@@ -2,16 +2,14 @@ import { useState } from 'react'
 import { getPlayers, saveActiveGame, savePlayers } from '../utils/storage.js'
 import { canStartGame, createGame, findDuplicateIndices } from '../utils/game.js'
 
-const PLAYER_COUNTS = [1, 2, 3, 4]
+const MAX_PLAYERS = 5
 
 export default function Setup({ navigate }) {
-  const [playerCount, setPlayerCount] = useState(2)
-  const [names, setNames]             = useState(['', '', '', ''])
+  const [names, setNames] = useState([''])
 
   const savedNames  = getPlayers()
-  const activeNames = names.slice(0, playerCount)
-  const dupeIndices = findDuplicateIndices(activeNames)
-  const ready       = canStartGame(names, playerCount)
+  const dupeIndices = findDuplicateIndices(names)
+  const ready       = canStartGame(names, names.length)
 
   function handleNameChange(i, value) {
     const next = [...names]
@@ -19,9 +17,16 @@ export default function Setup({ navigate }) {
     setNames(next)
   }
 
+  function handleAddPlayer() {
+    if (names.length < MAX_PLAYERS) setNames([...names, ''])
+  }
+
+  function handleRemovePlayer(i) {
+    setNames(names.filter((_, idx) => idx !== i))
+  }
+
   function suggestionsFor(index) {
     const otherLower = names
-      .slice(0, playerCount)
       .filter((_, i) => i !== index)
       .map(n => n.trim().toLowerCase())
     return savedNames.filter(n => !otherLower.includes(n.toLowerCase()))
@@ -29,7 +34,7 @@ export default function Setup({ navigate }) {
 
   function handleStart() {
     if (!ready) return
-    const trimmed = names.slice(0, playerCount).map(n => n.trim())
+    const trimmed = names.map(n => n.trim())
 
     const existing = getPlayers()
     const merged = [...new Set([...trimmed, ...existing])].slice(0, 20)
@@ -46,90 +51,87 @@ export default function Setup({ navigate }) {
       <header className="flex items-center px-5 pt-12 pb-6">
         <button
           onClick={() => navigate('home')}
-          className="py-2 text-muted font-ui text-sm tracking-[0.08em] uppercase mr-auto"
+          className="flex-1 py-2 text-muted font-ui text-sm tracking-[0.08em] uppercase text-left"
         >
           ← Back
         </button>
-        <span className="font-display italic text-xl text-text mr-auto">New Game</span>
+        <span className="font-display italic text-xl text-text">New Game</span>
+        <div className="flex-1" />
       </header>
 
-      <main className="flex-1 px-5 pb-10 max-w-sm mx-auto w-full space-y-8">
+      <main className="flex-1 px-5 pb-10 w-full space-y-3">
 
-        {/* Player count */}
-        <section>
-          <p className="font-ui text-xs tracking-[0.18em] uppercase text-muted mb-3">
-            Players
-          </p>
-          <div className="flex gap-2">
-            {PLAYER_COUNTS.map(n => (
-              <button
-                key={n}
-                onClick={() => setPlayerCount(n)}
-                className={[
-                  'flex-1 py-3 rounded-md font-ui text-sm font-medium border transition-colors',
-                  playerCount === n
-                    ? 'bg-accent text-bg border-accent'
-                    : 'bg-transparent text-text border-border',
-                ].join(' ')}
-              >
-                {n}
-              </button>
-            ))}
-          </div>
-        </section>
-
-        {/* Name inputs */}
-        <section className="space-y-3">
-          <p className="font-ui text-xs tracking-[0.18em] uppercase text-muted">
-            Names
-          </p>
-          {Array.from({ length: playerCount }, (_, i) => {
-            const listId = `player-suggestions-${i}`
-            const isDupe = dupeIndices.includes(i)
-            return (
-              <div key={i}>
+        {names.map((name, i) => {
+          const listId = `player-suggestions-${i}`
+          const isDupe = dupeIndices.includes(i)
+          return (
+            <div key={i}>
+              <div className="relative">
                 <input
                   type="text"
-                  value={names[i]}
+                  value={name}
                   onChange={e => handleNameChange(i, e.target.value)}
                   placeholder={`Player ${i + 1}`}
                   list={listId}
                   maxLength={30}
                   autoComplete="off"
+                  autoFocus={i === names.length - 1}
                   className={[
-                    'w-full py-3 px-4 rounded-md border font-ui text-sm bg-bg-card text-text',
+                    'w-full py-3 pl-4 rounded-md border font-ui text-sm bg-bg-card text-text',
                     'placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40',
+                    names.length > 1 ? 'pr-10' : 'pr-4',
                     isDupe ? 'border-accent' : 'border-border',
                   ].join(' ')}
                 />
-                <datalist id={listId}>
-                  {suggestionsFor(i).map(name => (
-                    <option key={name} value={name} />
-                  ))}
-                </datalist>
-                {isDupe && (
-                  <p className="text-accent font-ui text-xs mt-1 pl-1">
-                    Each player must have a unique name
-                  </p>
+                {names.length > 1 && (
+                  <button
+                    onClick={() => handleRemovePlayer(i)}
+                    aria-label={`Remove player ${i + 1}`}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted active:text-text"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 )}
               </div>
-            )
-          })}
-        </section>
+              <datalist id={listId}>
+                {suggestionsFor(i).map(n => (
+                  <option key={n} value={n} />
+                ))}
+              </datalist>
+              {isDupe && (
+                <p className="text-accent font-ui text-xs mt-1 pl-1">
+                  Each player must have a unique name
+                </p>
+              )}
+            </div>
+          )
+        })}
 
-        {/* Start button */}
-        <button
-          onClick={handleStart}
-          disabled={!ready}
-          className={[
-            'w-full py-4 rounded-md font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn transition-opacity',
-            ready
-              ? 'bg-accent text-bg active:bg-accent-hover'
-              : 'bg-accent text-bg opacity-40 cursor-not-allowed',
-          ].join(' ')}
-        >
-          Start
-        </button>
+        {names.length < MAX_PLAYERS && (
+          <button
+            onClick={handleAddPlayer}
+            className="w-full py-3 px-4 rounded-md border border-dashed border-border bg-bg-card text-muted font-ui text-sm active:bg-border"
+          >
+            + Add player
+          </button>
+        )}
+
+        <div className="pt-5">
+          <button
+            onClick={handleStart}
+            disabled={!ready}
+            className={[
+              'w-full py-4 rounded-md font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn transition-opacity',
+              ready
+                ? 'bg-accent text-bg active:bg-accent-hover'
+                : 'bg-accent text-bg opacity-40 cursor-not-allowed',
+            ].join(' ')}
+          >
+            Start
+          </button>
+        </div>
 
       </main>
     </div>
