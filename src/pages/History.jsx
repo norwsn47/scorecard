@@ -8,6 +8,11 @@ function formatShortDate(isoString) {
   }).format(new Date(isoString))
 }
 
+function playerTotal(scores, player) {
+  const scored = (scores?.[player] ?? []).filter(s => s !== null)
+  return scored.reduce((sum, s) => sum + s, 0)
+}
+
 function playerAverage(scores, player) {
   const scored = (scores?.[player] ?? []).filter(s => s !== null)
   if (scored.length === 0) return null
@@ -129,6 +134,7 @@ export default function History({ navigate }) {
                   const isWinner = name === game.winner
                   const avg = playerAverage(game.scores, name)
                   const isDnf = game.dnf?.includes(name)
+                  const total = playerTotal(game.scores, name)
                   return (
                     <div
                       key={name}
@@ -149,9 +155,9 @@ export default function History({ navigate }) {
                           {isDnf && <span className="text-muted font-normal"> (DNF)</span>}
                         </span>
                       </div>
-                      {avg !== null && (
-                        <span className="font-ui text-xs text-muted">Av. {avg}</span>
-                      )}
+                      <span className="font-ui text-xs text-muted">
+                        {total > 0 ? total : '—'}{avg !== null ? ` (Av. ${avg})` : ''}
+                      </span>
                     </div>
                   )
                 })}
