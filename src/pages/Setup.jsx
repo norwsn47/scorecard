@@ -3,7 +3,7 @@ import PageHeader from '../components/PageHeader.jsx'
 import { getPlayers, saveActiveGame, savePlayers } from '../utils/storage.js'
 import { canStartGame, createGame, findDuplicateIndices } from '../utils/game.js'
 
-const MAX_PLAYERS = 5
+const MAX_PLAYERS = 6
 
 export default function Setup({ navigate }) {
   const [names, setNames]         = useState([''])

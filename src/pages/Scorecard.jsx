@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import CourseMapModal from '../components/CourseMapModal.jsx'
+import PageHeader from '../components/PageHeader.jsx'
 import { track } from '../utils/analytics.js'
 import { computeDisplayedHoles, finishGame } from '../utils/game.js'
 import { playerTotal } from '../utils/scores.js'
@@ -100,43 +101,18 @@ export default function Scorecard({ navigate, params }) {
         </div>
       )}
 
-      {/* Header */}
-      <header className="flex items-center justify-between px-5 pt-10 pb-4 border-b border-border">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigate('home')}
-            aria-label="Back to home"
-            className="text-chrome active:text-text"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className="w-5 h-5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <div>
-            <p className="font-display italic text-lg text-text leading-tight">The Golf Tavern</p>
-            <p className="font-ui text-xs tracking-[0.15em] uppercase text-muted mt-0.5">
-              Bruntsfield Links
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowMap(true)}
-            aria-label="View course map"
-            className="w-10 h-10 flex items-center justify-center rounded-md border border-border text-muted active:bg-bg-card"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-5 h-5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.159.69.159 1.006 0z" />
-            </svg>
-          </button>
+      <PageHeader
+        title="Scorecard"
+        onBack={() => navigate('home')}
+        right={
           <button
             onClick={() => setShowConfirm(true)}
-            className="py-2.5 px-5 rounded-md bg-accent text-bg font-ui text-xs tracking-[0.1em] uppercase font-semibold shadow-btn"
+            className="py-2 px-4 rounded-md border border-accent text-accent font-ui text-xs tracking-[0.1em] uppercase font-semibold"
           >
             Finish
           </button>
-        </div>
-      </header>
+        }
+      />
 
       {/* Scrollable scorecard grid — full width, no horizontal scroll */}
       <div className="flex-1 overflow-y-auto">
@@ -214,7 +190,16 @@ export default function Scorecard({ navigate, params }) {
 
       {/* Floating control bar */}
       <div className="bg-bg border-t border-border px-5 py-4">
-        <div className="flex items-center justify-end gap-3">
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => setShowMap(true)}
+            aria-label="View course map"
+            className="w-16 h-16 rounded-full border-2 border-chrome text-chrome flex items-center justify-center active:opacity-70"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.159.69.159 1.006 0z" />
+            </svg>
+          </button>
           <button
             onClick={handleDecrement}
             disabled={activeScore === null}
@@ -234,9 +219,9 @@ export default function Scorecard({ navigate, params }) {
             onClick={handleAdvance}
             disabled={activeCell.holeIndex === displayedHoles - 1 && activeCell.playerIndex === players.length - 1}
             aria-label="Advance to next player"
-            className="w-16 h-16 rounded-full bg-control-warm text-bg flex items-center justify-center disabled:opacity-25 active:opacity-80"
+            className="w-16 h-16 rounded-full bg-muted border-2 border-muted text-bg flex items-center justify-center disabled:opacity-25 active:opacity-80"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-6 h-6">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6" />
             </svg>
           </button>

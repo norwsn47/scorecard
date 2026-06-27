@@ -1,4 +1,4 @@
-const MAX_HOLES = 24
+const MAX_HOLES = 36
 
 /**
  * Returns the indices of duplicate names (case-insensitive).
