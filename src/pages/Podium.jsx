@@ -36,7 +36,7 @@ export default function Podium({ navigate, params }) {
     .sort((a, b) => a.total - b.total)
 
   return (
-    <div className="min-h-screen bg-bg flex flex-col">
+    <div className="h-full bg-bg flex flex-col">
 
       {/* Header */}
       <header className="flex items-center justify-between px-5 pt-10 pb-4 border-b border-border">

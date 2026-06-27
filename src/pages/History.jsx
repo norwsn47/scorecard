@@ -21,7 +21,7 @@ export default function History({ navigate }) {
   }
 
   return (
-    <div className="min-h-screen bg-bg flex flex-col">
+    <div className="h-full bg-bg flex flex-col">
 
       {/* Header */}
       <header className="flex items-center px-5 pt-12 pb-5 border-b border-border">
@@ -49,7 +49,7 @@ export default function History({ navigate }) {
       )}
 
       {/* Game list */}
-      <main className="flex-1 px-5 py-4 space-y-3 max-w-sm mx-auto w-full">
+      <main className="flex-1 overflow-y-auto px-5 py-4 space-y-3 max-w-sm mx-auto w-full">
 
         {displayed.length === 0 && (
           <div className="text-center pt-16">

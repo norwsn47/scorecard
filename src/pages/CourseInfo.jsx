@@ -8,7 +8,7 @@ const FACTS = [
 
 export default function CourseInfo({ navigate }) {
   return (
-    <div className="min-h-screen bg-bg flex flex-col">
+    <div className="h-full bg-bg flex flex-col">
 
       {/* Header */}
       <header className="flex items-center px-5 pt-12 pb-6 border-b border-border">
@@ -48,7 +48,7 @@ export default function CourseInfo({ navigate }) {
       </div>
 
       {/* Facts */}
-      <div className="flex-1 px-6 py-6 space-y-4 max-w-sm mx-auto w-full">
+      <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4 max-w-sm mx-auto w-full">
         {FACTS.map(({ label, value }) => (
           <div key={label} className="bg-bg-card rounded-md border border-border px-5 py-4">
             <p className="font-ui text-xs tracking-[0.15em] uppercase text-muted mb-1">{label}</p>

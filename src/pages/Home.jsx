@@ -14,7 +14,7 @@ export default function Home({ navigate }) {
   }, [])
 
   return (
-    <div className="min-h-screen bg-bg flex flex-col">
+    <div className="h-full bg-bg flex flex-col">
 
       {/* ── Branding ── */}
       <header className="flex-1 flex flex-col items-center justify-center px-6 pt-16 pb-8">

@@ -82,7 +82,7 @@ export default function Scorecard({ navigate, params }) {
   }
 
   return (
-    <div className="h-dvh bg-bg flex flex-col">
+    <div className="h-full bg-bg flex flex-col">
 
       {saveError && (
         <div className="bg-accent text-bg text-center font-ui text-xs py-2 px-4 tracking-wide">

@@ -35,7 +35,7 @@ export default function App() {
   const Page = PAGES[page] ?? Home
   return (
     <>
-      <div className="app-shell max-w-[430px] mx-auto min-h-screen bg-bg flex flex-col">
+      <div className="app-shell max-w-[430px] mx-auto h-dvh overflow-hidden bg-bg flex flex-col">
         {!storageOk && (
           <div className="sticky top-0 z-50 bg-accent text-bg text-center font-ui text-xs py-2 px-4 tracking-wide">
             Scores won't be saved — storage is blocked (private browsing?)

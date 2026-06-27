@@ -46,7 +46,7 @@ export default function Setup({ navigate }) {
   }
 
   return (
-    <div className="min-h-screen bg-bg flex flex-col">
+    <div className="h-full bg-bg flex flex-col">
 
       <header className="flex items-center px-5 pt-12 pb-6">
         <button
@@ -59,7 +59,7 @@ export default function Setup({ navigate }) {
         <div className="flex-1" />
       </header>
 
-      <main className="flex-1 px-5 pb-10 w-full space-y-3">
+      <main className="flex-1 overflow-y-auto px-5 pb-10 w-full space-y-3">
 
         {names.map((name, i) => {
           const listId = `player-suggestions-${i}`

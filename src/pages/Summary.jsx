@@ -38,7 +38,7 @@ export default function Summary({ navigate, params }) {
   const isWinner = player => player === game.winner
 
   return (
-    <div className="min-h-screen bg-bg flex flex-col">
+    <div className="h-full bg-bg flex flex-col">
 
       {/* Header */}
       <header className="px-5 pt-12 pb-6 border-b border-border">
@@ -68,7 +68,7 @@ export default function Summary({ navigate, params }) {
       )}
 
       {/* Read-only scorecard */}
-      <div className="flex-1 overflow-x-auto mt-6">
+      <div className="flex-1 overflow-y-auto overflow-x-auto mt-6">
         <table className="w-full min-w-max border-collapse">
           <thead>
             <tr className="border-b border-border bg-bg-card">
