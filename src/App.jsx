@@ -1,12 +1,14 @@
 import { useState } from 'react'
-import Home  from './pages/Home.jsx'
-import Setup from './pages/Setup.jsx'
+import Home      from './pages/Home.jsx'
+import Scorecard from './pages/Scorecard.jsx'
+import Setup     from './pages/Setup.jsx'
 
 const PAGES = {
-  home:  Home,
-  setup: Setup,
+  home:      Home,
+  setup:     Setup,
+  scorecard: Scorecard,
   // Populated chunk by chunk:
-  // scorecard, summary, history
+  // summary, history
 }
 
 export default function App() {

@@ -30,6 +30,49 @@ export function canStartGame(names, count, holes) {
 }
 
 /**
+ * Calculates the winner and DNF players at the end of a game.
+ * A player "finished" if every hole has a score ≥ 1 (non-null).
+ * Winner = lowest total among finishers; null if everyone DNF'd.
+ */
+export function calculateResult(players, scores, holes) {
+  const finishers = []
+  const dnf = []
+
+  players.forEach(player => {
+    const playerScores = scores[player] ?? []
+    const allFilled = playerScores.length === holes &&
+      playerScores.every(s => s !== null && s >= 1)
+    if (allFilled) {
+      finishers.push({
+        name: player,
+        total: playerScores.reduce((sum, s) => sum + s, 0),
+      })
+    } else {
+      dnf.push(player)
+    }
+  })
+
+  const winner = finishers.length > 0
+    ? finishers.reduce((best, p) => p.total < best.total ? p : best).name
+    : null
+
+  return { winner, dnf, finishers }
+}
+
+/**
+ * Stamps a finished game with completedAt, winner, and dnf fields.
+ */
+export function finishGame(game) {
+  const { winner, dnf } = calculateResult(game.players, game.scores, game.holes)
+  return {
+    ...game,
+    completedAt: new Date().toISOString(),
+    winner,
+    dnf,
+  }
+}
+
+/**
  * Builds a fresh active-game object ready for local storage.
  */
 export function createGame(playerNames, holes) {

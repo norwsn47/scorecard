@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { canStartGame, createGame, findDuplicateIndices } from './game.js'
+import { calculateResult, canStartGame, createGame, findDuplicateIndices, finishGame } from './game.js'
 
 // ── findDuplicateIndices ──────────────────────────────────────────────────────
 
@@ -99,5 +99,69 @@ describe('createGame', () => {
   it('stores the hole count', () => {
     const game = createGame(['Alice'], 18)
     expect(game.holes).toBe(18)
+  })
+})
+
+// ── calculateResult ───────────────────────────────────────────────────────────
+
+describe('calculateResult', () => {
+  it('identifies the player with the lowest total as winner', () => {
+    const scores = { Alice: [3, 3, 3], Bob: [4, 4, 4] }
+    const { winner } = calculateResult(['Alice', 'Bob'], scores, 3)
+    expect(winner).toBe('Alice')
+  })
+
+  it('returns null winner when all players DNF', () => {
+    const scores = { Alice: [null, 3, 3] }
+    const { winner } = calculateResult(['Alice'], scores, 3)
+    expect(winner).toBeNull()
+  })
+
+  it('marks players with any null score as DNF', () => {
+    const scores = { Alice: [3, 3, 3], Bob: [4, null, 4] }
+    const { dnf } = calculateResult(['Alice', 'Bob'], scores, 3)
+    expect(dnf).toContain('Bob')
+    expect(dnf).not.toContain('Alice')
+  })
+
+  it('excludes DNF players from winner calculation', () => {
+    // Bob has a lower partial total but didn't finish
+    const scores = { Alice: [5, 5, 5], Bob: [1, null, 1] }
+    const { winner } = calculateResult(['Alice', 'Bob'], scores, 3)
+    expect(winner).toBe('Alice')
+  })
+
+  it('handles a single finisher as winner', () => {
+    const scores = { Alice: [4, 4, 4] }
+    const { winner } = calculateResult(['Alice'], scores, 3)
+    expect(winner).toBe('Alice')
+  })
+
+  it('returns a tied winner deterministically (first by lowest total)', () => {
+    const scores = { Alice: [3, 3, 3], Bob: [3, 3, 3] }
+    const { winner } = calculateResult(['Alice', 'Bob'], scores, 3)
+    expect(['Alice', 'Bob']).toContain(winner)
+  })
+})
+
+// ── finishGame ────────────────────────────────────────────────────────────────
+
+describe('finishGame', () => {
+  it('adds completedAt, winner, and dnf fields', () => {
+    const game = createGame(['Alice'], 2)
+    game.scores['Alice'] = [3, 4]
+    const finished = finishGame(game)
+    expect(finished.completedAt).toBeTruthy()
+    expect(finished.winner).toBe('Alice')
+    expect(finished.dnf).toEqual([])
+  })
+
+  it('preserves original game fields', () => {
+    const game = createGame(['Alice'], 2)
+    game.scores['Alice'] = [3, 4]
+    const finished = finishGame(game)
+    expect(finished.id).toBe(game.id)
+    expect(finished.players).toEqual(game.players)
+    expect(finished.holes).toBe(game.holes)
   })
 })
