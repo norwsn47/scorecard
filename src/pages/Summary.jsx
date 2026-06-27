@@ -1,3 +1,6 @@
+import { useState } from 'react'
+import { track } from '../utils/analytics.js'
+import { shareScorecard } from '../utils/share.js'
 import { getCompletedGames } from '../utils/storage.js'
 
 function formatDate(isoString) {
@@ -14,7 +17,15 @@ function playerTotal(scores, player) {
     .reduce((sum, s) => sum + s, 0)
 }
 
+function playerAverage(scores, player) {
+  const scored = (scores?.[player] ?? []).filter(s => s !== null)
+  if (scored.length === 0) return null
+  return (scored.reduce((sum, s) => sum + s, 0) / scored.length).toFixed(1)
+}
+
 export default function Summary({ navigate, params }) {
+  const [sharing, setSharing] = useState(false)
+
   // Prefer freshly-passed game; fall back to most recent completed game
   const game = params?.game ?? getCompletedGames()[0] ?? null
 
@@ -34,7 +45,7 @@ export default function Summary({ navigate, params }) {
         <div className="flex items-center gap-3 mb-4">
           <div className="flex-1 h-px bg-border" />
           <span className="font-ui text-xs tracking-[0.2em] uppercase text-muted">
-            {game.holes} holes · {formatDate(game.completedAt)}
+            {game.holesPlayed ?? game.holes} holes · {formatDate(game.completedAt)}
           </span>
           <div className="flex-1 h-px bg-border" />
         </div>
@@ -80,7 +91,7 @@ export default function Summary({ navigate, params }) {
           </thead>
 
           <tbody>
-            {Array.from({ length: game.holes }, (_, holeIndex) => (
+            {Array.from({ length: game.holesPlayed ?? game.holes }, (_, holeIndex) => (
               <tr key={holeIndex} className="border-b border-border">
                 <td className="py-2 px-3 font-ui text-xs text-muted">{holeIndex + 1}</td>
                 {game.players.map(player => {
@@ -113,6 +124,9 @@ export default function Summary({ navigate, params }) {
                   ].join(' ')}
                 >
                   {playerTotal(game.scores, player) || '—'}
+                  {playerAverage(game.scores, player) !== null && (
+                    <span className="block font-ui text-xs font-normal text-muted">Av. {playerAverage(game.scores, player)}</span>
+                  )}
                   {isDnf(player) && <span className="block font-ui text-xs font-normal text-muted">DNF</span>}
                 </td>
               ))}
@@ -121,11 +135,28 @@ export default function Summary({ navigate, params }) {
         </table>
       </div>
 
-      {/* Back to home */}
-      <div className="px-5 py-8">
+      {/* Actions */}
+      <div className="px-5 py-8 space-y-3 max-w-sm mx-auto w-full">
+        <button
+          onClick={async () => {
+            setSharing(true)
+            try {
+              await shareScorecard(game)
+              track('Scorecard Shared')
+            } catch {
+              // share failed silently
+            } finally {
+              setSharing(false)
+            }
+          }}
+          disabled={sharing}
+          className="w-full py-4 rounded-md border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card disabled:opacity-40"
+        >
+          {sharing ? 'Generating…' : 'Share Scorecard'}
+        </button>
         <button
           onClick={() => navigate('home')}
-          className="w-full py-4 rounded-md bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn max-w-sm mx-auto block"
+          className="w-full py-4 rounded-md bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn"
         >
           Back to Home
         </button>

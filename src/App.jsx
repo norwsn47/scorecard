@@ -1,17 +1,21 @@
 import { useEffect, useState } from 'react'
-import History   from './pages/History.jsx'
-import Home      from './pages/Home.jsx'
-import Scorecard from './pages/Scorecard.jsx'
-import Setup     from './pages/Setup.jsx'
-import Summary   from './pages/Summary.jsx'
+import CourseInfo from './pages/CourseInfo.jsx'
+import History    from './pages/History.jsx'
+import Home       from './pages/Home.jsx'
+import Podium     from './pages/Podium.jsx'
+import Scorecard  from './pages/Scorecard.jsx'
+import Setup      from './pages/Setup.jsx'
+import Summary    from './pages/Summary.jsx'
 import { isStorageAvailable } from './utils/storage.js'
 
 const PAGES = {
-  home:      Home,
-  setup:     Setup,
-  scorecard: Scorecard,
-  summary:   Summary,
-  history:   History,
+  home:       Home,
+  setup:      Setup,
+  scorecard:  Scorecard,
+  podium:     Podium,
+  summary:    Summary,
+  history:    History,
+  courseinfo: CourseInfo,
 }
 
 export default function App() {
@@ -31,12 +35,19 @@ export default function App() {
   const Page = PAGES[page] ?? Home
   return (
     <>
-      {!storageOk && (
-        <div className="fixed top-0 inset-x-0 z-50 bg-accent text-bg text-center font-ui text-xs py-2 px-4 tracking-wide">
-          Scores won't be saved — storage is blocked (private browsing?)
-        </div>
-      )}
-      <Page navigate={navigate} params={params} />
+      <div className="app-shell max-w-[430px] mx-auto min-h-screen bg-bg flex flex-col">
+        {!storageOk && (
+          <div className="sticky top-0 z-50 bg-accent text-bg text-center font-ui text-xs py-2 px-4 tracking-wide">
+            Scores won't be saved — storage is blocked (private browsing?)
+          </div>
+        )}
+        <Page navigate={navigate} params={params} />
+      </div>
+
+      <div className="desktop-note" aria-hidden="true">
+        this app is optimised for mobile — open it on your phone for the real experience
+        <span className="desktop-note-arrow">← this way</span>
+      </div>
     </>
   )
 }

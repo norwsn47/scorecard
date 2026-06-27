@@ -3,26 +3,20 @@ import { getPlayers, saveActiveGame, savePlayers } from '../utils/storage.js'
 import { canStartGame, createGame, findDuplicateIndices } from '../utils/game.js'
 
 const PLAYER_COUNTS = [1, 2, 3, 4]
-const HOLES_OPTIONS = Array.from({ length: 24 }, (_, i) => i + 1)
 
 export default function Setup({ navigate }) {
   const [playerCount, setPlayerCount] = useState(2)
   const [names, setNames]             = useState(['', '', '', ''])
-  const [holes, setHoles]             = useState('')
 
-  const savedNames = getPlayers()
+  const savedNames  = getPlayers()
   const activeNames = names.slice(0, playerCount)
   const dupeIndices = findDuplicateIndices(activeNames)
-  const ready = canStartGame(names, playerCount, Number(holes))
+  const ready       = canStartGame(names, playerCount)
 
   function handleNameChange(i, value) {
     const next = [...names]
-    next[i] = value.slice(0, 30) // max length enforced here
+    next[i] = value.slice(0, 30)
     setNames(next)
-  }
-
-  function handleCountChange(count) {
-    setPlayerCount(count)
   }
 
   function suggestionsFor(index) {
@@ -37,12 +31,11 @@ export default function Setup({ navigate }) {
     if (!ready) return
     const trimmed = names.slice(0, playerCount).map(n => n.trim())
 
-    // Merge new names into saved suggestions (deduped, most recent first, capped at 20)
     const existing = getPlayers()
     const merged = [...new Set([...trimmed, ...existing])].slice(0, 20)
     savePlayers(merged)
 
-    const game = createGame(trimmed, Number(holes))
+    const game = createGame(trimmed)
     saveActiveGame(game)
     navigate('scorecard', { game })
   }
@@ -50,7 +43,6 @@ export default function Setup({ navigate }) {
   return (
     <div className="min-h-screen bg-bg flex flex-col">
 
-      {/* Header */}
       <header className="flex items-center px-5 pt-12 pb-6">
         <button
           onClick={() => navigate('home')}
@@ -72,7 +64,7 @@ export default function Setup({ navigate }) {
             {PLAYER_COUNTS.map(n => (
               <button
                 key={n}
-                onClick={() => handleCountChange(n)}
+                onClick={() => setPlayerCount(n)}
                 className={[
                   'flex-1 py-3 rounded-md font-ui text-sm font-medium border transition-colors',
                   playerCount === n
@@ -123,23 +115,6 @@ export default function Setup({ navigate }) {
               </div>
             )
           })}
-        </section>
-
-        {/* Hole count */}
-        <section>
-          <p className="font-ui text-xs tracking-[0.18em] uppercase text-muted mb-3">
-            Holes
-          </p>
-          <select
-            value={holes}
-            onChange={e => setHoles(e.target.value)}
-            className="w-full py-3 px-4 rounded-md border border-border font-ui text-sm bg-bg-card text-text focus:outline-none focus:ring-2 focus:ring-accent/40 appearance-none"
-          >
-            <option value="">Select holes</option>
-            {HOLES_OPTIONS.map(n => (
-              <option key={n} value={n}>{n}</option>
-            ))}
-          </select>
         </section>
 
         {/* Start button */}

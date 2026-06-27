@@ -55,19 +55,25 @@ For the scorecard app, this palette is **flipped for outdoor sunlight legibility
   - Names previously used are suggested from local browser storage
   - **Duplicate names are not allowed** — the app blocks starting if two players share the same name
   - No login required — names are stored locally on the device
-- Selects number of holes to play (1–24)
-- Taps **Start** — scorecard is created
+- Taps **Start** — scorecard is created (no hole pre-selection required)
 
 ### 4.3 The scorecard
-- Resembles a physical scorecard — clean, simple grid layout
-- Rows = holes (numbered, Hole 1 through Hole N)
-- Columns = players
-- Each cell shows the stroke count for that player on that hole
-- Scores are entered via **+ and − buttons** (no typing required)
-  - Default starting value per hole: 0 (blank until first tap)
-  - Minimum value per hole: 1 (cannot go below 1 once started)
-  - No maximum — + button is unlimited
-- Running totals shown at the bottom of each player column, updating live
+- Resembles a physical scorecard — clean, full-width grid layout; no horizontal scrolling
+- Rows = holes (numbered); columns = players; all columns share available width equally
+- **Holes are added dynamically** — only the current hole row is shown; a new row appears automatically once all players have scored the current hole
+- **Active-cell model** — exactly one cell is focused at all times:
+  - Highlighted with the terracotta/rust accent background
+  - Active row gets a subtle warm tint across the full row
+  - Any cell can be tapped directly to jump to it
+- Scores are entered via a **floating control bar** fixed to the bottom of the screen (never scrolls away):
+  - Large **−** button · large **+** button · **→** advance button — all right-aligned
+  - A hole score has two states: **empty (—)** and **scored (1 or above)** — there is no zero
+  - Tapping **+** on an empty cell sets it to 1; tapping **+** on a scored cell increments by 1
+  - Tapping **−** on a cell showing 1 returns it to empty (—); tapping **−** on a cell showing 2+ decrements by 1
+  - The **−** button is visually disabled when the active cell is empty
+  - No maximum
+  - The **→** button advances focus to the next player on the same hole, or the next hole's first player
+- Running totals shown above the control bar, always visible
 - Progress is **auto-saved to local storage continuously** — closing and reopening the browser resumes exactly where you left off
 
 ### 4.4 Finishing a game

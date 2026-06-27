@@ -44,3 +44,47 @@
     -webkit-font-smoothing: antialiased;
   }
 }
+
+/* On anything wider than a phone, show the app in a centred mobile frame */
+@media (min-width: 431px) {
+  html {
+    background-color: #E8E2D6;
+  }
+
+  .app-shell {
+    box-shadow: 0 0 0 1px var(--color-border),
+                0 8px 40px rgba(26, 26, 24, 0.12);
+  }
+}
+
+/* Desktop annotation note — hidden on mobile */
+.desktop-note {
+  display: none;
+}
+
+@media (min-width: 800px) {
+  .desktop-note {
+    display: block;
+    position: fixed;
+    /* sits to the right of the centred 430px shell */
+    left: calc(50% + 240px);
+    top: 42%;
+    transform: rotate(5deg);
+    pointer-events: none;
+    width: 160px;
+    font-family: 'Caveat', cursive;
+    font-size: 1.15rem;
+    color: var(--color-text);
+    line-height: 1.35;
+    opacity: 0.75;
+  }
+
+  .desktop-note-arrow {
+    display: block;
+    margin-top: 6px;
+    font-size: 1.5rem;
+    /* nudge the arrow toward the phone frame */
+    transform: rotate(-5deg) translateX(-12px);
+    opacity: 0.65;
+  }
+}

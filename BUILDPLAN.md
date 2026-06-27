@@ -67,17 +67,16 @@ No chunk depends on unverified work from a previous chunk.
 
 ## Chunk 4 — New game setup
 
-**Goal:** Player name entry, duplicate prevention, hole selection, start game.
+**Goal:** Player name entry, duplicate prevention, start game. No hole pre-selection.
 
 - Build game setup screen:
   - Player count selector (1–4)
   - Name input per player
     - Suggests previously used names from local storage
     - Blocks duplicate names — show inline error, prevent proceeding
-  - Hole count selector (1–24)
-  - **Start** button — disabled until all players named and holes selected
+  - **Start** button — disabled until all players named
 - On Start:
-  - Create active game object and save to local storage
+  - Create active game object (always 24 slots) and save to local storage
   - Navigate to scorecard
 - Write tests for:
   - Duplicate name blocking
@@ -90,33 +89,43 @@ No chunk depends on unverified work from a previous chunk.
 
 ## Chunk 5 — Scorecard
 
-**Goal:** The core of the app. Physical scorecard feel, + / − controls, live totals, auto-save.
+**Goal:** The core of the app. Active-cell interaction, dynamic rows, live totals, auto-save.
 
 - Build scorecard screen:
-  - Grid layout: rows = holes, columns = players
-  - Each cell: current score (blank until first tap), **+** and **−** buttons
-    - Minimum score per hole: 1 (− disabled at 1)
-    - No maximum
-  - Running totals row at the bottom, updating live
-  - **Finish Game** button (sticky, always visible)
+  - Full-width fixed grid (`table-fixed`): rows = holes, columns = players — no horizontal scroll
+  - **Active-cell model** — exactly one cell is focused at all times:
+    - Highlighted with terracotta accent background
+    - Active row gets a subtle warm tint
+    - Any cell can be tapped directly to make it active
+    - On load: Hole 1, Player 1 is active
+  - Floating control bar (fixed to bottom, never scrolls away):
+    - Large **−** · large **+** · **→** advance button, right-aligned
+    - Two-state scoring: empty (null/—) or scored (1+) — no zero state
+    - **+** on empty → 1; **+** on scored → increment
+    - **−** on 1 → empty (null); **−** on 2+ → decrement; **−** disabled when empty
+    - **→** advances active cell to next player / next hole
+  - **Dynamic row growth** — holes appear one at a time: a new row is added automatically once all players have scored the current hole
+  - Running totals bar above the control bar, always visible
+  - **Finish Game** button in header
 - Auto-save to local storage on every score change
 - Build confirmation dialog for Finish Game:
   - Shows player names and current totals
   - Confirm / Cancel buttons
 - On confirm:
-  - Determine winner (lowest total among players with scores on all holes)
+  - Determine winner (lowest total, trailing unplayed holes ignored)
   - Mark any incomplete players as DNF
+  - Stamp `holesPlayed` (last hole where any player scored)
   - Save completed game to local storage
   - Clear active game from storage
   - Navigate to game summary
 - Write tests for:
-  - Score increment / decrement logic
-  - Minimum score enforcement
+  - Score increment / decrement logic (two-state: empty ↔ scored)
   - Auto-save on every change
-  - Winner calculation (including DNF logic)
-  - Confirmation dialog behaviour
+  - `computeDisplayedHoles` — dynamic row count
+  - Winner calculation (trailing-null-aware, DNF logic)
+  - `finishGame` stamps correct `holesPlayed`
 
-**Verify:** Scores update correctly. Totals update live. Auto-save works (reload mid-game and resume). Finish Game confirmation works. Winner calculated correctly. DNF handled correctly.
+**Verify:** Scores update correctly (+ sets empty→1, − returns 1→empty). Totals ignore empty cells. Active cell highlights correctly. → advance button moves focus correctly. New rows appear after each completed hole. Auto-save works (reload mid-game and resume). Finish Game confirmation works. Empty cells on active holes count as DNF. Winner calculated correctly.
 
 ---
 

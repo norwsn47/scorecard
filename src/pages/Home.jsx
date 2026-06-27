@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react'
+import CourseMapModal from '../components/CourseMapModal.jsx'
+import { track } from '../utils/analytics.js'
 import { getActiveGame } from '../utils/storage.js'
 
 export default function Home({ navigate }) {
   const [activeGame, setActiveGame] = useState(null)
+  const [showMap, setShowMap]       = useState(false)
 
   useEffect(() => {
     setActiveGame(getActiveGame())
@@ -23,9 +26,12 @@ export default function Home({ navigate }) {
           The Golf Tavern
         </h1>
 
-        <p className="font-ui text-xs tracking-[0.25em] uppercase text-muted mt-3 text-center">
+        <button
+          onClick={() => navigate('courseinfo')}
+          className="font-ui text-xs tracking-[0.25em] uppercase text-muted mt-3 text-center active:text-accent"
+        >
           Bruntsfield Links · Edinburgh
-        </p>
+        </button>
 
         <div className="w-10 h-0.5 bg-accent mx-auto mt-6" />
       </header>
@@ -47,10 +53,17 @@ export default function Home({ navigate }) {
         )}
 
         <button
-          onClick={() => navigate('setup')}
+          onClick={() => { track('New Game Started'); navigate('setup') }}
           className="w-full py-4 px-6 rounded-md bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn active:bg-accent-hover"
         >
           New Game
+        </button>
+
+        <button
+          onClick={() => setShowMap(true)}
+          className="font-ui text-xs tracking-[0.15em] uppercase text-muted active:text-accent"
+        >
+          View Course Map
         </button>
 
         <button
@@ -63,11 +76,14 @@ export default function Home({ navigate }) {
 
       {/* ── Footer ── */}
       <footer className="text-center pb-8 px-6">
-        <p className="font-ui text-xs text-muted tracking-[0.12em] uppercase">
-          More courses coming soon
+        <p className="font-ui text-text leading-tight">
+          <span className="text-base font-bold">Scorecard</span>
+          <span className="text-xs text-muted font-normal"> by </span>
+          <a href="https://outbuild.uk" target="_blank" rel="noopener noreferrer" className="text-xs text-muted font-normal underline underline-offset-2">Outbuild ↗</a>
         </p>
       </footer>
 
+      {showMap && <CourseMapModal onClose={() => setShowMap(false)} />}
     </div>
   )
 }

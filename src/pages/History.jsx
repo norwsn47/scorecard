@@ -95,7 +95,7 @@ export default function History({ navigate }) {
                 {formatShortDate(game.completedAt)}
               </span>
               <span className="font-ui text-xs text-muted">
-                {game.holes} holes
+                {game.holesPlayed ?? game.holes} holes
               </span>
             </div>
 
