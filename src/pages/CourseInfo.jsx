@@ -1,3 +1,5 @@
+import PageHeader from '../components/PageHeader.jsx'
+
 const FACTS = [
   { label: 'Location', value: 'Bruntsfield, Edinburgh, Scotland' },
   { label: 'Type', value: 'Public short hole course — free to play' },
@@ -10,15 +12,7 @@ export default function CourseInfo({ navigate }) {
   return (
     <div className="h-full bg-bg flex flex-col">
 
-      {/* Header */}
-      <header className="flex items-center px-5 pt-12 pb-6 border-b border-border">
-        <button
-          onClick={() => navigate('home')}
-          className="py-2 text-muted font-ui text-sm tracking-[0.08em] uppercase mr-auto"
-        >
-          ← Back
-        </button>
-      </header>
+      <PageHeader title="Course Info" onBack={() => navigate('home')} />
 
       {/* Hero */}
       <div className="px-6 pt-10 pb-8 text-center border-b border-border">

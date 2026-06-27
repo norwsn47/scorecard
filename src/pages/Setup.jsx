@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import PageHeader from '../components/PageHeader.jsx'
 import { getPlayers, saveActiveGame, savePlayers } from '../utils/storage.js'
 import { canStartGame, createGame, findDuplicateIndices } from '../utils/game.js'
 
@@ -48,16 +49,7 @@ export default function Setup({ navigate }) {
   return (
     <div className="h-full bg-bg flex flex-col">
 
-      <header className="flex items-center px-5 pt-12 pb-6">
-        <button
-          onClick={() => navigate('home')}
-          className="flex-1 py-2 text-muted font-ui text-sm tracking-[0.08em] uppercase text-left"
-        >
-          ← Back
-        </button>
-        <span className="font-display italic text-xl text-text">New Game</span>
-        <div className="flex-1" />
-      </header>
+      <PageHeader title="New Game" onBack={() => navigate('home')} />
 
       <main className="flex-1 overflow-y-auto px-5 pb-10 w-full space-y-3">
 

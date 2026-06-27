@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import PageHeader from '../components/PageHeader.jsx'
 import { deleteCompletedGame, getCompletedGames } from '../utils/storage.js'
 
 function formatShortDate(isoString) {
@@ -41,16 +42,7 @@ export default function History({ navigate }) {
   return (
     <div className="h-full bg-bg flex flex-col">
 
-      {/* Header */}
-      <header className="flex items-center px-5 pt-12 pb-5 border-b border-border shrink-0">
-        <button
-          onClick={() => navigate('home')}
-          className="py-2 text-muted font-ui text-sm tracking-[0.08em] uppercase mr-4"
-        >
-          ← Back
-        </button>
-        <h1 className="font-display italic text-2xl text-text">History</h1>
-      </header>
+      <PageHeader title="History" onBack={() => navigate('home')} />
 
       {/* Disclaimer */}
       <div className="px-5 pt-4 pb-1 shrink-0">
