@@ -77,7 +77,7 @@ export default function Setup({ navigate }) {
                   autoComplete="off"
                   autoFocus={i === names.length - 1}
                   className={[
-                    'w-full py-3 pl-4 rounded-md border font-ui text-sm bg-bg-card text-text',
+                    'w-full py-3 pl-4 rounded-md border font-ui text-base bg-bg-card text-text',
                     'placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40',
                     names.length > 1 ? 'pr-10' : 'pr-4',
                     isDupe ? 'border-accent' : 'border-border',
