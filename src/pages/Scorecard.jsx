@@ -96,7 +96,7 @@ export default function Scorecard({ navigate, params }) {
           <button
             onClick={() => navigate('home')}
             aria-label="Back to home"
-            className="text-[#c0b8b0] active:text-text"
+            className="text-chrome active:text-text"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className="w-5 h-5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -163,7 +163,7 @@ export default function Scorecard({ navigate, params }) {
                 >
                   <td className={[
                     'py-3 px-2 font-ui text-xs text-center',
-                    isActiveRow ? 'text-accent font-semibold' : 'text-[#c0b8b0]',
+                    isActiveRow ? 'text-accent font-semibold' : 'text-chrome',
                   ].join(' ')}>
                     {holeIndex + 1}
                   </td>
@@ -209,7 +209,7 @@ export default function Scorecard({ navigate, params }) {
             onClick={handleDecrement}
             disabled={activeScore === null}
             aria-label="Decrease score"
-            className="w-16 h-16 rounded-full border-2 border-[#c0b8b0] font-ui text-2xl text-[#c0b8b0] flex items-center justify-center disabled:opacity-25"
+            className="w-16 h-16 rounded-full border-2 border-chrome font-ui text-2xl text-chrome flex items-center justify-center disabled:opacity-25"
           >
             −
           </button>
@@ -224,7 +224,7 @@ export default function Scorecard({ navigate, params }) {
             onClick={handleAdvance}
             disabled={activeCell.holeIndex === displayedHoles - 1 && activeCell.playerIndex === players.length - 1}
             aria-label="Advance to next player"
-            className="w-16 h-16 rounded-full bg-[#9a9189] text-[#faf7f0] flex items-center justify-center disabled:opacity-25 active:opacity-80"
+            className="w-16 h-16 rounded-full bg-control-warm text-bg flex items-center justify-center disabled:opacity-25 active:opacity-80"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-6 h-6">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6" />
@@ -238,7 +238,7 @@ export default function Scorecard({ navigate, params }) {
 
       {/* Confirmation dialog */}
       {showConfirm && (
-        <div className="fixed inset-0 bg-text/40 flex items-end justify-center z-50">
+        <div className="fixed inset-0 flex items-end justify-center z-50" style={{ background: 'var(--overlay-backdrop)' }}>
           <div className="bg-bg rounded-t-2xl w-full max-w-[430px] px-6 pt-6 pb-10 shadow-card">
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-6" />
             <h2 className="font-display italic text-2xl text-text mb-1">Finish Game?</h2>

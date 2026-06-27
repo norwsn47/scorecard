@@ -78,7 +78,7 @@ export default function Podium({ navigate, params }) {
               <div className="flex items-center gap-4">
                 <span className={[
                   'font-ui text-xs tracking-widest uppercase w-8',
-                  i === 0 ? 'text-bg/70' : 'text-muted',
+                  i === 0 ? 'text-[rgba(250,247,240,0.7)]' : 'text-muted',
                 ].join(' ')}>
                   {ordinal(i + 1)}
                 </span>

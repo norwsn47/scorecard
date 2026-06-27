@@ -12,8 +12,10 @@ export default {
         text:        'var(--color-text)',
         muted:       'var(--color-text-muted)',
         accent:      'var(--color-accent)',
-        'accent-hover': 'var(--color-accent-hover)',
-        border:      'var(--color-border)',
+        'accent-hover':  'var(--color-accent-hover)',
+        border:          'var(--color-border)',
+        chrome:          'var(--color-chrome)',
+        'control-warm':  'var(--color-control-warm)',
       },
       fontFamily: {
         display: 'var(--font-display)',

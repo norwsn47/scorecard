@@ -2,7 +2,7 @@ export default function CourseMapModal({ onClose }) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-5"
-      style={{ background: 'rgba(26,26,24,0.55)' }}
+      style={{ background: 'var(--overlay-modal)' }}
       onClick={onClose}
     >
       <div
@@ -32,12 +32,7 @@ export default function CourseMapModal({ onClose }) {
             className="w-full block"
           />
           {/* Vignette — fades edges to cream */}
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background: 'radial-gradient(ellipse at center, transparent 45%, rgba(250,247,240,0.55) 68%, rgba(250,247,240,0.92) 85%, rgba(250,247,240,1) 100%)',
-            }}
-          />
+          <div className="map-vignette absolute inset-0 pointer-events-none" />
         </div>
       </div>
     </div>

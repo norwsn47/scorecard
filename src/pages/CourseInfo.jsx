@@ -33,12 +33,7 @@ export default function CourseInfo({ navigate }) {
           alt="Bruntsfield Links course map"
           className="w-full block"
         />
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: 'radial-gradient(ellipse at center, transparent 45%, rgba(250,247,240,0.55) 68%, rgba(250,247,240,0.92) 85%, rgba(250,247,240,1) 100%)',
-          }}
-        />
+        <div className="map-vignette absolute inset-0 pointer-events-none" />
       </div>
 
       {/* Facts */}

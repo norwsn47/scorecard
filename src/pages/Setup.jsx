@@ -70,7 +70,7 @@ export default function Setup({ navigate }) {
                   autoFocus={i === names.length - 1}
                   className={[
                     'w-full py-3 pl-4 rounded-md border font-ui text-base bg-bg-card text-text',
-                    'placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40',
+                    'placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-[rgba(184,85,48,0.4)]',
                     names.length > 1 ? 'pr-10' : 'pr-4',
                     isDupe ? 'border-accent' : 'border-border',
                   ].join(' ')}
