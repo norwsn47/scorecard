@@ -50,7 +50,7 @@ export default function Setup({ navigate }) {
 
       <PageHeader title="New Game" onBack={() => navigate('home')} />
 
-      <main className="flex-1 overflow-y-auto px-5 pb-10 w-full space-y-3">
+      <main className="flex-1 overflow-y-auto px-5 pt-6 pb-10 w-full space-y-3">
 
         {names.map((name, i) => {
           const listId = `player-suggestions-${i}`
