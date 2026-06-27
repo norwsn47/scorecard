@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import CourseMapModal from '../components/CourseMapModal.jsx'
-import { computeDisplayedHoles, finishGame } from '../utils/game.js'
 import { track } from '../utils/analytics.js'
+import { computeDisplayedHoles, finishGame } from '../utils/game.js'
+import { playerTotal } from '../utils/scores.js'
 import { clearActiveGame, getActiveGame, saveActiveGame, saveCompletedGame } from '../utils/storage.js'
 
 export default function Scorecard({ navigate, params }) {
@@ -65,12 +66,6 @@ export default function Scorecard({ navigate, params }) {
         setActiveCell({ holeIndex: nextHole, playerIndex: 0 })
       }
     }
-  }
-
-  function playerTotal(player) {
-    return (game.scores?.[player] ?? [])
-      .filter(s => s !== null)
-      .reduce((sum, s) => sum + s, 0)
   }
 
   function handleConfirmFinish() {
@@ -197,7 +192,7 @@ export default function Scorecard({ navigate, params }) {
         </div>
         {players.map(player => (
           <div key={player} className="flex-1 py-3 px-1 text-center font-ui text-base font-semibold text-text">
-            {playerTotal(player) || '—'}
+            {playerTotal(game.scores, player) || '—'}
           </div>
         ))}
       </div>
@@ -249,7 +244,7 @@ export default function Scorecard({ navigate, params }) {
               {players.map(player => (
                 <div key={player} className="flex justify-between font-ui text-sm text-text">
                   <span>{player}</span>
-                  <span className="font-semibold">{playerTotal(player) || '—'}</span>
+                  <span className="font-semibold">{playerTotal(game.scores, player) || '—'}</span>
                 </div>
               ))}
             </div>

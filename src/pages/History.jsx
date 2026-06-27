@@ -1,24 +1,8 @@
 import { useState } from 'react'
 import PageHeader from '../components/PageHeader.jsx'
+import { formatShortDate } from '../utils/format.js'
+import { playerAverage, playerTotal } from '../utils/scores.js'
 import { deleteCompletedGame, getCompletedGames } from '../utils/storage.js'
-
-function formatShortDate(isoString) {
-  if (!isoString) return ''
-  return new Intl.DateTimeFormat('en-GB', {
-    day: 'numeric', month: 'short', year: 'numeric',
-  }).format(new Date(isoString))
-}
-
-function playerTotal(scores, player) {
-  const scored = (scores?.[player] ?? []).filter(s => s !== null)
-  return scored.reduce((sum, s) => sum + s, 0)
-}
-
-function playerAverage(scores, player) {
-  const scored = (scores?.[player] ?? []).filter(s => s !== null)
-  if (scored.length === 0) return null
-  return (scored.reduce((sum, s) => sum + s, 0) / scored.length).toFixed(1)
-}
 
 
 export default function History({ navigate }) {

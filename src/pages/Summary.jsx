@@ -1,27 +1,9 @@
 import { useState } from 'react'
 import { track } from '../utils/analytics.js'
+import { formatDate } from '../utils/format.js'
+import { playerAverage, playerTotal } from '../utils/scores.js'
 import { shareScorecard } from '../utils/share.js'
 import { getCompletedGames } from '../utils/storage.js'
-
-function formatDate(isoString) {
-  if (!isoString) return ''
-  return new Intl.DateTimeFormat('en-GB', {
-    day: 'numeric', month: 'long', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  }).format(new Date(isoString))
-}
-
-function playerTotal(scores, player) {
-  return (scores[player] ?? [])
-    .filter(s => s !== null)
-    .reduce((sum, s) => sum + s, 0)
-}
-
-function playerAverage(scores, player) {
-  const scored = (scores?.[player] ?? []).filter(s => s !== null)
-  if (scored.length === 0) return null
-  return (scored.reduce((sum, s) => sum + s, 0) / scored.length).toFixed(1)
-}
 
 export default function Summary({ navigate, params }) {
   const [sharing, setSharing] = useState(false)

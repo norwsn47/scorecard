@@ -8,11 +8,7 @@ const COLORS = {
   bgText: '#FAF7F0',
 }
 
-function playerTotal(scores, player) {
-  return (scores?.[player] ?? [])
-    .filter(s => s !== null)
-    .reduce((sum, s) => sum + s, 0)
-}
+import { playerTotal } from './scores.js'
 
 async function buildCanvas(game) {
   await document.fonts.ready
