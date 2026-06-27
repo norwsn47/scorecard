@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react'
 import CourseMapModal from '../components/CourseMapModal.jsx'
 import { track } from '../utils/analytics.js'
-import { getActiveGame } from '../utils/storage.js'
+import { getActiveGame, getCompletedGames } from '../utils/storage.js'
 
 export default function Home({ navigate }) {
   const [activeGame, setActiveGame] = useState(null)
+  const [hasHistory, setHasHistory] = useState(false)
   const [showMap, setShowMap]       = useState(false)
 
   useEffect(() => {
     setActiveGame(getActiveGame())
+    setHasHistory(getCompletedGames().length > 0)
   }, [])
 
   return (
@@ -61,25 +63,32 @@ export default function Home({ navigate }) {
 
         <button
           onClick={() => setShowMap(true)}
-          className="font-ui text-xs tracking-[0.15em] uppercase text-muted active:text-accent"
+          className="w-full py-4 px-6 rounded-md border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card"
         >
           View Course Map
         </button>
 
-        <button
-          onClick={() => navigate('history')}
-          className="w-full py-4 px-6 rounded-md border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card"
-        >
-          History
-        </button>
+        {hasHistory && (
+          <button
+            onClick={() => navigate('history')}
+            className="w-full py-4 px-6 rounded-md border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card"
+          >
+            History
+          </button>
+        )}
       </main>
 
       {/* ── Footer ── */}
-      <footer className="text-center pb-8 px-6">
-        <p className="font-ui text-text leading-tight">
+      <footer className="text-center pb-14 px-6">
+        <p className="font-ui text-text leading-tight inline-flex items-baseline gap-1">
           <span className="text-base font-bold">Scorecard</span>
           <span className="text-xs text-muted font-normal"> by </span>
-          <a href="https://outbuild.uk" target="_blank" rel="noopener noreferrer" className="text-xs text-muted font-normal underline underline-offset-2">Outbuild ↗</a>
+          <a href="https://outbuild.uk" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 text-xs text-muted font-normal underline underline-offset-2">
+            Outbuild
+            <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5 relative top-px">
+              <path d="M2 8L8 2M8 2H4M8 2V6" />
+            </svg>
+          </a>
         </p>
       </footer>
 

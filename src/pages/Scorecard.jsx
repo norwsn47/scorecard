@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import CourseMapModal from '../components/CourseMapModal.jsx'
 import { computeDisplayedHoles, finishGame } from '../utils/game.js'
 import { track } from '../utils/analytics.js'
@@ -11,6 +11,11 @@ export default function Scorecard({ navigate, params }) {
   const [showMap, setShowMap]         = useState(false)
   const [saveError, setSaveError]     = useState(false)
   const [activeCell, setActiveCell]   = useState({ holeIndex: 0, playerIndex: 0 })
+  const activeRowRef = useRef(null)
+
+  useEffect(() => {
+    activeRowRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  }, [activeCell.holeIndex])
 
   if (!game) {
     navigate('home')
@@ -77,7 +82,7 @@ export default function Scorecard({ navigate, params }) {
   }
 
   return (
-    <div className="min-h-screen bg-bg flex flex-col">
+    <div className="h-dvh bg-bg flex flex-col">
 
       {saveError && (
         <div className="bg-accent text-bg text-center font-ui text-xs py-2 px-4 tracking-wide">
@@ -131,7 +136,7 @@ export default function Scorecard({ navigate, params }) {
             {players.map((_, i) => <col key={i} />)}
           </colgroup>
 
-          <thead>
+          <thead className="sticky top-0 z-10">
             <tr className="border-b border-border bg-bg-card">
               <th className="py-2 px-2 text-center font-ui text-xs tracking-[0.12em] uppercase text-muted">
                 Hole
@@ -150,6 +155,7 @@ export default function Scorecard({ navigate, params }) {
               return (
                 <tr
                   key={holeIndex}
+                  ref={isActiveRow ? activeRowRef : null}
                   className={[
                     'border-b border-border',
                     isActiveRow ? 'bg-[rgba(184,85,48,0.05)]' : '',
