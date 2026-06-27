@@ -84,3 +84,8 @@ export function saveCompletedGame(game) {
   games.unshift(game) // most recent first
   return safeWrite(KEYS.COMPLETED_GAMES, games)
 }
+
+export function deleteCompletedGame(id) {
+  const games = getCompletedGames()
+  return safeWrite(KEYS.COMPLETED_GAMES, games.filter(g => g.id !== id))
+}
