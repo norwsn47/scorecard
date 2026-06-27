@@ -6,9 +6,8 @@ import { canStartGame, createGame, findDuplicateIndices } from '../utils/game.js
 const MAX_PLAYERS = 5
 
 export default function Setup({ navigate }) {
-  const [names, setNames] = useState([''])
-
-  const savedNames  = getPlayers()
+  const [names, setNames]         = useState([''])
+  const [savedNames]              = useState(() => getPlayers())
   const dupeIndices = findDuplicateIndices(names)
   const ready       = canStartGame(names, names.length)
 
