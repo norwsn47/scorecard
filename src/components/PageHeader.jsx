@@ -12,7 +12,7 @@ export default function PageHeader({ title, onBack, right = null }) {
         )}
       </div>
 
-      <h1 className="absolute inset-x-0 text-center font-display italic text-xl text-text pointer-events-none">
+      <h1 className="absolute inset-x-0 text-center font-display italic text-2xl text-text pointer-events-none">
         {title}
       </h1>
 

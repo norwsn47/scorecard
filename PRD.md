@@ -1,7 +1,7 @@
 # Product Requirements Document
 ## The Golf Tavern — Bruntsfield Links Scorecard App
 
-**Version:** 1.2 (MVP)
+**Version:** 1.3 (MVP)
 **Last updated:** June 2026
 
 ---
@@ -50,7 +50,7 @@ For the scorecard app, this palette is **flipped for outdoor sunlight legibility
 
 ### 4.2 Start a new game
 - User taps **New Game**
-- Selects number of players (1–4)
+- Adds players dynamically (1–6) — tap **Add Player** to add, tap **✕** to remove; names can be typed or selected from suggestions
 - Each player enters or selects a name
   - Names previously used are suggested from local browser storage
   - **Duplicate names are not allowed** — the app blocks starting if two players share the same name
@@ -66,7 +66,7 @@ For the scorecard app, this palette is **flipped for outdoor sunlight legibility
   - Active row gets a subtle warm tint across the full row
   - Any cell can be tapped directly to jump to it
 - Scores are entered via a **floating control bar** fixed to the bottom of the screen (never scrolls away):
-  - Large **−** button · large **+** button · **→** advance button — all right-aligned
+  - **Map** button (left) · large **−** button · large **+** button · **→** advance button — spread across the bar
   - A hole score has two states: **empty (—)** and **scored (1 or above)** — there is no zero
   - Tapping **+** on an empty cell sets it to 1; tapping **+** on a scored cell increments by 1
   - Tapping **−** on a cell showing 1 returns it to empty (—); tapping **−** on a cell showing 2+ decrements by 1
@@ -116,7 +116,7 @@ For the scorecard app, this palette is **flipped for outdoor sunlight legibility
 ## 6. Course
 
 - Single course: **Bruntsfield Links**, Edinburgh
-- Up to **24 holes**
+- Up to **36 holes**
 - UI includes a **"More courses coming soon"** placeholder where course selection will eventually live
 - No hole-level metadata (no par, no yardage, no difficulty rating) in MVP
 
