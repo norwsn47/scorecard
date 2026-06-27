@@ -14,13 +14,6 @@ function playerAverage(scores, player) {
   return (scored.reduce((sum, s) => sum + s, 0) / scored.length).toFixed(1)
 }
 
-function TrophyIcon() {
-  return (
-    <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-accent inline-block mr-1 relative -top-px">
-      <path fillRule="evenodd" d="M10 1a.75.75 0 0 1 .75.75v.5h3.5a.75.75 0 0 1 0 1.5h-.5v.75a4.25 4.25 0 0 1-3 4.065V9.5h1.25a.75.75 0 0 1 0 1.5H8a.75.75 0 0 1 0-1.5h1.25V8.565a4.25 4.25 0 0 1-3-4.065V3.75h-.5a.75.75 0 0 1 0-1.5h3.5v-.5A.75.75 0 0 1 10 1ZM6.25 3.75v.75a2.75 2.75 0 0 0 5.5 0v-.75h-5.5ZM7 12.25a.75.75 0 0 1 .75-.75h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1-.75-.75Zm-1 3a.75.75 0 0 1 .75-.75h6.5a.75.75 0 0 1 0 1.5h-6.5a.75.75 0 0 1-.75-.75Z" clipRule="evenodd" />
-    </svg>
-  )
-}
 
 export default function History({ navigate }) {
   const [games, setGames] = useState(() => getCompletedGames())
@@ -142,7 +135,6 @@ export default function History({ navigate }) {
                       className="flex items-center justify-between"
                     >
                       <div className="flex items-center">
-                        {isWinner && <TrophyIcon />}
                         <span
                           role="button"
                           tabIndex={0}
