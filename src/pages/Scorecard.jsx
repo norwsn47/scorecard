@@ -3,8 +3,9 @@ import { finishGame } from '../utils/game.js'
 import { clearActiveGame, getActiveGame, saveActiveGame, saveCompletedGame } from '../utils/storage.js'
 
 export default function Scorecard({ navigate, params }) {
-  const [game, setGame]           = useState(() => params?.game ?? getActiveGame())
+  const [game, setGame]             = useState(() => params?.game ?? getActiveGame())
   const [showConfirm, setShowConfirm] = useState(false)
+  const [saveError, setSaveError]   = useState(false)
 
   // Guard: if no game in state or storage, return to home
   if (!game) {
@@ -12,25 +13,32 @@ export default function Scorecard({ navigate, params }) {
     return null
   }
 
+  // Guard against malformed scores shape
+  const players = Array.isArray(game.players) ? game.players : []
+
   function updateScores(player, holeIndex, next) {
+    const currentRow = Array.isArray(game.scores?.[player]) ? game.scores[player] : []
     const newGame = {
       ...game,
       scores: {
         ...game.scores,
-        [player]: game.scores[player].map((s, i) => (i === holeIndex ? next : s)),
+        [player]: currentRow.map((s, i) => (i === holeIndex ? next : s)),
       },
     }
     setGame(newGame)
-    saveActiveGame(newGame)
+    const saved = saveActiveGame(newGame)
+    setSaveError(!saved)
   }
 
   function increment(player, holeIndex) {
-    const current = game.scores[player][holeIndex]
+    const currentRow = Array.isArray(game.scores?.[player]) ? game.scores[player] : []
+    const current = currentRow[holeIndex] ?? null
     updateScores(player, holeIndex, current === null ? 1 : current + 1)
   }
 
   function decrement(player, holeIndex) {
-    const current = game.scores[player][holeIndex]
+    const currentRow = Array.isArray(game.scores?.[player]) ? game.scores[player] : []
+    const current = currentRow[holeIndex] ?? null
     if (current === null || current <= 1) return
     updateScores(player, holeIndex, current - 1)
   }
@@ -50,6 +58,13 @@ export default function Scorecard({ navigate, params }) {
 
   return (
     <div className="min-h-screen bg-bg flex flex-col">
+
+      {/* Save error banner */}
+      {saveError && (
+        <div className="bg-accent text-bg text-center font-ui text-xs py-2 px-4 tracking-wide">
+          Could not save — storage may be full or blocked
+        </div>
+      )}
 
       {/* Header */}
       <header className="flex items-center justify-between px-5 pt-10 pb-4 border-b border-border">
@@ -75,7 +90,7 @@ export default function Scorecard({ navigate, params }) {
               <th className="py-2 px-3 text-left font-ui text-xs tracking-[0.12em] uppercase text-muted w-12">
                 Hole
               </th>
-              {game.players.map(player => (
+              {players.map(player => (
                 <th
                   key={player}
                   className="py-2 px-3 text-center font-ui text-xs tracking-[0.12em] uppercase text-muted max-w-[90px]"
@@ -92,8 +107,8 @@ export default function Scorecard({ navigate, params }) {
                 <td className="py-2 px-3 font-ui text-xs text-muted text-left">
                   {holeIndex + 1}
                 </td>
-                {game.players.map(player => {
-                  const score = game.scores[player][holeIndex]
+                {players.map(player => {
+                  const score = (game.scores?.[player] ?? [])[holeIndex] ?? null
                   const isNull = score === null
                   const atMin  = score !== null && score <= 1
                   return (
@@ -130,7 +145,7 @@ export default function Scorecard({ navigate, params }) {
               <td className="py-3 px-3 font-ui text-xs tracking-[0.12em] uppercase text-muted">
                 Total
               </td>
-              {game.players.map(player => (
+              {players.map(player => (
                 <td key={player} className="py-3 px-3 text-center font-ui text-base font-semibold text-text">
                   {playerTotal(player) || '—'}
                 </td>
@@ -151,7 +166,7 @@ export default function Scorecard({ navigate, params }) {
             </p>
 
             <div className="space-y-2 mb-8">
-              {game.players.map(player => (
+              {players.map(player => (
                 <div key={player} className="flex justify-between font-ui text-sm text-text">
                   <span>{player}</span>
                   <span className="font-semibold">{playerTotal(player) || '—'}</span>

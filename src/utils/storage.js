@@ -1,3 +1,17 @@
+/**
+ * Returns false in private browsing or when the user has blocked storage.
+ */
+export function isStorageAvailable() {
+  try {
+    const k = '__gt_test__'
+    localStorage.setItem(k, '1')
+    localStorage.removeItem(k)
+    return true
+  } catch {
+    return false
+  }
+}
+
 const KEYS = {
   PLAYERS:         'gt_players',
   ACTIVE_GAME:     'gt_active_game',

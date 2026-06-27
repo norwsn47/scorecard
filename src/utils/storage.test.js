@@ -4,6 +4,7 @@ import {
   getActiveGame,
   getCompletedGames,
   getPlayers,
+  isStorageAvailable,
   saveActiveGame,
   saveCompletedGame,
   savePlayers,
@@ -11,6 +12,14 @@ import {
 
 beforeEach(() => {
   localStorage.clear()
+})
+
+// ── isStorageAvailable ────────────────────────────────────────────────────────
+
+describe('isStorageAvailable', () => {
+  it('returns true in jsdom (normal environment)', () => {
+    expect(isStorageAvailable()).toBe(true)
+  })
 })
 
 // ── Players ──────────────────────────────────────────────────────────────────
