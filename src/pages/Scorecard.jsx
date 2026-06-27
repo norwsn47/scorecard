@@ -5,13 +5,28 @@ import { computeDisplayedHoles, finishGame } from '../utils/game.js'
 import { playerTotal } from '../utils/scores.js'
 import { clearActiveGame, getActiveGame, saveActiveGame, saveCompletedGame } from '../utils/storage.js'
 
+function initialCellFor(g) {
+  if (!g) return { holeIndex: 0, playerIndex: 0 }
+  const ps = g.players ?? []
+  for (let h = 0; h < g.holes; h++) {
+    for (let p = 0; p < ps.length; p++) {
+      if ((g.scores?.[ps[p]]?.[h] ?? null) === null) return { holeIndex: h, playerIndex: p }
+    }
+  }
+  return { holeIndex: 0, playerIndex: 0 }
+}
+
 export default function Scorecard({ navigate, params }) {
-  const [game, setGame]               = useState(() => params?.game ?? getActiveGame())
+  const [[initialGame, initialCell]]  = useState(() => {
+    const g = params?.game ?? getActiveGame()
+    return [g, initialCellFor(g)]
+  })
+  const [game, setGame]               = useState(initialGame)
   const [showConfirm, setShowConfirm] = useState(false)
 
   const [showMap, setShowMap]         = useState(false)
   const [saveError, setSaveError]     = useState(false)
-  const [activeCell, setActiveCell]   = useState({ holeIndex: 0, playerIndex: 0 })
+  const [activeCell, setActiveCell]   = useState(initialCell)
   const activeRowRef = useRef(null)
 
   useEffect(() => {
