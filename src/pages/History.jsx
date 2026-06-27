@@ -27,7 +27,7 @@ export default function History({ navigate }) {
       <header className="flex items-center px-5 pt-12 pb-5 border-b border-border">
         <button
           onClick={() => navigate('home')}
-          className="text-muted font-ui text-sm tracking-[0.08em] uppercase mr-4"
+          className="py-2 text-muted font-ui text-sm tracking-[0.08em] uppercase mr-4"
         >
           ← Back
         </button>

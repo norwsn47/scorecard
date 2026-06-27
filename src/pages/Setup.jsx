@@ -54,7 +54,7 @@ export default function Setup({ navigate }) {
       <header className="flex items-center px-5 pt-12 pb-6">
         <button
           onClick={() => navigate('home')}
-          className="text-muted font-ui text-sm tracking-[0.08em] uppercase mr-auto"
+          className="py-2 text-muted font-ui text-sm tracking-[0.08em] uppercase mr-auto"
         >
           ← Back
         </button>

@@ -68,11 +68,11 @@ export default function Summary({ navigate, params }) {
                 <th
                   key={player}
                   className={[
-                    'py-2 px-3 text-center font-ui text-xs tracking-[0.12em] uppercase',
+                    'py-2 px-3 text-center font-ui text-xs tracking-[0.12em] uppercase max-w-[90px]',
                     isWinner(player) ? 'text-accent font-semibold' : 'text-muted',
                   ].join(' ')}
                 >
-                  {player}
+                  <span className="block truncate">{player}</span>
                   {isDnf(player) && <span className="block text-muted normal-case tracking-normal font-normal">DNF</span>}
                 </th>
               ))}

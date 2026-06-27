@@ -40,7 +40,7 @@ export default function Home({ navigate }) {
             className="w-full py-3 px-4 rounded-md border border-accent text-accent font-ui text-sm tracking-[0.08em] uppercase font-medium flex items-center justify-between"
           >
             <span>Resume Game</span>
-            <span className="text-xs text-muted normal-case tracking-normal font-normal">
+            <span className="text-xs text-muted normal-case tracking-normal font-normal truncate max-w-[160px]">
               {activeGame.players?.join(', ')}
             </span>
           </button>

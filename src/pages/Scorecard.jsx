@@ -61,7 +61,7 @@ export default function Scorecard({ navigate, params }) {
         </div>
         <button
           onClick={() => setShowConfirm(true)}
-          className="py-2 px-4 rounded-md bg-accent text-bg font-ui text-xs tracking-[0.1em] uppercase font-semibold shadow-btn"
+          className="py-2.5 px-5 rounded-md bg-accent text-bg font-ui text-xs tracking-[0.1em] uppercase font-semibold shadow-btn"
         >
           Finish
         </button>
@@ -78,9 +78,9 @@ export default function Scorecard({ navigate, params }) {
               {game.players.map(player => (
                 <th
                   key={player}
-                  className="py-2 px-3 text-center font-ui text-xs tracking-[0.12em] uppercase text-muted"
+                  className="py-2 px-3 text-center font-ui text-xs tracking-[0.12em] uppercase text-muted max-w-[90px]"
                 >
-                  {player}
+                  <span className="block truncate">{player}</span>
                 </th>
               ))}
             </tr>
@@ -103,7 +103,7 @@ export default function Scorecard({ navigate, params }) {
                           onClick={() => decrement(player, holeIndex)}
                           disabled={isNull || atMin}
                           aria-label={`Decrease ${player} hole ${holeIndex + 1}`}
-                          className="w-8 h-8 rounded-full border border-border font-ui text-base text-text flex items-center justify-center disabled:opacity-30 active:bg-bg-card"
+                          className="w-11 h-11 rounded-full border border-border font-ui text-base text-text flex items-center justify-center disabled:opacity-30 active:bg-bg-card"
                         >
                           −
                         </button>
@@ -113,7 +113,7 @@ export default function Scorecard({ navigate, params }) {
                         <button
                           onClick={() => increment(player, holeIndex)}
                           aria-label={`Increase ${player} hole ${holeIndex + 1}`}
-                          className="w-8 h-8 rounded-full border border-border font-ui text-base text-text flex items-center justify-center active:bg-bg-card"
+                          className="w-11 h-11 rounded-full border border-border font-ui text-base text-text flex items-center justify-center active:bg-bg-card"
                         >
                           +
                         </button>
