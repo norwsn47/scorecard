@@ -45,7 +45,7 @@ async function buildCanvas(game) {
   ctx.fillStyle = COLORS.text
   ctx.font = 'italic 26px "Cormorant Garamond", Georgia, serif'
   ctx.textAlign = 'left'
-  ctx.fillText('The Golf Tavern', PAD, 46)
+  ctx.fillText('Scorecard', PAD, 46)
 
   ctx.fillStyle = COLORS.muted
   ctx.font = '10px Inter, system-ui, sans-serif'
@@ -153,13 +153,13 @@ export async function shareScorecard(game) {
     canvas.toBlob(async blob => {
       if (!blob) { reject(new Error('Failed to generate image')); return }
 
-      const file = new File([blob], 'golf-tavern-scorecard.png', { type: 'image/png' })
+      const file = new File([blob], 'scorecard.png', { type: 'image/png' })
 
       if (navigator.canShare?.({ files: [file] })) {
         try {
           await navigator.share({
             files: [file],
-            title: 'Golf Tavern — Bruntsfield Links',
+            title: 'Scorecard — Bruntsfield Links',
           })
           resolve('shared')
         } catch (e) {
@@ -170,7 +170,7 @@ export async function shareScorecard(game) {
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
         a.href = url
-        a.download = 'golf-tavern-scorecard.png'
+        a.download = 'scorecard.png'
         a.click()
         setTimeout(() => URL.revokeObjectURL(url), 1000)
         resolve('downloaded')
