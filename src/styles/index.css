@@ -45,6 +45,7 @@
 @media (min-width: 431px) {
   html {
     background-color: #E8E2D6;
+    font-size: 18px;
   }
 
   .app-shell {
