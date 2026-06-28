@@ -31,10 +31,10 @@ export default function Home({ navigate }) {
 
         <div className="w-10 h-0.5 bg-accent mx-auto mt-6 mb-6" />
 
-        <div className="text-center space-y-1">
-          <p className="font-ui text-sm text-muted">Simple, no fuss.</p>
-          <p className="font-ui text-sm text-muted">Track every hole as you play.</p>
-          <p className="font-ui text-sm text-muted">Your round saved automatically.</p>
+        <div className="space-y-2">
+          <p className="font-ui text-sm text-muted flex gap-3"><span className="text-accent font-semibold">1</span>Simple, no fuss — no login required.</p>
+          <p className="font-ui text-sm text-muted flex gap-3"><span className="text-accent font-semibold">2</span>Track every hole as you play.</p>
+          <p className="font-ui text-sm text-muted flex gap-3"><span className="text-accent font-semibold">3</span>Your round saved automatically.</p>
         </div>
       </header>
 
