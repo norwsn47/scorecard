@@ -53,12 +53,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 32px 0;
+    padding: 48px 0;
   }
 
   .app-shell {
-    /* constrain to phone proportions — never taller than the viewport */
-    height: min(844px, calc(100dvh - 64px));
+    /* fixed phone dimensions — never resize between pages */
+    width: 390px;
+    flex-shrink: 0;
+    /* phone proportions with generous space above and below */
+    height: min(780px, calc(100dvh - 96px));
     border-radius: 44px;
     /* dark bezel ring + drop shadow */
     box-shadow:
