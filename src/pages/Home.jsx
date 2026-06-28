@@ -18,14 +18,8 @@ export default function Home({ navigate }) {
 
       {/* ── Branding ── */}
       <header className="flex-1 flex flex-col items-center justify-center px-6 pt-16 pb-8">
-        <div className="flex items-center gap-3 mb-8 w-full max-w-xs">
-          <div className="flex-1 h-px bg-border" />
-          <span className="text-accent text-xs tracking-[0.2em] uppercase font-ui">Est. 1456</span>
-          <div className="flex-1 h-px bg-border" />
-        </div>
-
         <h1 className="font-display text-5xl italic text-text leading-tight text-center">
-          The Golf Tavern
+          Scorecard
         </h1>
 
         <button
@@ -35,7 +29,13 @@ export default function Home({ navigate }) {
           Bruntsfield Links · Edinburgh
         </button>
 
-        <div className="w-10 h-0.5 bg-accent mx-auto mt-6" />
+        <div className="w-10 h-0.5 bg-accent mx-auto mt-6 mb-6" />
+
+        <div className="text-center space-y-1">
+          <p className="font-ui text-sm text-muted">Simple, no fuss.</p>
+          <p className="font-ui text-sm text-muted">Track every hole as you play.</p>
+          <p className="font-ui text-sm text-muted">Your round saved automatically.</p>
+        </div>
       </header>
 
       {/* ── Actions ── */}
