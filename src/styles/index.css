@@ -57,11 +57,10 @@
   }
 
   .app-shell {
-    /* fixed phone dimensions — never resize between pages */
+    /* fixed iPhone 14 dimensions — aspect ratio locked */
     width: 390px;
+    height: 844px;
     flex-shrink: 0;
-    /* phone proportions with generous space above and below */
-    height: min(780px, calc(100dvh - 96px));
     border-radius: 44px;
     /* dark bezel ring + drop shadow */
     box-shadow:
