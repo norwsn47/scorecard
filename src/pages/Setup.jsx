@@ -124,7 +124,16 @@ export default function Setup({ navigate }) {
           </button>
         )}
 
-        <div className="pt-5">
+        <div className="pt-2 pb-1 text-center">
+          <button
+            onClick={() => navigate('rules', { from: 'setup' })}
+            className="font-ui text-xs text-muted underline underline-offset-2 active:text-text"
+          >
+            Course rules
+          </button>
+        </div>
+
+        <div className="pt-3">
           <button
             onClick={handleStart}
             disabled={!ready}

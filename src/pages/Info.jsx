@@ -21,6 +21,19 @@ export default function Info({ navigate }) {
 
         <div className="w-8 h-0.5 bg-border" />
 
+        {/* Rules */}
+        <section className="space-y-3">
+          <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted">Course</p>
+          <button
+            onClick={() => navigate('rules', { from: 'info' })}
+            className="font-ui text-sm text-accent underline underline-offset-2 active:opacity-70"
+          >
+            Course rules
+          </button>
+        </section>
+
+        <div className="w-8 h-0.5 bg-border" />
+
         {/* About */}
         <section className="space-y-3">
           <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted">About</p>
