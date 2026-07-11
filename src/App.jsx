@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import CourseInfo from './pages/CourseInfo.jsx'
 import History    from './pages/History.jsx'
 import Home       from './pages/Home.jsx'
 import Podium     from './pages/Podium.jsx'
@@ -15,7 +14,6 @@ const PAGES = {
   podium:     Podium,
   summary:    Summary,
   history:    History,
-  courseinfo: CourseInfo,
 }
 
 export default function App() {

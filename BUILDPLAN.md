@@ -1,8 +1,8 @@
 # Build Plan
 ## Scorecard by Outbuild — Bruntsfield Links
 
-**Version:** 1.1
-**Last updated:** 8 July 2026
+**Version:** 1.2
+**Last updated:** 11 July 2026
 **Stack:** Vite + React · Tailwind CSS · localStorage · Cloudflare Pages
 
 Each chunk should be built, reviewed, tested, and committed before moving to the next.
@@ -278,16 +278,41 @@ No chunk depends on unverified work from a previous chunk.
 
 ## Chunk 14 — Share scorecard
 **Status: Not started**
+**Depends on: Chunks 6, 11, 18 — game naming (Chunk 18) must be complete before this chunk starts.**
 
-**Goal:** Players can share or save the completed scorecard after a game. (Originally backlog item 1.)
+**Goal:** Generate a branded share image and trigger the native device share sheet at the end of a game. (PRD 4.7. Originally backlog item 1.)
 
-- On the summary / podium screen, offer a share option:
-  - Generate a branded scorecard image (canvas or html-to-image)
-  - Trigger native browser share sheet on mobile (Web Share API)
-  - Fallback: download as PNG if share API unavailable
-- Scorecard image should look like a branded Outbuild scorecard — not a screenshot of the UI
+**Share button:**
+- Appears on the end-of-game summary screen (after the podium)
+- Tapping generates a PNG and triggers the native Web Share API on mobile
+- Fallback: download as PNG if the share API is unavailable (desktop browsers)
 
-**Verify:** Share sheet opens on mobile. Image downloads correctly on desktop. Scorecard image is readable and on-brand.
+**Share image layout (top to bottom):**
+- "Bruntsfield Links" — main heading in bold
+- Outbuild logo mark — directly below the heading
+- Game name — shown below the logo mark, only if one was set (Chunk 18); omitted if no name
+- Winner callout:
+  - Single winner: "Winner: [Name] — [X] strokes"
+  - Tied: "Tied: [Name] and [Name] — [X] strokes" (three-way: "[Name], [Name], and [Name]")
+  - All players DNF: "No winner — all players DNF"
+- Full hole-by-hole scorecard table:
+  - Columns = players; rows = holes; cells = stroke count
+  - Totals row at the bottom of each column
+  - Average strokes per hole in brackets next to each total (calculated over that player's completed holes only)
+  - DNF players marked as DNF in their totals row
+- No maximum height — image extends to fit all holes played
+
+**Sizing and layout:**
+- Image width targets 390px — fills a standard phone screen when opened as an image
+- Font sizes scaled for legibility as a standalone image on mobile
+- Column count and font size adapt to number of players (1–6) — content is always readable, never squashed
+
+**OG preview image:**
+- Replace `public/og-image.png` with a static branded card in the app's cream and terracotta palette
+- Text reads "Scorecard by Outbuild — Bruntsfield Links"
+- Not a scorecard screenshot — a clean brand card only
+
+**Verify:** Share sheet opens on iOS Safari and Android Chrome. PNG downloads correctly on desktop. Image layout correct for 1, 2, 3, 4, 5, and 6 players. Winner callout handles all three states correctly. Game name shown when set, absent when not set. DNF players correctly marked. OG image replaced and correct.
 
 ---
 
@@ -305,7 +330,143 @@ No chunk depends on unverified work from a previous chunk.
 
 ---
 
+## Wave 2 — New chunks (July 2026)
+
+Added from PRD v1.5. The hotfix runs before everything else. Chunks 16–20 are independent of each other and can be built in any order, with one constraint: Chunk 18 must be complete before Chunk 14 starts. Chunk 8 (Polish) gates on all feature chunks being present — it runs after all of wave 2.
+
+---
+
+## Hotfix H1 — Golf Tavern copy fix
+**Status: Not started**
+**Do this before any other wave 2 work.**
+
+**Goal:** Remove a stale brand name from the live app.
+
+- `src/pages/CourseInfo.jsx` line 8: user-facing copy reads "Golf Tavern" — correct it to the current brand name
+- One-line change — does not require the full build cycle, but does go through the code review gate before being pushed
+- Push immediately once the fix is confirmed
+
+**Verify:** "Golf Tavern" no longer appears anywhere in the app. The correct name is displayed on the CourseInfo page on a real device.
+
+---
+
+## Chunk 16 — Stroke limit cap
+**Status: Not started**
+**Depends on: Chunk 5**
+
+**Goal:** Enforce the app's hard cap of 14 strokes per hole in the scoring UI. (PRD 4.3)
+
+- The **+** button must be visually disabled and non-functional once a cell reaches 14 strokes
+- This is the app's practical cap — intentionally higher than the official 7-stroke course rule, which is displayed verbatim in Course Rules (Chunk 20)
+- Review current scoring logic: confirm no score above 14 can be entered via any code path (direct tap, rapid tap, value from storage, etc.)
+- If the cap is already implemented, verify it works correctly and document that this chunk is confirmed — do not assume it was built correctly without testing it
+
+**Verify:** Cannot score above 14 on any hole via any interaction. **+** button is visually disabled at 14. Decrement from 14 works normally. No way to write a value above 14 into local storage via the UI.
+
+---
+
+## Chunk 17 — App state on close
+**Status: Not started**
+**Depends on: Chunks 2, 5**
+
+**Goal:** Reopening the app with a game in progress bypasses the home screen and restores the exact previously-active cell. (PRD 4.3)
+
+- On app load: check local storage for an active game
+- If an active game exists: navigate directly to the scorecard, skipping the home screen entirely
+- Restore focus to the exact cell that was active when the app was closed — this requires persisting the active cell (player index and hole index) to local storage on every change, not just the scores
+- If no active game: show the home screen as normal
+- Update local storage schema if needed: add `activeCellPlayer` and `activeCellHole` fields to the active game object in the storage service (Chunk 2)
+- The home screen Resume Game prompt is a separate behaviour — it applies when the user navigates back to home mid-game, not on a fresh app open
+
+**Verify:** Close the browser mid-game with a specific cell active. Reopen the app. Confirm it navigates directly to the scorecard. Confirm the correct cell is highlighted (not defaulting to Hole 1 / Player 1). Test with the browser fully closed, not just navigated away from the page.
+
+---
+
+## Chunk 18 — Game naming
+**Status: Not started**
+**Depends on: Chunks 4, 5, 7**
+**Must be complete before Chunk 14 (share scorecard) starts.**
+
+**Goal:** Optional game name, pre-populated with the current day and date, visible throughout the app. (PRD 4.2)
+
+**New game setup screen:**
+- Add a game name field at the top of the setup screen, above the player name fields
+- Pre-populate with the current day and date in the format "Saturday 11 July" (day name + day number + month, no year)
+- A subtle hint makes clear the field is optional
+- If the field is cleared entirely, the game saves without a name — no validation error, no placeholder name
+
+**Scorecard header:**
+- If a game name is set, display it in the scorecard header during play
+
+**History list:**
+- Named games: show the game name as the primary identifier
+- Unnamed games (whether saved before this chunk or intentionally left blank): show the date as the primary identifier
+- Old saved games that predate this chunk have no `gameName` field — they must not break the History screen
+
+**Resume Game prompt:**
+- If a game name is set, include it in the Resume Game prompt on the home screen
+
+**Storage:**
+- Add `gameName` field to the active game and completed game objects
+- Must be backward-compatible: treat missing `gameName` as no name set
+
+**Verify:** Game name pre-populated correctly on setup screen. Can edit or clear the name. Named game shows name in header, History list, and Resume prompt. Unnamed game shows date in History. Old saved games (no `gameName` field) do not break History. Name persists correctly through play, finish, and reload.
+
+---
+
+## Chunk 19 — Information page
+**Status: Not started**
+**Depends on: Chunk 3**
+
+**Goal:** Passive-access information page explaining local data use and crediting Outbuild. (PRD 4.8)
+
+**Home screen change:**
+- Add a small **ⓘ** icon to the top-right corner of the home screen
+- Tapping it opens the information page
+- No first-launch prompt — passive access only, always available
+
+**Information page content (verbatim or close to it):**
+- Plain-English data explanation:
+  - Player names, game scores, and dates are stored locally on the user's device in browser local storage
+  - No data is ever sent to a server
+  - No tracking, no analytics, and no third-party services are used in this version of the app
+- Credit line: "Scorecard is made by Outbuild, a small design collective based in Edinburgh."
+- Contact link: `mailto:williamadamgriffiths@gmail.com` — tapping opens a pre-addressed email in the device's mail client
+
+**Note for maintainers:** When Chunk 15 (Analytics) is added, both PRD 4.8 and this in-app disclaimer text must be updated to reflect what data is collected and by whom.
+
+**Verify:** ⓘ icon visible on home screen. Tapping it opens the information page. All content matches PRD 4.8. Contact link opens the mail client with the correct address. Back navigation returns to home. Page styled consistently with the rest of the app.
+
+---
+
+## Chunk 20 — Course rules
+**Status: Not started**
+**Depends on: Chunks 3, 12**
+
+**Goal:** Verbatim course rules text, accessible from the home screen and from within the Map overlay mid-game. (PRD 4.9)
+
+**Home screen change:**
+- Add a **Rules** text link below the New Game and History buttons (and below the Resume Game prompt if one is showing)
+- Tapping it opens the rules view
+
+**Map overlay change:**
+- Add a **Rules** tab to the existing Map overlay (Chunk 12), accessible mid-game without leaving the scorecard
+- The rules content is the same regardless of which entry point is used
+
+**Rules content:**
+- Display the verbatim rules text from PRD 4.9 — do not rephrase or restructure
+- Typography and visual styling are the only permitted adaptations
+- The rules text includes: Rule 3 (max 4 players) and Rule 4 (stroke limit 7 per hole)
+  - Rule 3: displayed as information only — the app permits 1–6 players and does not enforce this limit
+  - Rule 4: displayed verbatim — the app's own scoring cap is 14 strokes (Chunk 16), intentionally higher than the official 7; both values are distinct and correct
+
+**Verify:** Rules link visible on home screen, below New Game and History. Rules tab visible inside the Map overlay. Rules text matches PRD 4.9 verbatim. No enforcement logic added. Both entry points open the same rules content. Styling is readable and consistent with the rest of the app.
+
+---
+
 ## Chunk order summary
+
+Table is shown in recommended execution order. Done chunks are listed first; wave 2 items follow in the order they should be built; existing not-started chunks close out the sequence.
 
 | Chunk | What | Depends on | Status |
 |-------|------|------------|--------|
@@ -316,11 +477,17 @@ No chunk depends on unverified work from a previous chunk.
 | 5 | Scorecard | 2, 4 | Done |
 | 6 | Game summary | 5 | Done |
 | 7 | History screen | 2, 6 | Done |
-| 8 | Polish & edge cases | 3–7 | Not started |
-| 9 | Error handling | 8 | Not started |
-| 10 | Security & pre-launch | 9 | Not started |
 | 11 | Podium screen | 5 | Done |
 | 12 | Course map | 3, 5 | Done |
 | 13 | Outbuild attribution mark | 3 | Done |
-| 14 | Share scorecard | 6, 11 | Not started |
+| HF-1 | Golf Tavern copy hotfix | — | Not started |
+| 16 | Stroke limit cap | 5 | Not started |
+| 17 | App state on close | 2, 5 | Not started |
+| 18 | Game naming | 4, 5, 7 | Not started |
+| 19 | Information page | 3 | Not started |
+| 20 | Course rules | 3, 12 | Not started |
+| 14 | Share scorecard | 6, 11, 18 | Not started |
+| 8 | Polish & edge cases | All features | Not started |
+| 9 | Error handling | 8 | Not started |
+| 10 | Security & pre-launch | 9 | Not started |
 | 15 | Analytics | 10 | Not started |

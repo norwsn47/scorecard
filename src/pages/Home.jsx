@@ -22,12 +22,9 @@ export default function Home({ navigate }) {
           Scorecard
         </h1>
 
-        <button
-          onClick={() => navigate('courseinfo')}
-          className="font-ui text-xs tracking-[0.25em] uppercase text-muted mt-3 text-center active:text-accent"
-        >
+        <p className="font-ui text-xs tracking-[0.25em] uppercase text-muted mt-3 text-center">
           Bruntsfield Links · Edinburgh
-        </button>
+        </p>
 
         <div className="w-10 h-0.5 bg-accent mx-auto mt-6 mb-6" />
 

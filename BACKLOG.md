@@ -1,7 +1,7 @@
 # Backlog
 ## Scorecard by Outbuild — Bruntsfield Links
 
-Last updated: 8 July 2026
+Last updated: 11 July 2026
 
 Items below are logged for future consideration. None are implemented.
 
@@ -12,3 +12,27 @@ Items previously in this backlog that have moved into the build plan: Podium (Ch
 ### 1. All-time leaderboard
 
 A screen showing top scores and records across all games ever played (lowest round, most wins per player, etc.). Requires database — post-MVP only. Blocked until backend storage is added.
+
+Related PRD section: 8 (Future considerations)
+
+---
+
+### 2. Contact email — switch to hello@outbuild.co via Resend
+
+**Status: On pause — blocked pending Resend setup**
+
+The information page (PRD 4.8) currently uses williamadamgriffiths@gmail.com as a placeholder contact email. Once hello@outbuild.co is configured via Resend, the mailto: link in the information page must be updated to that address.
+
+Action required when ready: configure Resend, verify hello@outbuild.co, then update the contact link in the information page component.
+
+Related PRD section: 4.8 (Information page)
+
+---
+
+### 3. package.json internal rename
+
+**Status: Low priority — no user impact**
+
+The npm package name is currently "golf-tavern-scorecard" (package.json line 2). This is an internal identifier only — not user-facing. Rename to "scorecard-by-outbuild" or similar when convenient, as part of routine housekeeping.
+
+No PRD section — housekeeping only.
