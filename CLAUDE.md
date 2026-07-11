@@ -1,12 +1,42 @@
 # CLAUDE.md
+Last updated: 11 July 2026
 > Ground rules for this project. Read this at the start of every session.
+> Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
 ---
 
 ## Project context
-This is a personal golf score tracking app, built on a work laptop.
-The project lives in a dedicated folder (e.g. `~/Projects/golf-tracker`).
+This is an Outbuild project, built on a work laptop.
+The project lives in a dedicated folder (e.g. `~/Projects/[project-name]`).
 Tech stack is TBD — stack decisions will be made in Phase 2 before any code is written.
+
+---
+
+## Agent setup
+This project uses a set of specialist agents located in `.claude/agents/`:
+- **project-manager** — start every session with this agent
+- **product-owner** — owns PRD.md and BACKLOG.md
+- **design-director** — produces DESIGN.md at step 2.4
+- **frontend-developer** — builds UI, always reads DESIGN.md first
+- **backend-developer** — builds APIs, database, auth, integrations
+- **code-reviewer** — runs the pre-push gate after every chunk
+- **debugger** — invoked when something is broken and needs root-cause investigation
+- **performance-auditor** — runs after scaffolding (baseline) and before launch
+
+The following project documents live in the root and must be kept current:
+`CLAUDE.md` · `PRD.md` · `BUILDPLAN.md` · `DESIGN.md` · `BACKLOG.md`
+
+**Date rule:** Whenever any agent edits a project document, it must update the `Last updated:` line at the top of that file to today's date before saving.
+
+---
+
+## Design principles
+This project follows the Outbuild design language. Before writing any UI code, read:
+- `.outbuild/OUTBUILD-PRINCIPLES.md` — product philosophy
+- `.outbuild/OUTBUILD-DESIGN-LANGUAGE.md` — transferable design principles
+- `DESIGN.md` — project-specific tokens (created at step 2.4)
+
+Do not invent a visual style. Do not default to generic patterns. Follow the principles.
 
 ---
 
@@ -20,6 +50,7 @@ Tech stack is TBD — stack decisions will be made in Phase 2 before any code is
 - For small, obvious changes (typos, single-line fixes): go ahead.
 - For anything significant — modifying multiple files, changing structure, adding new patterns, touching config — **show what you plan to do and wait for confirmation before doing it.**
 - Never make silent edits. If something changed, say so.
+- One change at a time. Confirm it works before moving on.
 - If you weren't able to run or test something, say so explicitly. Don't claim it works unless it was verified.
 
 ---
@@ -38,16 +69,46 @@ Tech stack is TBD — stack decisions will be made in Phase 2 before any code is
 
 ---
 
-## Git
-- **Never run `git push` automatically.** Always confirm before anything leaves the local machine.
-- Use branches for any significant work. Name them clearly: `feat/`, `fix/`, or `chore/` prefix, descriptive enough to understand from the branch list alone.
+## Version control
+This project's version control mode is set during setup. Check the project-specific rules section at the bottom of this file for the confirmed mode. If nothing is set, ask the user before assuming anything.
+
+**Mode A — No git (local files only)**
+- No git commands. No commits, no branches, no push.
+- Save checkpoints by asking the user to manually copy the folder if they want a backup.
+- The pre-push gate does not apply. The code-reviewer still runs static analysis and rendering verification, and the human review step still applies — but there is no commit or push at the end.
+
+**Mode B — Git local (version control, no remote)**
+- Use git for local commits and branches. No `git push` — ever.
+- Use branches for all significant work: `feat/`, `fix/`, `chore/`, `refactor/`, `security/` prefix.
+- Commit after every verified chunk — each commit is a safe point to return to.
 - Never merge to `main` without explicit sign-off.
-- Commit after every verified chunk of work — each commit should be a safe point to return to.
+- The pre-push gate applies up to and including the human review and document update steps. No push step.
+
+**Mode C — Git + GitHub (full setup)**
+- Full git workflow with remote. All Mode B rules apply, plus:
+- **Never run `git push` automatically.** Always confirm before anything leaves the local machine.
+- **Never push to main.** Every push goes to a new named branch.
+- The full pre-push gate applies including branch confirmation and push.
+
+---
+
+## Pre-push gate
+*Applies to Mode B (up to step 5) and Mode C (all steps). Does not apply to Mode A.*
+
+Before any chunk is finalised, the following runs in order:
+1. code-reviewer runs static analysis — Critical findings block completion
+2. code-reviewer runs rendering verification — dev server started, tests run, routes checked
+3. Human reviews the running app at localhost and confirms before proceeding
+4. product-owner runs PRD alignment check — conflicts block completion
+5. All project documents updated (BUILDPLAN.md, PRD.md, BACKLOG.md, DESIGN.md)
+6. *(Mode C only)* Branch name confirmed — then push runs
+
+This gate is mandatory for all modes. Step 6 only applies if using GitHub.
 
 ---
 
 ## Uncertainty
-- Distinguish clearly between what is **verified** (tested and confirmed), **assumed** (reasonable but untested), and **estimated** (a guess).
+- Distinguish clearly between what is **Verified** (tested and confirmed), **Assumed** (reasonable but untested), and **Estimated** (a guess).
 - Never present an assumption as a fact.
 - If you're unsure about something, ask — don't fill the gap silently.
 
@@ -66,3 +127,15 @@ After every significant task, provide a short summary covering:
 ## Notes
 - Stack is TBD — do not assume any framework, database, or tooling until decisions are confirmed in Phase 2.
 - This is a personal project on a work machine. Err on the side of caution with anything that touches system-level settings, global installs, or network calls.
+- Update this file if project-specific rules need to be added below.
+
+---
+
+## Project-specific rules
+<!-- Add any rules specific to this project below this line -->
+
+<!-- VERSION CONTROL MODE — set this during setup -->
+<!-- Uncomment the line that applies:              -->
+<!-- Version control: none (Mode A — local files only) -->
+<!-- Version control: git local (Mode B — no remote)   -->
+Version control: git + GitHub (Mode C — full)
