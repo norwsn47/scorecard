@@ -317,16 +317,9 @@ No chunk depends on unverified work from a previous chunk.
 ---
 
 ## Chunk 15 — Analytics
-**Status: Not started**
+**Status: Moved to backlog**
 
-**Goal:** Track meaningful usage without cookie consent requirements. (Originally backlog item 5.)
-
-- Confirm Cloudflare Pages built-in analytics are active for basic traffic data
-- Evaluate and integrate a privacy-friendly product analytics tool (Plausible, Fathom, or PostHog)
-- Track in-app events already instrumented: New Game Started, Game Completed (with player count and holes played)
-- Confirm: no cookie consent banner required
-
-**Verify:** Events fire correctly in production. No PII collected. No consent banner needed. Cloudflare analytics active.
+Moved back to BACKLOG.md (item 4). Not required for launch.
 
 ---
 
@@ -490,4 +483,4 @@ Table is shown in recommended execution order. Done chunks are listed first; wav
 | 8 | Polish & edge cases | All features | Done |
 | 9 | Error handling | 8 | Done |
 | 10 | Security & pre-launch | 9 | Done |
-| 15 | Analytics | 10 | Not started |
+| 15 | Analytics | — | Moved to backlog |

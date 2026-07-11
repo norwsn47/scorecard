@@ -5,7 +5,7 @@ Last updated: 11 July 2026
 
 Items below are logged for future consideration. None are implemented.
 
-Items previously in this backlog that have moved into the build plan: Podium (Chunk 11), Course Map (Chunk 12), Outbuild credit (Chunk 13), Share scorecard (Chunk 14), Analytics (Chunk 15).
+Items previously in this backlog that have moved into the build plan: Podium (Chunk 11), Course Map (Chunk 12), Outbuild credit (Chunk 13), Share scorecard (Chunk 14). Analytics was briefly promoted to Chunk 15 but moved back here — see item 4 below.
 
 ---
 
@@ -26,6 +26,20 @@ The information page (PRD 4.8) currently uses williamadamgriffiths@gmail.com as 
 Action required when ready: configure Resend, verify hello@outbuild.co, then update the contact link in the information page component.
 
 Related PRD section: 4.8 (Information page)
+
+---
+
+### 4. Analytics
+
+Track meaningful usage without cookie consent requirements.
+
+- Confirm Cloudflare Pages built-in analytics are active for basic traffic data
+- Evaluate and integrate a privacy-friendly product analytics tool (Plausible, Fathom, or PostHog)
+- Track in-app events already instrumented: New Game Started, Game Completed (with player count and holes played), Scorecard Shared
+- Confirm no cookie consent banner is required
+- If analytics are added, update the information page copy (PRD 4.8) to reflect what is collected and by whom
+
+Related PRD section: 4.5 (Analytics)
 
 ---
 
