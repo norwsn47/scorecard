@@ -1,18 +1,21 @@
 # Build Plan
-## The Golf Tavern — Bruntsfield Links Scorecard App
+## Scorecard by Outbuild — Bruntsfield Links
 
-**Version:** 1.0
-**Last updated:** June 2026
+**Version:** 1.1
+**Last updated:** 8 July 2026
 **Stack:** Vite + React · Tailwind CSS · localStorage · Cloudflare Pages
 
 Each chunk should be built, reviewed, tested, and committed before moving to the next.
 No chunk depends on unverified work from a previous chunk.
 
+**Status key:** Done · In progress · Not started
+
 ---
 
 ## Chunk 1 — Project scaffold & design tokens
+**Status: Done**
 
-**Goal:** Empty project that builds cleanly, with Golf Tavern brand baked in from day one.
+**Goal:** Empty project that builds cleanly, with brand baked in from day one.
 
 - Initialise project with agreed stack (framework, dependencies)
 - Set up folder structure: pages, components, hooks, utils, styles
@@ -21,7 +24,7 @@ No chunk depends on unverified work from a previous chunk.
   - Typography: script display font (headings/logo), spaced serif/sans (UI labels)
   - Spacing scale, border radius, shadow values
 - Apply tokens globally (CSS variables or equivalent)
-- Render a single branded placeholder page — Golf Tavern logo/name, Bruntsfield Links, "Est 1456"
+- Render a single branded placeholder page — logo/name, Bruntsfield Links
 - Confirm it builds without errors and displays correctly on mobile
 
 **Verify:** Page renders on mobile, fonts load, colours match brand brief, no console errors.
@@ -29,6 +32,7 @@ No chunk depends on unverified work from a previous chunk.
 ---
 
 ## Chunk 2 — Local storage service
+**Status: Done**
 
 **Goal:** A single, tested utility that all other chunks use to read/write data. Build this once, use it everywhere.
 
@@ -48,11 +52,12 @@ No chunk depends on unverified work from a previous chunk.
 ---
 
 ## Chunk 3 — Home screen
+**Status: Done**
 
 **Goal:** The entry point. Two buttons, branded, with resume logic.
 
 - Build home screen layout:
-  - Golf Tavern branding prominent (logo/name, "Bruntsfield Links", "Est 1456")
+  - Branding prominent (app name, "Bruntsfield Links", course sub-label)
   - **New Game** button
   - **History** button
   - **Resume Game** banner — shown only if an active game exists in local storage
@@ -66,6 +71,7 @@ No chunk depends on unverified work from a previous chunk.
 ---
 
 ## Chunk 4 — New game setup
+**Status: Done**
 
 **Goal:** Player name entry, duplicate prevention, start game. No hole pre-selection.
 
@@ -88,6 +94,7 @@ No chunk depends on unverified work from a previous chunk.
 ---
 
 ## Chunk 5 — Scorecard
+**Status: Done**
 
 **Goal:** The core of the app. Active-cell interaction, dynamic rows, live totals, auto-save.
 
@@ -130,6 +137,7 @@ No chunk depends on unverified work from a previous chunk.
 ---
 
 ## Chunk 6 — Game summary screen
+**Status: Done**
 
 **Goal:** Clear end-of-game view, shown immediately after finishing.
 
@@ -145,6 +153,7 @@ No chunk depends on unverified work from a previous chunk.
 ---
 
 ## Chunk 7 — History screen
+**Status: Done**
 
 **Goal:** List of all completed games, with player filtering.
 
@@ -161,6 +170,7 @@ No chunk depends on unverified work from a previous chunk.
 ---
 
 ## Chunk 8 — Polish & edge cases
+**Status: Not started**
 
 **Goal:** Tighten everything up before pre-launch checks.
 
@@ -175,12 +185,16 @@ No chunk depends on unverified work from a previous chunk.
   - 24 holes (ensure scorecard scrolls/handles correctly)
 - Add any missing loading or empty states
 - Remove any console.log statements
+- Fix known token divergences from DESIGN.md:
+  - Advance button: `bg-muted` → `bg-control-warm`
+  - Active row tint: extract to named token `accent-tint`
 
 **Verify:** App feels cohesive and on-brand across all screens. No layout breaks on small screens. Edge cases handled gracefully.
 
 ---
 
 ## Chunk 9 — Error handling pass
+**Status: Not started**
 
 **Goal:** Explicit pass to catch everything not covered above.
 
@@ -194,6 +208,7 @@ No chunk depends on unverified work from a previous chunk.
 ---
 
 ## Chunk 10 — Security & pre-launch
+**Status: Not started**
 
 **Goal:** Final checks before the app goes live.
 
@@ -207,23 +222,105 @@ No chunk depends on unverified work from a previous chunk.
   - Performance check — loads fast on a mobile connection
   - Tested on iOS Safari and Android Chrome (primary target browsers)
   - "More courses coming soon" placeholder in place
-  - Golf Tavern branding correct throughout
+  - Branding correct throughout
 
 **Verify:** Clean bill of health. Ready to share the URL.
 
 ---
 
+## Chunk 11 — Podium screen
+**Status: Done**
+
+**Goal:** Celebratory end-of-game screen before the full scorecard summary. (Originally backlog item 3.)
+
+- Build podium screen shown immediately after Finish Game confirmation:
+  - Ranked list of finishers (1st, 2nd, 3rd...) with scores and per-hole average
+  - 1st place card uses inverted terracotta fill — a visual moment of celebration
+  - DNF players listed below, clearly marked and muted
+  - CTA: "See Full Scorecard" navigates to the summary screen
+- Wire scorecard → podium → summary navigation
+
+**Verify:** Correct ranking order. 1st place card visually distinct. DNF players excluded from ranking. Navigation to summary works.
+
+---
+
+## Chunk 12 — Course map
+**Status: Done**
+
+**Goal:** Players can view the Bruntsfield Links course map before or during a round. (Originally backlog item 2.)
+
+- Course map modal accessible from:
+  - Home screen (View Course Map button)
+  - Scorecard control bar (map icon button)
+- Full-screen modal overlay with course image
+- Vignette effect to blend image edges into app background
+- Course info screen with additional course detail
+- Close / dismiss to return to previous screen
+
+**Verify:** Map opens from both entry points. Modal dismisses correctly. Image loads and displays correctly on mobile.
+
+---
+
+## Chunk 13 — Outbuild attribution mark
+**Status: Done**
+
+**Goal:** Outbuild credit on the home screen, per Outbuild brand requirements. (Originally backlog item 6.)
+
+- Footer of home screen: `Scorecard  by Outbuild ↗`
+  - "Scorecard" in bold
+  - "by Outbuild ↗" in muted lighter weight, linking to https://outbuild.uk
+  - Opens in new tab
+- Subtle but present — does not compete with primary content
+
+**Verify:** Mark visible on home screen. Link opens outbuild.uk in new tab. Styling matches DESIGN.md attribution spec.
+
+---
+
+## Chunk 14 — Share scorecard
+**Status: Not started**
+
+**Goal:** Players can share or save the completed scorecard after a game. (Originally backlog item 1.)
+
+- On the summary / podium screen, offer a share option:
+  - Generate a branded scorecard image (canvas or html-to-image)
+  - Trigger native browser share sheet on mobile (Web Share API)
+  - Fallback: download as PNG if share API unavailable
+- Scorecard image should look like a branded Outbuild scorecard — not a screenshot of the UI
+
+**Verify:** Share sheet opens on mobile. Image downloads correctly on desktop. Scorecard image is readable and on-brand.
+
+---
+
+## Chunk 15 — Analytics
+**Status: Not started**
+
+**Goal:** Track meaningful usage without cookie consent requirements. (Originally backlog item 5.)
+
+- Confirm Cloudflare Pages built-in analytics are active for basic traffic data
+- Evaluate and integrate a privacy-friendly product analytics tool (Plausible, Fathom, or PostHog)
+- Track in-app events already instrumented: New Game Started, Game Completed (with player count and holes played)
+- Confirm: no cookie consent banner required
+
+**Verify:** Events fire correctly in production. No PII collected. No consent banner needed. Cloudflare analytics active.
+
+---
+
 ## Chunk order summary
 
-| Chunk | What | Depends on |
-|-------|------|------------|
-| 1 | Scaffold + design tokens | Nothing |
-| 2 | Local storage service | 1 |
-| 3 | Home screen | 2 |
-| 4 | New game setup | 2, 3 |
-| 5 | Scorecard | 2, 4 |
-| 6 | Game summary | 5 |
-| 7 | History screen | 2, 6 |
-| 8 | Polish & edge cases | 3–7 |
-| 9 | Error handling | 8 |
-| 10 | Security & pre-launch | 9 |
+| Chunk | What | Depends on | Status |
+|-------|------|------------|--------|
+| 1 | Scaffold + design tokens | Nothing | Done |
+| 2 | Local storage service | 1 | Done |
+| 3 | Home screen | 2 | Done |
+| 4 | New game setup | 2, 3 | Done |
+| 5 | Scorecard | 2, 4 | Done |
+| 6 | Game summary | 5 | Done |
+| 7 | History screen | 2, 6 | Done |
+| 8 | Polish & edge cases | 3–7 | Not started |
+| 9 | Error handling | 8 | Not started |
+| 10 | Security & pre-launch | 9 | Not started |
+| 11 | Podium screen | 5 | Done |
+| 12 | Course map | 3, 5 | Done |
+| 13 | Outbuild attribution mark | 3 | Done |
+| 14 | Share scorecard | 6, 11 | Not started |
+| 15 | Analytics | 10 | Not started |

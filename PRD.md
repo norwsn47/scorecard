@@ -1,34 +1,30 @@
 # Product Requirements Document
-## The Golf Tavern — Bruntsfield Links Scorecard App
+## Scorecard by Outbuild — Bruntsfield Links
 
-**Version:** 1.3 (MVP)
-**Last updated:** June 2026
+**Version:** 1.4 (MVP)
+**Last updated:** 8 July 2026
 
 ---
 
 ## 1. Goal
 
-An official Golf Tavern web app that lets anyone create and track a golf scorecard for Bruntsfield Links — no login required, as few taps as possible, designed to feel like a physical scorecard on your phone. Built for use on the course, in the sun, by anyone.
+A web app by Outbuild that lets anyone create and track a golf scorecard for Bruntsfield Links — no login required, as few taps as possible, designed to feel like a physical scorecard on your phone. Built for use on the course, in the sun, by anyone.
 
 ---
 
 ## 2. Brand
 
-- **Product of:** The Golf Tavern, Edinburgh — est. 1456
-- **Built by:** Outbuild (design agency)
-- **Tone:** Historic, warm, Scottish — rooted in place. Heritage pub meets classic golf club. Not corporate, not generic.
-- **Course:** Bruntsfield Links — one of Scotland's oldest public golf courses, on the doorstep of The Golf Tavern
+- **Built by:** Outbuild
+- **Tone:** Warm, Scottish, restrained — rooted in place. Not corporate, not generic.
+- **Course:** Bruntsfield Links — one of Scotland's oldest public golf courses, Edinburgh
 
 ### Visual direction
-The Golf Tavern's brand uses a dark, moody palette — deep charcoal backgrounds, cream/ivory script logotype, terracotta/rust accents, all-caps spaced serif supporting text.
-
-For the scorecard app, this palette is **flipped for outdoor sunlight legibility:**
+Outbuild palette applied for outdoor sunlight legibility on a phone:
 - **Background:** Cream / ivory (warm, not clinical white)
 - **Primary text:** Deep charcoal / near-black
-- **Accent:** Terracotta / rust (matching the Golf Tavern "Book Now" / "Est 1456" tone)
-- **Typography:** Script display font for headings/logo (matching Golf Tavern logotype feel); clean spaced all-caps serif or sans for UI labels and data
-- **Texture:** Subtle and warm — not flat and generic
-- **Overall feel:** Same brand DNA as the Golf Tavern site — inverted for readability on a phone in daylight
+- **Accent:** Terracotta / rust — single brand colour, does all decorative and interactive work
+- **Typography:** Cormorant Garamond italic for editorial moments (app name, headings); Inter for all UI labels and data
+- **Overall feel:** Warm, grounded, purposeful — designed for use outdoors, one hand, in sunlight
 
 ---
 
@@ -152,7 +148,7 @@ For the scorecard app, this palette is **flipped for outdoor sunlight legibility
 - A group can complete a full round and save it without confusion
 - Returning users can see their previous games on the same device
 - Closing and reopening the browser mid-round resumes the game correctly
-- Feels like a Golf Tavern product — not a generic app
+- Feels like a Scorecard by Outbuild product — not a generic app
 
 ---
 
@@ -162,5 +158,5 @@ For the scorecard app, this palette is **flipped for outdoor sunlight legibility
 - **Light and legible** — high contrast, readable outdoors; aesthetics serve usability
 - **Fewest taps possible** — every interaction obvious and minimal
 - **Physical scorecard feel** — familiar grid layout, nothing unfamiliar
-- **Golf Tavern character** — traditional, warm, Scottish — not generic or corporate
+- **Outbuild character** — restrained, warm, Scottish — not generic or corporate
 - **No friction** — no login, no setup, no onboarding required
