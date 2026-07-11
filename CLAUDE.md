@@ -5,6 +5,17 @@ Last updated: 11 July 2026
 
 ---
 
+## How to start every session
+
+Always begin by invoking the project-manager agent before doing anything else. Never respond to tasks, questions, or requests directly without going through the agent system first.
+
+The correct way to start every session:
+> "Use the project-manager agent to start this session."
+
+If a user sends a message without invoking an agent, the first response must always be to remind them to start with the project-manager agent before proceeding. Do not start any work until this has happened.
+
+---
+
 ## Project context
 This is an Outbuild project, built on a work laptop.
 The project lives in a dedicated folder (e.g. `~/Projects/[project-name]`).
