@@ -62,8 +62,11 @@ export default function Scorecard({ navigate, params }) {
     setSaveError(!saved)
   }
 
+  const MAX_STROKES = 14
+
   function handleIncrement() {
     if (!activePlayer) return
+    if (activeScore !== null && activeScore >= MAX_STROKES) return
     updateScores(activePlayer, activeCell.holeIndex, activeScore === null ? 1 : activeScore + 1)
   }
 
