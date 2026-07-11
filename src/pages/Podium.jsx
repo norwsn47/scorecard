@@ -67,7 +67,7 @@ export default function Podium({ navigate, params }) {
               <div className="flex items-center gap-4">
                 <span className={[
                   'font-ui text-xs tracking-widest uppercase w-8',
-                  i === 0 ? 'text-[rgba(250,247,240,0.7)]' : 'text-muted',
+                  i === 0 ? 'text-bg/70' : 'text-muted',
                 ].join(' ')}>
                   {ordinal(i + 1)}
                 </span>
@@ -81,14 +81,14 @@ export default function Podium({ navigate, params }) {
               <div className="text-right">
                 <span className={[
                   'font-ui text-lg font-semibold',
-                  i === 0 ? 'text-white' : 'text-text',
+                  i === 0 ? 'text-bg' : 'text-text',
                 ].join(' ')}>
                   {player.total}
                 </span>
                 {player.avg !== null && (
                   <span className={[
                     'block font-ui text-xs font-normal',
-                    i === 0 ? 'text-white/60' : 'text-muted',
+                    i === 0 ? 'text-bg/60' : 'text-muted',
                   ].join(' ')}>
                     Av. {player.avg}
                   </span>

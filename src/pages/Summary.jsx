@@ -57,7 +57,7 @@ export default function Summary({ navigate, params }) {
               <th className="py-2 px-3 text-left font-ui text-xs tracking-[0.12em] uppercase text-muted w-12">
                 Hole
               </th>
-              {game.players.map(player => (
+              {(game.players ?? []).map(player => (
                 <th
                   key={player}
                   className={[
@@ -76,7 +76,7 @@ export default function Summary({ navigate, params }) {
             {Array.from({ length: game.holesPlayed ?? game.holes }, (_, holeIndex) => (
               <tr key={holeIndex} className="border-b border-border">
                 <td className="py-2 px-3 font-ui text-xs text-muted">{holeIndex + 1}</td>
-                {game.players.map(player => {
+                {(game.players ?? []).map(player => {
                   const score = game.scores[player]?.[holeIndex]
                   return (
                     <td
@@ -97,7 +97,7 @@ export default function Summary({ navigate, params }) {
           <tfoot>
             <tr className="bg-bg-card border-t-2 border-border">
               <td className="py-3 px-3 font-ui text-xs tracking-[0.12em] uppercase text-muted">Total</td>
-              {game.players.map(player => (
+              {(game.players ?? []).map(player => (
                 <td
                   key={player}
                   className={[

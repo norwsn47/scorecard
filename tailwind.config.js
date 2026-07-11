@@ -16,6 +16,7 @@ export default {
         border:          'var(--color-border)',
         chrome:          'var(--color-chrome)',
         'control-warm':  'var(--color-control-warm)',
+        'accent-tint':   'var(--color-accent-tint)',
       },
       fontFamily: {
         display: 'var(--font-display)',

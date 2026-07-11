@@ -19,7 +19,7 @@ export default function Home({ navigate }) {
       <button
         onClick={() => navigate('info')}
         aria-label="Information"
-        className="absolute top-12 right-5 text-muted active:text-accent p-1"
+        className="absolute top-10 right-4 text-muted active:text-accent p-2"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
           <circle cx="12" cy="12" r="9" />
@@ -87,7 +87,7 @@ export default function Home({ navigate }) {
       </main>
 
       {/* ── Footer ── */}
-      <footer className="text-center pb-14 px-6">
+      <footer className="text-center pb-14 px-6 space-y-3">
         <p className="font-ui text-text leading-tight inline-flex items-baseline gap-1">
           <span className="text-base font-bold">Scorecard</span>
           <span className="text-xs text-muted font-normal"> by </span>
@@ -98,6 +98,7 @@ export default function Home({ navigate }) {
             </svg>
           </a>
         </p>
+        <p className="font-ui text-xs text-muted opacity-50">More courses coming soon</p>
       </footer>
 
       {showMap && <CourseMapModal onClose={() => setShowMap(false)} />}

@@ -14,6 +14,7 @@
     --color-border:    #D9D0C4;
     --color-chrome:       #C0B8B0;   /* inactive UI chrome — muted icons, disabled borders */
     --color-control-warm: #9A9189;   /* warm grey fill — advance button */
+    --color-accent-tint:  rgba(184,85,48,0.05); /* active row background */
 
     /* Typography */
     --font-display: 'Cormorant Garamond', serif;

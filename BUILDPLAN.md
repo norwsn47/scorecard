@@ -2,7 +2,7 @@
 ## Scorecard by Outbuild — Bruntsfield Links
 
 **Version:** 1.2
-**Last updated:** 11 July 2026
+**Last updated:** 11 July 2026 (updated end of session — Wave 2 complete)
 **Stack:** Vite + React · Tailwind CSS · localStorage · Cloudflare Pages
 
 Each chunk should be built, reviewed, tested, and committed before moving to the next.
@@ -170,7 +170,7 @@ No chunk depends on unverified work from a previous chunk.
 ---
 
 ## Chunk 8 — Polish & edge cases
-**Status: Not started**
+**Status: Done**
 
 **Goal:** Tighten everything up before pre-launch checks.
 
@@ -194,7 +194,7 @@ No chunk depends on unverified work from a previous chunk.
 ---
 
 ## Chunk 9 — Error handling pass
-**Status: Not started**
+**Status: Done**
 
 **Goal:** Explicit pass to catch everything not covered above.
 
@@ -208,7 +208,7 @@ No chunk depends on unverified work from a previous chunk.
 ---
 
 ## Chunk 10 — Security & pre-launch
-**Status: Not started**
+**Status: Done**
 
 **Goal:** Final checks before the app goes live.
 
@@ -277,7 +277,7 @@ No chunk depends on unverified work from a previous chunk.
 ---
 
 ## Chunk 14 — Share scorecard
-**Status: Not started**
+**Status: Done**
 **Depends on: Chunks 6, 11, 18 — game naming (Chunk 18) must be complete before this chunk starts.**
 
 **Goal:** Generate a branded share image and trigger the native device share sheet at the end of a game. (PRD 4.7. Originally backlog item 1.)
@@ -337,7 +337,7 @@ Added from PRD v1.5. The hotfix runs before everything else. Chunks 16–20 are 
 ---
 
 ## Hotfix H1 — Golf Tavern copy fix
-**Status: Not started**
+**Status: Done**
 **Do this before any other wave 2 work.**
 
 **Goal:** Remove a stale brand name from the live app.
@@ -351,7 +351,7 @@ Added from PRD v1.5. The hotfix runs before everything else. Chunks 16–20 are 
 ---
 
 ## Chunk 16 — Stroke limit cap
-**Status: Not started**
+**Status: Done**
 **Depends on: Chunk 5**
 
 **Goal:** Enforce the app's hard cap of 14 strokes per hole in the scoring UI. (PRD 4.3)
@@ -366,7 +366,7 @@ Added from PRD v1.5. The hotfix runs before everything else. Chunks 16–20 are 
 ---
 
 ## Chunk 17 — App state on close
-**Status: Not started**
+**Status: Done**
 **Depends on: Chunks 2, 5**
 
 **Goal:** Reopening the app with a game in progress bypasses the home screen and restores the exact previously-active cell. (PRD 4.3)
@@ -383,7 +383,7 @@ Added from PRD v1.5. The hotfix runs before everything else. Chunks 16–20 are 
 ---
 
 ## Chunk 18 — Game naming
-**Status: Not started**
+**Status: Done**
 **Depends on: Chunks 4, 5, 7**
 **Must be complete before Chunk 14 (share scorecard) starts.**
 
@@ -415,7 +415,7 @@ Added from PRD v1.5. The hotfix runs before everything else. Chunks 16–20 are 
 ---
 
 ## Chunk 19 — Information page
-**Status: Not started**
+**Status: Done**
 **Depends on: Chunk 3**
 
 **Goal:** Passive-access information page explaining local data use and crediting Outbuild. (PRD 4.8)
@@ -440,7 +440,7 @@ Added from PRD v1.5. The hotfix runs before everything else. Chunks 16–20 are 
 ---
 
 ## Chunk 20 — Course rules
-**Status: Not started**
+**Status: Done**
 **Depends on: Chunks 3, 12**
 
 **Goal:** Verbatim course rules text, accessible from the home screen and from within the Map overlay mid-game. (PRD 4.9)
@@ -480,14 +480,14 @@ Table is shown in recommended execution order. Done chunks are listed first; wav
 | 11 | Podium screen | 5 | Done |
 | 12 | Course map | 3, 5 | Done |
 | 13 | Outbuild attribution mark | 3 | Done |
-| HF-1 | Golf Tavern copy hotfix | — | Not started |
-| 16 | Stroke limit cap | 5 | Not started |
-| 17 | App state on close | 2, 5 | Not started |
-| 18 | Game naming | 4, 5, 7 | Not started |
-| 19 | Information page | 3 | Not started |
-| 20 | Course rules | 3, 12 | Not started |
-| 14 | Share scorecard | 6, 11, 18 | Not started |
-| 8 | Polish & edge cases | All features | Not started |
-| 9 | Error handling | 8 | Not started |
-| 10 | Security & pre-launch | 9 | Not started |
+| HF-1 | Golf Tavern copy hotfix | — | Done |
+| 16 | Stroke limit cap | 5 | Done |
+| 17 | App state on close | 2, 5 | Done |
+| 18 | Game naming | 4, 5, 7 | Done |
+| 19 | Information page | 3 | Done |
+| 20 | Course rules | 3, 12 | Done |
+| 14 | Share scorecard | 6, 11, 18 | Done |
+| 8 | Polish & edge cases | All features | Done |
+| 9 | Error handling | 8 | Done |
+| 10 | Security & pre-launch | 9 | Done |
 | 15 | Analytics | 10 | Not started |

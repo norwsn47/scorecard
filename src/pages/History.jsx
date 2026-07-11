@@ -149,7 +149,7 @@ export default function History({ navigate }) {
             <button
               onClick={e => handleDelete(e, game.id)}
               aria-label="Delete game"
-              className="absolute top-3 right-3 w-6 h-6 flex items-center justify-center text-muted active:text-text"
+              className="absolute top-2 right-2 w-9 h-9 flex items-center justify-center text-muted active:text-text"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

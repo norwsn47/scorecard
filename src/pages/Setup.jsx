@@ -62,7 +62,7 @@ export default function Setup({ navigate }) {
             onChange={e => setGameName(e.target.value.slice(0, 50))}
             maxLength={50}
             autoComplete="off"
-            className="w-full py-3 pl-4 pr-4 rounded-md border border-border font-ui text-base bg-bg-card text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-[rgba(184,85,48,0.4)]"
+            className="w-full py-3 pl-4 pr-4 rounded-md border border-border font-ui text-base bg-bg-card text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40"
           />
           <p className="font-ui text-xs text-muted mt-1.5 pl-1">Game name — optional</p>
         </div>
@@ -84,7 +84,7 @@ export default function Setup({ navigate }) {
                   autoFocus={i === names.length - 1}
                   className={[
                     'w-full py-3 pl-4 rounded-md border font-ui text-base bg-bg-card text-text',
-                    'placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-[rgba(184,85,48,0.4)]',
+                    'placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40',
                     names.length > 1 ? 'pr-10' : 'pr-4',
                     isDupe ? 'border-accent' : 'border-border',
                   ].join(' ')}
@@ -93,7 +93,7 @@ export default function Setup({ navigate }) {
                   <button
                     onClick={() => handleRemovePlayer(i)}
                     aria-label={`Remove player ${i + 1}`}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted active:text-text"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 p-2 text-muted active:text-text"
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -127,7 +127,7 @@ export default function Setup({ navigate }) {
         <div className="pt-2 pb-1 text-center">
           <button
             onClick={() => navigate('rules', { from: 'setup' })}
-            className="font-ui text-xs text-muted underline underline-offset-2 active:text-text"
+            className="py-2 font-ui text-xs text-muted underline underline-offset-2 active:text-text"
           >
             Course rules
           </button>

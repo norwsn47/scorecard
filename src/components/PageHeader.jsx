@@ -5,7 +5,7 @@ export default function PageHeader({ title, onBack, right = null }) {
         {onBack && (
           <button
             onClick={onBack}
-            className="py-2 text-muted font-ui text-sm tracking-[0.08em] uppercase"
+            className="py-3 min-h-[44px] flex items-center text-muted font-ui text-sm tracking-[0.08em] uppercase"
           >
             ← Back
           </button>

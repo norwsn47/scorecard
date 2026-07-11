@@ -67,9 +67,9 @@ describe('createGame', () => {
     expect(game.players).toEqual(['Alice', 'Bob'])
   })
 
-  it('creates a null-filled scores array per player with 24 slots', () => {
+  it('creates a null-filled scores array per player with 36 slots', () => {
     const game = createGame(['Alice'])
-    expect(game.scores['Alice']).toHaveLength(24)
+    expect(game.scores['Alice']).toHaveLength(36)
     expect(game.scores['Alice'].every(s => s === null)).toBe(true)
   })
 
@@ -79,9 +79,9 @@ describe('createGame', () => {
     expect(game.startedAt).toBeTruthy()
   })
 
-  it('stores holes as 24', () => {
+  it('stores holes as 36', () => {
     const game = createGame(['Alice'])
-    expect(game.holes).toBe(24)
+    expect(game.holes).toBe(36)
   })
 })
 
@@ -155,20 +155,20 @@ describe('calculateResult', () => {
     expect(['Alice', 'Bob']).toContain(winner)
   })
 
-  it('ignores trailing unplayed holes on a 24-slot scorecard', () => {
-    // Only 9 holes played out of 24 — trailing nulls should not cause DNF
+  it('ignores trailing unplayed holes on a 36-slot scorecard', () => {
+    // Only 9 holes played out of 36 — trailing nulls should not cause DNF
     const scores = {
-      Alice: [3, 4, 3, 5, 3, 4, 3, 4, 3, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
-      Bob:   [4, 4, 4, 4, 4, 4, 4, 4, 4, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null],
+      Alice: [3, 4, 3, 5, 3, 4, 3, 4, 3, ...Array(27).fill(null)],
+      Bob:   [4, 4, 4, 4, 4, 4, 4, 4, 4, ...Array(27).fill(null)],
     }
-    const { winner, dnf } = calculateResult(['Alice', 'Bob'], scores, 24)
+    const { winner, dnf } = calculateResult(['Alice', 'Bob'], scores, 36)
     expect(winner).toBe('Alice')
     expect(dnf).toEqual([])
   })
 
   it('returns null winner when no holes have been scored', () => {
-    const scores = { Alice: Array(24).fill(null) }
-    const { winner } = calculateResult(['Alice'], scores, 24)
+    const scores = { Alice: Array(36).fill(null) }
+    const { winner } = calculateResult(['Alice'], scores, 36)
     expect(winner).toBeNull()
   })
 })
@@ -204,6 +204,6 @@ describe('finishGame', () => {
     const finished = finishGame(game)
     expect(finished.id).toBe(game.id)
     expect(finished.players).toEqual(game.players)
-    expect(finished.holes).toBe(24)
+    expect(finished.holes).toBe(36)
   })
 })

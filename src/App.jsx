@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { Component, useEffect, useState } from 'react'
 import History    from './pages/History.jsx'
 import Info       from './pages/Info.jsx'
 import Rules      from './pages/Rules.jsx'
@@ -8,6 +8,33 @@ import Scorecard  from './pages/Scorecard.jsx'
 import Setup      from './pages/Setup.jsx'
 import Summary    from './pages/Summary.jsx'
 import { getActiveGame, isStorageAvailable } from './utils/storage.js'
+
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props)
+    this.state = { error: null }
+  }
+  static getDerivedStateFromError(error) {
+    return { error }
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="h-full bg-bg flex flex-col items-center justify-center px-8 text-center gap-4">
+          <p className="font-display italic text-2xl text-text">Something went wrong</p>
+          <p className="font-ui text-sm text-muted">Try refreshing the page. Your scores are saved.</p>
+          <button
+            onClick={() => { this.setState({ error: null }); window.location.reload() }}
+            className="py-3 px-6 rounded-md bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn"
+          >
+            Reload
+          </button>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
 
 const PAGES = {
   home:       Home,
@@ -43,7 +70,9 @@ export default function App() {
             Scores won't be saved — storage is blocked (private browsing?)
           </div>
         )}
-        <Page navigate={navigate} params={params} />
+        <ErrorBoundary key={page}>
+          <Page navigate={navigate} params={params} />
+        </ErrorBoundary>
       </div>
 
       <div className="desktop-note" aria-hidden="true">

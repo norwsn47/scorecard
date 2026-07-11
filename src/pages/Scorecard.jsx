@@ -153,7 +153,7 @@ export default function Scorecard({ navigate, params }) {
                   ref={isActiveRow ? activeRowRef : null}
                   className={[
                     'border-b border-border',
-                    isActiveRow ? 'bg-[rgba(184,85,48,0.05)]' : '',
+                    isActiveRow ? 'bg-accent-tint' : '',
                   ].join(' ')}
                 >
                   <td className={[
@@ -228,7 +228,7 @@ export default function Scorecard({ navigate, params }) {
             onClick={handleAdvance}
             disabled={activeCell.holeIndex === displayedHoles - 1 && activeCell.playerIndex === players.length - 1}
             aria-label="Advance to next player"
-            className="w-16 h-16 rounded-full bg-muted border-2 border-muted text-bg flex items-center justify-center disabled:opacity-25 active:opacity-80"
+            className="w-16 h-16 rounded-full bg-control-warm border-2 border-control-warm text-bg flex items-center justify-center disabled:opacity-25 active:opacity-80"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-6 h-6">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6" />

@@ -61,7 +61,7 @@ export default function CourseMapModal({ onClose }) {
       <button
         onClick={onClose}
         aria-label="Close map"
-        className="w-8 h-8 flex items-center justify-center rounded-full bg-neutral-500 text-white text-sm font-semibold active:bg-neutral-600"
+        className="w-11 h-11 flex items-center justify-center rounded-full bg-muted text-bg active:bg-chrome"
       >
         ✕
       </button>
