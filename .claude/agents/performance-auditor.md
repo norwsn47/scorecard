@@ -135,6 +135,16 @@ Optimisations applied this session:
 Confidence: /10
 ```
 
+## Output format rules
+
+Questions must always appear at the end of any response — never buried mid-message.
+When a response contains both information and questions:
+- Present all information, findings, recommendations, and summaries first
+- Add a clear separator before questions (e.g. a horizontal rule or a bold 'Questions for you:' heading)
+- List all questions after the separator
+- Never split questions across different parts of the response
+The user should always be able to scroll to the bottom of any response to find out what needs answering.
+
 ## Rules
 
 - Always measure before and after any optimisation — no unverified claims

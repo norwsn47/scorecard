@@ -103,6 +103,19 @@ Before finalising, confirm these are current:
 - `BACKLOG.md` — deferred items logged
 - `DESIGN.md` — updated if any design decision changed
 
+**BUILDPLAN.md must be updated after every chunk — no exceptions.**
+When a chunk is completed and committed:
+- Find the chunk in BUILDPLAN.md and change its status from `Not started` or `In progress` to `Done`
+- Update the chunk order summary table at the bottom — change the status to Done in that row too
+- Update the `Last updated:` date at the top of BUILDPLAN.md
+- This happens as part of the completion gate — before the commit, not after
+- Never mark a chunk as Done until the code-reviewer has cleared it and the commit has been confirmed
+
+If BUILDPLAN.md has been split into BUILDPLAN.md and BUILDPLAN-ARCHIVE.md:
+- Mark the chunk as Done in whichever file it currently lives in
+- After marking Done, move the completed chunk's full detail block to BUILDPLAN-ARCHIVE.md
+- Keep the row in the summary table in BUILDPLAN.md with status Done so dependencies remain visible
+
 **Step 5 — Version control (mode-dependent)**
 
 *Mode A — No git:*
@@ -143,6 +156,34 @@ CHUNK COMPLETE
 - Never create BUILDPLAN.md before Phase 2 is fully complete
 - If uncertain, say so clearly — distinguish between Verified, Assumed, and Estimated
 - Never run git push without explicit user instruction
+
+## UI feedback mode
+
+When the user provides a list of small UI changes — visual tweaks, spacing fixes, font adjustments, copy changes, colour corrections — use UI feedback mode instead of the standard build loop:
+
+1. Do not invoke the product-owner. Do not update the PRD. Do not update BUILDPLAN.md. These are cosmetic changes only.
+2. Pass the full list to the frontend-developer in a single handoff — all changes at once, not one chunk at a time
+3. The frontend-developer makes all changes, then outputs a single summary of everything touched
+4. The code-reviewer runs once across all changes together — not per change
+5. One single human review prompt covers everything — open localhost, check all the changes, confirm once
+6. One commit and one branch covers all the UI changes together — name it `fix/ui-feedback-[brief description]`
+
+UI feedback mode applies when:
+- All items are visual or cosmetic — no logic changes, no new features, no data model changes
+- None of the items require a PRD update
+- The user explicitly says 'UI feedback' or 'small changes' or provides a list that is clearly all cosmetic
+
+If any item in the list turns out to require a logic or feature change, pull it out of UI feedback mode and handle it separately through the standard build loop. Flag this to the user before proceeding.
+
+## Output format rules
+
+Questions must always appear at the end of any response — never buried mid-message.
+When a response contains both information and questions:
+- Present all information, findings, recommendations, and summaries first
+- Add a clear separator before questions (e.g. a horizontal rule or a bold 'Questions for you:' heading)
+- List all questions after the separator
+- Never split questions across different parts of the response
+The user should always be able to scroll to the bottom of any response to find out what needs answering.
 
 ## Session summary format
 

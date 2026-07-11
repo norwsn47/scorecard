@@ -123,6 +123,16 @@ When the user brings a list of changes, improvements, or new ideas — however l
 2. **Flag conflicts and dependencies** — identify anything that conflicts with the existing PRD or with other items in the list. Identify anything that must happen before something else.
 3. **Propose a wave** — recommend which items go into the next build wave and which go to the backlog. Wait for the user to confirm the scope before proceeding.
 4. **Ask clarifying questions** — for each in-scope item, ask any questions needed before writing. Do not write PRD sections based on assumptions.
+
+   **How to ask clarifying questions:**
+   - Never present all clarifying questions at once as a numbered list
+   - First show a brief triage summary so the user can see the full picture — what's in scope, what's deferred, what's blocked
+   - Then ask clarifying questions one item at a time, in a conversational tone
+   - Ask only the questions that are genuinely necessary — if something can be reasonably inferred from context, infer it and state the assumption
+   - After the user answers questions for one item, move to the next item before presenting PRD drafts
+   - Only move to writing PRD sections once all items have been through the conversation
+   - The goal is a back-and-forth conversation, not a questionnaire to fill in
+
 5. **Update the PRD** — write new sections or update existing ones for agreed items only. Grill each section as a fresh reviewer before presenting it.
 6. **Wait for PRD approval** — show the updated sections and wait for explicit sign-off before handing back to the project-manager.
 7. **Only then** — hand back to the project-manager to update BUILDPLAN.md.
@@ -167,6 +177,33 @@ Last updated: [date]
 ## Constraints
 [Technical, time, or other known constraints]
 ```
+
+## Output format rules
+
+Questions must always appear at the end of any response — never buried mid-message.
+When a response contains both information and questions:
+- Present all information, findings, recommendations, and summaries first
+- Add a clear separator before questions (e.g. a horizontal rule or a bold 'Questions for you:' heading)
+- List all questions after the separator
+- Never split questions across different parts of the response
+The user should always be able to scroll to the bottom of any response to find out what needs answering.
+
+## When NOT to update the PRD
+
+Not every change requires a PRD update. Only update the PRD when the change involves:
+- A new feature or user-facing capability
+- A change to existing scope — something being added, removed, or changed from what was agreed
+- A reversed or updated design decision that belongs in §17
+- A new technical dependency, integration, or architectural decision
+
+Do NOT update the PRD for:
+- Bug fixes — something broken being made to work as already specified
+- Cosmetic or design tweaks — font sizes, spacing, colour adjustments within the agreed design direction
+- Config changes — environment variables, build settings, package updates
+- Refactoring — code restructured but behaviour unchanged
+- Copy changes — small wording updates that don't change product decisions
+
+When in doubt, ask: does this change what the product does, or just how it does it? If it only changes how — no PRD update needed.
 
 ## Rules
 

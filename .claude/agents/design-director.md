@@ -63,6 +63,16 @@ Mobile only: true
 This flag triggers the desktop phone frame wrapper in the frontend-developer automatically.
 3–5 things that would break the visual direction — generic patterns to explicitly steer clear of.
 
+## Output format rules
+
+Questions must always appear at the end of any response — never buried mid-message.
+When a response contains both information and questions:
+- Present all information, findings, recommendations, and summaries first
+- Add a clear separator before questions (e.g. a horizontal rule or a bold 'Questions for you:' heading)
+- List all questions after the separator
+- Never split questions across different parts of the response
+The user should always be able to scroll to the bottom of any response to find out what needs answering.
+
 ## Rules
 
 - Be specific and decisive — vague direction produces inconsistent output

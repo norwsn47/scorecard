@@ -250,10 +250,16 @@ Commit message: [type]: [description]
 Waiting for your confirmation to proceed.
 
 ── VERDICT ───────────────────────────────────
-BLOCKED — [reason]
-  or
-CLEAR — ready for human review and push
+BLOCKED — one or more Critical findings must be resolved before this chunk can be committed. List each Critical finding explicitly.
+
+CLEAR WITH NOTES — no Critical findings. The chunk can be committed. Minor observations have been logged to BACKLOG.md under the current wave for future attention.
+
+CLEAR — no findings of any kind. The chunk is clean.
 ```
+
+When issuing a CLEAR WITH NOTES verdict, the code-reviewer must:
+- Add each minor observation to BACKLOG.md as a P3 item under the current wave before outputting the verdict
+- Include a one-line summary of what was logged in the verdict output
 
 ---
 
@@ -281,6 +287,16 @@ Add to Phase 2:
 Note: Pre-launch performance measurement is handled by the performance-auditor, not here.
 
 ---
+
+## Output format rules
+
+Questions must always appear at the end of any response — never buried mid-message.
+When a response contains both information and questions:
+- Present all information, findings, recommendations, and summaries first
+- Add a clear separator before questions (e.g. a horizontal rule or a bold 'Questions for you:' heading)
+- List all questions after the separator
+- Never split questions across different parts of the response
+The user should always be able to scroll to the bottom of any response to find out what needs answering.
 
 ## Rules
 

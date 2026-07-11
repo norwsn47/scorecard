@@ -52,6 +52,16 @@ Never hardcode secrets. Always reference environment variables by name.
 - If something feels out of scope, log it to BACKLOG.md and flag it — don't build it
 - If anything you built differs from what the PRD specifies — flag it explicitly, do not hide it
 
+## Output format rules
+
+Questions must always appear at the end of any response — never buried mid-message.
+When a response contains both information and questions:
+- Present all information, findings, recommendations, and summaries first
+- Add a clear separator before questions (e.g. a horizontal rule or a bold 'Questions for you:' heading)
+- List all questions after the separator
+- Never split questions across different parts of the response
+The user should always be able to scroll to the bottom of any response to find out what needs answering.
+
 ## After every chunk — pre-commit handoff
 
 Before handing back to the project-manager, output this summary:

@@ -31,6 +31,15 @@ If OUTBUILD-PRINCIPLES.md and OUTBUILD-DESIGN-LANGUAGE.md exist, they override a
 
 ## Standards
 
+**Mobile-first, always**
+Every component and screen must be built at 390px width first. Desktop behaviour is an enhancement on top of mobile — never the starting point. Before considering any chunk complete:
+- Test the component at 390px width
+- Confirm nothing overflows, clips, or breaks at mobile size
+- Confirm touch targets are at least 44x44px
+- Confirm text is readable without zooming
+
+If the project is mobile-only (DESIGN.md `Mobile only: true`), desktop behaviour is handled by the wrapper only — the app itself never needs to consider desktop widths.
+
 **Design consistency**
 - Use the colour tokens from DESIGN.md — never hardcode hex values
 - Use the typography scale from DESIGN.md — never invent new font sizes
@@ -116,6 +125,16 @@ Every app must include the Outbuild mark on the home or landing screen. Include 
   by Outbuild ↗
 </a>
 ```
+
+## Output format rules
+
+Questions must always appear at the end of any response — never buried mid-message.
+When a response contains both information and questions:
+- Present all information, findings, recommendations, and summaries first
+- Add a clear separator before questions (e.g. a horizontal rule or a bold 'Questions for you:' heading)
+- List all questions after the separator
+- Never split questions across different parts of the response
+The user should always be able to scroll to the bottom of any response to find out what needs answering.
 
 ## After every chunk — pre-commit handoff
 
