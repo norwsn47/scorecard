@@ -16,6 +16,7 @@ const KEYS = {
   PLAYERS:         'gt_players',
   ACTIVE_GAME:     'gt_active_game',
   COMPLETED_GAMES: 'gt_completed_games',
+  ACTIVE_CELL:     'gt_active_cell',
 }
 
 function safeRead(key, fallback) {
@@ -66,6 +67,27 @@ export function saveActiveGame(game) {
 export function clearActiveGame() {
   try {
     localStorage.removeItem(KEYS.ACTIVE_GAME)
+    return true
+  } catch {
+    return false
+  }
+}
+
+// ── Active cell ────────────────────────────────────────────────────────────
+
+export function getActiveCell() {
+  const result = safeRead(KEYS.ACTIVE_CELL, null)
+  if (!result || typeof result !== 'object') return null
+  return result
+}
+
+export function saveActiveCell(cell) {
+  return safeWrite(KEYS.ACTIVE_CELL, cell)
+}
+
+export function clearActiveCell() {
+  try {
+    localStorage.removeItem(KEYS.ACTIVE_CELL)
     return true
   } catch {
     return false

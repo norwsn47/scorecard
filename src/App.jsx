@@ -5,7 +5,7 @@ import Podium     from './pages/Podium.jsx'
 import Scorecard  from './pages/Scorecard.jsx'
 import Setup      from './pages/Setup.jsx'
 import Summary    from './pages/Summary.jsx'
-import { isStorageAvailable } from './utils/storage.js'
+import { getActiveGame, isStorageAvailable } from './utils/storage.js'
 
 const PAGES = {
   home:       Home,
@@ -17,7 +17,7 @@ const PAGES = {
 }
 
 export default function App() {
-  const [page, setPage]           = useState('home')
+  const [page, setPage]           = useState(() => getActiveGame() ? 'scorecard' : 'home')
   const [params, setParams]       = useState({})
   const [storageOk, setStorageOk] = useState(true)
 

@@ -4,7 +4,7 @@ import PageHeader from '../components/PageHeader.jsx'
 import { track } from '../utils/analytics.js'
 import { computeDisplayedHoles, finishGame } from '../utils/game.js'
 import { playerTotal } from '../utils/scores.js'
-import { clearActiveGame, getActiveGame, saveActiveGame, saveCompletedGame } from '../utils/storage.js'
+import { clearActiveCell, clearActiveGame, getActiveCell, getActiveGame, saveActiveCell, saveActiveGame, saveCompletedGame } from '../utils/storage.js'
 
 function initialCellFor(g) {
   if (!g) return { holeIndex: 0, playerIndex: 0 }
@@ -20,7 +20,7 @@ function initialCellFor(g) {
 export default function Scorecard({ navigate, params }) {
   const [[initialGame, initialCell]]  = useState(() => {
     const g = params?.game ?? getActiveGame()
-    return [g, initialCellFor(g)]
+    return [g, getActiveCell() ?? initialCellFor(g)]
   })
   const [game, setGame]               = useState(initialGame)
   const [showConfirm, setShowConfirm] = useState(false)
@@ -75,14 +75,19 @@ export default function Scorecard({ navigate, params }) {
     updateScores(activePlayer, activeCell.holeIndex, activeScore <= 1 ? null : activeScore - 1)
   }
 
+  function moveToCell(cell) {
+    setActiveCell(cell)
+    saveActiveCell(cell)
+  }
+
   function handleAdvance() {
     const nextPlayer = activeCell.playerIndex + 1
     if (nextPlayer < players.length) {
-      setActiveCell({ holeIndex: activeCell.holeIndex, playerIndex: nextPlayer })
+      moveToCell({ holeIndex: activeCell.holeIndex, playerIndex: nextPlayer })
     } else {
       const nextHole = activeCell.holeIndex + 1
       if (nextHole < game.holes) {
-        setActiveCell({ holeIndex: nextHole, playerIndex: 0 })
+        moveToCell({ holeIndex: nextHole, playerIndex: 0 })
       }
     }
   }
@@ -91,6 +96,7 @@ export default function Scorecard({ navigate, params }) {
     const completed = finishGame(game)
     saveCompletedGame(completed)
     clearActiveGame()
+    clearActiveCell()
     track('Game Completed', { players: players.length, holes: completed.holesPlayed })
     navigate('podium', { game: completed })
   }
@@ -162,7 +168,7 @@ export default function Scorecard({ navigate, params }) {
                     return (
                       <td
                         key={player}
-                        onClick={() => setActiveCell({ holeIndex, playerIndex })}
+                        onClick={() => moveToCell({ holeIndex, playerIndex })}
                         className={[
                           'py-3 px-1 text-center font-ui text-sm cursor-pointer select-none transition-colors',
                           isActive ? 'bg-accent text-white font-semibold' : 'text-text',
