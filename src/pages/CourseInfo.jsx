@@ -29,7 +29,7 @@ export default function CourseInfo({ navigate }) {
       {/* Map image */}
       <div className="relative overflow-hidden mx-0">
         <img
-          src="/course-map.jpg"
+          src="/course_map_v2.png"
           alt="Bruntsfield Links course map"
           className="w-full block"
         />
