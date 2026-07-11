@@ -137,7 +137,7 @@ export default function History({ navigate }) {
                         </span>
                       </div>
                       <span className="font-ui text-xs text-muted">
-                        {total > 0 ? total : '—'}{avg !== null ? ` (Av. ${avg})` : ''}
+                        {total > 0 ? total : '–'}{avg !== null ? ` (Av. ${avg})` : ''}
                       </span>
                     </div>
                   )

@@ -21,15 +21,32 @@ export default function Info({ navigate }) {
 
         <div className="w-8 h-0.5 bg-border" />
 
-        {/* Rules */}
+        {/* Course */}
         <section className="space-y-3">
           <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted">Course</p>
+          <p className="font-ui text-sm text-muted leading-relaxed">
+            One of the world's oldest golf links, Bruntsfield Short Hole Golf Club has been a fixture in Edinburgh since 1895. The 36-hole course features par-3 holes of 45–90 yards – unique to world golf.
+          </p>
+          <a
+            href="https://www.bruntsfieldshortholegolfclub.co.uk/history/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 font-ui text-sm text-accent underline underline-offset-2"
+          >
+            Find out more
+            <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5 relative top-px">
+              <path d="M2 8L8 2M8 2H4M8 2V6" />
+            </svg>
+          </a>
           <button
             onClick={() => navigate('rules', { from: 'info' })}
-            className="font-ui text-sm text-accent underline underline-offset-2 active:opacity-70"
+            className="block font-ui text-sm text-accent underline underline-offset-2 active:opacity-70"
           >
             Course rules
           </button>
+          <p className="font-ui text-xs text-muted leading-relaxed">
+            The course map is reproduced with permission from Bruntsfield Short Hole Golf Club.
+          </p>
         </section>
 
         <div className="w-8 h-0.5 bg-border" />

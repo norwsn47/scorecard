@@ -106,7 +106,7 @@ export default function Scorecard({ navigate, params }) {
 
       {saveError && (
         <div className="bg-accent text-bg text-center font-ui text-xs py-2 px-4 tracking-wide">
-          Could not save — storage may be full or blocked
+          Could not save – storage may be full or blocked
         </div>
       )}
 
@@ -174,7 +174,7 @@ export default function Scorecard({ navigate, params }) {
                           isActive ? 'bg-accent text-white font-semibold' : 'text-text',
                         ].join(' ')}
                       >
-                        {score ?? '—'}
+                        {score ?? '–'}
                       </td>
                     )
                   })}
@@ -192,7 +192,7 @@ export default function Scorecard({ navigate, params }) {
         </div>
         {players.map(player => (
           <div key={player} className="flex-1 py-3 px-1 text-center font-ui text-base font-semibold text-text">
-            {playerTotal(game.scores, player) || '—'}
+            {playerTotal(game.scores, player) || '–'}
           </div>
         ))}
       </div>
@@ -253,7 +253,7 @@ export default function Scorecard({ navigate, params }) {
               {players.map(player => (
                 <div key={player} className="flex justify-between font-ui text-sm text-text">
                   <span>{player}</span>
-                  <span className="font-semibold">{playerTotal(game.scores, player) || '—'}</span>
+                  <span className="font-semibold">{playerTotal(game.scores, player) || '–'}</span>
                 </div>
               ))}
             </div>

@@ -149,6 +149,11 @@ Accessed via the **ⓘ** icon in the top-right corner of the home screen (see 4.
   - Player names, game scores, and dates are stored locally on the user's device in browser local storage
   - No data is ever sent to a server
   - No tracking, no analytics, and no third-party services are used in this version of the app
+- Course section:
+  - Short description: "One of the world's oldest golf links, Bruntsfield Short Hole Golf Club has been a fixture in Edinburgh since 1895. The 36-hole course features par-3 holes of 45–90 yards – unique to world golf."
+  - "Find out more" external link to https://www.bruntsfieldshortholegolfclub.co.uk/history/
+  - "Course rules" link (navigates to the rules page)
+  - Permission line: "The course map is reproduced with permission from Bruntsfield Short Hole Golf Club."
 - Credit line: "Scorecard is made by Outbuild, a small design collective based in Edinburgh."
 - A contact link (mailto:) — tapping opens an email to williamadamgriffiths@gmail.com
   - This is a placeholder pending setup of hello@outbuild.co via Resend (see Backlog)

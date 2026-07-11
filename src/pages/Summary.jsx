@@ -45,7 +45,7 @@ export default function Summary({ navigate, params }) {
         </div>
       ) : (
         <div className="mx-5 mt-5 py-4 px-5 rounded-md bg-bg-card border border-border text-center">
-          <p className="font-ui text-xs tracking-[0.2em] uppercase text-muted">No winner — all players DNF</p>
+          <p className="font-ui text-xs tracking-[0.2em] uppercase text-muted">No winner – all players DNF</p>
         </div>
       )}
 
@@ -86,7 +86,7 @@ export default function Summary({ navigate, params }) {
                         isWinner(player) ? 'text-accent font-medium' : 'text-text',
                       ].join(' ')}
                     >
-                      {score ?? '—'}
+                      {score ?? '–'}
                     </td>
                   )
                 })}
@@ -105,7 +105,7 @@ export default function Summary({ navigate, params }) {
                     isWinner(player) ? 'text-accent' : 'text-text',
                   ].join(' ')}
                 >
-                  {playerTotal(game.scores, player) || '—'}
+                  {playerTotal(game.scores, player) || '–'}
                   {playerAverage(game.scores, player) !== null && (
                     <span className="block font-ui text-xs font-normal text-muted">Av. {playerAverage(game.scores, player)}</span>
                   )}
