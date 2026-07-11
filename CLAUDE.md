@@ -89,6 +89,12 @@ This project's version control mode is set during setup. Check the project-speci
 - **Never run `git push` automatically.** Always confirm before anything leaves the local machine.
 - **Never push to main.** Every push goes to a new named branch.
 - The full pre-push gate applies including branch confirmation and push.
+- Never merge directly to main under any circumstances. Always:
+  - Create a descriptive branch before any work starts — feat/, fix/, chore/, refactor/, or security/ prefix, descriptive enough to understand from the branch list alone
+  - Push the branch to GitHub
+  - Show the user the branch name and GitHub URL and wait for explicit confirmation before merging
+  - If the gh CLI is not available, still create and push the branch — do not use direct merge as a fallback
+  - Never auto-clean up branches without asking first — always confirm before deleting a local or remote branch
 
 ---
 
