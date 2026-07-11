@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import History    from './pages/History.jsx'
+import Info       from './pages/Info.jsx'
 import Home       from './pages/Home.jsx'
 import Podium     from './pages/Podium.jsx'
 import Scorecard  from './pages/Scorecard.jsx'
@@ -9,6 +10,7 @@ import { getActiveGame, isStorageAvailable } from './utils/storage.js'
 
 const PAGES = {
   home:       Home,
+  info:       Info,
   setup:      Setup,
   scorecard:  Scorecard,
   podium:     Podium,

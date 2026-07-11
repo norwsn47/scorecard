@@ -14,7 +14,18 @@ export default function Home({ navigate }) {
   }, [])
 
   return (
-    <div className="h-full bg-bg flex flex-col">
+    <div className="h-full bg-bg flex flex-col relative">
+
+      <button
+        onClick={() => navigate('info')}
+        aria-label="Information"
+        className="absolute top-12 right-5 text-muted active:text-accent p-1"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 8h.01M12 12v4" />
+        </svg>
+      </button>
 
       {/* ── Branding ── */}
       <header className="flex-1 flex flex-col items-center justify-center px-6 pt-16 pb-8">
