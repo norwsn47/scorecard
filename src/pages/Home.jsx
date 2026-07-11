@@ -46,7 +46,7 @@ export default function Home({ navigate }) {
           >
             <span>Resume Game</span>
             <span className="text-xs text-muted normal-case tracking-normal font-normal truncate max-w-[160px]">
-              {activeGame.players?.join(', ')}
+              {activeGame.name || activeGame.players?.join(', ')}
             </span>
           </button>
         )}

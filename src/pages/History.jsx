@@ -94,6 +94,11 @@ export default function History({ navigate }) {
               onClick={() => navigate('summary', { game })}
               className="w-full text-left px-4 pt-4 pb-4 pr-10 active:opacity-70"
             >
+              {/* Game name or date as primary identifier */}
+              {game.name
+                ? <p className="font-ui text-sm font-semibold text-text mb-1">{game.name}</p>
+                : null
+              }
               {/* Date + holes */}
               <div className="flex justify-between items-start mb-2">
                 <span className="font-ui text-xs text-muted">

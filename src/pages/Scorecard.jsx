@@ -111,7 +111,7 @@ export default function Scorecard({ navigate, params }) {
       )}
 
       <PageHeader
-        title="Scorecard"
+        title={game.name || 'Scorecard'}
         onBack={() => navigate('home')}
         right={
           <button

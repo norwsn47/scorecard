@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import PageHeader from '../components/PageHeader.jsx'
-import { getPlayers, saveActiveGame, savePlayers } from '../utils/storage.js'
+import { formatGameNameDate } from '../utils/format.js'
 import { canStartGame, createGame, findDuplicateIndices } from '../utils/game.js'
+import { getPlayers, saveActiveGame, savePlayers } from '../utils/storage.js'
 
 const MAX_PLAYERS = 6
 
 export default function Setup({ navigate }) {
+  const [gameName, setGameName]   = useState(() => formatGameNameDate())
   const [names, setNames]         = useState([''])
   const [savedNames]              = useState(() => getPlayers())
   const dupeIndices = findDuplicateIndices(names)
@@ -40,7 +42,7 @@ export default function Setup({ navigate }) {
     const merged = [...new Set([...trimmed, ...existing])].slice(0, 20)
     savePlayers(merged)
 
-    const game = createGame(trimmed)
+    const game = createGame(trimmed, gameName)
     saveActiveGame(game)
     navigate('scorecard', { game })
   }
@@ -51,6 +53,19 @@ export default function Setup({ navigate }) {
       <PageHeader title="New Game" onBack={() => navigate('home')} />
 
       <main className="flex-1 overflow-y-auto px-5 pt-6 pb-10 w-full space-y-3">
+
+        {/* Game name */}
+        <div className="pb-1">
+          <input
+            type="text"
+            value={gameName}
+            onChange={e => setGameName(e.target.value.slice(0, 50))}
+            maxLength={50}
+            autoComplete="off"
+            className="w-full py-3 pl-4 pr-4 rounded-md border border-border font-ui text-base bg-bg-card text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-[rgba(184,85,48,0.4)]"
+          />
+          <p className="font-ui text-xs text-muted mt-1.5 pl-1">Game name — optional</p>
+        </div>
 
         {names.map((name, i) => {
           const listId = `player-suggestions-${i}`
