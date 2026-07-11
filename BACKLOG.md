@@ -50,3 +50,21 @@ Related PRD section: 4.5 (Analytics)
 The npm package name is currently "golf-tavern-scorecard" (package.json line 2). This is an internal identifier only — not user-facing. Rename to "scorecard-by-outbuild" or similar when convenient, as part of routine housekeeping.
 
 No PRD section — housekeeping only.
+
+---
+
+### 5. Crisper course map image
+
+The current course map image (`public/course_map_v2.png`) lacks sharpness when zoomed in on high-resolution screens. Replace with a higher-resolution source image, or explore SVG/vector format if one is available from the course.
+
+No PRD section — visual quality improvement.
+
+---
+
+### 6. Official Bruntsfield Links logo
+
+**Status: Blocked — awaiting permissions**
+
+Add the official Bruntsfield Short Hole Golf Club logo to the app (likely the home screen or course information section) once permission to use it has been obtained from the club.
+
+No PRD section — pending permissions.

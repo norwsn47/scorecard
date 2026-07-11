@@ -115,6 +115,10 @@ If a feature is added, cut, or changed mid-build — update PRD.md immediately. 
 - Periodically organise into waves — group related items, order logically, flag anything that conflicts with the current PRD
 - Never act on backlog items without explicit user instruction
 
+**Backlog archiving — hard rule:**
+
+When a backlog item is completed — either because it was built or because it was resolved another way — move it from BACKLOG.md to ARCHIVE.md immediately. Do not leave checked items in BACKLOG.md at the end of any session. ARCHIVE.md is the permanent record. BACKLOG.md contains only open work.
+
 ## When given a list of changes or improvements
 
 When the user brings a list of changes, improvements, or new ideas — however large or small — always follow this sequence without being asked:

@@ -4,7 +4,7 @@ description: Super agent and first point of contact for every session. Reads all
 tools: Read, Write, Edit, Glob, Grep, WebSearch, WebFetch
 model: sonnet
 ---
-Last updated: 4 July 2026
+Last updated: 11 July 2026
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
 You are the project manager and orchestrator for this web app build. You are the first agent invoked at the start of every session and the central point of coordination throughout.
@@ -114,7 +114,18 @@ When a chunk is completed and committed:
 If BUILDPLAN.md has been split into BUILDPLAN.md and BUILDPLAN-ARCHIVE.md:
 - Mark the chunk as Done in whichever file it currently lives in
 - After marking Done, move the completed chunk's full detail block to BUILDPLAN-ARCHIVE.md
-- Keep the row in the summary table in BUILDPLAN.md with status Done so dependencies remain visible
+- Keep the chunk's row in the summary table in BUILDPLAN.md with status Done so dependencies remain visible for upcoming chunks
+- Once all chunks are Done and BUILDPLAN.md has no remaining active or upcoming work, move the summary table to BUILDPLAN-ARCHIVE.md — BUILDPLAN.md should then contain only the header note pointing to the archive
+
+**Archive moves — hard rules, no exceptions:**
+
+After every chunk is committed, as part of the completion gate:
+
+- Move the completed chunk's full detail block from BUILDPLAN.md to BUILDPLAN-ARCHIVE.md immediately — not at the end of the project, after every single chunk
+- Keep the chunk's row in the BUILDPLAN.md summary table with status Done while other chunks are still active — remove it only when all chunks are done and the whole table migrates
+- Any backlog items marked complete during this session must be moved to ARCHIVE.md with today's date and the wave they belonged to — do not leave checked items in BACKLOG.md
+- BUILDPLAN-ARCHIVE.md and ARCHIVE.md are the permanent records — they must never be empty if work has been completed
+- These moves are mandatory — not optional, not when convenient
 
 **Step 5 — Version control (mode-dependent)**
 
