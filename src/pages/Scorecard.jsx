@@ -98,7 +98,7 @@ export default function Scorecard({ navigate, params }) {
     clearActiveGame()
     clearActiveCell()
     track('Game Completed', { players: players.length, holes: completed.holesPlayed })
-    navigate('podium', { game: completed })
+    navigate('summary', { game: completed })
   }
 
   return (

@@ -58,32 +58,33 @@ export default function Summary({ navigate, params }) {
     <div className="h-full bg-bg flex flex-col">
 
       {/* Header */}
-      <header className="px-5 pt-12 pb-6 border-b border-border">
-        <div className="flex items-center gap-3 mb-4">
+      <header className="px-5 pt-10 pb-4 border-b border-border">
+        <div className="flex items-center gap-3">
           <div className="flex-1 h-px bg-border" />
           <span className="font-ui text-xs tracking-[0.2em] uppercase text-muted">
             {game.holesPlayed ?? game.holes} holes · {formatDate(game.completedAt)}
           </span>
           <div className="flex-1 h-px bg-border" />
         </div>
-        <h1 className="font-display italic text-3xl text-text text-center">Round complete</h1>
       </header>
 
-      {/* Winner — slim rule-separated banner, table is the hero */}
-      <div className="px-5 pt-4 pb-1">
-        <div className="flex items-center gap-3">
-          <div className="flex-1 h-px bg-border" />
-          {game.winner ? (
-            <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted shrink-0">
-              Winner — <span className="font-display italic text-sm text-accent normal-case tracking-normal">{game.winner}</span>
-              <span className="ml-2 font-ui text-xs text-muted normal-case tracking-normal">{playerTotal(game.scores, game.winner)} strokes</span>
-            </p>
-          ) : (
-            <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted shrink-0">Nobody finished</p>
-          )}
-          <div className="flex-1 h-px bg-border" />
+      {/* Winner — only shown for multi-player rounds */}
+      {(game.players?.length ?? 0) > 1 && (
+        <div className="px-5 pt-3 pb-1">
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-px bg-border" />
+            {game.winner ? (
+              <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted shrink-0">
+                Winner — <span className="font-display italic text-sm text-accent normal-case tracking-normal">{game.winner}</span>
+                <span className="ml-2 font-ui text-xs text-muted normal-case tracking-normal">{playerTotal(game.scores, game.winner)} strokes</span>
+              </p>
+            ) : (
+              <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted shrink-0">Nobody finished</p>
+            )}
+            <div className="flex-1 h-px bg-border" />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Read-only scorecard */}
       <div className="flex-1 overflow-y-auto overflow-x-auto mt-3">
@@ -130,7 +131,7 @@ export default function Summary({ navigate, params }) {
             ))}
           </tbody>
 
-          <tfoot>
+          <tfoot className="sticky bottom-0 z-10">
             <tr className="bg-bg-card border-t-2 border-border">
               <td className="py-3 px-3 font-ui text-xs tracking-[0.12em] uppercase text-muted">Total</td>
               {(game.players ?? []).map(player => (
@@ -171,30 +172,32 @@ export default function Summary({ navigate, params }) {
         )}
 
         <button
-          onClick={async () => {
-            setSharing(true)
-            try {
-              await shareScorecard(game)
-              track('Scorecard Shared')
-            } catch {
-              // share failed silently
-            } finally {
-              setSharing(false)
-            }
-          }}
-          disabled={sharing}
-          className="w-full py-4 rounded-sm border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card disabled:opacity-40"
-        >
-          {sharing ? 'Generating…' : 'Share the card'}
-        </button>
-
-        <button
           onClick={handleGoHome}
           disabled={saving}
           className="w-full py-4 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn disabled:opacity-60"
         >
           {saving ? 'Saving…' : 'Done'}
         </button>
+
+        <div className="text-center -mt-2">
+          <button
+            onClick={async () => {
+              setSharing(true)
+              try {
+                await shareScorecard(game)
+                track('Scorecard Shared')
+              } catch {
+                // share failed silently
+              } finally {
+                setSharing(false)
+              }
+            }}
+            disabled={sharing}
+            className="font-ui text-xs text-muted underline underline-offset-2 active:opacity-70 disabled:opacity-40"
+          >
+            {sharing ? 'Generating…' : 'Share scorecard'}
+          </button>
+        </div>
 
         {!user && (
           <div className="text-center space-y-1 pt-2">
