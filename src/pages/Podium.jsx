@@ -1,5 +1,6 @@
 import { playerAverage, playerTotal } from '../utils/scores.js'
 import { getCompletedGames } from '../utils/storage.js'
+import { useAuth } from '../hooks/useAuth.jsx'
 
 function ordinal(n) {
   const v = n % 100
@@ -11,6 +12,7 @@ function ordinal(n) {
 }
 
 export default function Podium({ navigate, params }) {
+  const { user } = useAuth()
   const game = params?.game ?? getCompletedGames()[0] ?? null
 
   if (!game) {
@@ -114,13 +116,27 @@ export default function Podium({ navigate, params }) {
       </div>
 
       {/* CTA */}
-      <div className="px-6 pb-10">
+      <div className="px-6 pb-10 space-y-4">
         <button
           onClick={() => navigate('summary', { game })}
           className="w-full py-4 rounded-sm border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card"
         >
           See full card
         </button>
+
+        {!user && (
+          <div className="text-center space-y-1 pt-1">
+            <p className="font-ui text-xs text-muted leading-relaxed">
+              Results saved on this device only — may be lost in private browsing or if you clear your browser data.
+            </p>
+            <button
+              onClick={() => navigate('login')}
+              className="font-ui text-xs text-accent underline underline-offset-2 active:opacity-70"
+            >
+              Create an account to save your rounds
+            </button>
+          </div>
+        )}
       </div>
 
     </div>

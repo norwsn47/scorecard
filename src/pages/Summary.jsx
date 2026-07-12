@@ -196,6 +196,20 @@ export default function Summary({ navigate, params }) {
           {saving ? 'Saving…' : 'Done'}
         </button>
 
+        {!user && (
+          <div className="text-center space-y-1 pt-2">
+            <p className="font-ui text-xs text-muted leading-relaxed">
+              Results saved on this device only — may be lost in private browsing or if you clear your browser data.
+            </p>
+            <button
+              onClick={() => navigate('login')}
+              className="font-ui text-xs text-accent underline underline-offset-2 active:opacity-70"
+            >
+              Create an account to save your rounds
+            </button>
+          </div>
+        )}
+
       </div>
 
     </div>
