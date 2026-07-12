@@ -88,7 +88,7 @@ export default function Home({ navigate }) {
             onClick={() => navigate('history')}
             className="w-full py-4 px-6 rounded-sm border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card"
           >
-            History
+            Past Rounds
           </button>
         )}
 
