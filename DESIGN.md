@@ -1,14 +1,14 @@
 # Design
 ## Scorecard by Outbuild — Bruntsfield Links
 
-Last updated: 8 July 2026
+Last updated: 12 July 2026
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
 ---
 
 ## Overview
 
-Mobile-only scorecard app. Cream/warm ivory background with a single terracotta/rust brand colour. Two typographic registers: Cormorant Garamond italic for editorial moments, Inter for all UI labels and data. Outbuild design language throughout — warm, restrained, purposeful.
+Mobile-only scorecard app. Cream/warm ivory background with a single forest green brand colour. Two typographic registers: Cormorant Garamond italic for editorial moments, Inter for all UI labels and data. Outbuild design language throughout — warm, restrained, purposeful.
 
 **Mobile only: true** — on desktop the app is displayed as a centred phone frame with a handwritten Caveat note beside it.
 
@@ -24,8 +24,8 @@ All tokens are defined as CSS custom properties in `src/styles/index.css` and al
 | `bg-card` | `--color-bg-card` | `#F5EFE3` | Surface — slightly warmer cream for cards, inputs |
 | `text` | `--color-text` | `#1A1A18` | Primary text — near-black charcoal |
 | `muted` | `--color-text-muted` | `#6B6560` | Muted text — warm grey |
-| `accent` | `--color-accent` | `#B85530` | Brand colour — terracotta/rust; all interactive highlights |
-| `accent-hover` | `--color-accent-hover` | `#9E4728` | Accent on press |
+| `accent` | `--color-accent` | `#2d5a4a` | Brand colour — forest green; all interactive highlights |
+| `accent-hover` | `--color-accent-hover` | `#244a3c` | Accent on press |
 | `border` | `--color-border` | `#D9D0C4` | All borders — warm light |
 | `chrome` | `--color-chrome` | `#C0B8B0` | Inactive chrome — disabled icons, borders |
 | `control-warm` | `--color-control-warm` | `#9A9189` | Warm grey fill — advance button background |
@@ -37,8 +37,8 @@ All tokens are defined as CSS custom properties in `src/styles/index.css` and al
 |---|---|---|
 | `--overlay-modal` | `rgba(26,26,24,0.55)` | Full modal backdrop |
 | `--overlay-backdrop` | `rgba(26,26,24,0.4)` | Bottom sheet backdrop |
-| Active row tint | `rgba(184,85,48,0.05)` | Scorecard active row background |
-| Focus ring | `rgba(184,85,48,0.4)` | Input focus ring |
+| Active row tint | `rgba(45,90,74,0.05)` | Scorecard active row background |
+| Focus ring | `rgba(45,90,74,0.4)` | Input focus ring |
 
 ---
 
@@ -173,7 +173,7 @@ active:bg-border
 ```
 w-full py-3 pl-4 rounded-md border font-ui text-base bg-bg-card text-text
 placeholder:text-muted
-focus:outline-none focus:ring-2 focus:ring-[rgba(184,85,48,0.4)]
+focus:outline-none focus:ring-2 focus:ring-[rgba(45,90,74,0.4)]
 normal border: border-border
 error border: border-accent
 with remove button: pr-10   without: pr-4
@@ -205,7 +205,7 @@ table-fixed border-collapse w-full
 | Header row | `bg-bg-card border-b border-border` |
 | Header cells | `font-ui text-xs tracking-[0.12em] uppercase text-muted` |
 | Data rows | `border-b border-border` |
-| Active row | `bg-[rgba(184,85,48,0.05)]` |
+| Active row | `bg-[rgba(45,90,74,0.05)]` |
 | Active cell | `bg-accent text-white font-semibold` |
 | Hole # (active row) | `text-accent font-semibold` |
 | Hole # (inactive) | `text-chrome` |
@@ -283,7 +283,7 @@ Inline SVGs throughout — no icon library dependency.
 ## Consistency check — Outbuild principles
 
 ### Aligned ✓
-- Single brand colour (terracotta) handles all decorative and interactive roles
+- Single brand colour (forest green) handles all decorative and interactive roles
 - Two typographic registers (editorial Cormorant Garamond + micro Inter) are clearly distinct
 - Flatness maintained — shadows only on floating elements (modals, primary CTA)
 - Two radius families: `rounded-md` for controls, `rounded-full` for circular controls
@@ -302,10 +302,10 @@ The CSS token `--color-control-warm: #9A9189` was created specifically for the a
 The `control-warm` token is currently unused. Fix: change `bg-muted border-2 border-muted` to `bg-control-warm border-2 border-control-warm` in the advance button.
 
 **2. Active row tint is an arbitrary hardcoded value**
-`bg-[rgba(184,85,48,0.05)]` hardcodes the accent RGB. Recommend adding `--color-accent-tint` to CSS vars and `'accent-tint': 'var(--color-accent-tint)'` to Tailwind config so it's a named token.
+`bg-[rgba(45,90,74,0.05)]` hardcodes the accent RGB. Recommend adding `--color-accent-tint` to CSS vars and `'accent-tint': 'var(--color-accent-tint)'` to Tailwind config so it's a named token.
 
 **3. Focus ring hardcodes the accent RGB**
-`focus:ring-[rgba(184,85,48,0.4)]` — same pattern as above. Could be extracted to a consistent named value.
+`focus:ring-[rgba(45,90,74,0.4)]` — same pattern as above. Could be extracted to a consistent named value.
 
 **4. Podium screen uses a bespoke header instead of PageHeader**
 All other screens use the shared `PageHeader` component. Podium has a custom inline header. Low priority — but worth standardising if Podium header ever needs updating.

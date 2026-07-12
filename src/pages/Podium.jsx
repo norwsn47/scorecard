@@ -41,17 +41,17 @@ export default function Podium({ navigate, params }) {
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-10">
 
         <p className="font-ui text-xs tracking-[0.2em] uppercase text-muted mb-2">
-          Game Complete
+          Round complete
         </p>
         <h1 className="font-display italic text-4xl text-text mb-2">
-          Final Scores
+          Final card
         </h1>
         <div className="w-8 h-0.5 bg-accent mx-auto mb-10" />
 
         {/* Rankings */}
         <div className="w-full max-w-xs space-y-3">
           {finishers.length === 0 && (
-            <p className="font-ui text-sm text-muted text-center">All players did not finish.</p>
+            <p className="font-ui text-sm text-muted text-center">Nobody finished.</p>
           )}
 
           {finishers.map((player, i) => (
@@ -119,7 +119,7 @@ export default function Podium({ navigate, params }) {
           onClick={() => navigate('summary', { game })}
           className="w-full py-4 rounded-md border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card"
         >
-          See Full Scorecard
+          See full card
         </button>
       </div>
 

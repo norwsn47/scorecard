@@ -106,7 +106,7 @@ export default function Scorecard({ navigate, params }) {
 
       {saveError && (
         <div className="bg-accent text-bg text-center font-ui text-xs py-2 px-4 tracking-wide">
-          Could not save – storage may be full or blocked
+          Couldn't save – storage may be full
         </div>
       )}
 
@@ -247,7 +247,7 @@ export default function Scorecard({ navigate, params }) {
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-6" />
             <h2 className="font-display italic text-2xl text-text mb-1">Finish Game?</h2>
             <p className="font-ui text-xs text-muted tracking-wide mb-6">
-              This cannot be undone
+              Scores are final
             </p>
             <div className="space-y-2 mb-8">
               {players.map(player => (

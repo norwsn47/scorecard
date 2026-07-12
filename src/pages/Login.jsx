@@ -23,12 +23,12 @@ export default function Login({ navigate }) {
       })
       const data = await res.json()
       if (!res.ok) {
-        setError(data.error || 'Something went wrong - please try again.')
+        setError(data.error || 'Something went wrong. Try again.')
       } else {
         setSent(true)
       }
     } catch {
-      setError('Something went wrong - please try again.')
+      setError('Something went wrong. Try again.')
     } finally {
       setSending(false)
     }
@@ -52,7 +52,7 @@ export default function Login({ navigate }) {
           </div>
           <div className="space-y-2">
             <h1 className="font-display text-3xl italic text-text">Check your email</h1>
-            <p className="font-ui text-sm text-muted">We sent a sign-in link to</p>
+            <p className="font-ui text-sm text-muted">We've sent a sign-in link to</p>
             <p className="font-ui text-sm text-text font-medium">{email}</p>
           </div>
           <p className="font-ui text-xs text-muted leading-relaxed">
@@ -81,12 +81,12 @@ export default function Login({ navigate }) {
 
         <div className="mb-8 space-y-3">
           <p className="font-ui text-sm text-muted leading-relaxed">
-            Golf scoring shouldn't be complicated. But sometimes it's nice to see how you're getting on.
+            The scoring is simple. It's nice to keep a proper record.
           </p>
           <div className="space-y-2 pt-1">
             <p className="font-ui text-sm text-muted flex gap-3"><span className="text-accent font-semibold">1</span>Add your own courses</p>
-            <p className="font-ui text-sm text-muted flex gap-3"><span className="text-accent font-semibold">2</span>Track your scores across sessions</p>
-            <p className="font-ui text-sm text-muted flex gap-3"><span className="text-accent font-semibold">3</span>See basic stats on your rounds</p>
+            <p className="font-ui text-sm text-muted flex gap-3"><span className="text-accent font-semibold">2</span>Keep a proper record across rounds</p>
+            <p className="font-ui text-sm text-muted flex gap-3"><span className="text-accent font-semibold">3</span>Look back at how you played</p>
           </div>
         </div>
 
@@ -94,9 +94,9 @@ export default function Login({ navigate }) {
           <div className="mb-5 px-4 py-3 rounded-md bg-bg-card border border-border">
             <p className="font-ui text-xs text-accent">
               {error === 'expired'
-                ? 'Your sign-in link has expired - please request a new one.'
+                ? 'Your link has expired. Request a new one.'
                 : error === 'error'
-                ? 'Something went wrong. Please try again.'
+                ? 'Something went wrong. Try again.'
                 : error}
             </p>
           </div>
@@ -115,7 +115,7 @@ export default function Login({ navigate }) {
               required
               autoFocus
               autoComplete="email"
-              className="w-full px-4 py-3 rounded-md bg-bg-card border border-border font-ui text-base text-text placeholder:text-chrome focus:outline-none focus:ring-2 focus:ring-[rgba(184,85,48,0.4)]"
+              className="w-full px-4 py-3 rounded-md bg-bg-card border border-border font-ui text-base text-text placeholder:text-chrome focus:outline-none focus:ring-2 focus:ring-[rgba(45,90,74,0.4)]"
             />
           </div>
           <button
@@ -128,7 +128,7 @@ export default function Login({ navigate }) {
         </form>
 
         <p className="font-ui text-xs text-muted mt-6 text-center">
-          No password needed - we'll email you a sign-in link.
+          No password. We'll send a link to your inbox.
         </p>
       </div>
     </div>

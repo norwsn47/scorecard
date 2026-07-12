@@ -63,7 +63,7 @@ export default function CourseMapModal({ onClose }) {
         <div className="border-t border-border px-5 py-3 shrink-0">
           <button
             onClick={() => setShowRules(r => !r)}
-            className="font-ui text-xs text-muted underline underline-offset-2 active:text-text"
+            className="font-ui text-xs text-accent underline underline-offset-2 active:text-text"
           >
             {showRules ? '← Back to map' : 'Course rules'}
           </button>

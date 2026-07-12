@@ -66,7 +66,7 @@ export default function Summary({ navigate, params }) {
           </span>
           <div className="flex-1 h-px bg-border" />
         </div>
-        <h1 className="font-display italic text-3xl text-text text-center">Game Complete</h1>
+        <h1 className="font-display italic text-3xl text-text text-center">Round complete</h1>
       </header>
 
       {/* Winner callout */}
@@ -80,7 +80,7 @@ export default function Summary({ navigate, params }) {
         </div>
       ) : (
         <div className="mx-5 mt-5 py-4 px-5 rounded-md bg-bg-card border border-border text-center">
-          <p className="font-ui text-xs tracking-[0.2em] uppercase text-muted">No winner - all players DNF</p>
+          <p className="font-ui text-xs tracking-[0.2em] uppercase text-muted">Nobody finished</p>
         </div>
       )}
 
@@ -184,7 +184,7 @@ export default function Summary({ navigate, params }) {
           disabled={sharing}
           className="w-full py-4 rounded-md border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card disabled:opacity-40"
         >
-          {sharing ? 'Generating…' : 'Share Scorecard'}
+          {sharing ? 'Generating…' : 'Share the card'}
         </button>
 
         <button
@@ -192,7 +192,7 @@ export default function Summary({ navigate, params }) {
           disabled={saving}
           className="w-full py-4 rounded-md bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn disabled:opacity-60"
         >
-          {saving ? 'Saving…' : 'Back to Home'}
+          {saving ? 'Saving…' : 'Done'}
         </button>
 
       </div>

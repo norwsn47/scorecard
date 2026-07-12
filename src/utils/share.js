@@ -5,7 +5,7 @@ const C = {
   card:   '#F5EFE3',
   text:   '#1A1A18',
   muted:  '#6B6560',
-  accent: '#B85530',
+  accent: '#2d5a4a',
   border: '#D9D0C4',
 }
 

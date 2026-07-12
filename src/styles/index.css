@@ -9,12 +9,12 @@
     --color-bg-card:   #F5EFE3;
     --color-text:      #1A1A18;
     --color-text-muted:#6B6560;
-    --color-accent:    #B85530;
-    --color-accent-hover: #9E4728;
+    --color-accent:    #2d5a4a;
+    --color-accent-hover: #244a3c;
     --color-border:    #D9D0C4;
     --color-chrome:       #C0B8B0;   /* inactive UI chrome — muted icons, disabled borders */
     --color-control-warm: #9A9189;   /* warm grey fill — advance button */
-    --color-accent-tint:  rgba(184,85,48,0.05); /* active row background */
+    --color-accent-tint:  rgba(45,90,74,0.05); /* active row background */
 
     /* Typography */
     --font-display: 'Cormorant Garamond', serif;

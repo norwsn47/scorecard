@@ -222,7 +222,7 @@ export default function Setup({ navigate }) {
         <div className="pt-2 pb-1 text-center">
           <button
             onClick={() => navigate('rules', { from: 'setup' })}
-            className="py-2 font-ui text-xs text-muted underline underline-offset-2 active:text-text"
+            className="py-2 font-ui text-xs text-accent underline underline-offset-2 active:text-text"
           >
             Course rules
           </button>
@@ -239,7 +239,7 @@ export default function Setup({ navigate }) {
                 : 'bg-accent text-bg opacity-40 cursor-not-allowed',
             ].join(' ')}
           >
-            Start
+            Start the round
           </button>
         </div>
 

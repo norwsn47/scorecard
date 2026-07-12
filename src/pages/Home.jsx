@@ -58,9 +58,9 @@ export default function Home({ navigate }) {
         <div className="w-10 h-0.5 bg-accent mx-auto mt-6 mb-6" />
 
         <div className="space-y-2">
-          <p className="font-ui text-sm text-muted flex gap-3"><span className="text-accent font-semibold">1</span>No account needed to get started</p>
-          <p className="font-ui text-sm text-muted flex gap-3"><span className="text-accent font-semibold">2</span>Track every hole as you play</p>
-          <p className="font-ui text-sm text-muted flex gap-3"><span className="text-accent font-semibold">3</span>Share your results in one tap</p>
+          <p className="font-ui text-sm text-muted flex gap-3"><span className="text-accent font-semibold">1</span>No sign-up, no faff - just golf</p>
+          <p className="font-ui text-sm text-muted flex gap-3"><span className="text-accent font-semibold">2</span>Every hole, as you play it</p>
+          <p className="font-ui text-sm text-muted flex gap-3"><span className="text-accent font-semibold">3</span>Share your card when you're done</p>
         </div>
       </header>
 
@@ -105,12 +105,11 @@ export default function Home({ navigate }) {
         {/* Sign in prompt for logged-out users */}
         {!user && (
           <div className="mt-2 flex flex-col items-center gap-1">
-            <p className="font-ui text-xs text-muted">Want to save your history?</p>
             <button
               onClick={() => navigate('login')}
               className="font-ui text-xs text-accent underline underline-offset-2 active:opacity-70"
             >
-              Sign in to Scorecard Club →
+              Playing again? Sign in to keep your history
             </button>
           </div>
         )}

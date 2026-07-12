@@ -74,7 +74,7 @@ function AppContent() {
       <div className="app-shell max-w-[430px] mx-auto h-dvh overflow-hidden bg-bg flex flex-col">
         {!storageOk && (
           <div className="sticky top-0 z-50 bg-accent text-bg text-center font-ui text-xs py-2 px-4 tracking-wide">
-            Scores won't be saved – storage is blocked (private browsing?)
+            Scores won't save – storage is blocked. Using private browsing?
           </div>
         )}
         <ErrorBoundary key={page}>

@@ -83,7 +83,7 @@ export default function History({ navigate }) {
       {!user && (
         <div className="px-5 pt-4 pb-1 shrink-0">
           <p className="font-ui text-xs text-muted leading-relaxed">
-            History is saved to your device only. Clearing browser data will erase it.
+            Stored on your device. Gone if you clear your browser.
           </p>
         </div>
       )}
@@ -107,7 +107,7 @@ export default function History({ navigate }) {
 
         {loading && (
           <div className="text-center pt-16">
-            <p className="font-ui text-sm text-muted">Loading your history…</p>
+            <p className="font-ui text-sm text-muted">Loading…</p>
           </div>
         )}
 
@@ -115,20 +115,20 @@ export default function History({ navigate }) {
           <div className="text-center pt-16">
             {filter ? (
               <>
-                <p className="font-display italic text-xl text-text mb-2">No games found</p>
+                <p className="font-display italic text-xl text-text mb-2">No rounds found</p>
                 <p className="font-ui text-sm text-muted">
-                  {filter} hasn't played any recorded games.
+                  {filter} hasn't played a recorded round.
                 </p>
                 <button
                   onClick={() => setFilter(null)}
                   className="mt-4 font-ui text-sm text-accent underline"
                 >
-                  Show all games
+                  Show all rounds
                 </button>
               </>
             ) : (
               <>
-                <p className="font-display italic text-xl text-text mb-2">No games yet</p>
+                <p className="font-display italic text-xl text-text mb-2">No rounds yet</p>
                 <p className="font-ui text-sm text-muted mb-6">
                   Finish a round to see it here.
                 </p>
