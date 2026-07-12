@@ -42,9 +42,10 @@ function normalizeDbGame(row) {
 export default function History({ navigate }) {
   const { user } = useAuth()
 
-  const [games, setGames]     = useState(() => user ? [] : getCompletedGames())
-  const [loading, setLoading] = useState(!!user)
-  const [filter, setFilter]   = useState(null)
+  const [games, setGames]       = useState(() => user ? [] : getCompletedGames())
+  const [loading, setLoading]   = useState(!!user)
+  const [filter, setFilter]     = useState(null)
+  const [courseFilter, setCourseFilter] = useState(null)
 
   useEffect(() => {
     if (!user) return
@@ -55,9 +56,13 @@ export default function History({ navigate }) {
       .finally(() => setLoading(false))
   }, [user])
 
-  const displayed = filter
-    ? games.filter(g => g.players?.includes(filter))
-    : games
+  const courses = user
+    ? [...new Set(games.map(g => g.courseName).filter(Boolean))]
+    : []
+
+  const displayed = games
+    .filter(g => !courseFilter || g.courseName === courseFilter)
+    .filter(g => !filter || g.players?.includes(filter))
 
   function toggleFilter(name) {
     setFilter(prev => (prev === name ? null : name))
@@ -78,6 +83,42 @@ export default function History({ navigate }) {
     <div className="h-full bg-bg flex flex-col">
 
       <PageHeader title="History" onBack={() => navigate('home')} />
+
+      {/* Course label (1 course) or course filter chips (2+ courses) — logged-in only */}
+      {user && !loading && courses.length === 1 && (
+        <div className="px-5 pt-4 pb-1 shrink-0">
+          <p className="font-ui text-xs tracking-[0.08em] uppercase text-accent">{courses[0]}</p>
+        </div>
+      )}
+      {user && !loading && courses.length > 1 && (
+        <div className="px-5 pt-3 pb-1 shrink-0 flex gap-2 overflow-x-auto no-scrollbar">
+          <button
+            onClick={() => setCourseFilter(null)}
+            className={[
+              'shrink-0 py-1 px-3 rounded-full border font-ui text-xs font-medium',
+              !courseFilter
+                ? 'bg-accent border-accent text-bg'
+                : 'border-border text-muted',
+            ].join(' ')}
+          >
+            All
+          </button>
+          {courses.map(course => (
+            <button
+              key={course}
+              onClick={() => setCourseFilter(prev => prev === course ? null : course)}
+              className={[
+                'shrink-0 py-1 px-3 rounded-full border font-ui text-xs font-medium',
+                courseFilter === course
+                  ? 'bg-accent border-accent text-bg'
+                  : 'border-border text-muted',
+              ].join(' ')}
+            >
+              {course}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Disclaimer — logged-out only */}
       {!user && (
