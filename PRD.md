@@ -1,8 +1,8 @@
 # Product Requirements Document
 ## Scorecard by Outbuild — Bruntsfield Links
 
-**Version:** 1.5 (MVP)
-**Last updated:** 11 July 2026
+**Version:** 2.0
+**Last updated:** 12 July 2026
 
 ---
 
@@ -30,10 +30,15 @@ Outbuild palette applied for outdoor sunlight legibility on a phone:
 
 ## 3. Users
 
-- Golfers playing Bruntsfield Links
-- Primarily a known group of friends to start — designed to scale to any visitor
-- No accounts, no authentication
+**Quick-play (logged-out):**
+- Golfers playing Bruntsfield Links who want to score a round immediately with no setup
+- No account required — scores saved locally to the device
 - Accessed via mobile browser on the course
+
+**Scorecard Plus (logged-in):**
+- Users who want history that persists across devices and browsers
+- Authenticated via magic link (email only — no password)
+- Can create and name custom courses, with Bruntsfield Links pre-loaded as the default
 
 ---
 
@@ -211,26 +216,32 @@ MANY THANKS FOR YOUR CO-OPERATION — ENJOY YOUR GAME
 
 ---
 
-## 7. Out of scope (MVP)
+## 7. Out of scope
 
-- User accounts or authentication
-- Multiple courses / course selection
+The following are out of scope for both the MVP (v1.x) and the Scorecard Plus release (v2.0):
+
 - Par values or handicap calculations
 - Leaderboards or social features
 - Push notifications
 - Native mobile app (web only)
-- Backend database (local storage only for MVP)
 - Admin tools or course management
-- Cross-device history sync
+
+The following were out of scope in v1.x and are now addressed in v2.0:
+- User accounts and authentication → magic link auth (Section 11)
+- Backend database → Cloudflare D1 (Section 11)
+- Cross-device history sync → DB-backed history for logged-in users (Section 11)
+- Custom course names → user-created courses (Section 11)
 
 ---
 
-## 8. Future considerations (post-MVP)
+## 8. Future considerations (post v2.0)
 
-- Database-backed storage so history persists across devices and browsers
-- Course selection (add more courses, or allow custom course names)
-- Player profiles backed by accounts (optional login)
 - Par values and scoring modes (stableford, etc.)
+- Leaderboards or social features (requires account foundation — now built in v2.0)
+- All-time personal leaderboard per user (lowest round, most wins, etc.)
+- Quick-play history import — allow users to migrate existing localStorage games to their new DB account after signing in
+- Multiple holes / course configuration beyond the default (e.g. 9-hole or 18-hole variants)
+- hello@outbuild.co as the contact email once configured via Resend
 
 ---
 
@@ -252,3 +263,183 @@ MANY THANKS FOR YOUR CO-OPERATION — ENJOY YOUR GAME
 - **Physical scorecard feel** — familiar grid layout, nothing unfamiliar
 - **Outbuild character** — restrained, warm, Scottish — not generic or corporate
 - **No friction** — no login, no setup, no onboarding required
+
+---
+
+## 11. Scorecard Plus (v2.0)
+
+This section defines everything added in v2.0. The MVP (v1.x) remains fully functional for logged-out users — nothing in this section removes or degrades existing quick-play behaviour.
+
+---
+
+### 11.1 Overview
+
+Scorecard Plus is the logged-in layer of the app. It adds persistent history, custom course creation, and cross-device sync for users who want more than quick-play offers. The two modes coexist: the app detects whether a user is authenticated and adapts accordingly.
+
+---
+
+### 11.2 Technology stack additions
+
+- **API layer:** Cloudflare Pages Functions — serverless functions co-deployed with the Cloudflare Pages site, living in the `/functions` directory
+- **Database:** Cloudflare D1 — SQLite-compatible database, bound to the Pages project via wrangler
+- **Email:** Resend — transactional email for magic link delivery (account exists; API key to be created as part of this work)
+- **Session management:** D1 sessions table + HttpOnly cookie — a UUID session token is stored in D1; the browser receives it as a `Set-Cookie: session=<token>; HttpOnly; Secure; SameSite=Strict` header on verification
+
+---
+
+### 11.3 Database schema
+
+Four tables in Cloudflare D1:
+
+**users**
+- `id` — UUID, primary key
+- `email` — text, unique, not null
+- `created_at` — timestamp
+
+**magic_tokens**
+- `id` — UUID, primary key
+- `email` — text, not null
+- `token` — text, unique, not null
+- `expires_at` — timestamp
+- `used` — boolean, default false
+
+**sessions**
+- `id` — UUID, primary key (this is the session token stored in the cookie)
+- `user_id` — UUID, foreign key → users.id
+- `created_at` — timestamp
+- `expires_at` — timestamp
+
+**games**
+- `id` — UUID, primary key
+- `user_id` — UUID, foreign key → users.id
+- `game_name` — text, nullable
+- `played_at` — timestamp
+- `holes_played` — integer
+- `player_data` — JSON blob (array of players with name, per-hole scores, total, DNF flag)
+- `course_id` — UUID, foreign key → courses.id, nullable
+- `created_at` — timestamp
+
+**courses**
+- `id` — UUID, primary key
+- `user_id` — UUID, foreign key → users.id (null for system-provided courses)
+- `name` — text, not null
+- `holes` — integer, default 36
+- `is_default` — boolean, default false
+- `created_at` — timestamp
+
+**Seed data:** On new account creation, Bruntsfield Links is inserted into `courses` for that user as their default course (`is_default = true`, `holes = 36`).
+
+---
+
+### 11.4 Authentication — magic link via Resend
+
+No passwords. Users authenticate with their email address only.
+
+**Flow:**
+1. User enters email address on the login screen
+2. `POST /api/auth/request-link` — validates email format, creates a magic_token record in D1 (expires in 15 minutes), sends the magic link email via Resend
+3. User sees a confirmation screen: "Check your email — we've sent a link to [email]"
+4. User taps the link in their email
+5. `GET /api/auth/verify?token=<token>` — validates the token (exists, not expired, not used), marks it as used, creates or finds the user record, creates a session, sets the HttpOnly session cookie, redirects to the app
+6. On first-time sign-in (new user), Bruntsfield Links is seeded as the user's default course
+7. User is now in the logged-in state
+
+**Session expiry:** Sessions last 30 days. A new session is created on each successful verification.
+
+**Email content:** Simple, branded. Subject: "Your Scorecard Plus sign-in link". Body: a single CTA button — "Sign in to Scorecard Plus" — with a plain-text fallback URL below. Signed off with Outbuild branding.
+
+**From address:** To be confirmed — either `hello@outbuild.co` or a Resend-verified sending domain. This is determined when the Resend API key is created as part of this work.
+
+---
+
+### 11.5 Session management
+
+- Session ID (UUID) stored in D1 `sessions` table
+- Browser receives the session ID as a `session` HttpOnly cookie — never accessible to JavaScript
+- `GET /api/auth/me` — reads the session cookie, validates against D1, returns `{ user: { id, email } }` or 401
+- All logged-in API routes read and validate the session cookie before executing
+- `POST /api/auth/logout` — deletes the session from D1, clears the cookie, returns 200
+- On app load, the frontend calls `/api/auth/me` to determine whether the user is authenticated — this sets a global `user` context used throughout the app
+
+---
+
+### 11.6 Scorecard Plus branding
+
+- The logged-in product is called **Scorecard Plus**
+- The "Plus" suffix appears in the app header when the user is authenticated — once, in the top-level logo/wordmark area
+- Visual treatment: logo similar to the existing watermark/wordmark, with "Plus" appended in the terracotta accent colour — same weight and baseline as the rest of the logo
+- Logged-out users see the existing branding unchanged — no "Plus" anywhere
+- The "Plus" branding must not be garish or promotional — it is a quiet identifier, not a marketing badge
+
+---
+
+### 11.7 Course creation and selection
+
+**For logged-in users:**
+- When starting a new game, a course selector appears above the player setup
+- Default selected: the user's default course (Bruntsfield Links on first use)
+- User can select from their existing courses or create a new one
+- Creating a course: a single text input for the course name — any name the user types is valid
+- New courses default to 36 holes — no per-hole configuration in v2.0
+- The selected course is stored on the game record when the game is saved to D1
+- Course names appear in the game history list
+
+**For logged-out users:**
+- Quick-play remains hardcoded to Bruntsfield Links — no course selection UI
+- No change to the logged-out experience
+
+**Backlog:** Allow quick-play games (localStorage) to be imported into the user's DB after sign-in — logged in BACKLOG.md as a future item, not in v2.0.
+
+---
+
+### 11.8 Logged-in game flow
+
+When a user is authenticated, the game save behaviour changes:
+
+- On game completion, the game is saved to D1 (via `POST /api/games`) in addition to (or instead of) localStorage — this is to be determined during implementation, but the preferred approach is DB only for logged-in users to keep the two histories cleanly separate
+- The game record includes: user_id, game_name, played_at, holes_played, player_data (JSON), course_id
+- The existing finish-game flow (podium screen, summary screen, share) is unchanged — only the save destination changes
+
+**Active game state:** While a game is in progress, the active game is still tracked in localStorage (same as the quick-play flow). On game completion, the final record is written to D1.
+
+---
+
+### 11.9 Logged-in history
+
+- Logged-in users see their DB-backed game history — not their localStorage history
+- Logged-out users see their localStorage history — no change
+- The two histories are kept strictly separate — no merging in v2.0
+- Logged-in history screen shows: game name (if set), course name, date, player names, holes played, winner
+- Tapping a game shows the full scorecard (read-only, same layout as the existing summary screen)
+- Tapping a player name filters to games that player appeared in
+- Empty state if no games saved yet
+
+---
+
+### 11.10 Quick-play (unchanged)
+
+The quick-play experience (logged-out mode) is not changed by v2.0. Everything in Sections 4–10 of this PRD remains in effect for logged-out users. The app detects auth state on load and adapts — but a logged-out user should not notice anything different from the MVP.
+
+---
+
+### 11.11 Environment variables and secrets
+
+The following must be configured before Phase 4 build starts:
+
+| Variable | Where | Notes |
+|---|---|---|
+| `RESEND_API_KEY` | Cloudflare Pages env (production + preview) | API key to be created in Resend dashboard |
+| `RESEND_FROM_EMAIL` | Cloudflare Pages env | Sending address — to be confirmed when Resend key is created |
+| `APP_URL` | Cloudflare Pages env | Base URL for constructing magic link URLs (e.g. `https://scorecard.outbuild.uk`) |
+| D1 binding: `DB` | wrangler.toml | Not an env var — a Cloudflare D1 binding. Database to be created via wrangler. |
+
+Cookie name and session/token expiry can be hardcoded in the API layer (not env vars).
+
+---
+
+### 11.12 Information page update (v2.0)
+
+When Scorecard Plus is live, the information page (PRD 4.8) must be updated to reflect:
+- That logged-in users' data is stored in a Cloudflare D1 database, not only in local storage
+- That email addresses are processed by Resend for authentication purposes
+- The contact email should be updated to hello@outbuild.co once that address is configured via Resend (see BACKLOG.md)
