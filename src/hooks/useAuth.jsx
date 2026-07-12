@@ -16,11 +16,14 @@ export function AuthProvider({ children }) {
       window.history.replaceState({}, '', window.location.pathname)
     }
 
-    fetch('/api/auth/me', { credentials: 'include' })
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 5000)
+
+    fetch('/api/auth/me', { credentials: 'include', signal: controller.signal })
       .then(res => res.json())
       .then(data => setUser(data.user ?? null))
       .catch(() => setUser(null))
-      .finally(() => setLoading(false))
+      .finally(() => { clearTimeout(timeout); setLoading(false) })
   }, [])
 
   const logout = useCallback(async () => {
