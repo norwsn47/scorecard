@@ -1,5 +1,5 @@
 # CLAUDE.md
-Last updated: 11 July 2026
+Last updated: 12 July 2026
 > Ground rules for this project. Read this at the start of every session.
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
@@ -154,3 +154,10 @@ After every significant task, provide a short summary covering:
 <!-- Version control: none (Mode A — local files only) -->
 <!-- Version control: git local (Mode B — no remote)   -->
 Version control: git + GitHub (Mode C — full)
+
+Work laptop constraints - CLI tools:
+- Wrangler CLI is not available on this machine
+- gh CLI is not available on this machine
+- Homebrew is not available on this machine
+- Do not attempt to run any of these commands
+- If a task requires one of these tools, stop and output clear manual instructions for the human to follow instead - using the Cloudflare dashboard, GitHub UI, or Resend dashboard as appropriate

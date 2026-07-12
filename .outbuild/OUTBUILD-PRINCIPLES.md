@@ -1,5 +1,5 @@
 # Outbuild Design Principles
-Last updated: 4 July 2026
+Last updated: 12 July 2026
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 *To be fed into the design-director agent alongside project references at step 2.4*
 
@@ -57,6 +57,56 @@ The aesthetic comes from the context Outbuild products live in — outdoors, act
 - Dark mode as a style choice rather than a user need
 - Landing page energy in product UI — hero sections, feature grids, testimonial carousels
 - Anything that would feel out of place shown to someone standing on a hill
+
+---
+
+## Microcopy - write for a specific person in a specific context
+
+Never use generic functional labels if a more specific, human alternative exists. UI copy should sound like someone who cares about this product and knows its context wrote it - not like a form template.
+
+Ask before writing any copy:
+- Who is using this, and where are they when they use it?
+- What are they actually doing at this moment?
+- What would a knowledgeable, friendly person say here - not what would a system prompt say?
+
+Examples of the difference:
+- "Submit" vs "Start the round"
+- "History" vs "Past rounds"
+- "Error: invalid input" vs "That does not look right - try again"
+- "No data available" vs "No rounds saved yet - start a new game to begin"
+
+Rules:
+- Avoid words like Submit, Confirm, Proceed, Enter, Manage - these are system words not human words
+- Empty states should never say "No [thing] found" - they should acknowledge the context and suggest a next step
+- Error messages should explain what went wrong in plain English and say what to do next
+- Button labels should describe the outcome, not the action - "Save round" not "Save", "See full scorecard" not "View details"
+- If a label could belong to any app, it is not specific enough
+
+This applies to every piece of visible text the user reads - buttons, labels, empty states, error messages, headings, helper text, and placeholders.
+
+---
+
+## Products rooted in a physical context
+
+Some Outbuild products are digital replicas of physical objects or are designed to be used in a specific physical environment. In these cases, borrowing from that environment's visual language is not a violation of the Outbuild principles - it is an expression of them.
+
+The core principle is: the product should feel like it belongs where it is used.
+
+Examples of what this permits:
+- A golf scorecard app borrowing the tactile, printed aesthetic of a paper scorecard - texture, sharp corners, left-aligned type, heritage typography
+- A bothy planning app borrowing the utilitarian, functional aesthetic of an OS map or a mountain rescue notice
+- A race spectator tool borrowing the energy and colour of physical race signage
+
+When a product has a strong physical context, the design-director should:
+- Identify the physical object or environment the product most closely relates to
+- Extract the visual principles of that object or environment - not copy it literally, but borrow its spirit
+- Document this as a project-specific design direction in DESIGN.md
+- Flag explicitly that this is a deliberate context-rooted decision, not a deviation from Outbuild principles
+
+What this does not permit:
+- Decorative textures or historical references that have no connection to the product's actual context
+- Borrowing a physical aesthetic purely for trend reasons
+- Abandoning the core Outbuild principles of restraint, clarity, and doing less better - the physical context adds character, it does not override the fundamentals
 
 ---
 
