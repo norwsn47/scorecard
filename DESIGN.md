@@ -272,6 +272,45 @@ Text: "Bruntsfield Links, Edinburgh · Golf played here since 1456"
 
 ---
 
+## Email design — magic link
+
+Email clients cannot load web fonts, so the two-register typographic system is approximated with widely supported fallbacks.
+
+| Role | App token | Email equivalent |
+|------|-----------|-----------------|
+| Display / wordmark | Cormorant Garamond | Georgia, serif |
+| UI labels, body, button | Inter | Arial, sans-serif |
+
+### Colour palette (inline styles — no CSS variables in email)
+
+| Role | Hex |
+|------|-----|
+| Page background | `#F7F4EE` |
+| Card surface | `#F5EFE3` |
+| Border | `#D9D0C4` |
+| Primary text | `#1A1A18` |
+| Muted text / labels | `#6B6560` |
+| Accent (green) | `#1A4329` |
+| Button text | `#F7F4EE` |
+
+### Button style
+Matches the app's primary button: `border-radius: 4px` (sharp), uppercase, `letter-spacing: 0.1em`, `font-weight: 600`, `font-size: 13px`. Background `#1A4329`, text `#F7F4EE`.
+
+### Structure
+- Outer background: `#F7F4EE`, `padding: 40px 20px`
+- Card: `max-width: 480px`, `background: #F5EFE3`, `border: 1px solid #D9D0C4`, `border-radius: 8px`, `padding: 40px`
+- Wordmark: `font-family: Georgia, serif` — "Scorecard" in muted (`#6B6560`), "Club" in accent (`#1A4329`); `font-size: 11px`, uppercase, `letter-spacing: 0.12em`
+- Heading: Georgia, `font-weight: normal`, `font-size: 24px`, `color: #1A1A18`
+- Body copy: Arial, `font-size: 14px`, `line-height: 1.6`, `color: #6B6560`
+- Fallback link: `font-size: 12px`, muted label + `#1A1A18` URL, `word-break: break-all`
+- Footer: Arial, `font-size: 12px`, `color: #6B6560` — "Built by Outbuild. If you didn't request this, you can safely ignore this email."
+- Divider: `border-top: 1px solid #D9D0C4`, no shadow
+
+### Source file
+`functions/api/auth/request-link.js` — `buildEmailHtml()` function.
+
+---
+
 ## Desktop wrapper pattern
 
 `Mobile only: true`
