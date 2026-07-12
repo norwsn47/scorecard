@@ -134,7 +134,7 @@ export default function History({ navigate }) {
                 </p>
                 <button
                   onClick={() => navigate('setup')}
-                  className="py-3 px-6 rounded-md bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn"
+                  className="py-3 px-6 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn"
                 >
                   New Game
                 </button>

@@ -10,6 +10,8 @@ Last updated: 12 July 2026
 
 Mobile-only scorecard app. Cream/warm ivory background with a single forest green brand colour. Two typographic registers: Cormorant Garamond italic for editorial moments, Inter for all UI labels and data. Outbuild design language throughout — warm, restrained, purposeful.
 
+**Design philosophy (Home screen):** "A simple digital replica of the paper scorecard used for hundreds of years, designed to keep your focus on the game, not the screen." The Home screen breaks digital symmetry intentionally — left-aligned title, subtitle, and value propositions create a structured printed-document feel, not a centred app layout.
+
 **Mobile only: true** — on desktop the app is displayed as a centred phone frame with a handwritten Caveat note beside it.
 
 ---
@@ -20,12 +22,12 @@ All tokens are defined as CSS custom properties in `src/styles/index.css` and al
 
 | Token | CSS var | Hex | Role |
 |---|---|---|---|
-| `bg` | `--color-bg` | `#FAF7F0` | Page background — cream/ivory |
+| `bg` | `--color-bg` | `#F7F4EE` | Page background — warm off-white, heavy cardstock feel |
 | `bg-card` | `--color-bg-card` | `#F5EFE3` | Surface — slightly warmer cream for cards, inputs |
 | `text` | `--color-text` | `#1A1A18` | Primary text — near-black charcoal |
 | `muted` | `--color-text-muted` | `#6B6560` | Muted text — warm grey |
-| `accent` | `--color-accent` | `#2d5a4a` | Brand colour — forest green; all interactive highlights |
-| `accent-hover` | `--color-accent-hover` | `#244a3c` | Accent on press |
+| `accent` | `--color-accent` | `#1A4329` | Brand colour — deep historic Scottish green; all interactive highlights |
+| `accent-hover` | `--color-accent-hover` | `#142f1e` | Accent on press |
 | `border` | `--color-border` | `#D9D0C4` | All borders — warm light |
 | `chrome` | `--color-chrome` | `#C0B8B0` | Inactive chrome — disabled icons, borders |
 | `control-warm` | `--color-control-warm` | `#9A9189` | Warm grey fill — advance button background |
@@ -37,8 +39,8 @@ All tokens are defined as CSS custom properties in `src/styles/index.css` and al
 |---|---|---|
 | `--overlay-modal` | `rgba(26,26,24,0.55)` | Full modal backdrop |
 | `--overlay-backdrop` | `rgba(26,26,24,0.4)` | Bottom sheet backdrop |
-| Active row tint | `rgba(45,90,74,0.05)` | Scorecard active row background |
-| Focus ring | `rgba(45,90,74,0.4)` | Input focus ring |
+| Active row tint | `rgba(26,67,41,0.05)` | Scorecard active row background |
+| Focus ring | `rgba(26,67,41,0.4)` | Input focus ring |
 
 ---
 
@@ -61,6 +63,8 @@ Two registers. The display font is used once, deliberately, for a specific edito
 | Section heading (Podium) | `font-display text-4xl italic text-text` |
 | Player names (Podium) | `font-display text-2xl italic` |
 | Logo lockup (Podium header) | `font-display text-lg italic text-text` |
+
+**Home screen alignment exception:** The `h1` title and subtitle on the Home screen are left-aligned (`text-left`). This is a deliberate departure from centred editorial screens (Podium, page headers). The Home screen follows a printed-document convention.
 
 ### UI register — Inter
 
@@ -105,14 +109,16 @@ Base unit: 4px (Tailwind default).
 
 | Value | Tailwind | Use |
 |---|---|---|
-| `4px` | `rounded-sm` | (Available — rarely used explicitly) |
-| `8px` | `rounded-md` | All interactive controls: buttons, inputs, cards, Podium rows |
+| `4px` | `rounded-sm` | Primary and secondary CTA buttons — sharp, printed-document feel |
+| `8px` | `rounded-md` | All other interactive controls: inputs, cards, Podium rows |
 | `12px` | `rounded-lg` | (Available — larger panels) |
 | `50%` | `rounded-full` | Circular control bar buttons (64×64) |
 | `16px top` | `rounded-t-2xl` | Bottom sheet / confirmation modal |
 | `44px` | *(CSS only)* | Phone frame on desktop |
 
-Rule: interactive elements in the page flow use `rounded-md`. Floating elements (modals, sheets) use `rounded-t-2xl`. Circular controls use `rounded-full`.
+Primary button exception: uses `rounded-sm` (4px) for a sharp, printed-document feel. Secondary/outlined buttons also use `rounded-sm`. All other interactive controls retain `rounded-md` (8px).
+
+Rule: **Exception: primary and secondary CTA buttons use `rounded-sm` (4px) — sharp corners signal a printed document.** All other interactive elements in the page flow use `rounded-md`. Floating elements (modals, sheets) use `rounded-t-2xl`. Circular controls use `rounded-full`.
 
 ---
 
@@ -130,11 +136,25 @@ Static surfaces in the page flow carry no shadow.
 
 ---
 
+## Home screen layout principles
+
+The Home screen breaks the centred-app convention deliberately:
+- `h1` title: left-aligned
+- Subtitle: left-aligned
+- Accent divider rule: left-aligned (`ml-0`, not `mx-auto`)
+- Value-proposition lines: left-aligned
+- Action buttons: full-width (no change)
+- Heritage footer: left-aligned
+
+All other screens retain their existing centred or page-header layout.
+
+---
+
 ## Component patterns
 
 ### Primary button
 ```
-bg-accent text-bg rounded-md py-4 px-6
+bg-accent text-bg rounded-sm py-4 px-6
 font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn
 active:bg-accent-hover
 disabled: opacity-40 cursor-not-allowed
@@ -142,14 +162,14 @@ disabled: opacity-40 cursor-not-allowed
 
 ### Secondary / outline button
 ```
-border border-border text-text rounded-md py-4 px-6
+border border-border text-text rounded-sm py-4 px-6
 font-ui text-sm tracking-[0.1em] uppercase font-medium
 active:bg-bg-card
 ```
 
 ### Accent outline button (Resume Game, Finish header button)
 ```
-border border-accent text-accent rounded-md py-3 px-4
+border border-accent text-accent rounded-sm py-3 px-4
 font-ui text-sm tracking-[0.08em] uppercase font-medium
 ```
 
@@ -173,7 +193,7 @@ active:bg-border
 ```
 w-full py-3 pl-4 rounded-md border font-ui text-base bg-bg-card text-text
 placeholder:text-muted
-focus:outline-none focus:ring-2 focus:ring-[rgba(45,90,74,0.4)]
+focus:outline-none focus:ring-2 focus:ring-[rgba(26,67,41,0.4)]
 normal border: border-border
 error border: border-accent
 with remove button: pr-10   without: pr-4
@@ -205,7 +225,7 @@ table-fixed border-collapse w-full
 | Header row | `bg-bg-card border-b border-border` |
 | Header cells | `font-ui text-xs tracking-[0.12em] uppercase text-muted` |
 | Data rows | `border-b border-border` |
-| Active row | `bg-[rgba(45,90,74,0.05)]` |
+| Active row | `bg-[rgba(26,67,41,0.05)]` |
 | Active cell | `bg-accent text-white font-semibold` |
 | Hole # (active row) | `text-accent font-semibold` |
 | Hole # (inactive) | `text-chrome` |
@@ -223,6 +243,7 @@ table-fixed border-collapse w-full
 w-10 h-0.5 bg-accent mx-auto
 ```
 Used to separate major sections on editorial screens (Home, Podium). Not used on utility screens.
+On the Home screen the rule is left-aligned: `ml-0` replaces `mx-auto`.
 
 ### Error / notification banner
 ```
@@ -238,6 +259,16 @@ Outbuild ↗        text-xs text-muted font-normal underline underline-offset-2
                   → links to https://outbuild.uk, target="_blank"
 ```
 Inline, same baseline, `items-baseline gap-1`.
+
+### Heritage footer (Home screen only)
+```
+font-display italic text-[11px] text-muted opacity-70 text-left pb-3
+```
+Text: "Bruntsfield Links, Edinburgh · Golf played here since 1456"
+- Uses existing `font-display` (Cormorant Garamond italic)
+- `text-[11px]` — deliberately smaller than any standard text step
+- `text-muted` + `opacity-70` — an inscription, not a UI element
+- Left-aligned, no interactive behaviour
 
 ---
 
@@ -302,10 +333,10 @@ The CSS token `--color-control-warm: #9A9189` was created specifically for the a
 The `control-warm` token is currently unused. Fix: change `bg-muted border-2 border-muted` to `bg-control-warm border-2 border-control-warm` in the advance button.
 
 **2. Active row tint is an arbitrary hardcoded value**
-`bg-[rgba(45,90,74,0.05)]` hardcodes the accent RGB. Recommend adding `--color-accent-tint` to CSS vars and `'accent-tint': 'var(--color-accent-tint)'` to Tailwind config so it's a named token.
+`bg-[rgba(26,67,41,0.05)]` hardcodes the accent RGB. Recommend adding `--color-accent-tint` to CSS vars and `'accent-tint': 'var(--color-accent-tint)'` to Tailwind config so it's a named token.
 
 **3. Focus ring hardcodes the accent RGB**
-`focus:ring-[rgba(45,90,74,0.4)]` — same pattern as above. Could be extracted to a consistent named value.
+`focus:ring-[rgba(26,67,41,0.4)]` — same pattern as above. Could be extracted to a consistent named value.
 
 **4. Podium screen uses a bespoke header instead of PageHeader**
 All other screens use the shared `PageHeader` component. Podium has a custom inline header. Low priority — but worth standardising if Podium header ever needs updating.

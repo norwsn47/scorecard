@@ -182,7 +182,7 @@ export default function Summary({ navigate, params }) {
             }
           }}
           disabled={sharing}
-          className="w-full py-4 rounded-md border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card disabled:opacity-40"
+          className="w-full py-4 rounded-sm border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card disabled:opacity-40"
         >
           {sharing ? 'Generating…' : 'Share the card'}
         </button>
@@ -190,7 +190,7 @@ export default function Summary({ navigate, params }) {
         <button
           onClick={handleGoHome}
           disabled={saving}
-          className="w-full py-4 rounded-md bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn disabled:opacity-60"
+          className="w-full py-4 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn disabled:opacity-60"
         >
           {saving ? 'Saving…' : 'Done'}
         </button>

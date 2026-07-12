@@ -46,16 +46,18 @@ export default function Home({ navigate }) {
       )}
 
       {/* ── Branding ── */}
-      <header className="flex-1 flex flex-col items-center justify-center px-6 pt-16 pb-8">
-        <h1 className="font-display text-5xl italic text-text leading-tight text-center">
+      <header className="flex-1 flex flex-col justify-center px-6 pt-16 pb-8">
+        <h1 className="font-display text-5xl italic text-text leading-tight text-left">
           Scorecard{user && <span className="text-accent"> Club</span>}
         </h1>
 
-        <p className="font-ui text-xs tracking-[0.25em] uppercase text-muted mt-3 text-center">
-          Bruntsfield Links · Edinburgh
+        <p className="font-display italic text-base text-text text-left mt-3">
+          Bruntsfield Links · golf played here since 1456
         </p>
 
-        <div className="w-10 h-0.5 bg-accent mx-auto mt-6 mb-6" />
+        <div className="w-10 h-0.5 bg-accent ml-0 mt-6 mb-6" />
+
+        <p className="font-ui text-xs text-muted italic mt-5 mb-3">Designed to keep your focus on the game, not the screen.</p>
 
         <div className="space-y-2">
           <p className="font-ui text-sm text-muted flex gap-3"><span className="text-accent font-semibold">1</span>No sign-up, no faff - just golf</p>
@@ -70,7 +72,7 @@ export default function Home({ navigate }) {
         {activeGame && (
           <button
             onClick={() => navigate('scorecard')}
-            className="w-full py-3 px-4 rounded-md border border-accent text-accent font-ui text-sm tracking-[0.08em] uppercase font-medium flex items-center justify-between"
+            className="w-full py-3 px-4 rounded-sm border border-accent text-accent font-ui text-sm tracking-[0.08em] uppercase font-medium flex items-center justify-between"
           >
             <span>Resume Game</span>
             <span className="text-xs text-muted normal-case tracking-normal font-normal truncate max-w-[160px]">
@@ -81,14 +83,14 @@ export default function Home({ navigate }) {
 
         <button
           onClick={() => { track('New Game Started'); navigate('setup') }}
-          className="w-full py-4 px-6 rounded-md bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn active:bg-accent-hover"
+          className="w-full py-4 px-6 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn active:bg-accent-hover"
         >
           New Game
         </button>
 
         <button
           onClick={() => setShowMap(true)}
-          className="w-full py-4 px-6 rounded-md border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card"
+          className="w-full py-4 px-6 rounded-sm border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card"
         >
           View Course Map
         </button>
@@ -96,7 +98,7 @@ export default function Home({ navigate }) {
         {user && (
           <button
             onClick={() => navigate('history')}
-            className="w-full py-4 px-6 rounded-md border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card"
+            className="w-full py-4 px-6 rounded-sm border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card"
           >
             History
           </button>
@@ -117,7 +119,7 @@ export default function Home({ navigate }) {
 
       {/* ── Footer ── */}
       <footer className="text-center pb-14 px-6 space-y-3">
-        <p className="font-ui text-text leading-tight inline-flex items-baseline gap-1">
+<p className="font-ui text-text leading-tight inline-flex items-baseline gap-1">
           <span className="text-base font-bold">Scorecard</span>
           <span className="text-xs text-muted font-normal"> by </span>
           <a href="https://outbuild.uk" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 text-xs text-muted font-normal underline underline-offset-2">

@@ -115,13 +115,13 @@ export default function Login({ navigate }) {
               required
               autoFocus
               autoComplete="email"
-              className="w-full px-4 py-3 rounded-md bg-bg-card border border-border font-ui text-base text-text placeholder:text-chrome focus:outline-none focus:ring-2 focus:ring-[rgba(45,90,74,0.4)]"
+              className="w-full px-4 py-3 rounded-md bg-bg-card border border-border font-ui text-base text-text placeholder:text-chrome focus:outline-none focus:ring-2 focus:ring-[rgba(26,67,41,0.4)]"
             />
           </div>
           <button
             type="submit"
             disabled={sending}
-            className="w-full py-4 px-6 rounded-md bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn active:bg-accent-hover disabled:opacity-50"
+            className="w-full py-4 px-6 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn active:bg-accent-hover disabled:opacity-50"
           >
             {sending ? 'Sending…' : 'Send sign-in link'}
           </button>

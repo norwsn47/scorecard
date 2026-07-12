@@ -135,7 +135,7 @@ export default function Setup({ navigate }) {
                   />
                   <button
                     onClick={() => { setCreatingCourse(false); setNewCourseName(''); setCourseError(null) }}
-                    className="px-4 py-3 rounded-md border border-border text-muted font-ui text-sm active:bg-bg-card"
+                    className="px-4 py-3 rounded-sm border border-border text-muted font-ui text-sm active:bg-bg-card"
                   >
                     Cancel
                   </button>
@@ -233,7 +233,7 @@ export default function Setup({ navigate }) {
             onClick={handleStart}
             disabled={!ready}
             className={[
-              'w-full py-4 rounded-md font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn transition-opacity',
+              'w-full py-4 rounded-sm font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn transition-opacity',
               ready
                 ? 'bg-accent text-bg active:bg-accent-hover'
                 : 'bg-accent text-bg opacity-40 cursor-not-allowed',

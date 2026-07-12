@@ -5,16 +5,16 @@
 @layer base {
   :root {
     /* Colours */
-    --color-bg:        #FAF7F0;
+    --color-bg:        #F7F4EE;
     --color-bg-card:   #F5EFE3;
     --color-text:      #1A1A18;
     --color-text-muted:#6B6560;
-    --color-accent:    #2d5a4a;
-    --color-accent-hover: #244a3c;
+    --color-accent:    #1A4329;
+    --color-accent-hover: #142f1e;
     --color-border:    #D9D0C4;
     --color-chrome:       #C0B8B0;   /* inactive UI chrome — muted icons, disabled borders */
     --color-control-warm: #9A9189;   /* warm grey fill — advance button */
-    --color-accent-tint:  rgba(45,90,74,0.05); /* active row background */
+    --color-accent-tint:  rgba(26,67,41,0.05); /* active row background */
 
     /* Typography */
     --font-display: 'Cormorant Garamond', serif;
@@ -76,9 +76,9 @@
   background: radial-gradient(
     ellipse at center,
     transparent 45%,
-    rgba(250,247,240,0.55) 68%,
-    rgba(250,247,240,0.92) 85%,
-    rgba(250,247,240,1) 100%
+    rgba(247,244,238,0.55) 68%,
+    rgba(247,244,238,0.92) 85%,
+    rgba(247,244,238,1) 100%
   );
 }
 

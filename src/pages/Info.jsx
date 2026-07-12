@@ -8,6 +8,16 @@ export default function Info({ navigate }) {
 
       <main className="flex-1 overflow-y-auto px-5 pt-6 pb-14 space-y-8 max-w-sm mx-auto w-full">
 
+        {/* Why we made this */}
+        <section className="space-y-3">
+          <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted">Why we made this</p>
+          <p className="font-ui text-sm text-muted leading-relaxed">
+            We created Scorecard around one idea: the fewest possible taps to log a score, so you can focus on the game and your phone goes back in your pocket.
+          </p>
+        </section>
+
+        <div className="w-8 h-0.5 bg-border" />
+
         {/* Course */}
         <section className="space-y-3">
           <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted">Bruntsfield Short Hole Golf Club</p>

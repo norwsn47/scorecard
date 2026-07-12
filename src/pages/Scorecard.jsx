@@ -116,7 +116,7 @@ export default function Scorecard({ navigate, params }) {
         right={
           <button
             onClick={() => setShowConfirm(true)}
-            className="py-2 px-4 rounded-md border border-accent text-accent font-ui text-xs tracking-[0.1em] uppercase font-semibold"
+            className="py-2 px-4 rounded-sm border border-accent text-accent font-ui text-xs tracking-[0.1em] uppercase font-semibold"
           >
             Finish
           </button>
@@ -260,13 +260,13 @@ export default function Scorecard({ navigate, params }) {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowConfirm(false)}
-                className="flex-1 py-3 rounded-md border border-border font-ui text-sm tracking-[0.08em] uppercase text-text"
+                className="flex-1 py-3 rounded-sm border border-border font-ui text-sm tracking-[0.08em] uppercase text-text"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmFinish}
-                className="flex-1 py-3 rounded-md bg-accent text-bg font-ui text-sm tracking-[0.08em] uppercase font-semibold"
+                className="flex-1 py-3 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.08em] uppercase font-semibold"
               >
                 Confirm
               </button>

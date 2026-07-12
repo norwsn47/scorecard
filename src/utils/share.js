@@ -1,11 +1,11 @@
 import { playerAverage, playerTotal } from './scores.js'
 
 const C = {
-  bg:     '#FAF7F0',
+  bg:     '#F7F4EE',
   card:   '#F5EFE3',
   text:   '#1A1A18',
   muted:  '#6B6560',
-  accent: '#2d5a4a',
+  accent: '#1A4329',
   border: '#D9D0C4',
 }
 

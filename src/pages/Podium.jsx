@@ -117,7 +117,7 @@ export default function Podium({ navigate, params }) {
       <div className="px-6 pb-10">
         <button
           onClick={() => navigate('summary', { game })}
-          className="w-full py-4 rounded-md border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card"
+          className="w-full py-4 rounded-sm border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card"
         >
           See full card
         </button>
