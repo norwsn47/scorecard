@@ -131,9 +131,9 @@ export default function Podium({ navigate, params }) {
             </p>
             <button
               onClick={() => navigate('login')}
-              className="font-ui text-xs text-accent underline underline-offset-2 active:opacity-70"
+              className="font-ui text-xs text-accent active:opacity-70"
             >
-              Create an account to save your rounds
+              To save your rounds, <span className="underline underline-offset-2">create an account</span>
             </button>
           </div>
         )}

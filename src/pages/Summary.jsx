@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { track } from '../utils/analytics.js'
-import { formatDate } from '../utils/format.js'
+import { formatDate, formatDateOnly } from '../utils/format.js'
 import { playerAverage, playerTotal } from '../utils/scores.js'
 import { shareScorecard } from '../utils/share.js'
 import { getCompletedGames } from '../utils/storage.js'
@@ -58,14 +58,13 @@ export default function Summary({ navigate, params }) {
     <div className="h-full bg-bg flex flex-col">
 
       {/* Header */}
-      <header className="px-5 pt-10 pb-4 border-b border-border">
-        <div className="flex items-center gap-3">
-          <div className="flex-1 h-px bg-border" />
-          <span className="font-ui text-xs tracking-[0.2em] uppercase text-muted">
-            {game.holesPlayed ?? game.holes} holes · {formatDate(game.completedAt)}
-          </span>
-          <div className="flex-1 h-px bg-border" />
-        </div>
+      <header className="px-5 pt-10 pb-4 border-b border-border text-center">
+        {game.name && (
+          <h1 className="font-display italic text-2xl text-text mb-1">{game.name}</h1>
+        )}
+        <p className="font-ui text-xs tracking-[0.15em] uppercase text-muted">
+          {formatDateOnly(game.completedAt)}
+        </p>
       </header>
 
       {/* Winner — only shown for multi-player rounds */}
@@ -206,9 +205,9 @@ export default function Summary({ navigate, params }) {
             </p>
             <button
               onClick={() => navigate('login')}
-              className="font-ui text-xs text-accent underline underline-offset-2 active:opacity-70"
+              className="font-ui text-xs text-accent active:opacity-70"
             >
-              Create an account to save your rounds
+              To save your rounds, <span className="underline underline-offset-2">create an account</span>
             </button>
           </div>
         )}

@@ -75,7 +75,7 @@ export default function Login({ navigate }) {
       <div className="flex-1 flex flex-col px-6 pt-6 pb-8">
         <div className="mb-8">
           <h1 className="font-display text-4xl italic text-text leading-tight">
-            Scorecard <span className="text-accent">Club</span><span className="relative -top-3 ml-2.5 font-ui not-italic text-[10px] tracking-[0.06em] uppercase text-accent border border-accent rounded px-1 py-0.5">Beta</span>
+            Scorecard
           </h1>
         </div>
 

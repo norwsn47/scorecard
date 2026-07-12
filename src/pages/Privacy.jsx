@@ -91,7 +91,7 @@ export default function Privacy({ navigate, params }) {
         <section className="space-y-3">
           <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted">About this notice</p>
           <p className="font-ui text-sm text-muted leading-relaxed">
-            Scorecard is made by Outbuild, a small design collective based in Edinburgh. This notice covers the Scorecard Club app. Questions:{' '}
+            Scorecard is made by Outbuild, a small design collective based in Edinburgh. This notice covers the Scorecard app. Questions:{' '}
             <a href="mailto:scorecard@outbuild.uk" className="text-accent underline underline-offset-2">scorecard@outbuild.uk</a>
           </p>
           <ExternalLink href="https://outbuild.uk">outbuild.uk</ExternalLink>
