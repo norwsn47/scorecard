@@ -42,6 +42,19 @@ Summarise where the project is: what phase, what's been completed, what's next. 
 1.2 product-owner grills the user on the PRD
 → STOP. Do not create the build plan yet.
 
+**Phase 1.3 - Version scope agreement (before stack, before build plan)**
+Once the PRD is approved, the product-owner produces a version scope summary before anything goes into the build plan:
+
+Building in this version:
+- [list of features agreed for v1]
+
+Deferring to backlog:
+- [list of features that are out of scope for this version]
+
+Nothing moves to the build plan until the user explicitly approves this split. This step prevents scope creep mid-build and ensures BACKLOG.md is populated with deferred items from the start, not discovered later.
+
+The product-owner owns this step. The project-manager coordinates it.
+
 **Phase 2 — Stack**
 2.1 Tech stack conversation (you lead this)
 2.2 Tools and integrations confirmed — product-owner updates PRD.md

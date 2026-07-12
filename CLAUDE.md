@@ -5,6 +5,17 @@ Last updated: 12 July 2026
 
 ---
 
+## Before anything else
+Every session must start by invoking the project-manager agent. This is not optional.
+
+If a task, question, or request arrives without the project-manager being invoked first, do not action it. Instead respond with:
+
+'Please start this session with the project-manager agent first: Use the project-manager agent to start this session.'
+
+Do not make any file changes, run any commands, write any code, or commit anything until the project-manager has been invoked and has confirmed the current project state.
+
+---
+
 ## How to start every session
 
 Always begin by invoking the project-manager agent before doing anything else. Never respond to tasks, questions, or requests directly without going through the agent system first.
@@ -104,6 +115,12 @@ This project's version control mode is set during setup. Check the project-speci
 - Never auto-clean up branches without asking — always confirm before deleting local or remote branches.
 - gh CLI is not available on this machine — use standard git commands only.
 - Never use direct merge as a fallback — always create a named branch, push it, and wait for confirmation before merging.
+
+**Hard git rules - these apply even if the project-manager has not been invoked:**
+- Never push to main under any circumstances - not directly, not via merge without explicit sign-off
+- Never use a session-assigned branch name (claude/anything) - always create a descriptive branch with feat/, fix/, chore/, refactor/, or security/ prefix
+- Never commit more than one logical change in a single commit without explicit instruction
+- If the completion gate has not been run, do not commit - remind the user to invoke the project-manager first
 
 ---
 

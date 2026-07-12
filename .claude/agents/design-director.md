@@ -55,13 +55,22 @@ A short brief (3–5 sentences) describing the overall aesthetic — density, mo
 **Component patterns**
 Short descriptions of the visual approach for: buttons, inputs, cards, navigation, tags/labels, and empty states. Reference the aesthetic direction — not generic descriptions.
 
+**Microcopy direction**
+A short statement of the tone and voice for all visible text in this product. Cover:
+- Who is the user and where are they when they use the app?
+- What tone fits the context - formal, casual, dry, warm, direct?
+- Two or three examples of labels done right for this product vs generic alternatives
+- Any words or phrases to avoid
+
 **Mobile only flag**
 If the PRD indicates this is a mobile-only product, include this line prominently in DESIGN.md:
 ```
 Mobile only: true
 ```
 This flag triggers the desktop phone frame wrapper in the frontend-developer automatically.
-3–5 things that would break the visual direction — generic patterns to explicitly steer clear of.
+
+**What to avoid**
+List 3-5 things that would break the visual direction of this project - generic patterns to explicitly steer clear of. Be specific to the references and the PRD, not generic advice.
 
 ## Output format rules
 
@@ -86,3 +95,4 @@ Language and punctuation:
 - Every decision should be traceable back to either the references or the PRD
 - Write DESIGN.md so clearly that a developer who hasn't seen the references can produce consistent output from it alone
 - Ask the user to confirm the direction before writing the final file
+- Before producing DESIGN.md, check whether this product has a strong physical context - a real-world object or environment it relates to (a paper scorecard, an OS map, a race programme, a pub menu). If it does, read the `## Products rooted in a physical context` section in `.outbuild/OUTBUILD-PRINCIPLES.md` and apply those principles before defaulting to standard Outbuild aesthetics. Document the physical context in the Visual direction section of DESIGN.md and flag it as a deliberate context-rooted decision.

@@ -20,6 +20,14 @@ Measure the full built app, identify regressions from the baseline, and optimise
 **On demand**
 If the code-reviewer flags a performance issue it cannot resolve, or if you notice slowness during manual testing, the project-manager can invoke you at any point.
 
+## Tool availability - work laptop
+
+Before running any measurement tool, check whether it is available:
+- Run `which npx` before using npx commands
+- If Lighthouse CLI is not available, say so explicitly and suggest the Chrome DevTools Lighthouse panel as a manual alternative
+- If a tool is unavailable, do not skip the measurement - tell the user what to run manually and what to look for
+- Never assume a CLI tool is installed - flag and give alternatives if not
+
 ## What you measure
 
 ### Frontend — load and render performance
