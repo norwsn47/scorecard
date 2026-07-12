@@ -57,8 +57,6 @@ export default function Home({ navigate }) {
 
         <div className="w-10 h-0.5 bg-accent ml-0 mt-6 mb-6" />
 
-        <p className="font-ui text-xs text-muted italic mt-5 mb-3">Designed to keep your focus on the game, not the screen.</p>
-
         <div className="space-y-2">
           <p className="font-ui text-sm text-muted flex gap-3"><span className="text-accent font-semibold">1</span>No sign-up, no faff - just golf</p>
           <p className="font-ui text-sm text-muted flex gap-3"><span className="text-accent font-semibold">2</span>Every hole, as you play it</p>
