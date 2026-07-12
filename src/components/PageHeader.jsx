@@ -1,6 +1,6 @@
-export default function PageHeader({ title, onBack, right = null }) {
+export default function PageHeader({ title, subtitle, onBack, right = null }) {
   return (
-    <header className="relative flex items-center px-5 pt-12 pb-6 border-b border-border shrink-0">
+    <header className="relative flex items-center px-5 pt-page pb-6 border-b border-border shrink-0">
       <div className="flex-1">
         {onBack && (
           <button
@@ -12,9 +12,12 @@ export default function PageHeader({ title, onBack, right = null }) {
         )}
       </div>
 
-      <h1 className="absolute inset-x-0 px-20 text-center font-display italic text-2xl text-text pointer-events-none truncate">
-        {title}
-      </h1>
+      <div className="absolute inset-x-0 px-20 text-center pointer-events-none">
+        <h1 className="font-display italic text-2xl text-text truncate">{title}</h1>
+        {subtitle && (
+          <p className="font-ui text-xs tracking-[0.08em] uppercase text-muted mt-0.5 truncate">{subtitle}</p>
+        )}
+      </div>
 
       <div className="flex-1 flex justify-end">
         {right}

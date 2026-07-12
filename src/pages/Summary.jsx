@@ -69,23 +69,24 @@ export default function Summary({ navigate, params }) {
         <h1 className="font-display italic text-3xl text-text text-center">Round complete</h1>
       </header>
 
-      {/* Winner callout */}
-      {game.winner ? (
-        <div className="mx-5 mt-5 py-4 px-5 rounded-md bg-bg-card border border-border text-center">
-          <p className="font-ui text-xs tracking-[0.2em] uppercase text-muted mb-1">Winner</p>
-          <p className="font-display italic text-2xl text-accent">{game.winner}</p>
-          <p className="font-ui text-xs text-muted mt-1">
-            {playerTotal(game.scores, game.winner)} strokes
-          </p>
+      {/* Winner — slim rule-separated banner, table is the hero */}
+      <div className="px-5 pt-4 pb-1">
+        <div className="flex items-center gap-3">
+          <div className="flex-1 h-px bg-border" />
+          {game.winner ? (
+            <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted shrink-0">
+              Winner — <span className="font-display italic text-sm text-accent normal-case tracking-normal">{game.winner}</span>
+              <span className="ml-2 font-ui text-xs text-muted normal-case tracking-normal">{playerTotal(game.scores, game.winner)} strokes</span>
+            </p>
+          ) : (
+            <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted shrink-0">Nobody finished</p>
+          )}
+          <div className="flex-1 h-px bg-border" />
         </div>
-      ) : (
-        <div className="mx-5 mt-5 py-4 px-5 rounded-md bg-bg-card border border-border text-center">
-          <p className="font-ui text-xs tracking-[0.2em] uppercase text-muted">Nobody finished</p>
-        </div>
-      )}
+      </div>
 
       {/* Read-only scorecard */}
-      <div className="flex-1 overflow-y-auto overflow-x-auto mt-6">
+      <div className="flex-1 overflow-y-auto overflow-x-auto mt-3">
         <table className="w-full min-w-max border-collapse">
           <thead>
             <tr className="border-b border-border bg-bg-card">
