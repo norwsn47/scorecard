@@ -119,8 +119,18 @@ Related PRD section: 11.7
 
 ### 11. Data clause for logged-in users
 
+**Added: 12 July 2026. Resolved 12 July 2026 - implemented as a dedicated Privacy page (`/privacy`) linked from the login screen.**
+
+---
+
+### 12. magic_tokens table cleanup - expired token retention
+
 **Added: 12 July 2026.**
 
-The "Your data" section was removed from the information page as it only described localStorage behaviour (quick-play). A new data clause is needed for logged-in (Scorecard Plus) users explaining that scores, player names, and game history are stored on Cloudflare's servers and tied to their email address. This should appear in an appropriate logged-in context - either a dedicated section in the information page (shown only when logged in), or in an account/settings screen added in a later chunk.
+Used and expired magic tokens are never deleted from the D1 `magic_tokens` table. This means email addresses from abandoned sign-in attempts (where the user never clicked the link) accumulate in the database indefinitely. This is inconsistent with the UK GDPR data minimisation and storage limitation principles (Articles 5(1)(c) and (e)).
+
+Fix: add a scheduled Cloudflare Worker (or a cleanup step in `verify.js`) that deletes `magic_tokens` rows older than 24 hours. All tokens expire after 15 minutes and are marked `used = 1` after verification - there is no legitimate reason to retain them beyond 24 hours.
+
+Priority: medium. Not a launch blocker, but should be addressed before significant user numbers.
 
 Related PRD section: 11.12

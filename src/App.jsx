@@ -2,6 +2,7 @@ import { Component, useEffect, useState } from 'react'
 import History    from './pages/History.jsx'
 import Info       from './pages/Info.jsx'
 import Login      from './pages/Login.jsx'
+import Privacy    from './pages/Privacy.jsx'
 import Rules      from './pages/Rules.jsx'
 import Home       from './pages/Home.jsx'
 import Podium     from './pages/Podium.jsx'
@@ -41,6 +42,7 @@ class ErrorBoundary extends Component {
 const PAGES = {
   home:       Home,
   login:      Login,
+  privacy:    Privacy,
   info:       Info,
   rules:      Rules,
   setup:      Setup,
