@@ -31,14 +31,14 @@ export async function onRequestPost(context) {
     body: JSON.stringify({
       from: RESEND_FROM_EMAIL,
       to: email,
-      subject: 'Your Scorecard Plus sign-in link',
+      subject: 'Your Scorecard Club sign-in link',
       html: buildEmailHtml(magicLink),
-      text: `Sign in to Scorecard Plus:\n${magicLink}\n\nThis link expires in 15 minutes.\n\nIf you didn't request this, you can safely ignore this email.`,
+      text: `Sign in to Scorecard Club:\n${magicLink}\n\nThis link expires in 15 minutes.\n\nIf you didn't request this, you can safely ignore this email.`,
     }),
   });
 
   if (!resendRes.ok) {
-    return Response.json({ error: 'Failed to send email — please try again' }, { status: 500 });
+    return Response.json({ error: 'Failed to send email - please try again' }, { status: 500 });
   }
 
   return Response.json({ ok: true }, { status: 200 });
@@ -50,7 +50,7 @@ function buildEmailHtml(magicLink) {
 <body style="font-family: Georgia, serif; background: #faf8f5; padding: 40px 20px; margin: 0;">
   <div style="max-width: 480px; margin: 0 auto; background: #ffffff; border-radius: 8px; padding: 40px; border: 1px solid #e8e0d5;">
     <p style="font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: #8a7a6a; margin: 0 0 24px;">
-      Scorecard <span style="color: #c17a5a;">Plus</span>
+      Scorecard <span style="color: #c17a5a;">Club</span>
     </p>
     <h1 style="font-size: 24px; font-weight: normal; color: #1a1a1a; margin: 0 0 16px;">Sign in to your account</h1>
     <p style="color: #4a4a4a; font-size: 16px; line-height: 1.5; margin: 0 0 32px;">
@@ -58,7 +58,7 @@ function buildEmailHtml(magicLink) {
     </p>
     <a href="${magicLink}"
        style="display: inline-block; background: #c17a5a; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 6px; font-size: 15px;">
-      Sign in to Scorecard Plus
+      Sign in to Scorecard Club
     </a>
     <p style="color: #8a7a6a; font-size: 13px; margin: 32px 0 0; line-height: 1.5;">
       Or copy this link into your browser:<br>

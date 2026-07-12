@@ -1,17 +1,21 @@
 import { useEffect, useState } from 'react'
 import CourseMapModal from '../components/CourseMapModal.jsx'
 import { track } from '../utils/analytics.js'
-import { getActiveGame, getCompletedGames } from '../utils/storage.js'
+import { getActiveGame } from '../utils/storage.js'
+import { useAuth } from '../hooks/useAuth.jsx'
 
 export default function Home({ navigate }) {
+  const { user, logout }           = useAuth()
   const [activeGame, setActiveGame] = useState(null)
-  const [hasHistory, setHasHistory] = useState(false)
   const [showMap, setShowMap]       = useState(false)
 
   useEffect(() => {
     setActiveGame(getActiveGame())
-    setHasHistory(getCompletedGames().length > 0)
   }, [])
+
+  async function handleLogout() {
+    await logout()
+  }
 
   return (
     <div className="h-full bg-bg flex flex-col relative">
@@ -27,6 +31,20 @@ export default function Home({ navigate }) {
         </svg>
       </button>
 
+      {/* ── Signed-in account strip ── */}
+      {user && (
+        <div className="absolute top-10 left-4 flex items-center gap-2">
+          <span className="font-ui text-xs text-muted truncate max-w-[160px]">{user.email}</span>
+          <span className="text-chrome font-ui text-xs">·</span>
+          <button
+            onClick={handleLogout}
+            className="font-ui text-xs text-muted underline underline-offset-2 active:text-accent"
+          >
+            Sign out
+          </button>
+        </div>
+      )}
+
       {/* ── Branding ── */}
       <header className="flex-1 flex flex-col items-center justify-center px-6 pt-16 pb-8">
         <h1 className="font-display text-5xl italic text-text leading-tight text-center">
@@ -40,16 +58,15 @@ export default function Home({ navigate }) {
         <div className="w-10 h-0.5 bg-accent mx-auto mt-6 mb-6" />
 
         <div className="space-y-2">
-          <p className="font-ui text-sm text-muted flex gap-3"><span className="text-accent font-semibold">1</span>Simple, no fuss – no login required.</p>
-          <p className="font-ui text-sm text-muted flex gap-3"><span className="text-accent font-semibold">2</span>Track every hole as you play.</p>
-          <p className="font-ui text-sm text-muted flex gap-3"><span className="text-accent font-semibold">3</span>Your round saved automatically.</p>
+          <p className="font-ui text-sm text-muted flex gap-3"><span className="text-accent font-semibold">1</span>No account needed to get started</p>
+          <p className="font-ui text-sm text-muted flex gap-3"><span className="text-accent font-semibold">2</span>Track every hole as you play</p>
+          <p className="font-ui text-sm text-muted flex gap-3"><span className="text-accent font-semibold">3</span>Share your results in one tap</p>
         </div>
       </header>
 
       {/* ── Actions ── */}
       <main className="flex flex-col items-center gap-4 px-6 pb-8 max-w-xs mx-auto w-full">
 
-        {/* Resume Game — only shown when a game is in progress */}
         {activeGame && (
           <button
             onClick={() => navigate('scorecard')}
@@ -76,13 +93,26 @@ export default function Home({ navigate }) {
           View Course Map
         </button>
 
-        {hasHistory && (
+        {user && (
           <button
             onClick={() => navigate('history')}
             className="w-full py-4 px-6 rounded-md border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card"
           >
             History
           </button>
+        )}
+
+        {/* Sign in prompt for logged-out users */}
+        {!user && (
+          <div className="mt-2 flex flex-col items-center gap-1">
+            <p className="font-ui text-xs text-muted">Want to save your history?</p>
+            <button
+              onClick={() => navigate('login')}
+              className="font-ui text-xs text-accent underline underline-offset-2 active:opacity-70"
+            >
+              Sign in to Scorecard Club →
+            </button>
+          </div>
         )}
       </main>
 
@@ -98,7 +128,6 @@ export default function Home({ navigate }) {
             </svg>
           </a>
         </p>
-        <p className="font-ui text-xs text-muted opacity-50">More courses coming soon</p>
       </footer>
 
       {showMap && <CourseMapModal onClose={() => setShowMap(false)} />}

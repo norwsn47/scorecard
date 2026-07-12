@@ -114,3 +114,13 @@ Related PRD section: 11.4
 Quick-play is currently hardcoded to Bruntsfield Links. If the app ever expands to other courses, quick-play will need a lightweight course selector. For now it stays hardcoded — no UI change needed. Log this so the hardcoded course reference is easy to find when the time comes: it lives in the new-game setup screen (logged-out path) and should be a named constant, not an inline string.
 
 Related PRD section: 11.7
+
+---
+
+### 11. Data clause for logged-in users
+
+**Added: 12 July 2026.**
+
+The "Your data" section was removed from the information page as it only described localStorage behaviour (quick-play). A new data clause is needed for logged-in (Scorecard Plus) users explaining that scores, player names, and game history are stored on Cloudflare's servers and tied to their email address. This should appear in an appropriate logged-in context - either a dedicated section in the information page (shown only when logged in), or in an account/settings screen added in a later chunk.
+
+Related PRD section: 11.12

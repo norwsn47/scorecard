@@ -8,19 +8,6 @@ export default function Info({ navigate }) {
 
       <main className="flex-1 overflow-y-auto px-5 pt-6 pb-14 space-y-8 max-w-sm mx-auto w-full">
 
-        {/* Data */}
-        <section className="space-y-3">
-          <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted">Your data</p>
-          <p className="font-ui text-sm text-muted leading-relaxed">
-            Your scores, player names, and game dates are saved to your device's browser storage - nothing is sent to a server.
-          </p>
-          <p className="font-ui text-sm text-muted leading-relaxed">
-            Clearing your browser data or using private browsing will erase your history.
-          </p>
-        </section>
-
-        <div className="w-8 h-0.5 bg-border" />
-
         {/* Course */}
         <section className="space-y-3">
           <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted">Course</p>

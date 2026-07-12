@@ -1,6 +1,7 @@
 import { Component, useEffect, useState } from 'react'
 import History    from './pages/History.jsx'
 import Info       from './pages/Info.jsx'
+import Login      from './pages/Login.jsx'
 import Rules      from './pages/Rules.jsx'
 import Home       from './pages/Home.jsx'
 import Podium     from './pages/Podium.jsx'
@@ -8,6 +9,7 @@ import Scorecard  from './pages/Scorecard.jsx'
 import Setup      from './pages/Setup.jsx'
 import Summary    from './pages/Summary.jsx'
 import { getActiveGame, isStorageAvailable } from './utils/storage.js'
+import { AuthProvider, useAuth } from './hooks/useAuth.jsx'
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -38,6 +40,7 @@ class ErrorBoundary extends Component {
 
 const PAGES = {
   home:       Home,
+  login:      Login,
   info:       Info,
   rules:      Rules,
   setup:      Setup,
@@ -47,7 +50,8 @@ const PAGES = {
   history:    History,
 }
 
-export default function App() {
+function AppContent() {
+  const { loading } = useAuth()
   const [page, setPage]           = useState(() => getActiveGame() ? 'scorecard' : 'home')
   const [params, setParams]       = useState({})
   const [storageOk, setStorageOk] = useState(true)
@@ -60,6 +64,9 @@ export default function App() {
     setPage(to)
     setParams(nextParams)
   }
+
+  // Blank screen while auth check is in flight — prevents flash of wrong state
+  if (loading) return <div className="app-shell max-w-[430px] mx-auto h-dvh bg-bg" />
 
   const Page = PAGES[page] ?? Home
   return (
@@ -80,5 +87,13 @@ export default function App() {
         <span className="desktop-note-arrow">← this way</span>
       </div>
     </>
+  )
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   )
 }
