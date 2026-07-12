@@ -52,19 +52,42 @@ const PAGES = {
   history:    History,
 }
 
+function pageFromPath() {
+  const path = window.location.pathname.replace(/^\//, '') || 'home'
+  return path in PAGES ? path : 'home'
+}
+
 function AppContent() {
   const { loading } = useAuth()
-  const [page, setPage]           = useState(() => getActiveGame() ? 'scorecard' : 'home')
+
+  const [page, setPage] = useState(() => {
+    // Active game always takes priority
+    if (getActiveGame()) return 'scorecard'
+    return pageFromPath()
+  })
   const [params, setParams]       = useState({})
   const [storageOk, setStorageOk] = useState(true)
 
   useEffect(() => {
     setStorageOk(isStorageAvailable())
+    // Stamp the initial history entry so the first back press has state
+    window.history.replaceState({ page }, '', window.location.pathname)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    function handlePopState(e) {
+      const to = e.state?.page ?? pageFromPath()
+      setPage(to in PAGES ? to : 'home')
+      setParams({})
+    }
+    window.addEventListener('popstate', handlePopState)
+    return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
   function navigate(to, nextParams = {}) {
     setPage(to)
     setParams(nextParams)
+    window.history.pushState({ page: to }, '', to === 'home' ? '/' : `/${to}`)
   }
 
   // Blank screen while auth check is in flight — prevents flash of wrong state
