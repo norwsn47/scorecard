@@ -102,7 +102,7 @@ export default function Scorecard({ navigate, params }) {
   }
 
   return (
-    <div className="h-full bg-bg flex flex-col">
+    <div className="relative h-full bg-bg flex flex-col">
 
       {saveError && (
         <div className="bg-accent text-bg text-center font-ui text-xs py-2 px-4 tracking-wide">
@@ -243,7 +243,7 @@ export default function Scorecard({ navigate, params }) {
 
       {/* Confirmation dialog */}
       {showConfirm && (
-        <div className="fixed inset-0 flex items-end justify-center z-50" style={{ background: 'var(--overlay-backdrop)' }}>
+        <div className="absolute inset-0 flex items-end justify-center z-50" style={{ background: 'var(--overlay-backdrop)' }}>
           <div className="bg-bg rounded-t-2xl w-full max-w-[430px] px-6 pt-6 pb-10 shadow-card">
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-6" />
             <h2 className="font-display italic text-2xl text-text mb-1">Finish Game?</h2>

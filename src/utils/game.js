@@ -102,7 +102,7 @@ export function finishGame(game) {
 
   return {
     ...game,
-    completedAt: new Date().toISOString(),
+    completedAt: game.pastDate ?? new Date().toISOString(),
     holesPlayed,
     winner,
     dnf,
@@ -113,7 +113,7 @@ export function finishGame(game) {
  * Builds a fresh active-game object. Always allocates MAX_HOLES slots;
  * the UI shows only as many rows as have been played.
  */
-export function createGame(playerNames, name = '', courseId = null) {
+export function createGame(playerNames, name = '', courseId = null, pastDate = null) {
   const scores = {}
   playerNames.forEach(name => {
     scores[name] = Array(MAX_HOLES).fill(null)
@@ -126,5 +126,6 @@ export function createGame(playerNames, name = '', courseId = null) {
     holes: MAX_HOLES,
     scores,
     courseId,
+    ...(pastDate ? { pastDate } : {}),
   }
 }

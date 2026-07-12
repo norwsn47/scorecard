@@ -7,7 +7,8 @@ import { useAuth } from '../hooks/useAuth.jsx'
 
 const MAX_PLAYERS = 6
 
-export default function Setup({ navigate }) {
+export default function Setup({ navigate, params }) {
+  const pastRound                          = params?.pastRound ?? false
   const { user }                          = useAuth()
   const [gameName, setGameName]           = useState(() => formatGameNameDate())
   const [names, setNames]                 = useState([''])
@@ -17,6 +18,7 @@ export default function Setup({ navigate }) {
   const [creatingCourse, setCreatingCourse]     = useState(false)
   const [newCourseName, setNewCourseName]       = useState('')
   const [courseError, setCourseError]           = useState(null)
+  const [pastDate, setPastDate]                 = useState(() => new Date().toISOString().slice(0, 10))
 
   const dupeIndices = findDuplicateIndices(names)
   const courseReady = !user || !creatingCourse || newCourseName.trim().length > 0
@@ -89,7 +91,10 @@ export default function Setup({ navigate }) {
       }
     }
 
-    const game = createGame(trimmed, gameName, courseId)
+    const dateIso = pastRound
+      ? new Date(pastDate + 'T12:00:00').toISOString()
+      : null
+    const game = createGame(trimmed, gameName, courseId, dateIso)
     saveActiveGame(game)
     navigate('scorecard', { game })
   }
@@ -97,7 +102,7 @@ export default function Setup({ navigate }) {
   return (
     <div className="h-full bg-bg flex flex-col">
 
-      <PageHeader title="New Game" onBack={() => navigate('home')} />
+      <PageHeader title={pastRound ? 'Add Past Round' : 'New Game'} onBack={() => pastRound ? navigate('history') : navigate('home')} />
 
       <main className="flex-1 overflow-y-auto px-5 pt-6 pb-10 w-full space-y-3">
 
@@ -159,8 +164,22 @@ export default function Setup({ navigate }) {
             autoComplete="off"
             className="w-full py-3 pl-4 pr-4 rounded-md border border-border font-ui text-base bg-bg-card text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40"
           />
-          <p className="font-ui text-xs text-muted mt-1.5 pl-1">Game name - optional</p>
+          <p className="font-ui text-xs text-muted mt-1.5 pl-1">Round name - optional</p>
         </div>
+
+        {/* Date picker — past rounds only */}
+        {pastRound && (
+          <div className="pb-1">
+            <input
+              type="date"
+              value={pastDate}
+              max={new Date().toISOString().slice(0, 10)}
+              onChange={e => setPastDate(e.target.value)}
+              className="w-full py-3 pl-4 pr-4 rounded-md border border-border font-ui text-base bg-bg-card text-text focus:outline-none focus:ring-2 focus:ring-accent/40"
+            />
+            <p className="font-ui text-xs text-muted mt-1.5 pl-1">Date played</p>
+          </div>
+        )}
 
         {names.map((name, i) => {
           const listId = `player-suggestions-${i}`
@@ -239,7 +258,7 @@ export default function Setup({ navigate }) {
                 : 'bg-accent text-bg opacity-40 cursor-not-allowed',
             ].join(' ')}
           >
-            Start the round
+            {pastRound ? 'Enter scores' : 'Start the round'}
           </button>
         </div>
 

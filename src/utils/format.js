@@ -12,6 +12,13 @@ export function formatDate(isoString) {
   }).format(new Date(isoString))
 }
 
+export function formatDateOnly(isoString) {
+  if (!isoString) return ''
+  return new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric', month: 'long', year: 'numeric',
+  }).format(new Date(isoString))
+}
+
 export function formatShortDate(isoString) {
   if (!isoString) return ''
   return new Intl.DateTimeFormat('en-GB', {

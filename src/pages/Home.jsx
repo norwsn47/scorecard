@@ -118,7 +118,7 @@ export default function Home({ navigate }) {
               onClick={() => navigate('login')}
               className="font-ui text-xs text-accent active:opacity-70"
             >
-              <span className="underline underline-offset-2">Sign in</span> to save your rounds across devices
+              Want to save your scores? <span className="underline underline-offset-2">Sign in</span>
             </button>
           </div>
         )}

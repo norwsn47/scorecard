@@ -85,7 +85,18 @@ export default function History({ navigate }) {
   return (
     <div className="h-full bg-bg flex flex-col">
 
-      <PageHeader title="History" onBack={() => navigate('home')} />
+      <PageHeader
+        title="History"
+        onBack={() => navigate('home')}
+        right={user ? (
+          <button
+            onClick={() => navigate('setup', { pastRound: true })}
+            className="font-ui text-xs tracking-[0.08em] uppercase text-accent py-2 px-3 rounded-sm border border-accent active:bg-accent/10"
+          >
+            + Add round
+          </button>
+        ) : null}
+      />
 
       {/* Course label (1 course) or course filter chips (2+ courses) — logged-in only */}
       {user && !loading && courses.length === 1 && (
