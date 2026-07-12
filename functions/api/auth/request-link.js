@@ -40,7 +40,7 @@ export async function onRequestPost(context) {
   if (!resendRes.ok) {
     const resendError = await resendRes.json().catch(() => ({}));
     console.error('Resend error', resendRes.status, JSON.stringify(resendError));
-    return Response.json({ error: 'Failed to send email - please try again', debug: { status: resendRes.status, resend: resendError } }, { status: 500 });
+    return Response.json({ error: 'Failed to send email - please try again' }, { status: 500 });
   }
 
   return Response.json({ ok: true }, { status: 200 });
@@ -49,25 +49,25 @@ export async function onRequestPost(context) {
 function buildEmailHtml(magicLink) {
   return `<!DOCTYPE html>
 <html>
-<body style="font-family: Georgia, serif; background: #faf8f5; padding: 40px 20px; margin: 0;">
-  <div style="max-width: 480px; margin: 0 auto; background: #ffffff; border-radius: 8px; padding: 40px; border: 1px solid #e8e0d5;">
-    <p style="font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: #8a7a6a; margin: 0 0 24px;">
-      Scorecard <span style="color: #c17a5a;">Club</span>
+<body style="font-family: Georgia, serif; background: #F7F4EE; padding: 40px 20px; margin: 0;">
+  <div style="max-width: 480px; margin: 0 auto; background: #F5EFE3; border-radius: 8px; padding: 40px; border: 1px solid #D9D0C4;">
+    <p style="font-family: Arial, sans-serif; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #6B6560; margin: 0 0 24px;">
+      Scorecard <span style="color: #1A4329;">Club</span>
     </p>
-    <h1 style="font-size: 24px; font-weight: normal; color: #1a1a1a; margin: 0 0 16px;">Sign in to your account</h1>
-    <p style="color: #4a4a4a; font-size: 16px; line-height: 1.5; margin: 0 0 32px;">
+    <h1 style="font-size: 24px; font-weight: normal; color: #1A1A18; margin: 0 0 16px;">Sign in to your account</h1>
+    <p style="font-family: Arial, sans-serif; color: #6B6560; font-size: 14px; line-height: 1.6; margin: 0 0 32px;">
       Click the button below to sign in. This link expires in 15 minutes.
     </p>
     <a href="${magicLink}"
-       style="display: inline-block; background: #c17a5a; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 6px; font-size: 15px;">
+       style="display: inline-block; background: #1A4329; color: #F7F4EE; text-decoration: none; padding: 14px 28px; border-radius: 4px; font-family: Arial, sans-serif; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600;">
       Sign in to Scorecard Club
     </a>
-    <p style="color: #8a7a6a; font-size: 13px; margin: 32px 0 0; line-height: 1.5;">
+    <p style="font-family: Arial, sans-serif; color: #6B6560; font-size: 12px; margin: 32px 0 0; line-height: 1.6;">
       Or copy this link into your browser:<br>
-      <span style="color: #4a4a4a; word-break: break-all;">${magicLink}</span>
+      <span style="color: #1A1A18; word-break: break-all;">${magicLink}</span>
     </p>
-    <hr style="border: none; border-top: 1px solid #e8e0d5; margin: 32px 0 24px;">
-    <p style="color: #8a7a6a; font-size: 12px; margin: 0;">
+    <hr style="border: none; border-top: 1px solid #D9D0C4; margin: 32px 0 24px;">
+    <p style="font-family: Arial, sans-serif; color: #6B6560; font-size: 12px; margin: 0;">
       Built by Outbuild. If you didn't request this, you can safely ignore this email.
     </p>
   </div>
