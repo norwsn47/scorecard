@@ -42,10 +42,11 @@ function normalizeDbGame(row) {
 export default function History({ navigate }) {
   const { user } = useAuth()
 
-  const [games, setGames]       = useState(() => user ? [] : getCompletedGames())
-  const [loading, setLoading]   = useState(!!user)
-  const [filter, setFilter]     = useState(null)
+  const [games, setGames]             = useState(() => user ? [] : getCompletedGames())
+  const [loading, setLoading]         = useState(!!user)
+  const [filter, setFilter]           = useState(null)
   const [courseFilter, setCourseFilter] = useState(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null)
 
   useEffect(() => {
     if (!user) return
@@ -68,15 +69,17 @@ export default function History({ navigate }) {
     setFilter(prev => (prev === name ? null : name))
   }
 
-  async function handleDelete(e, game) {
-    e.stopPropagation()
+  async function executeDelete(id) {
+    const game = games.find(g => g.id === id)
+    if (!game) return
     if (game._fromDb) {
       await fetch(`/api/games/${game.id}`, { method: 'DELETE', credentials: 'include' })
         .catch(() => {})
     } else {
       deleteCompletedGame(game.id)
     }
-    setGames(prev => prev.filter(g => g.id !== game.id))
+    setGames(prev => prev.filter(g => g.id !== id))
+    setConfirmDeleteId(null)
   }
 
   return (
@@ -251,7 +254,7 @@ export default function History({ navigate }) {
 
             {/* Delete button */}
             <button
-              onClick={e => handleDelete(e, game)}
+              onClick={e => { e.stopPropagation(); setConfirmDeleteId(game.id) }}
               aria-label="Delete game"
               className="absolute top-2 right-2 w-9 h-9 flex items-center justify-center text-muted active:text-text"
             >
@@ -263,6 +266,32 @@ export default function History({ navigate }) {
         ))}
 
       </main>
+
+      {/* Delete confirmation */}
+      {confirmDeleteId && (
+        <div className="fixed inset-0 flex items-end justify-center z-50" style={{ background: 'var(--overlay-backdrop)' }}>
+          <div className="bg-bg rounded-t-2xl w-full max-w-[430px] px-6 pt-6 pb-10 shadow-card">
+            <div className="w-10 h-1 bg-border rounded-full mx-auto mb-6" />
+            <h2 className="font-display italic text-2xl text-text mb-1">Delete this round?</h2>
+            <p className="font-ui text-xs text-muted tracking-wide mb-8">This cannot be undone.</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                className="flex-1 py-3 rounded-sm border border-border font-ui text-sm tracking-[0.08em] uppercase text-text active:bg-bg-card"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => executeDelete(confirmDeleteId)}
+                className="flex-1 py-3 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.08em] uppercase font-semibold active:opacity-80"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }

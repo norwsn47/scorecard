@@ -6,7 +6,7 @@ import { getActiveGame, getCompletedGames } from '../utils/storage.js'
 import { useAuth } from '../hooks/useAuth.jsx'
 
 export default function Home({ navigate }) {
-  const { user, logout }           = useAuth()
+  const { user }                    = useAuth()
   const [activeGame, setActiveGame] = useState(null)
   const [lastGame, setLastGame]     = useState(null)
   const [showMap, setShowMap]       = useState(false)
@@ -19,9 +19,6 @@ export default function Home({ navigate }) {
     }
   }, [user])
 
-  async function handleLogout() {
-    await logout()
-  }
 
   return (
     <div className="h-full bg-bg flex flex-col relative">
@@ -37,19 +34,6 @@ export default function Home({ navigate }) {
         </svg>
       </button>
 
-      {/* ── Signed-in account strip ── */}
-      {user && (
-        <div className="absolute top-10 left-4 flex items-center gap-2">
-          <span className="font-ui text-xs text-muted truncate max-w-[160px]">{user.email}</span>
-          <span className="text-chrome font-ui text-xs">·</span>
-          <button
-            onClick={handleLogout}
-            className="font-ui text-xs text-muted underline underline-offset-2 active:text-accent"
-          >
-            Sign out
-          </button>
-        </div>
-      )}
 
       {/* ── Branding ── */}
       <header className="flex-1 flex flex-col justify-start px-6 pt-10 pb-8">

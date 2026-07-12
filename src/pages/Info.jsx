@@ -1,6 +1,8 @@
 import PageHeader from '../components/PageHeader.jsx'
+import { useAuth } from '../hooks/useAuth.jsx'
 
 export default function Info({ navigate }) {
+  const { user, logout } = useAuth()
   return (
     <div className="h-full bg-bg flex flex-col">
 
@@ -90,6 +92,35 @@ export default function Info({ navigate }) {
             </svg>
           </a>
         </section>
+
+        <div className="w-8 h-0.5 bg-border" />
+
+        {/* Account */}
+        {user ? (
+          <section className="space-y-3">
+            <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted">Account</p>
+            <p className="font-ui text-sm text-muted truncate">{user.email}</p>
+            <button
+              onClick={async () => { await logout(); navigate('home') }}
+              className="font-ui text-sm text-accent underline underline-offset-2 active:opacity-70"
+            >
+              Sign out
+            </button>
+          </section>
+        ) : (
+          <section className="space-y-3">
+            <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted">Account</p>
+            <p className="font-ui text-sm text-muted leading-relaxed">
+              Sign in to save your rounds across devices and keep your history.
+            </p>
+            <button
+              onClick={() => navigate('login')}
+              className="font-ui text-sm text-accent underline underline-offset-2 active:opacity-70"
+            >
+              Sign in or create account
+            </button>
+          </section>
+        )}
 
       </main>
     </div>
