@@ -4,11 +4,14 @@ import { formatDate } from '../utils/format.js'
 import { playerAverage, playerTotal } from '../utils/scores.js'
 import { shareScorecard } from '../utils/share.js'
 import { getCompletedGames } from '../utils/storage.js'
+import { useAuth } from '../hooks/useAuth.jsx'
 
 export default function Summary({ navigate, params }) {
+  const { user }          = useAuth()
   const [sharing, setSharing] = useState(false)
+  const [notes, setNotes]     = useState('')
+  const [saving, setSaving]   = useState(false)
 
-  // Prefer freshly-passed game; fall back to most recent completed game
   const game = params?.game ?? getCompletedGames()[0] ?? null
 
   if (!game) {
@@ -16,8 +19,40 @@ export default function Summary({ navigate, params }) {
     return null
   }
 
-  const isDnf   = player => game.dnf?.includes(player)
+  const isDnf    = player => game.dnf?.includes(player)
   const isWinner = player => player === game.winner
+
+  async function handleGoHome() {
+    if (user) {
+      setSaving(true)
+      try {
+        const playerData = game.players.map(p => ({
+          name: p,
+          scores: (game.scores[p] ?? []).slice(0, game.holesPlayed),
+          total: playerTotal(game.scores, p) || 0,
+          dnf: game.dnf?.includes(p) ?? false,
+        }))
+        await fetch('/api/games', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            game_name: game.name || null,
+            course_id: game.courseId || null,
+            played_at: game.completedAt,
+            holes_played: game.holesPlayed,
+            player_data: playerData,
+            notes: notes.trim() || null,
+          }),
+        })
+      } catch {
+        // Save failed silently — game is still in localStorage
+      } finally {
+        setSaving(false)
+      }
+    }
+    navigate('home')
+  }
 
   return (
     <div className="h-full bg-bg flex flex-col">
@@ -45,7 +80,7 @@ export default function Summary({ navigate, params }) {
         </div>
       ) : (
         <div className="mx-5 mt-5 py-4 px-5 rounded-md bg-bg-card border border-border text-center">
-          <p className="font-ui text-xs tracking-[0.2em] uppercase text-muted">No winner – all players DNF</p>
+          <p className="font-ui text-xs tracking-[0.2em] uppercase text-muted">No winner - all players DNF</p>
         </div>
       )}
 
@@ -86,7 +121,7 @@ export default function Summary({ navigate, params }) {
                         isWinner(player) ? 'text-accent font-medium' : 'text-text',
                       ].join(' ')}
                     >
-                      {score ?? '–'}
+                      {score ?? '-'}
                     </td>
                   )
                 })}
@@ -105,7 +140,7 @@ export default function Summary({ navigate, params }) {
                     isWinner(player) ? 'text-accent' : 'text-text',
                   ].join(' ')}
                 >
-                  {playerTotal(game.scores, player) || '–'}
+                  {playerTotal(game.scores, player) || '-'}
                   {playerAverage(game.scores, player) !== null && (
                     <span className="block font-ui text-xs font-normal text-muted">Av. {playerAverage(game.scores, player)}</span>
                   )}
@@ -119,6 +154,21 @@ export default function Summary({ navigate, params }) {
 
       {/* Actions */}
       <div className="px-5 py-8 space-y-3 max-w-sm mx-auto w-full">
+
+        {/* Notes — logged-in only */}
+        {user && (
+          <div>
+            <textarea
+              value={notes}
+              onChange={e => setNotes(e.target.value.slice(0, 300))}
+              placeholder="Add a note about this round..."
+              rows={2}
+              className="w-full px-4 py-3 rounded-md border border-border bg-bg-card font-ui text-sm text-text placeholder:text-chrome resize-none focus:outline-none focus:ring-2 focus:ring-accent/40"
+            />
+            <p className="font-ui text-xs text-muted mt-1 pl-1">Round notes - optional</p>
+          </div>
+        )}
+
         <button
           onClick={async () => {
             setSharing(true)
@@ -136,12 +186,15 @@ export default function Summary({ navigate, params }) {
         >
           {sharing ? 'Generating…' : 'Share Scorecard'}
         </button>
+
         <button
-          onClick={() => navigate('home')}
-          className="w-full py-4 rounded-md bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn"
+          onClick={handleGoHome}
+          disabled={saving}
+          className="w-full py-4 rounded-md bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn disabled:opacity-60"
         >
-          Back to Home
+          {saving ? 'Saving…' : 'Back to Home'}
         </button>
+
       </div>
 
     </div>
