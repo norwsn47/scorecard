@@ -79,9 +79,9 @@ No PRD section — pending permissions.
 
 Allow users who have been playing in quick-play (localStorage) mode to migrate their existing local game history into their new DB account after they sign in for the first time.
 
-**Proposed flow:** After the magic link verification and account creation, detect whether the user's device has localStorage game history. If so, offer a one-time prompt: "You have X saved games on this device — import them to your Scorecard Plus account?" Importing would POST each game to `/api/games` with a flag indicating it was migrated from local storage.
+**Proposed flow:** After the magic link verification and account creation, detect whether the user's device has localStorage game history. If so, offer a one-time prompt: "You have X saved games on this device — import them to your Scorecard Club account?" Importing would POST each game to `/api/games` with a flag indicating it was migrated from local storage.
 
-Deferred because: the two histories are deliberately kept separate in v2.0 (PRD 11.9), and the migration flow adds meaningful complexity without blocking the core Plus experience. Revisit post-launch once users have used the product.
+Deferred because: the two histories are deliberately kept separate in v2.0 (PRD 11.9), and the migration flow adds meaningful complexity without blocking the core Club experience. Revisit post-launch once users have used the product.
 
 Related PRD section: 11.7, 11.9, 8 (Future considerations)
 
@@ -134,3 +134,17 @@ Fix: add a scheduled Cloudflare Worker (or a cleanup step in `verify.js`) that d
 Priority: medium. Not a launch blocker, but should be addressed before significant user numbers.
 
 Related PRD section: 11.12
+
+---
+
+### 13. Logged-in game save — remove localStorage write for authenticated users
+
+**Added: 12 July 2026. Open item from Chunk 28.**
+
+Currently, when a logged-in user finishes a game, `saveCompletedGame` in `Scorecard.jsx` writes the game to localStorage regardless of auth state. The game is also correctly saved to D1 via `Summary.jsx handleGoHome`. The PRD (11.9) specifies that logged-in users should save to D1 only, keeping the two histories cleanly separate.
+
+Fix: in `Scorecard.jsx handleConfirmFinish`, make the `saveCompletedGame(completed)` call conditional — only call it if the user is not authenticated. This requires importing `useAuth` into Scorecard.jsx.
+
+Priority: low. The histories display correctly (logged-in History reads from D1), but redundant data accumulates in localStorage for logged-in users.
+
+Related PRD section: 11.8, 11.9

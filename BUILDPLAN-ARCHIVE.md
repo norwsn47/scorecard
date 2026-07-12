@@ -1,7 +1,7 @@
 # Build Plan Archive
 ## Scorecard by Outbuild — Bruntsfield Links
 
-Last updated: 11 July 2026
+Last updated: 12 July 2026
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
 This file contains the full detail blocks for all completed chunks, moved here from BUILDPLAN.md as each chunk was finished. The chunk order summary table is also here — it migrated from BUILDPLAN.md once all planned work was complete.
@@ -477,4 +477,181 @@ Added from PRD v1.5. The hotfix runs before everything else. Chunks 16–20 are 
 | 9 | Error handling | 8 | Done |
 | 10 | Security & pre-launch | 9 | Done |
 
-**Verify:** Rules link visible on home screen, below New Game and History. Rules tab visible inside the Map overlay. Rules text matches PRD 4.9 verbatim. No enforcement logic added. Both entry points open the same rules content. Styling is readable and consistent with the rest of the app.
+---
+
+## Phase 4 — Scorecard Club (v2.0)
+*Archived 12 July 2026*
+
+---
+
+## Chunk 21 — D1 database setup + schema
+**Status: Done**
+**Depends on: Nothing (infrastructure)**
+
+**Goal:** A working Cloudflare D1 database with the full v2.0 schema applied and verified locally.
+
+- Created the D1 database via wrangler
+- Updated `wrangler.toml` to add the D1 binding: name `DB`, database_id `83f123c3-248c-4c7b-a8c2-19170fb6e5b5`
+- Migration file `migrations/001_initial.sql` covers all five tables:
+  - `users` — id (UUID PK), email (unique, not null), created_at
+  - `magic_tokens` — id (UUID PK), email (not null), token (unique, not null), expires_at, used (boolean, default false)
+  - `sessions` — id (UUID PK), user_id (FK → users.id), created_at, expires_at
+  - `games` — id (UUID PK), user_id (FK → users.id), game_name (nullable), played_at, holes_played (integer), player_data (JSON text, not null), course_id (FK → courses.id, nullable), created_at, notes (text, nullable — enhancement)
+  - `courses` — id (UUID PK), user_id (FK → users.id, nullable for system courses), name (not null), holes (integer, default 36), is_default (boolean, default false), created_at
+
+**As built:** All five tables created with correct FK relationships. `notes` field added to `games` as an enhancement not in the original spec.
+
+---
+
+## Chunk 22 — Pages Functions API scaffold
+**Status: Done**
+**Depends on: 21**
+
+**Goal:** A working Cloudflare Pages Functions structure with the D1 binding confirmed live and local dev running cleanly.
+
+- `/functions` directory created in the project root
+- All auth, courses, and games endpoint files created (detailed in Chunks 23–29)
+- `wrangler.toml` Pages Functions configuration confirmed correct
+
+**As built:** No `api/health.js` created — not needed, endpoints verified via real usage. No `src/lib/api.js` wrapper — all frontend API calls use `fetch` directly with `credentials: 'include'`. Local dev confirmed working per live deployment and recent commits.
+
+---
+
+## Chunk 23 — Magic link auth backend
+**Status: Done**
+**Depends on: 21, 22**
+
+**Goal:** The two auth endpoints that power magic link sign-in — request a link and verify it.
+
+**`POST /api/auth/request-link`** (`functions/api/auth/request-link.js`):
+- Validates email format — returns 400 if invalid
+- Generates a secure random token via `crypto.randomUUID()`
+- Inserts into `magic_tokens`: email, token, expires_at (now + 15 minutes), used = false
+- Sends magic link email via Resend — subject: "Your Scorecard Club sign-in link", CTA: "Sign in to Scorecard Club"
+- Returns 200 `{ ok: true }` regardless of whether the email already exists
+
+**`GET /api/auth/verify?token=<token>`** (`functions/api/auth/verify.js`):
+- Redirects to `{APP_URL}/?auth=expired` if token not found, expired, or already used
+- Marks token as used
+- Creates user if not exists; seeds Bruntsfield Links course for new users
+- Creates session (30-day expiry), sets `session` HttpOnly cookie
+- Redirects to `{APP_URL}` on success
+
+**As built:** SameSite=Lax used (not Strict) — correct for cross-site magic link redirects. Verify redirects to `APP_URL` on success (not `APP_URL/?verified=true`). Returns `{ ok: true }` not `{ sent: true }`.
+
+---
+
+## Chunk 24 — Session middleware
+**Status: Done**
+**Depends on: 23**
+
+**Goal:** Session validation infrastructure used by all protected API routes, plus the `me` and `logout` endpoints.
+
+**`functions/_lib/session.js`:** `getSessionUser(request, DB)` — reads session cookie, queries D1 for a matching unexpired session joined to users, returns `{ id, email }` or null. Used by all protected endpoints.
+
+**`GET /api/auth/me`** (`functions/api/auth/me.js`): Calls `getSessionUser` — returns 401 if no valid session, or `{ user: { id, email } }` if valid.
+
+**`POST /api/auth/logout`** (`functions/api/auth/logout.js`): Reads session cookie, deletes session row from D1, clears the cookie, returns 200 `{ ok: true }`.
+
+**Frontend:** `useAuth` hook (`src/hooks/useAuth.jsx`) — calls `/api/auth/me` on mount, exposes `{ user, loading, logout, authError, setAuthError }`. `AuthProvider` wraps the app in `App.jsx`. Also captures `?auth=expired` and `?auth=error` query params from verify redirects.
+
+**As built:** Logout doesn't require a valid session — it attempts to delete whatever session ID is in the cookie, then clears the cookie regardless. Safe and pragmatic.
+
+---
+
+## Chunk 25 — Auth UI
+**Status: Done**
+**Depends on: 23, 24**
+
+**Goal:** The login screen, post-send confirmation, session-aware routing, and logout.
+
+**Login screen** (`src/pages/Login.jsx`):
+- Email input, "Send sign-in link" CTA, inline loading/error/success states
+- Post-send state shows within same screen: "Check your email" heading with the sent address
+- Branding: "Scorecard Club" with "Beta" badge
+- Links to `/privacy` page: "How we handle your data"
+
+**Home screen additions** (`src/pages/Home.jsx`):
+- Logged-in: user email + "· Sign out" strip in top-left; History button shown
+- Logged-out: "Playing again? Sign in to keep your history" link to `/login`; History button hidden
+
+**Privacy page** (`src/pages/Privacy.jsx`): accessible from Login screen as a standalone route.
+
+**Session-aware routing:** App.jsx renders the correct page based on state-machine router; auth state from `useAuth` drives conditional rendering throughout.
+
+**As built:** No "Welcome to Scorecard Club" message on verify redirect — the verify endpoint redirects to `APP_URL` with no query param. Login screen shows "Scorecard Club Beta" branding (not in original spec but consistent with the name decision).
+
+---
+
+## Chunk 26 — Scorecard Club branding
+**Status: Done**
+**Depends on: 25**
+
+**Goal:** The "Club" visual treatment in the logged-in home screen header.
+
+- `Home.jsx`: `Scorecard{user && <span className="text-accent"> Club</span>}` — conditional "Club" in accent colour
+- Applied only on the home screen header — correct, as other screens use simpler headers
+- Logged-out users see "Scorecard" only
+
+---
+
+## Chunk 27 — Course creation and selection UI
+**Status: Done**
+**Depends on: 25**
+
+**Goal:** Logged-in users can select from their courses or create a new one when starting a game.
+
+**API** (`functions/api/courses/index.js`):
+- `GET /api/courses` — returns user's courses, ordered by is_default DESC, name ASC; 401 if no session
+- `POST /api/courses` — creates a new course; name max 60 chars; returns `{ course: { id, name, holes, is_default } }`; 401 if no session
+
+**Setup screen** (`src/pages/Setup.jsx`):
+- Course selector (`<select>`) shown only when logged in, above player fields
+- "+ New course" option in select triggers inline name input with Cancel button
+- New course creation calls `POST /api/courses` and selects the new course immediately
+- `courseId` passed through game state to Summary for the D1 save (Chunk 28)
+- API failure is silent — user can still start a game with no course selected
+
+**As built:** Max course name 60 chars (spec said 100 — 60 is more appropriate). Native `<select>` used (not a custom dropdown). Inline new-course flow works correctly.
+
+---
+
+## Chunk 28 — Logged-in game save to D1
+**Status: Done (open item — see BACKLOG.md item 13)**
+**Depends on: 25, 27**
+
+**Goal:** Completed games are saved to D1 for logged-in users.
+
+**API** (`functions/api/games/index.js`):
+- `GET /api/games` — returns user's games most recent first, joined with course name; 401 if no session
+- `POST /api/games` — saves a completed game; body: `{ game_name, course_id, played_at, holes_played, player_data, notes }`; returns `{ id }`; 401 if no session
+
+**Frontend** (`src/pages/Summary.jsx`):
+- `handleGoHome` checks `useAuth` — if logged in, calls `POST /api/games` before navigating home
+- Logged-in users see an optional round notes textarea (max 300 chars) — not in original spec, added as enhancement
+- If not logged in: saves to localStorage only (existing behaviour, unchanged)
+
+**Open item (BACKLOG.md item 13):** Logged-in users currently also get a localStorage write in `Scorecard.jsx handleConfirmFinish` via `saveCompletedGame`. The PRD specifies D1-only for logged-in users. Fix: make `saveCompletedGame` call conditional on auth state in `handleConfirmFinish`.
+
+---
+
+## Chunk 29 — Logged-in history
+**Status: Done**
+**Depends on: 25, 28**
+
+**Goal:** Logged-in users see their DB-backed game history. Logged-out users see localStorage history.
+
+**API** (`functions/api/games/index.js` + `functions/api/games/[id].js`):
+- `GET /api/games` — full player_data returned in list; 401 if no session
+- `DELETE /api/games/:id` — deletes a game for the authenticated user; 401/404 if not found
+
+**History screen** (`src/pages/History.jsx`):
+- Detects auth state — fetches from D1 for logged-in users, reads localStorage for logged-out
+- `normalizeDbGame` helper maps D1 row shape to the same shape used by localStorage games
+- Logged-in list shows: course name (accent), game name, date + holes, player names with totals/averages, notes snippet
+- Tapping a game: passes full game object via navigation params to Summary (no second fetch needed)
+- Player filter: client-side toggle on player name, clear chip to reset
+- Delete button on each card — calls `DELETE /api/games/:id` for DB games, `deleteCompletedGame` for localStorage games
+- Loading state and empty state with New Game CTA
+
+**As built:** `GET /api/games/:id` not implemented — not needed because list returns full `player_data`. Delete feature added as enhancement (not in original spec). History button on Home screen only shown to logged-in users — logged-out users see the sign-in prompt instead.

@@ -1,5 +1,6 @@
 # CLAUDE.md
 Last updated: 12 July 2026
+> Updated this session: added standing BUILDPLAN.md update rule to pre-push gate.
 > Ground rules for this project. Read this at the start of every session.
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
@@ -119,6 +120,15 @@ Before any chunk is finalised, the following runs in order:
 6. *(Mode C only)* Branch name confirmed — then push runs
 
 This gate is mandatory for all modes. Step 6 only applies if using GitHub.
+
+**BUILDPLAN.md must be updated as part of every single commit — no exceptions.**
+Before any commit is made:
+- Find the chunk being completed in BUILDPLAN.md and change its status to Done
+- Update the `Last updated:` date at the top of BUILDPLAN.md
+- Move the completed chunk's full detail block to BUILDPLAN-ARCHIVE.md
+- Keep the chunk's row in the summary table in BUILDPLAN.md with status Done
+If BUILDPLAN.md is not updated, the commit does not happen.
+This is a hard rule. The build plan must always reflect reality.
 
 ---
 

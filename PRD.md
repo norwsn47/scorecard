@@ -3,6 +3,7 @@
 
 **Version:** 2.0
 **Last updated:** 12 July 2026
+> Name change: "Scorecard Club" renamed to "Scorecard Club" (confirmed 12 July 2026).
 
 ---
 
@@ -35,7 +36,7 @@ Outbuild palette applied for outdoor sunlight legibility on a phone:
 - No account required — scores saved locally to the device
 - Accessed via mobile browser on the course
 
-**Scorecard Plus (logged-in):**
+**Scorecard Club (logged-in):**
 - Users who want history that persists across devices and browsers
 - Authenticated via magic link (email only — no password)
 - Can create and name custom courses, with Bruntsfield Links pre-loaded as the default
@@ -218,7 +219,7 @@ MANY THANKS FOR YOUR CO-OPERATION — ENJOY YOUR GAME
 
 ## 7. Out of scope
 
-The following are out of scope for both the MVP (v1.x) and the Scorecard Plus release (v2.0):
+The following are out of scope for both the MVP (v1.x) and the Scorecard Club release (v2.0):
 
 - Par values or handicap calculations
 - Leaderboards or social features
@@ -266,7 +267,7 @@ The following were out of scope in v1.x and are now addressed in v2.0:
 
 ---
 
-## 11. Scorecard Plus (v2.0)
+## 11. Scorecard Club (v2.0)
 
 This section defines everything added in v2.0. The MVP (v1.x) remains fully functional for logged-out users — nothing in this section removes or degrades existing quick-play behaviour.
 
@@ -274,7 +275,7 @@ This section defines everything added in v2.0. The MVP (v1.x) remains fully func
 
 ### 11.1 Overview
 
-Scorecard Plus is the logged-in layer of the app. It adds persistent history, custom course creation, and cross-device sync for users who want more than quick-play offers. The two modes coexist: the app detects whether a user is authenticated and adapts accordingly.
+Scorecard Club is the logged-in layer of the app. It adds persistent history, custom course creation, and cross-device sync for users who want more than quick-play offers. The two modes coexist: the app detects whether a user is authenticated and adapts accordingly.
 
 ---
 
@@ -346,7 +347,7 @@ No passwords. Users authenticate with their email address only.
 
 **Session expiry:** Sessions last 30 days. A new session is created on each successful verification.
 
-**Email content:** Simple, branded. Subject: "Your Scorecard Plus sign-in link". Body: a single CTA button — "Sign in to Scorecard Plus" — with a plain-text fallback URL below. Signed off with Outbuild branding.
+**Email content:** Simple, branded. Subject: "Your Scorecard Club sign-in link". Body: a single CTA button — "Sign in to Scorecard Club" — with a plain-text fallback URL below. Signed off with Outbuild branding.
 
 **From address:** To be confirmed — either `hello@outbuild.co` or a Resend-verified sending domain. This is determined when the Resend API key is created as part of this work.
 
@@ -363,13 +364,13 @@ No passwords. Users authenticate with their email address only.
 
 ---
 
-### 11.6 Scorecard Plus branding
+### 11.6 Scorecard Club branding
 
-- The logged-in product is called **Scorecard Plus**
-- The "Plus" suffix appears in the app header when the user is authenticated — once, in the top-level logo/wordmark area
-- Visual treatment: logo similar to the existing watermark/wordmark, with "Plus" appended in the terracotta accent colour — same weight and baseline as the rest of the logo
-- Logged-out users see the existing branding unchanged — no "Plus" anywhere
-- The "Plus" branding must not be garish or promotional — it is a quiet identifier, not a marketing badge
+- The logged-in product is called **Scorecard Club**
+- The " Club" word appears in the app header when the user is authenticated — once, in the top-level logo/wordmark area
+- Visual treatment: logo similar to the existing watermark/wordmark, with " Club" appended in the terracotta accent colour — same weight and baseline as the rest of the logo
+- Logged-out users see the existing branding unchanged — no " Club" anywhere
+- The " Club" branding must not be garish or promotional — it is a quiet identifier, not a marketing badge
 
 ---
 
@@ -439,7 +440,7 @@ Cookie name and session/token expiry can be hardcoded in the API layer (not env 
 
 ### 11.12 Information page update (v2.0)
 
-When Scorecard Plus is live, the information page (PRD 4.8) must be updated to reflect:
+When Scorecard Club is live, the information page (PRD 4.8) must be updated to reflect:
 - That logged-in users' data is stored in a Cloudflare D1 database, not only in local storage
 - That email addresses are processed by Resend for authentication purposes
 - The contact email should be updated to hello@outbuild.co once that address is configured via Resend (see BACKLOG.md)
