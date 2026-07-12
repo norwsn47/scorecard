@@ -38,6 +38,8 @@ export async function onRequestPost(context) {
   });
 
   if (!resendRes.ok) {
+    const resendError = await resendRes.json().catch(() => ({}));
+    console.error('Resend error', resendRes.status, JSON.stringify(resendError));
     return Response.json({ error: 'Failed to send email - please try again' }, { status: 500 });
   }
 
