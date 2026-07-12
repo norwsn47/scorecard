@@ -48,11 +48,11 @@ export default function Home({ navigate }) {
       {/* ── Branding ── */}
       <header className="flex-1 flex flex-col justify-center px-6 pt-16 pb-8">
         <h1 className="font-display text-5xl italic text-text leading-tight text-left">
-          Scorecard
+          Bruntsfield Links Scorecard
         </h1>
 
         <p className="font-display italic text-base text-text text-left mt-3">
-          Bruntsfield Links · golf played here since 1456
+          Golf played here since 1456
         </p>
 
         <div className="w-10 h-0.5 bg-accent ml-0 mt-6 mb-6" />
