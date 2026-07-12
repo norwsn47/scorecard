@@ -23,39 +23,45 @@ export default function Home({ navigate }) {
   return (
     <div className="h-full bg-bg flex flex-col relative">
 
-      <button
-        onClick={() => navigate('info')}
-        aria-label="Information"
-        className="absolute top-10 right-4 text-muted active:text-accent p-2"
-      >
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-          <circle cx="12" cy="12" r="9" />
-          <path d="M12 8h.01M12 12v4" />
-        </svg>
-      </button>
-
-
       {/* ── Branding ── */}
-      <header className="flex-1 flex flex-col justify-start px-6 pt-10 pb-8">
-        <h1 className="font-display text-5xl italic text-text leading-tight text-left">
-          Bruntsfield Links Scorecard
-        </h1>
+      <header className="flex-1 flex flex-col justify-start px-6 pt-10 pb-2">
 
-        <p className="font-display italic text-base text-text text-left mt-3">
+        {/* Heading row — h1 + info icon inline, icon aligns to first line */}
+        <div className="flex items-start -mr-2">
+          <h1 className="font-display text-[42px] italic text-text leading-[1.1] text-left flex-1">
+            <span className="whitespace-nowrap">Bruntsfield Links</span><br />Scorecard
+          </h1>
+          <button
+            onClick={() => navigate('info')}
+            aria-label="Information"
+            className="text-muted active:text-accent p-2 flex-shrink-0 mt-1.5"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 8h.01M12 12v4" />
+            </svg>
+          </button>
+        </div>
+
+        <p className="font-display italic text-base text-text text-left mt-2">
           Golf played here since 1456
         </p>
 
-        <div className="w-10 h-0.5 bg-accent ml-0 mt-6 mb-6" />
+        <div className="w-10 h-0.5 bg-accent ml-0 mt-4 mb-8" />
 
-        <div className="space-y-2">
-          <p className="font-ui text-sm text-muted flex gap-3"><span className="text-accent font-semibold">1</span>No sign-up, no faff - just golf</p>
-          <p className="font-ui text-sm text-muted flex gap-3"><span className="text-accent font-semibold">2</span>Every hole, as you play it</p>
-          <p className="font-ui text-sm text-muted flex gap-3"><span className="text-accent font-semibold">3</span>Share your card when you're done</p>
+        {/* Numbered list — strict two-column grid for reliable numeral alignment */}
+        <div className="grid grid-cols-[1.5rem_1fr] gap-x-3 gap-y-2">
+          <span className="font-ui text-base text-accent font-semibold text-right">1</span>
+          <span className="font-ui text-base text-muted">No sign-up, no faff - just golf</span>
+          <span className="font-ui text-base text-accent font-semibold text-right">2</span>
+          <span className="font-ui text-base text-muted">Every hole, as you play it</span>
+          <span className="font-ui text-base text-accent font-semibold text-right">3</span>
+          <span className="font-ui text-base text-muted">Share your card when you're done</span>
         </div>
       </header>
 
       {/* ── Actions ── */}
-      <main className="flex flex-col gap-4 px-6 pb-8 w-full">
+      <main className="flex flex-col gap-4 px-6 pt-6 pb-8 w-full">
 
         {activeGame && (
           <button
@@ -95,7 +101,7 @@ export default function Home({ navigate }) {
         {/* Last completed round — logged-out only */}
         {!user && lastGame && (
           <button
-            onClick={() => navigate('podium', { game: lastGame })}
+            onClick={() => navigate('summary', { game: lastGame })}
             className="w-full py-3 px-4 rounded-sm border border-border text-text font-ui text-sm tracking-[0.08em] uppercase font-medium flex items-center justify-between active:bg-bg-card"
           >
             <span>Last round</span>
@@ -107,25 +113,20 @@ export default function Home({ navigate }) {
 
         {/* Sign in nudge — logged-out only */}
         {!user && (
-          <div className="pt-1 text-center space-y-1">
+          <div className="pt-0 text-center space-y-1">
             <button
               onClick={() => navigate('login')}
-              className="font-ui text-xs text-accent underline underline-offset-2 active:opacity-70"
+              className="font-ui text-xs text-accent active:opacity-70"
             >
-              Sign in to save your rounds across devices
+              <span className="underline underline-offset-2">Sign in</span> to save your rounds across devices
             </button>
-            {lastGame && (
-              <p className="font-ui text-xs text-muted">
-                Your last round is stored on this device only
-              </p>
-            )}
           </div>
         )}
       </main>
 
       {/* ── Footer ── */}
-      <footer className="text-center pb-14 px-6 space-y-3">
-<p className="font-ui text-text leading-tight inline-flex items-baseline gap-1">
+      <footer className="text-center pt-8 pb-14 px-6 space-y-3">
+        <p className="font-ui text-text leading-tight inline-flex items-baseline gap-1">
           <span className="text-base font-bold">Scorecard</span>
           <span className="text-xs text-muted font-normal"> by </span>
           <a href="https://outbuild.uk" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 text-xs text-muted font-normal underline underline-offset-2">
