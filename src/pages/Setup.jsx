@@ -1,17 +1,40 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import PageHeader from '../components/PageHeader.jsx'
 import { formatGameNameDate } from '../utils/format.js'
 import { canStartGame, createGame, findDuplicateIndices } from '../utils/game.js'
 import { getPlayers, saveActiveGame, savePlayers } from '../utils/storage.js'
+import { useAuth } from '../hooks/useAuth.jsx'
 
 const MAX_PLAYERS = 6
 
 export default function Setup({ navigate }) {
-  const [gameName, setGameName]   = useState(() => formatGameNameDate())
-  const [names, setNames]         = useState([''])
-  const [savedNames]              = useState(() => getPlayers())
+  const { user }                          = useAuth()
+  const [gameName, setGameName]           = useState(() => formatGameNameDate())
+  const [names, setNames]                 = useState([''])
+  const [savedNames]                      = useState(() => getPlayers())
+  const [courses, setCourses]             = useState([])
+  const [selectedCourseId, setSelectedCourseId] = useState(null)
+  const [creatingCourse, setCreatingCourse]     = useState(false)
+  const [newCourseName, setNewCourseName]       = useState('')
+  const [courseError, setCourseError]           = useState(null)
+
   const dupeIndices = findDuplicateIndices(names)
-  const ready       = canStartGame(names, names.length)
+  const courseReady = !user || !creatingCourse || newCourseName.trim().length > 0
+  const ready       = canStartGame(names, names.length) && courseReady
+
+  useEffect(() => {
+    if (!user) return
+    fetch('/api/courses', { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => {
+        if (data.courses?.length) {
+          setCourses(data.courses)
+          const def = data.courses.find(c => c.is_default) ?? data.courses[0]
+          setSelectedCourseId(def.id)
+        }
+      })
+      .catch(() => {})
+  }, [user])
 
   function handleNameChange(i, value) {
     const next = [...names]
@@ -34,7 +57,7 @@ export default function Setup({ navigate }) {
     return savedNames.filter(n => !otherLower.includes(n.toLowerCase()))
   }
 
-  function handleStart() {
+  async function handleStart() {
     if (!ready) return
     const trimmed = names.map(n => n.trim())
 
@@ -42,7 +65,31 @@ export default function Setup({ navigate }) {
     const merged = [...new Set([...trimmed, ...existing])].slice(0, 20)
     savePlayers(merged)
 
-    const game = createGame(trimmed, gameName)
+    let courseId = user ? (selectedCourseId ?? null) : null
+
+    if (user && creatingCourse && newCourseName.trim()) {
+      setCourseError(null)
+      try {
+        const res = await fetch('/api/courses', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ name: newCourseName.trim() }),
+        })
+        const data = await res.json()
+        if (res.ok) {
+          courseId = data.course.id
+        } else {
+          setCourseError(data.error || 'Could not create course')
+          return
+        }
+      } catch {
+        setCourseError('Could not create course - please try again')
+        return
+      }
+    }
+
+    const game = createGame(trimmed, gameName, courseId)
     saveActiveGame(game)
     navigate('scorecard', { game })
   }
@@ -54,6 +101,54 @@ export default function Setup({ navigate }) {
 
       <main className="flex-1 overflow-y-auto px-5 pt-6 pb-10 w-full space-y-3">
 
+        {/* Course selector — logged-in only */}
+        {user && (
+          <div className="pb-1">
+            {!creatingCourse ? (
+              <select
+                value={selectedCourseId ?? ''}
+                onChange={e => {
+                  if (e.target.value === '__new__') {
+                    setCreatingCourse(true)
+                    setSelectedCourseId(null)
+                  } else {
+                    setSelectedCourseId(e.target.value)
+                  }
+                }}
+                className="w-full py-3 pl-4 pr-4 rounded-md border border-border font-ui text-base bg-bg-card text-text focus:outline-none focus:ring-2 focus:ring-accent/40"
+              >
+                {courses.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+                <option value="__new__">+ New course</option>
+              </select>
+            ) : (
+              <div className="space-y-1">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newCourseName}
+                    onChange={e => { setNewCourseName(e.target.value.slice(0, 60)); setCourseError(null) }}
+                    placeholder="Course name"
+                    autoFocus
+                    className="flex-1 py-3 pl-4 pr-4 rounded-md border border-border font-ui text-base bg-bg-card text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40"
+                  />
+                  <button
+                    onClick={() => { setCreatingCourse(false); setNewCourseName(''); setCourseError(null) }}
+                    className="px-4 py-3 rounded-md border border-border text-muted font-ui text-sm active:bg-bg-card"
+                  >
+                    Cancel
+                  </button>
+                </div>
+                {courseError && (
+                  <p className="font-ui text-xs text-accent pl-1">{courseError}</p>
+                )}
+              </div>
+            )}
+            <p className="font-ui text-xs text-muted mt-1.5 pl-1">Course</p>
+          </div>
+        )}
+
         {/* Game name */}
         <div className="pb-1">
           <input
@@ -64,7 +159,7 @@ export default function Setup({ navigate }) {
             autoComplete="off"
             className="w-full py-3 pl-4 pr-4 rounded-md border border-border font-ui text-base bg-bg-card text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40"
           />
-          <p className="font-ui text-xs text-muted mt-1.5 pl-1">Game name – optional</p>
+          <p className="font-ui text-xs text-muted mt-1.5 pl-1">Game name - optional</p>
         </div>
 
         {names.map((name, i) => {

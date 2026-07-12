@@ -48,7 +48,7 @@ export default function Home({ navigate }) {
       {/* ── Branding ── */}
       <header className="flex-1 flex flex-col items-center justify-center px-6 pt-16 pb-8">
         <h1 className="font-display text-5xl italic text-text leading-tight text-center">
-          Scorecard
+          Scorecard{user && <span className="text-accent"> Club</span>}
         </h1>
 
         <p className="font-ui text-xs tracking-[0.25em] uppercase text-muted mt-3 text-center">
