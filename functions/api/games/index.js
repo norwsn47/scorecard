@@ -6,10 +6,12 @@ export async function onRequestGet(context) {
   if (!user) return Response.json({ error: 'Unauthorised' }, { status: 401 })
 
   const { results } = await DB.prepare(
-    `SELECT id, game_name, course_id, played_at, holes_played, player_data, notes, created_at
-     FROM games
-     WHERE user_id = ?
-     ORDER BY played_at DESC
+    `SELECT g.id, g.game_name, g.course_id, c.name AS course_name,
+            g.played_at, g.holes_played, g.player_data, g.notes, g.created_at
+     FROM games g
+     LEFT JOIN courses c ON g.course_id = c.id
+     WHERE g.user_id = ?
+     ORDER BY g.played_at DESC
      LIMIT 100`
   ).bind(user.id).all()
 

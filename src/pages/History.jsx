@@ -1,13 +1,59 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import PageHeader from '../components/PageHeader.jsx'
 import { formatShortDate } from '../utils/format.js'
 import { playerAverage, playerTotal } from '../utils/scores.js'
 import { deleteCompletedGame, getCompletedGames } from '../utils/storage.js'
+import { useAuth } from '../hooks/useAuth.jsx'
 
+function normalizeDbGame(row) {
+  const playerData = typeof row.player_data === 'string'
+    ? JSON.parse(row.player_data)
+    : (row.player_data ?? [])
+
+  const players = playerData.map(p => p.name)
+  const scores  = {}
+  const dnf     = []
+
+  playerData.forEach(p => {
+    scores[p.name] = p.scores ?? []
+    if (p.dnf) dnf.push(p.name)
+  })
+
+  const finishers = playerData.filter(p => !p.dnf && p.total > 0)
+  const winner = finishers.length > 0
+    ? finishers.reduce((best, p) => p.total < best.total ? p : best).name
+    : null
+
+  return {
+    id:          row.id,
+    name:        row.game_name || '',
+    completedAt: row.played_at,
+    holesPlayed: row.holes_played,
+    courseName:  row.course_name || null,
+    notes:       row.notes || null,
+    players,
+    scores,
+    winner,
+    dnf,
+    _fromDb: true,
+  }
+}
 
 export default function History({ navigate }) {
-  const [games, setGames] = useState(() => getCompletedGames())
-  const [filter, setFilter] = useState(null)
+  const { user } = useAuth()
+
+  const [games, setGames]     = useState(() => user ? [] : getCompletedGames())
+  const [loading, setLoading] = useState(!!user)
+  const [filter, setFilter]   = useState(null)
+
+  useEffect(() => {
+    if (!user) return
+    fetch('/api/games', { credentials: 'include' })
+      .then(r => r.json())
+      .then(data => setGames((data.games ?? []).map(normalizeDbGame)))
+      .catch(() => setGames([]))
+      .finally(() => setLoading(false))
+  }, [user])
 
   const displayed = filter
     ? games.filter(g => g.players?.includes(filter))
@@ -17,10 +63,15 @@ export default function History({ navigate }) {
     setFilter(prev => (prev === name ? null : name))
   }
 
-  function handleDelete(e, id) {
+  async function handleDelete(e, game) {
     e.stopPropagation()
-    deleteCompletedGame(id)
-    setGames(prev => prev.filter(g => g.id !== id))
+    if (game._fromDb) {
+      await fetch(`/api/games/${game.id}`, { method: 'DELETE', credentials: 'include' })
+        .catch(() => {})
+    } else {
+      deleteCompletedGame(game.id)
+    }
+    setGames(prev => prev.filter(g => g.id !== game.id))
   }
 
   return (
@@ -28,12 +79,14 @@ export default function History({ navigate }) {
 
       <PageHeader title="History" onBack={() => navigate('home')} />
 
-      {/* Disclaimer */}
-      <div className="px-5 pt-4 pb-1 shrink-0">
-        <p className="font-ui text-xs text-muted leading-relaxed">
-          History is saved to your device's browser storage. Clearing your browser data or using private browsing will erase it.
-        </p>
-      </div>
+      {/* Disclaimer — logged-out only */}
+      {!user && (
+        <div className="px-5 pt-4 pb-1 shrink-0">
+          <p className="font-ui text-xs text-muted leading-relaxed">
+            History is saved to your device only. Clearing browser data will erase it.
+          </p>
+        </div>
+      )}
 
       {/* Active player filter chip */}
       {filter && (
@@ -52,7 +105,13 @@ export default function History({ navigate }) {
       {/* Game list */}
       <main className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
 
-        {displayed.length === 0 && (
+        {loading && (
+          <div className="text-center pt-16">
+            <p className="font-ui text-sm text-muted">Loading your history…</p>
+          </div>
+        )}
+
+        {!loading && displayed.length === 0 && (
           <div className="text-center pt-16">
             {filter ? (
               <>
@@ -84,21 +143,25 @@ export default function History({ navigate }) {
           </div>
         )}
 
-        {displayed.map(game => (
+        {!loading && displayed.map(game => (
           <div
             key={game.id}
             className="relative bg-bg-card rounded-md border border-border shadow-card"
           >
-            {/* Tappable main area */}
             <button
               onClick={() => navigate('summary', { game })}
               className="w-full text-left px-4 pt-4 pb-4 pr-10 active:opacity-70"
             >
-              {/* Game name or date as primary identifier */}
-              {game.name
-                ? <p className="font-ui text-sm font-semibold text-text mb-1">{game.name}</p>
-                : null
-              }
+              {/* Course name */}
+              {game.courseName && (
+                <p className="font-ui text-xs tracking-[0.08em] uppercase text-accent mb-1">{game.courseName}</p>
+              )}
+
+              {/* Game name */}
+              {game.name && (
+                <p className="font-ui text-sm font-semibold text-text mb-1">{game.name}</p>
+              )}
+
               {/* Date + holes */}
               <div className="flex justify-between items-start mb-2">
                 <span className="font-ui text-xs text-muted">
@@ -109,45 +172,45 @@ export default function History({ navigate }) {
                 </span>
               </div>
 
-              {/* Players with averages */}
+              {/* Players */}
               <div className="space-y-1">
                 {(game.players ?? []).map(name => {
                   const isWinner = name === game.winner
-                  const avg = playerAverage(game.scores, name)
-                  const isDnf = game.dnf?.includes(name)
-                  const total = playerTotal(game.scores, name)
+                  const avg      = playerAverage(game.scores, name)
+                  const isDnf    = game.dnf?.includes(name)
+                  const total    = playerTotal(game.scores, name)
                   return (
-                    <div
-                      key={name}
-                      className="flex items-center justify-between"
-                    >
-                      <div className="flex items-center">
-                        <span
-                          role="button"
-                          tabIndex={0}
-                          onClick={e => { e.stopPropagation(); toggleFilter(name) }}
-                          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); toggleFilter(name) } }}
-                          className={[
-                            'font-ui text-sm',
-                            isWinner ? 'text-accent font-semibold' : 'text-text',
-                          ].join(' ')}
-                        >
-                          {name}
-                          {isDnf && <span className="text-muted font-normal"> (DNF)</span>}
-                        </span>
-                      </div>
+                    <div key={name} className="flex items-center justify-between">
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        onClick={e => { e.stopPropagation(); toggleFilter(name) }}
+                        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); toggleFilter(name) } }}
+                        className={[
+                          'font-ui text-sm',
+                          isWinner ? 'text-accent font-semibold' : 'text-text',
+                        ].join(' ')}
+                      >
+                        {name}
+                        {isDnf && <span className="text-muted font-normal"> (DNF)</span>}
+                      </span>
                       <span className="font-ui text-xs text-muted">
-                        {total > 0 ? total : '–'}{avg !== null ? ` (Av. ${avg})` : ''}
+                        {total > 0 ? total : '-'}{avg !== null ? ` (Av. ${avg})` : ''}
                       </span>
                     </div>
                   )
                 })}
               </div>
+
+              {/* Notes */}
+              {game.notes && (
+                <p className="font-ui text-xs text-muted mt-2 italic leading-relaxed line-clamp-2">{game.notes}</p>
+              )}
             </button>
 
             {/* Delete button */}
             <button
-              onClick={e => handleDelete(e, game.id)}
+              onClick={e => handleDelete(e, game)}
               aria-label="Delete game"
               className="absolute top-2 right-2 w-9 h-9 flex items-center justify-center text-muted active:text-text"
             >
