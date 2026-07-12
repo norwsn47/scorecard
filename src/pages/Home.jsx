@@ -46,7 +46,7 @@ export default function Home({ navigate }) {
       )}
 
       {/* ── Branding ── */}
-      <header className="flex-1 flex flex-col justify-center px-6 pt-16 pb-8">
+      <header className="flex-1 flex flex-col justify-start px-6 pt-10 pb-8">
         <h1 className="font-display text-5xl italic text-text leading-tight text-left">
           Bruntsfield Links Scorecard
         </h1>
