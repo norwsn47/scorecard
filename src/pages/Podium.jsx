@@ -30,7 +30,7 @@ export default function Podium({ navigate, params }) {
       {/* Header */}
       <header className="flex items-center justify-between px-5 pt-10 pb-4 border-b border-border">
         <div>
-          <p className="font-display italic text-lg text-text leading-tight">The Links Club</p>
+          <p className="font-display italic text-lg text-text leading-tight">Scorecard</p>
           <p className="font-ui text-xs tracking-[0.15em] uppercase text-muted mt-0.5">
             Bruntsfield Links
           </p>

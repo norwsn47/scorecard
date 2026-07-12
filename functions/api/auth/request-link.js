@@ -31,9 +31,9 @@ export async function onRequestPost(context) {
     body: JSON.stringify({
       from: RESEND_FROM_EMAIL,
       to: email,
-      subject: 'Your Links Club sign-in link',
+      subject: 'Your Scorecard sign-in link',
       html: buildEmailHtml(magicLink),
-      text: `Sign in to The Links Club:\n${magicLink}\n\nThis link expires in 15 minutes.\n\nIf you didn't request this, you can safely ignore this email.`,
+      text: `Sign in to Scorecard:\n${magicLink}\n\nThis link expires in 15 minutes.\n\nIf you didn't request this, you can safely ignore this email.`,
     }),
   });
 
@@ -52,7 +52,7 @@ function buildEmailHtml(magicLink) {
 <body style="font-family: Georgia, serif; background: #F7F4EE; padding: 40px 20px; margin: 0;">
   <div style="max-width: 480px; margin: 0 auto; background: #F5EFE3; border-radius: 8px; padding: 40px; border: 1px solid #D9D0C4;">
     <p style="font-family: Arial, sans-serif; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #6B6560; margin: 0 0 24px;">
-      The Links <span style="color: #1A4329;">Club</span>
+      Scorecard
     </p>
     <h1 style="font-size: 24px; font-weight: normal; color: #1A1A18; margin: 0 0 16px;">Sign in to your account</h1>
     <p style="font-family: Arial, sans-serif; color: #6B6560; font-size: 14px; line-height: 1.6; margin: 0 0 32px;">
@@ -60,7 +60,7 @@ function buildEmailHtml(magicLink) {
     </p>
     <a href="${magicLink}"
        style="display: inline-block; background: #1A4329; color: #F7F4EE; text-decoration: none; padding: 14px 28px; border-radius: 4px; font-family: Arial, sans-serif; font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600;">
-      Sign in to The Links Club
+      Sign in to Scorecard
     </a>
     <p style="font-family: Arial, sans-serif; color: #6B6560; font-size: 12px; margin: 32px 0 0; line-height: 1.6;">
       Or copy this link into your browser:<br>

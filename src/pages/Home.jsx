@@ -48,7 +48,7 @@ export default function Home({ navigate }) {
       {/* ── Branding ── */}
       <header className="flex-1 flex flex-col justify-center px-6 pt-16 pb-8">
         <h1 className="font-display text-5xl italic text-text leading-tight text-left">
-          The Links{user && <span className="text-accent"> Club</span>}
+          Scorecard
         </h1>
 
         <p className="font-display italic text-base text-text text-left mt-3">
@@ -120,7 +120,7 @@ export default function Home({ navigate }) {
       {/* ── Footer ── */}
       <footer className="text-center pb-14 px-6 space-y-3">
 <p className="font-ui text-text leading-tight inline-flex items-baseline gap-1">
-          <span className="text-base font-bold">The Links Club</span>
+          <span className="text-base font-bold">Scorecard</span>
           <span className="text-xs text-muted font-normal"> by </span>
           <a href="https://outbuild.uk" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 text-xs text-muted font-normal underline underline-offset-2">
             Outbuild
