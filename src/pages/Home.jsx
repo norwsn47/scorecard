@@ -1,17 +1,23 @@
 import { useEffect, useState } from 'react'
 import CourseMapModal from '../components/CourseMapModal.jsx'
 import { track } from '../utils/analytics.js'
-import { getActiveGame } from '../utils/storage.js'
+import { formatShortDate } from '../utils/format.js'
+import { getActiveGame, getCompletedGames } from '../utils/storage.js'
 import { useAuth } from '../hooks/useAuth.jsx'
 
 export default function Home({ navigate }) {
   const { user, logout }           = useAuth()
   const [activeGame, setActiveGame] = useState(null)
+  const [lastGame, setLastGame]     = useState(null)
   const [showMap, setShowMap]       = useState(false)
 
   useEffect(() => {
     setActiveGame(getActiveGame())
-  }, [])
+    if (!user) {
+      const completed = getCompletedGames()
+      setLastGame(completed[0] ?? null)
+    }
+  }, [user])
 
   async function handleLogout() {
     await logout()
@@ -102,15 +108,33 @@ export default function Home({ navigate }) {
           </button>
         )}
 
-        {/* Sign in prompt for logged-out users */}
+        {/* Last completed round — logged-out only */}
+        {!user && lastGame && (
+          <button
+            onClick={() => navigate('podium', { game: lastGame })}
+            className="w-full py-3 px-4 rounded-sm border border-border text-text font-ui text-sm tracking-[0.08em] uppercase font-medium flex items-center justify-between active:bg-bg-card"
+          >
+            <span>Last round</span>
+            <span className="text-xs text-muted normal-case tracking-normal font-normal truncate max-w-[180px]">
+              {lastGame.name || (lastGame.players ?? []).join(', ')} · {formatShortDate(lastGame.completedAt)}
+            </span>
+          </button>
+        )}
+
+        {/* Sign in nudge — logged-out only */}
         {!user && (
-          <div className="mt-2 flex flex-col items-center gap-1">
+          <div className="pt-1 text-center space-y-1">
             <button
               onClick={() => navigate('login')}
               className="font-ui text-xs text-accent underline underline-offset-2 active:opacity-70"
             >
-              Playing again? Sign in to keep your history
+              Sign in to save your rounds across devices
             </button>
+            {lastGame && (
+              <p className="font-ui text-xs text-muted">
+                Your last round is stored on this device only
+              </p>
+            )}
           </div>
         )}
       </main>
