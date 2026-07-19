@@ -46,9 +46,8 @@ async function buildCanvas(game) {
 
   // Section heights
   const TOP_PAD   = 20
-  const TITLE_H   = 36   // "Bruntsfield Links"
-  const BRAND_H   = 24   // "Outbuild"
-  const NAME_H    = game.name ? 22 : 0
+  const TITLE_H   = 40   // course name (serif italic)
+  const BRAND_H   = 26   // "Scorecard by Outbuild"
   const GAP1      = 12   // before winner callout
   const WIN_H     = 44   // winner callout box
   const GAP2      = 12   // after winner callout
@@ -58,7 +57,7 @@ async function buildCanvas(game) {
   const TOTAL_H   = 54   // totals + avg
   const BOT_PAD   = 20
 
-  const H = TOP_PAD + TITLE_H + BRAND_H + NAME_H + GAP1 + WIN_H + GAP2 + DIV_H + COL_H + holes * ROW_H + DIV_H + TOTAL_H + BOT_PAD
+  const H = TOP_PAD + TITLE_H + BRAND_H + GAP1 + WIN_H + GAP2 + DIV_H + COL_H + holes * ROW_H + DIV_H + TOTAL_H + BOT_PAD
 
   const canvas  = document.createElement('canvas')
   canvas.width  = W * SCALE
@@ -72,28 +71,40 @@ async function buildCanvas(game) {
 
   let y = TOP_PAD
 
-  // "Bruntsfield Links" — main bold heading
+  // Course name — serif italic display font
+  const courseName = game.courseName || 'Golf Scorecard'
   ctx.fillStyle = C.accent
-  ctx.font      = 'bold 26px Inter, system-ui, sans-serif'
+  ctx.font      = 'italic 22px "Cormorant Garamond", Georgia, serif'
   ctx.textAlign = 'center'
-  ctx.fillText('Bruntsfield Links', W / 2, y + 24)
+  ctx.fillText(courseName, W / 2, y + 28, W - PAD * 2)
   y += TITLE_H
 
-  // "Outbuild" — text lockup
-  ctx.fillStyle = C.muted
-  ctx.font      = 'italic 17px "Cormorant Garamond", Georgia, serif'
-  ctx.textAlign = 'center'
-  ctx.fillText('Outbuild', W / 2, y + 16)
-  y += BRAND_H
+  // "Scorecard by Outbuild" wordmark — mixed weight
+  {
+    const boldFont = 'bold 12px Inter, system-ui, sans-serif'
+    const normFont = '12px Inter, system-ui, sans-serif'
+    ctx.font = boldFont
+    const w1 = ctx.measureText('Scorecard').width
+    ctx.font = normFont
+    const w2 = ctx.measureText(' by ').width
+    const w3 = ctx.measureText('Outbuild').width
+    let x = W / 2 - (w1 + w2 + w3) / 2
 
-  // Game name (if set)
-  if (game.name) {
+    ctx.textAlign = 'left'
     ctx.fillStyle = C.text
-    ctx.font      = '13px Inter, system-ui, sans-serif'
-    ctx.textAlign = 'center'
-    ctx.fillText(game.name, W / 2, y + 15)
-    y += NAME_H
+    ctx.font      = boldFont
+    ctx.fillText('Scorecard', x, y + 16)
+    x += w1
+
+    ctx.fillStyle = C.muted
+    ctx.font      = normFont
+    ctx.fillText(' by ', x, y + 16)
+    x += w2
+
+    ctx.fillStyle = C.muted
+    ctx.fillText('Outbuild', x, y + 16)
   }
+  y += BRAND_H
 
   y += GAP1
 
@@ -204,7 +215,7 @@ export async function shareScorecard(game) {
 
       if (navigator.canShare?.({ files: [file] })) {
         try {
-          await navigator.share({ files: [file], title: 'Scorecard - Bruntsfield Links' })
+          await navigator.share({ files: [file], title: `Scorecard - ${game.courseName || 'Golf Scorecard'}` })
           resolve('shared')
         } catch (e) {
           if (e.name === 'AbortError') resolve('cancelled')

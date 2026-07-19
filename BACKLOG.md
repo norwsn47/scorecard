@@ -1,13 +1,15 @@
 # Backlog
 ## Scorecard by Outbuild — Bruntsfield Links
 
-Last updated: 12 July 2026
+Last updated: 19 July 2026
 
 Items below are logged for future consideration. None are implemented.
 
 Items previously in this backlog that have moved into the build plan: Podium (Chunk 11), Course Map (Chunk 12), Outbuild credit (Chunk 13), Share scorecard (Chunk 14). Analytics was briefly promoted to Chunk 15 but moved back here — see item 4 below.
 
 Items from the v2.0 planning session (July 2026) that were explicitly deferred: quick-play history import (item 7), magic link resend (item 8), auth rate limiting (item 9), quick-play course future-proofing (item 10).
+
+Wave 5 items (generic home + Bruntsfield course page refactor, added 19 July 2026) were planned directly into the build plan — see Chunks 30-32 in BUILDPLAN.md. They are not listed as separate backlog items here.
 
 ---
 

@@ -212,11 +212,6 @@ export default function History({ navigate }) {
                 <p className="font-ui text-xs tracking-[0.08em] uppercase text-accent mb-1">{game.courseName}</p>
               )}
 
-              {/* Game name */}
-              {game.name && (
-                <p className="font-ui text-sm font-semibold text-text mb-1">{game.name}</p>
-              )}
-
               {/* Date + holes */}
               <div className="flex justify-between items-start mb-2">
                 <span className="font-ui text-xs text-muted">

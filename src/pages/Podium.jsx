@@ -34,7 +34,7 @@ export default function Podium({ navigate, params }) {
         <div>
           <p className="font-display italic text-lg text-text leading-tight">Scorecard</p>
           <p className="font-ui text-xs tracking-[0.15em] uppercase text-muted mt-0.5">
-            Bruntsfield Links
+            Bruntsfield Short Hole Golf Course
           </p>
         </div>
       </header>

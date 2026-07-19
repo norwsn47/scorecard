@@ -1,14 +1,15 @@
 import { Component, useEffect, useState } from 'react'
-import History    from './pages/History.jsx'
-import Info       from './pages/Info.jsx'
-import Login      from './pages/Login.jsx'
-import Privacy    from './pages/Privacy.jsx'
-import Rules      from './pages/Rules.jsx'
-import Home       from './pages/Home.jsx'
-import Podium     from './pages/Podium.jsx'
-import Scorecard  from './pages/Scorecard.jsx'
-import Setup      from './pages/Setup.jsx'
-import Summary    from './pages/Summary.jsx'
+import History              from './pages/History.jsx'
+import Info                 from './pages/Info.jsx'
+import Login                from './pages/Login.jsx'
+import Privacy              from './pages/Privacy.jsx'
+import Rules                from './pages/Rules.jsx'
+import Home                 from './pages/Home.jsx'
+import Podium               from './pages/Podium.jsx'
+import Scorecard            from './pages/Scorecard.jsx'
+import Setup                from './pages/Setup.jsx'
+import Summary              from './pages/Summary.jsx'
+import BruntsfiledCoursePage from './pages/BruntsfiledCoursePage.jsx'
 import { getActiveGame, isStorageAvailable } from './utils/storage.js'
 import { AuthProvider, useAuth } from './hooks/useAuth.jsx'
 
@@ -40,21 +41,34 @@ class ErrorBoundary extends Component {
 }
 
 const PAGES = {
-  home:       Home,
-  login:      Login,
-  privacy:    Privacy,
-  info:       Info,
-  rules:      Rules,
-  setup:      Setup,
-  scorecard:  Scorecard,
-  podium:     Podium,
-  summary:    Summary,
-  history:    History,
+  home:        Home,
+  login:       Login,
+  privacy:     Privacy,
+  info:        Info,
+  rules:       Rules,
+  setup:       Setup,
+  scorecard:   Scorecard,
+  podium:      Podium,
+  summary:     Summary,
+  history:     History,
+  bruntsfield: BruntsfiledCoursePage,
+}
+
+// Pages whose URL slug differs from their key
+const PAGE_PATHS = {
+  home:        '/',
+  bruntsfield: '/bruntsfield-short-course',
+}
+
+function pathForPage(key) {
+  return PAGE_PATHS[key] ?? `/${key}`
 }
 
 function pageFromPath() {
-  const path = window.location.pathname.replace(/^\//, '') || 'home'
-  return path in PAGES ? path : 'home'
+  const path = window.location.pathname
+  if (path === '/bruntsfield-short-course') return 'bruntsfield'
+  const key = path.replace(/^\//, '') || 'home'
+  return key in PAGES ? key : 'home'
 }
 
 function AppContent() {
@@ -87,7 +101,7 @@ function AppContent() {
   function navigate(to, nextParams = {}) {
     setPage(to)
     setParams(nextParams)
-    window.history.pushState({ page: to }, '', to === 'home' ? '/' : `/${to}`)
+    window.history.pushState({ page: to }, '', pathForPage(to))
   }
 
   // Blank screen while auth check is in flight — prevents flash of wrong state

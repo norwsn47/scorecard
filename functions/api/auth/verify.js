@@ -33,7 +33,7 @@ export async function onRequestGet(context) {
   if (isNewUser) {
     await DB.prepare(
       'INSERT INTO courses (id, user_id, name, holes, is_default, created_at) VALUES (?, ?, ?, ?, ?, ?)'
-    ).bind(crypto.randomUUID(), user.id, 'Bruntsfield Links', 36, 1, new Date().toISOString()).run();
+    ).bind(crypto.randomUUID(), user.id, 'Bruntsfield Short Hole Golf Course', 36, 1, new Date().toISOString()).run();
   }
 
   const sessionId = crypto.randomUUID();

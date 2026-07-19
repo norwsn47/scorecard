@@ -18,10 +18,10 @@ export default function CourseMapModal({ onClose }) {
         {/* Header */}
         <div className="relative px-5 py-4 border-b border-border shrink-0">
           <p className="font-display italic text-xl text-text leading-tight">
-            {showRules ? 'Course Rules' : 'Bruntsfield Links'}
+            Bruntsfield Short Hole Golf Course
           </p>
           <p className="font-ui text-xs tracking-[0.15em] uppercase text-muted mt-0.5">
-            {showRules ? 'Bruntsfield Links' : 'Course Map'}
+            {showRules ? 'Course Rules' : 'Course Map'}
           </p>
           <button
             onClick={onClose}
@@ -45,7 +45,7 @@ export default function CourseMapModal({ onClose }) {
             >
               <img
                 src="/course_map_v2.png"
-                alt="Bruntsfield Links course map"
+                alt="Bruntsfield Short Hole Golf Course course map"
                 className="w-full block"
               />
             </TransformComponent>

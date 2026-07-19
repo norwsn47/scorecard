@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import PageHeader from '../components/PageHeader.jsx'
-import { formatGameNameDate } from '../utils/format.js'
 import { canStartGame, createGame, findDuplicateIndices } from '../utils/game.js'
 import { getPlayers, saveActiveGame, savePlayers } from '../utils/storage.js'
 import { useAuth } from '../hooks/useAuth.jsx'
@@ -9,8 +8,8 @@ const MAX_PLAYERS = 6
 
 export default function Setup({ navigate, params }) {
   const pastRound                          = params?.pastRound ?? false
+  const fromBruntsfield                   = params?.bruntsfield ?? false
   const { user }                          = useAuth()
-  const [gameName, setGameName]           = useState(() => formatGameNameDate())
   const [names, setNames]                 = useState([''])
   const [savedNames]                      = useState(() => getPlayers())
   const [courses, setCourses]             = useState([])
@@ -67,7 +66,10 @@ export default function Setup({ navigate, params }) {
     const merged = [...new Set([...trimmed, ...existing])].slice(0, 20)
     savePlayers(merged)
 
-    let courseId = user ? (selectedCourseId ?? null) : null
+    let courseId   = user ? (selectedCourseId ?? null) : null
+    let courseName = user
+      ? (courses.find(c => c.id === courseId)?.name ?? null)
+      : (fromBruntsfield ? 'Bruntsfield Short Hole Golf Course' : null)
 
     if (user && creatingCourse && newCourseName.trim()) {
       setCourseError(null)
@@ -80,7 +82,8 @@ export default function Setup({ navigate, params }) {
         })
         const data = await res.json()
         if (res.ok) {
-          courseId = data.course.id
+          courseId   = data.course.id
+          courseName = data.course.name
         } else {
           setCourseError(data.error || 'Could not create course')
           return
@@ -94,15 +97,15 @@ export default function Setup({ navigate, params }) {
     const dateIso = pastRound
       ? new Date(pastDate + 'T12:00:00').toISOString()
       : null
-    const game = createGame(trimmed, gameName, courseId, dateIso)
+    const game = createGame(trimmed, courseId, courseName, dateIso)
     saveActiveGame(game)
-    navigate('scorecard', { game })
+    navigate('scorecard', { game, bruntsfield: fromBruntsfield })
   }
 
   return (
     <div className="h-full bg-bg flex flex-col">
 
-      <PageHeader title={pastRound ? 'Add Past Round' : 'New Game'} onBack={() => pastRound ? navigate('history') : navigate('home')} />
+      <PageHeader title={pastRound ? 'Add Past Round' : 'New Game'} onBack={() => pastRound ? navigate('history') : navigate(fromBruntsfield ? 'bruntsfield' : 'home')} />
 
       <main className="flex-1 overflow-y-auto px-5 pt-6 pb-10 w-full space-y-3">
 
@@ -153,19 +156,6 @@ export default function Setup({ navigate, params }) {
             <p className="font-ui text-xs text-muted mt-1.5 pl-1">Course</p>
           </div>
         )}
-
-        {/* Game name */}
-        <div className="pb-1">
-          <input
-            type="text"
-            value={gameName}
-            onChange={e => setGameName(e.target.value.slice(0, 50))}
-            maxLength={50}
-            autoComplete="off"
-            className="w-full py-3 pl-4 pr-4 rounded-md border border-border font-ui text-base bg-bg-card text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40"
-          />
-          <p className="font-ui text-xs text-muted mt-1.5 pl-1">Round name - optional</p>
-        </div>
 
         {/* Date picker — past rounds only */}
         {pastRound && (
@@ -238,14 +228,16 @@ export default function Setup({ navigate, params }) {
           </button>
         )}
 
-        <div className="pt-2 pb-1 text-center">
-          <button
-            onClick={() => navigate('rules', { from: 'setup' })}
-            className="py-2 font-ui text-xs text-accent underline underline-offset-2 active:text-text"
-          >
-            Course rules
-          </button>
-        </div>
+        {fromBruntsfield && (
+          <div className="pt-2 pb-1 text-center">
+            <button
+              onClick={() => navigate('rules', { from: 'setup', bruntsfield: fromBruntsfield })}
+              className="py-2 font-ui text-xs text-accent underline underline-offset-2 active:text-text"
+            >
+              Course rules
+            </button>
+          </div>
+        )}
 
         <div className="pt-3">
           <button

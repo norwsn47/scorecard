@@ -1,5 +1,5 @@
 # CLAUDE.md
-Last updated: 12 July 2026
+Last updated: 19 July 2026
 > Ground rules for this project. Read this at the start of every session.
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 

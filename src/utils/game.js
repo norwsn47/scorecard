@@ -113,7 +113,7 @@ export function finishGame(game) {
  * Builds a fresh active-game object. Always allocates MAX_HOLES slots;
  * the UI shows only as many rows as have been played.
  */
-export function createGame(playerNames, name = '', courseId = null, pastDate = null) {
+export function createGame(playerNames, courseId = null, courseName = null, pastDate = null) {
   const scores = {}
   playerNames.forEach(name => {
     scores[name] = Array(MAX_HOLES).fill(null)
@@ -121,11 +121,11 @@ export function createGame(playerNames, name = '', courseId = null, pastDate = n
   return {
     id: Date.now().toString(),
     startedAt: new Date().toISOString(),
-    name: name.trim(),
     players: playerNames,
     holes: MAX_HOLES,
     scores,
     courseId,
+    courseName,
     ...(pastDate ? { pastDate } : {}),
   }
 }

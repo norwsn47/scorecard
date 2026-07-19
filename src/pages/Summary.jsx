@@ -37,7 +37,7 @@ export default function Summary({ navigate, params }) {
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify({
-            game_name: game.name || null,
+            game_name: null,
             course_id: game.courseId || null,
             played_at: game.completedAt,
             holes_played: game.holesPlayed,
@@ -59,8 +59,8 @@ export default function Summary({ navigate, params }) {
 
       {/* Header */}
       <header className="px-5 pt-10 pb-4 border-b border-border text-center">
-        {game.name && (
-          <h1 className="font-display italic text-2xl text-text mb-1">{game.name}</h1>
+        {game.courseName && (
+          <h1 className="font-display italic text-2xl text-text mb-1">{game.courseName}</h1>
         )}
         <p className="font-ui text-xs tracking-[0.15em] uppercase text-muted">
           {formatDateOnly(game.completedAt)}

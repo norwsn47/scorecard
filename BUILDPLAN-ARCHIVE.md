@@ -1,7 +1,7 @@
 # Build Plan Archive
 ## Scorecard by Outbuild — Bruntsfield Links
 
-Last updated: 11 July 2026
+Last updated: 19 July 2026
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
 This file contains the full detail blocks for all completed chunks, moved here from BUILDPLAN.md as each chunk was finished. The chunk order summary table is also here — it migrated from BUILDPLAN.md once all planned work was complete.
@@ -476,5 +476,151 @@ Added from PRD v1.5. The hotfix runs before everything else. Chunks 16–20 are 
 | 8 | Polish & edge cases | All features | Done |
 | 9 | Error handling | 8 | Done |
 | 10 | Security & pre-launch | 9 | Done |
+
+---
+
+## Phase 4 — Scorecard Plus (v2.0) + Wave 5
+*Archived 19 July 2026*
+
+**Stack:** Vite + React · Tailwind CSS · localStorage · Cloudflare Pages · Cloudflare D1 · Cloudflare Pages Functions · Resend
+
+---
+
+## Chunk 21 — D1 database setup + schema
+**Status: Done**
+**Depends on: Nothing (infrastructure)**
+
+**Goal:** A working Cloudflare D1 database with the full v2.0 schema applied and verified locally.
+
+- Create the D1 database via `wrangler d1 create scorecard-plus`
+- Update `wrangler.toml` to add the D1 binding: name `DB`, database name and ID from the create command
+- Write the initial SQL migration file covering all five tables:
+  - `users` — id (UUID PK), email (unique, not null), created_at
+  - `magic_tokens` — id (UUID PK), email (not null), token (unique, not null), expires_at, used (boolean, default false)
+  - `sessions` — id (UUID PK), user_id (FK → users.id), created_at, expires_at
+  - `games` — id (UUID PK), user_id (FK → users.id), game_name (nullable), played_at, holes_played (integer), player_data (JSON text, not null), course_id (FK → courses.id, nullable), created_at
+  - `courses` — id (UUID PK), user_id (FK → users.id, nullable for system courses), name (not null), holes (integer, default 36), is_default (boolean, default false), created_at
+- Apply migration locally
+- Verify schema is correct with a local query
+
+---
+
+## Chunk 22 — Pages Functions API scaffold
+**Status: Done**
+**Depends on: 21**
+
+**Goal:** A working Cloudflare Pages Functions structure with the D1 binding confirmed live, a health check endpoint, and local dev running cleanly.
+
+- Create `/functions` directory in the project root
+- Set up directory structure: `/functions/api/health.js`, `/functions/api/auth/`, `/functions/api/games/`
+- Confirm `wrangler.toml` Pages Functions configuration is correct
+- Start local dev and confirm health check and D1 binding work
+
+---
+
+## Chunk 23 — Magic link auth backend
+**Status: Done**
+**Depends on: 21, 22**
+
+**Goal:** `POST /api/auth/request-link` and `GET /api/auth/verify` endpoints powering magic link sign-in via Resend.
+
+- Request-link: validates email, generates token, inserts into `magic_tokens`, sends email via Resend
+- Verify: looks up token, marks used, creates user if new, creates default course, creates session, sets HttpOnly cookie, redirects to `/?verified=true`
+
+---
+
+## Chunk 24 — Session middleware
+**Status: Done**
+**Depends on: 23**
+
+**Goal:** Session validation infrastructure, `GET /api/auth/me`, `POST /api/auth/logout`, and `useAuth` hook.
+
+---
+
+## Chunk 25 — Auth UI
+**Status: Done**
+**Depends on: 23, 24**
+
+**Goal:** Login screen, post-send confirmation, session-aware routing, logout, and home screen auth state display.
+
+---
+
+## Chunk 26 — Scorecard Plus branding
+**Status: Done**
+**Depends on: 25**
+
+**Goal:** "Scorecard Plus" wordmark (with "Plus" in terracotta) for logged-in users on the home screen.
+
+---
+
+## Chunk 27 — Course creation and selection UI
+**Status: Done**
+**Depends on: 25**
+
+**Goal:** Course selector and inline course creation in the new game setup screen for logged-in users. `GET /api/courses` and `POST /api/courses` endpoints.
+
+---
+
+## Chunk 28 — Logged-in game save to D1
+**Status: Done**
+**Depends on: 25, 27**
+
+**Goal:** Completed games saved to D1 for logged-in users via `POST /api/games`. Logged-out users continue to use localStorage.
+
+---
+
+## Chunk 29 — Logged-in history
+**Status: Done**
+**Depends on: 25, 28**
+
+**Goal:** History screen reads from D1 for logged-in users (`GET /api/games`, `GET /api/games/:id`). Logged-out users see localStorage history unchanged.
+
+---
+
+## Wave 5 — Generic home + Bruntsfield course page refactor
+*Added and completed 19 July 2026*
+
+---
+
+## Chunk 30 — Rename "Bruntsfield Links" to "Bruntsfield Short Hole Golf Course"
+**Status: Done**
+**Depends on: 29**
+
+**Goal:** Full codebase rename — UI text, `verify.js` new-user course default, share canvas, and all component labels updated to the correct full course name.
+
+---
+
+## Chunk 31 — Generic home screen + /bruntsfield-short-course page
+**Status: Done**
+**Depends on: 30**
+
+**Goal:** Home (`/`) becomes generic with no Bruntsfield-specific content. New `BruntsfiledCoursePage` component at `/bruntsfield-short-course` with full course-specific actions. Page-key routing extended with `PAGE_PATHS` mapping. `public/_redirects` updated.
+
+---
+
+## Chunk 32 — Rules content update + context-aware setup/scorecard flow
+**Status: Done**
+**Depends on: 30, 31**
+
+**Goal:** Updated rules copy in `RulesContent.jsx`. New Game from Bruntsfield page passes `{ bruntsfield: true }` through setup into the scorecard, showing the course map button and rules link only in that context. Generic home new game flow has no course-specific links.
+
+---
+
+## Chunk order summary (Phase 4 + Wave 5)
+
+| Chunk | What | Depends on | Status |
+|-------|------|------------|--------|
+| 21 | D1 database setup + schema | Nothing | Done |
+| 22 | Pages Functions API scaffold | 21 | Done |
+| 23 | Magic link auth backend | 21, 22 | Done |
+| 24 | Session middleware | 23 | Done |
+| 25 | Auth UI | 23, 24 | Done |
+| 26 | Scorecard Plus branding | 25 | Done |
+| 27 | Course creation/selection UI | 25 | Done |
+| 28 | Logged-in game save to D1 | 25, 27 | Done |
+| 29 | Logged-in history | 25, 28 | Done |
+| 30 | Rename "Bruntsfield Links" to full course name | 29 | Done |
+| 31 | Generic home screen + /bruntsfield-short-course page | 30 | Done |
+| 32 | Rules content update + context-aware flow | 30, 31 | Done |
 
 **Verify:** Rules link visible on home screen, below New Game and History. Rules tab visible inside the Map overlay. Rules text matches PRD 4.9 verbatim. No enforcement logic added. Both entry points open the same rules content. Styling is readable and consistent with the rest of the app.
