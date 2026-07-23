@@ -73,7 +73,7 @@ Covers user item 9.
 ---
 
 ### Chunk 35 — Course map reliability
-**Status: Not started**
+**Status: PAUSED — needs manual review/instruction before an agent resumes.** An implementation attempt was made (branch `fix/course-map-reliability`, stashed, not committed) but the user flagged it as wrong before it reached commit. Do not re-attempt this chunk without fresh, explicit instruction from the user on what approach is actually wanted.
 **Depends on: nothing**
 
 Covers user items 10 and 11. Grouped because both concern `CourseMapModal.jsx` and the map trigger in `Scorecard.jsx`.
