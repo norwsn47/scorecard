@@ -72,23 +72,16 @@ export default function Login({ navigate }) {
         ← Back
       </button>
 
-      <div className="flex-1 flex flex-col px-6 pt-6 pb-8">
-        <div className="mb-8">
-          <h1 className="font-display text-4xl italic text-text leading-tight">
-            Scorecard
+      <div className="flex-1 flex flex-col px-6 pt-3 pb-8">
+        <div className="mb-2">
+          <h1 className="font-display text-2xl italic text-text leading-tight">
+            Sign in to Scorecard
           </h1>
         </div>
 
-        <div className="mb-8 space-y-3">
-          <p className="font-ui text-sm text-muted leading-relaxed">
-            The scoring is simple. It's nice to keep a proper record.
-          </p>
-          <div className="space-y-2 pt-1">
-            <p className="font-ui text-sm text-muted flex gap-3"><span className="text-accent font-semibold">1</span>Add your own courses</p>
-            <p className="font-ui text-sm text-muted flex gap-3"><span className="text-accent font-semibold">2</span>Keep a proper record across rounds</p>
-            <p className="font-ui text-sm text-muted flex gap-3"><span className="text-accent font-semibold">3</span>Look back at how you played</p>
-          </div>
-        </div>
+        <p className="font-ui text-sm text-muted leading-relaxed mb-5">
+          Keep a proper record of your rounds and courses, across devices.
+        </p>
 
         {error && (
           <div className="mb-5 px-4 py-3 rounded-md bg-bg-card border border-border">

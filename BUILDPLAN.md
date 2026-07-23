@@ -1,7 +1,7 @@
 # Build Plan
 ## Scorecard by Outbuild
 
-**Last updated:** 23 July 2026
+**Last updated:** 23 July 2026 (Chunk 33 complete)
 
 > All planned work through Phase 4 (Chunks 1–29) and Wave 5 (Chunks 30–32) is complete and archived in BUILDPLAN-ARCHIVE.md.
 
@@ -36,7 +36,7 @@ Source: 15-item list from the user (bugs, small features, one backend-touching f
 ---
 
 ### Chunk 33 — UI feedback pass: sign-in & scorecard polish
-**Status: Not started**
+**Status: Complete (23 July 2026)**
 **Mode: UI feedback (bundled, single review/commit)**
 
 Covers user items 1, 2, 3, 4, 12, 15. All cosmetic/layout — no data model or logic changes.

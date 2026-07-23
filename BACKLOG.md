@@ -162,3 +162,45 @@ Consider the site architecture needed to properly support multiple courses, beyo
 This is an architecture/planning item, not a single buildable chunk — revisit once real usage data shows whether users are actually creating multiple distinct courses in practice.
 
 Related PRD sections: 6 (Course), 11.7 (Course creation and selection), 8 (Future considerations).
+
+---
+
+### 15. PageHeader title-clearance margin is fixed, not proportional
+
+**Added: 23 July 2026. Raised by code-reviewer during Chunk 33 review.**
+
+`PageHeader.jsx`'s absolutely-centred title layer uses a fixed `px-16` clearance from the header edges to avoid overlapping the back button and right-side slot. Verified safe against every title/button combination currently in the app (smallest real margin measured: 20px), but the margin doesn't scale with the actual rendered width of sibling content — a future long title paired with a wide right-side button could overlap with no truncation-based safety net protecting against that specific case.
+
+Fix: either document a safe title-length budget in DESIGN.md, or make the clearance responsive to actual sibling widths (e.g. measure at render time) next time this component is touched.
+
+No PRD section — component-level implementation detail.
+
+---
+
+### 16. Sub-44px tap targets on inline text links
+
+**Added: 23 July 2026. Raised by code-reviewer during Chunk 33 review.**
+
+Several inline text-link buttons across the app (e.g. `Info.jsx`, `Login.jsx`, `Setup.jsx`, `Summary.jsx`, `CourseMapModal.jsx`, `RulesContent.jsx`) have no padding/min-height, giving a tap target well under the 44×44px accessibility guideline. This is an existing app-wide convention, not introduced by any single chunk. Consider a pass to bring these in line with the guideline.
+
+No PRD section — accessibility housekeeping.
+
+---
+
+### 17. No linter configured
+
+**Added: 23 July 2026. Raised by code-reviewer during Chunk 33 review.**
+
+The project has no ESLint (or other linter) configured — no `.eslintrc*`/`eslint.config.*` and no `lint` script in `package.json`. Code review currently relies on manual reading rather than tool-assisted static analysis. Add ESLint with a reasonable React/JSX config when convenient.
+
+No PRD section — tooling housekeeping.
+
+---
+
+### 18. Scorecard.jsx setState-during-render warning on direct load
+
+**Added: 23 July 2026. Raised by code-reviewer during Chunk 33 review (incidental finding, unrelated to Chunk 33's diff).**
+
+Loading `/scorecard` directly with no active game in storage triggers a React warning: "Cannot update a component (`AppContent`) while rendering a different component (`Scorecard`)." `Scorecard.jsx` (around line 35) appears to call `navigate()`/setState synchronously during render rather than inside a `useEffect` for this no-active-game case. Needs a debugger pass to confirm root cause and fix.
+
+No PRD section — bug, pre-existing behaviour.

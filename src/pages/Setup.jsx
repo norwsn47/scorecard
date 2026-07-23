@@ -139,7 +139,7 @@ export default function Setup({ navigate, params }) {
                     onChange={e => { setNewCourseName(e.target.value.slice(0, 60)); setCourseError(null) }}
                     placeholder="Course name"
                     autoFocus
-                    className="flex-1 py-3 pl-4 pr-4 rounded-md border border-border font-ui text-base bg-bg-card text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40"
+                    className="flex-1 min-w-0 py-3 pl-4 pr-4 rounded-md border border-border font-ui text-base bg-bg-card text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40"
                   />
                   <button
                     onClick={() => { setCreatingCourse(false); setNewCourseName(''); setCourseError(null) }}

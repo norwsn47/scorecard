@@ -115,6 +115,16 @@ export default function Info({ navigate, params }) {
           </section>
         )}
 
+        <p className="font-ui text-xs text-muted leading-relaxed">
+          Your data is handled under UK GDPR.{' '}
+          <button
+            onClick={() => navigate('privacy', { from: 'info' })}
+            className="text-accent underline underline-offset-2 active:opacity-70"
+          >
+            Read our privacy policy
+          </button>
+        </p>
+
       </main>
     </div>
   )
