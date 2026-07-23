@@ -1,7 +1,7 @@
 # Backlog
 ## Scorecard by Outbuild — Bruntsfield Links
 
-Last updated: 19 July 2026
+Last updated: 23 July 2026
 
 Items below are logged for future consideration. None are implemented.
 
@@ -10,6 +10,8 @@ Items previously in this backlog that have moved into the build plan: Podium (Ch
 Items from the v2.0 planning session (July 2026) that were explicitly deferred: quick-play history import (item 7), magic link resend (item 8), auth rate limiting (item 9), quick-play course future-proofing (item 10).
 
 Wave 5 items (generic home + Bruntsfield course page refactor, added 19 July 2026) were planned directly into the build plan — see Chunks 30-32 in BUILDPLAN.md. They are not listed as separate backlog items here.
+
+Items 13 and 14 below were added 23 July 2026 from a 15-item user feedback list. The user explicitly flagged both as "future addition, not to be done now" at the time of request — see Chunks 33-40 in BUILDPLAN.md for the rest of that list, which was actioned into the current build plan.
 
 ---
 
@@ -136,3 +138,27 @@ Fix: add a scheduled Cloudflare Worker (or a cleanup step in `verify.js`) that d
 Priority: medium. Not a launch blocker, but should be addressed before significant user numbers.
 
 Related PRD section: 11.12
+
+---
+
+### 13. Full onboarding journey (name + home course + par)
+
+**Added: 23 July 2026. Explicitly deferred by the user — "future addition, not to be done now."**
+
+A proper onboarding flow on sign-up: prompt for name and home course together (rather than the lightweight name-only capture being built now in Chunk 39 of BUILDPLAN.md), with the ability to add/edit a home course and its par scores when created. Par would then appear on the course record and on the scorecard, with running over/under-par totals alongside the existing raw stroke totals.
+
+This is a materially bigger feature than the current v2.0 scope: it introduces par as a first-class concept, which PRD section 7 currently lists as explicitly out of scope for both MVP and v2.0. Building this properly means deciding how par interacts with the existing raw-stroke scoring model (PRD section 5) before writing any code — not a small addition.
+
+Related PRD sections: 5 (Scoring), 7 (Out of scope), 8 (Future considerations), 11.7 (Course creation).
+
+---
+
+### 14. Multi-course architecture
+
+**Added: 23 July 2026. Explicitly deferred by the user — "future addition, not to be done now."**
+
+Consider the site architecture needed to properly support multiple courses, beyond the current v2.0 model where a logged-in user's "course" is just a name string with a default hole count (PRD 11.7). Would need to cover: structured per-course data (holes, par per hole if item 13 is ever built), how quick-play (currently hardcoded to Bruntsfield) would coexist with a multi-course model, and whether system-provided courses (beyond the Bruntsfield default) become a thing users can browse rather than only create themselves.
+
+This is an architecture/planning item, not a single buildable chunk — revisit once real usage data shows whether users are actually creating multiple distinct courses in practice.
+
+Related PRD sections: 6 (Course), 11.7 (Course creation and selection), 8 (Future considerations).
