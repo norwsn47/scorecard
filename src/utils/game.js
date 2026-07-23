@@ -33,13 +33,34 @@ export function canStartGame(names, count) {
  * How many hole rows to show in the live scorecard.
  * Displays up to and including the first hole where not all players have
  * scored — so a new row appears automatically once the previous hole is full.
+ *
+ * Also always displays up to and including the last hole that has a score
+ * for any player. This matters when a middle hole gets reset to empty
+ * (e.g. a player clears a score partway through a round): without this,
+ * the "first incomplete hole" would sit earlier in the sequence than holes
+ * that still have real scores recorded after it, and those later rows would
+ * disappear from the grid even though the data in `scores` is untouched.
+ * The reset hole itself still renders with the existing empty (`–`) treatment.
  */
 export function computeDisplayedHoles(players, scores, maxHoles) {
+  let firstIncomplete = maxHoles
   for (let h = 0; h < maxHoles; h++) {
     const allScored = players.every(p => (scores[p]?.[h] ?? null) !== null)
-    if (!allScored) return Math.min(h + 1, maxHoles)
+    if (!allScored) {
+      firstIncomplete = h + 1
+      break
+    }
   }
-  return maxHoles
+
+  let lastScoredHole = -1
+  for (let h = maxHoles - 1; h >= 0; h--) {
+    if (players.some(p => (scores[p]?.[h] ?? null) !== null)) {
+      lastScoredHole = h
+      break
+    }
+  }
+
+  return Math.min(Math.max(firstIncomplete, lastScoredHole + 1), maxHoles)
 }
 
 /**
