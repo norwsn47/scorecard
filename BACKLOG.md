@@ -183,6 +183,8 @@ No PRD section — component-level implementation detail.
 
 Several inline text-link buttons across the app (e.g. `Info.jsx`, `Login.jsx`, `Setup.jsx`, `Summary.jsx`, `CourseMapModal.jsx`, `RulesContent.jsx`) have no padding/min-height, giving a tap target well under the 44×44px accessibility guideline. This is an existing app-wide convention, not introduced by any single chunk. Consider a pass to bring these in line with the guideline.
 
+**Partially addressed 23 July 2026:** the "Read the course rules before you start" link in `Setup.jsx` (Bruntsfield New Game screen) now has a widened touch target (`inline-block py-2 -my-2`) as part of the course-rules-prompt chunk. `Info.jsx`, `Login.jsx`, `Summary.jsx`, `CourseMapModal.jsx`, and `RulesContent.jsx` are still unaddressed — item stays open.
+
 No PRD section — accessibility housekeeping.
 
 ---

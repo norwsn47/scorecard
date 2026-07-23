@@ -229,13 +229,16 @@ export default function Setup({ navigate, params }) {
         )}
 
         {fromBruntsfield && (
-          <div className="pt-2 pb-1 text-center">
-            <button
-              onClick={() => navigate('rules', { from: 'setup', bruntsfield: fromBruntsfield })}
-              className="py-2 font-ui text-xs text-accent underline underline-offset-2 active:text-text"
-            >
-              Course rules
-            </button>
+          <div className="pt-4 pb-3 text-center">
+            <p className="font-ui text-sm text-muted leading-relaxed">
+              New here?{' '}
+              <button
+                onClick={() => navigate('rules', { from: 'setup', bruntsfield: fromBruntsfield })}
+                className="inline-block py-2 -my-2 text-accent underline underline-offset-2 active:opacity-70"
+              >
+                Read the course rules before you start
+              </button>
+            </p>
           </div>
         )}
 
