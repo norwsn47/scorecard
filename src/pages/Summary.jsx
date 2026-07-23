@@ -164,7 +164,7 @@ export default function Summary({ navigate, params }) {
               onChange={e => setNotes(e.target.value.slice(0, 300))}
               placeholder="Add a note about this round..."
               rows={2}
-              className="w-full px-4 py-3 rounded-md border border-border bg-bg-card font-ui text-sm text-text placeholder:text-chrome resize-none focus:outline-none focus:ring-2 focus:ring-accent/40"
+              className="w-full px-4 py-3 rounded-md border border-border bg-bg-card font-ui text-base text-text placeholder:text-chrome resize-none focus:outline-none focus:ring-2 focus:ring-accent/40"
             />
             <p className="font-ui text-xs text-muted mt-1 pl-1">Round notes - optional</p>
           </div>
