@@ -1,9 +1,13 @@
 # Build Plan
 ## Scorecard by Outbuild
 
-**Last updated:** 23 July 2026 (Chunks 33-34 complete)
+**Last updated:** 23 July 2026 (Chunks 33-34 complete; urgent hotfix — production deep-link 308 redirect)
 
 > All planned work through Phase 4 (Chunks 1–29) and Wave 5 (Chunks 30–32) is complete and archived in BUILDPLAN-ARCHIVE.md.
+
+## Hotfix log
+
+**23 July 2026 — Production 308 redirect on deep-linked routes.** Reported urgently by the user: direct navigation to `https://scorecard.outbuild.uk/bruntsfield-short-course` (and other routes) returned an HTTP 308 redirect to the bare domain root instead of loading the app. Investigated via the debugger agent and extensive live Cloudflare dashboard checks with the user — app code, build output, DNS, Redirect Rules, Page Rules, Bulk Redirects, and Pages build configuration were all confirmed correct. Root cause narrowed to `public/_redirects`'s enumerated per-route format; fixed by switching to the standard Cloudflare Pages SPA wildcard rule (`/* /index.html 200`). Confirmed via Cloudflare docs that Pages Functions always take priority over `_redirects`, so the `/api/*` auth/games endpoints are unaffected. Merged to `main` — awaiting the user's live redeploy verification.
 
 ---
 
