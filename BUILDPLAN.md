@@ -1,7 +1,7 @@
 # Build Plan
 ## Scorecard by Outbuild
 
-**Last updated:** 23 July 2026 (Chunk 33 complete)
+**Last updated:** 23 July 2026 (Chunks 33-34 complete)
 
 > All planned work through Phase 4 (Chunks 1–29) and Wave 5 (Chunks 30–32) is complete and archived in BUILDPLAN-ARCHIVE.md.
 
@@ -53,7 +53,7 @@ Covers user items 1, 2, 3, 4, 12, 15. All cosmetic/layout — no data model or l
 ---
 
 ### Chunk 34 — Bug fix: hole reset no longer hides later holes
-**Status: Not started**
+**Status: Complete (23 July 2026)**
 **Depends on: nothing**
 
 Covers user item 9.

@@ -113,6 +113,27 @@ describe('computeDisplayedHoles', () => {
     const scores = { Alice: [3, 4, null] }
     expect(computeDisplayedHoles(['Alice'], scores, 3)).toBe(3)
   })
+
+  it('keeps later holes visible when a middle hole is reset to empty', () => {
+    // Holes 0-2 were all scored, then hole 1 got cleared back to null
+    // for both players (e.g. the player tapped "reset" on that hole).
+    const scores = { Alice: [3, null, 3], Bob: [4, null, 4] }
+    expect(computeDisplayedHoles(['Alice', 'Bob'], scores, 3)).toBe(3)
+  })
+
+  it('keeps the last hole visible when only one player has scored it', () => {
+    // Alice has entered hole 2's score, Bob hasn't yet — the row must
+    // still show, not disappear because Bob is incomplete on it.
+    const scores = { Alice: [3, 4, 5], Bob: [3, 4, null] }
+    expect(computeDisplayedHoles(['Alice', 'Bob'], scores, 3)).toBe(3)
+  })
+
+  it('only counts one player having reset a hole as still incomplete for that hole, but keeps a later fully-scored hole visible', () => {
+    // Alice reset hole 1, Bob did not — hole 1 is still incomplete,
+    // but hole 2 (fully scored by both) must remain visible.
+    const scores = { Alice: [3, null, 3], Bob: [4, 5, 4] }
+    expect(computeDisplayedHoles(['Alice', 'Bob'], scores, 3)).toBe(3)
+  })
 })
 
 // ── calculateResult ───────────────────────────────────────────────────────────
