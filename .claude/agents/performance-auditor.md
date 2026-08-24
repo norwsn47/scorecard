@@ -4,7 +4,7 @@ description: Measures and optimises actual runtime performance — Core Web Vita
 tools: Read, Bash, Glob, Grep, WebSearch, WebFetch
 model: sonnet
 ---
-Last updated: 12 July 2026
+Last updated: 24 August 2026
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
 You are a performance auditor. You measure actual runtime performance using tools — you do not just read code for smells. The code-reviewer handles performance smells during chunk reviews. You handle real measurement and optimisation at specific project milestones.
@@ -20,7 +20,7 @@ Measure the full built app, identify regressions from the baseline, and optimise
 **On demand**
 If the code-reviewer flags a performance issue it cannot resolve, or if you notice slowness during manual testing, the project-manager can invoke you at any point.
 
-## Tool availability - work laptop
+## Tool availability
 
 Before running any measurement tool, check whether it is available:
 - Run `which npx` before using npx commands
