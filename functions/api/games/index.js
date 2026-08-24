@@ -30,27 +30,62 @@ export async function onRequestPost(context) {
     return Response.json({ error: 'Invalid request body' }, { status: 400 })
   }
 
-  const { game_name, course_id, played_at, holes_played, player_data, notes } = body
+  const { game_name, course_id, played_at, holes_played, player_data, notes, client_round_id } = body
 
   if (!played_at || !holes_played || !player_data) {
     return Response.json({ error: 'Missing required fields' }, { status: 400 })
   }
 
+  // Idempotency: the client sends a stable per-round id (the local game's own
+  // id) with every save attempt. If a row for this user + round already
+  // exists — e.g. the user tapped "Done" a second time after navigating back
+  // to an already-saved Summary screen — return the existing row instead of
+  // inserting a duplicate.
+  //
+  // Requests with no client_round_id (an old cached frontend mid-deploy) skip
+  // this check and just insert — a date+hole-count fallback match was tried
+  // here previously, but it can false-positive on two different past rounds
+  // backfilled for the same day with the same hole count, silently dropping
+  // a real round. A rare duplicate during a deploy window is the safer
+  // failure mode.
+  if (client_round_id) {
+    const existing = await DB.prepare(
+      `SELECT id FROM games WHERE user_id = ? AND client_round_id = ? LIMIT 1`
+    ).bind(user.id, client_round_id).first()
+    if (existing) {
+      return Response.json({ id: existing.id }, { status: 200 })
+    }
+  }
+
   const id = crypto.randomUUID()
-  await DB.prepare(
-    `INSERT INTO games (id, user_id, course_id, game_name, played_at, holes_played, player_data, notes, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-  ).bind(
-    id,
-    user.id,
-    course_id || null,
-    game_name || null,
-    played_at,
-    holes_played,
-    typeof player_data === 'string' ? player_data : JSON.stringify(player_data),
-    notes || null,
-    new Date().toISOString()
-  ).run()
+  try {
+    await DB.prepare(
+      `INSERT INTO games (id, user_id, course_id, game_name, played_at, holes_played, player_data, notes, client_round_id, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(
+      id,
+      user.id,
+      course_id || null,
+      game_name || null,
+      played_at,
+      holes_played,
+      typeof player_data === 'string' ? player_data : JSON.stringify(player_data),
+      notes || null,
+      client_round_id || null,
+      new Date().toISOString()
+    ).run()
+  } catch (err) {
+    // Race: two near-simultaneous requests both passed the check above.
+    // The UNIQUE(user_id, client_round_id) index rejects the second insert —
+    // treat that as success and return the row the first request created.
+    if (client_round_id && String(err?.message ?? '').toLowerCase().includes('unique')) {
+      const existing = await DB.prepare(
+        `SELECT id FROM games WHERE user_id = ? AND client_round_id = ? LIMIT 1`
+      ).bind(user.id, client_round_id).first()
+      if (existing) return Response.json({ id: existing.id }, { status: 200 })
+    }
+    throw err
+  }
 
   return Response.json({ id }, { status: 201 })
 }

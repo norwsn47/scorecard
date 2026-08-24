@@ -1,18 +1,32 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { track } from '../utils/analytics.js'
 import { formatDate, formatDateOnly } from '../utils/format.js'
 import { playerAverage, playerTotal } from '../utils/scores.js'
 import { shareScorecard } from '../utils/share.js'
-import { getCompletedGames } from '../utils/storage.js'
+import { getCompletedGames, markCompletedGameSynced } from '../utils/storage.js'
 import { useAuth } from '../hooks/useAuth.jsx'
 
 export default function Summary({ navigate, params }) {
   const { user }          = useAuth()
-  const [sharing, setSharing] = useState(false)
-  const [notes, setNotes]     = useState('')
-  const [saving, setSaving]   = useState(false)
 
+  // params.game is set on the normal finish-round flow (Scorecard ->
+  // navigate('summary', { game })), and also when History links into a past
+  // round (History -> navigate('summary', { game }), where `game` is a
+  // DB-backed record flagged `_fromDb: true` — see normalizeDbGame in
+  // History.jsx). Browser back/forward navigation clears params (see
+  // App.jsx's popstate handler), so this screen can also be reached with no
+  // params — e.g. the user finishes a round, taps Done, then presses back.
+  // In that case we fall back to the most recently completed local game so
+  // the screen still renders something sensible, but that fallback game may
+  // already have been saved to the server on the first "Done" tap — see the
+  // `game.synced` / `game._fromDb` checks in handleGoHome, which stop this
+  // screen from silently re-submitting a duplicate round in either case.
   const game = params?.game ?? getCompletedGames()[0] ?? null
+
+  const [sharing, setSharing] = useState(false)
+  const [notes, setNotes]     = useState(() => game?.notes ?? '')
+  const [saving, setSaving]   = useState(false)
+  const savingRef             = useRef(false)
 
   if (!game) {
     navigate('home')
@@ -22,8 +36,26 @@ export default function Summary({ navigate, params }) {
   const isDnf    = player => game.dnf?.includes(player)
   const isWinner = player => player === game.winner
 
+  // True once this round can no longer be (re-)saved here: either it's a
+  // past round opened from History (_fromDb), or it was already POSTed on
+  // this screen (synced). Drives both the save guard below and the notes
+  // field going read-only, so the two never disagree with each other.
+  const alreadySaved = game._fromDb || game.synced
+
   async function handleGoHome() {
-    if (user) {
+    // Only ever save on the immediate post-finish flow. A round already
+    // persisted in D1 (_fromDb — opened from History) must never be
+    // re-POSTed here: "Done" is this screen's only way back, so without this
+    // guard, simply viewing a past round and tapping Done would silently
+    // create a fresh duplicate row every time (its `game.id` is the DB row's
+    // own id, not the original client_round_id, so the server dedup check
+    // wouldn't catch it either).
+    if (user && game && !alreadySaved) {
+      // Synchronous re-entrance guard: protects against a double-tap firing
+      // two handler invocations before React has re-rendered the disabled
+      // button, which `saving` state alone can't guarantee.
+      if (savingRef.current) return
+      savingRef.current = true
       setSaving(true)
       try {
         const playerData = game.players.map(p => ({
@@ -32,7 +64,7 @@ export default function Summary({ navigate, params }) {
           total: playerTotal(game.scores, p) || 0,
           dnf: game.dnf?.includes(p) ?? false,
         }))
-        await fetch('/api/games', {
+        const res = await fetch('/api/games', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -43,12 +75,15 @@ export default function Summary({ navigate, params }) {
             holes_played: game.holesPlayed,
             player_data: playerData,
             notes: notes.trim() || null,
+            client_round_id: game.id,
           }),
         })
+        if (res.ok) markCompletedGameSynced(game.id)
       } catch {
         // Save failed silently — game is still in localStorage
       } finally {
         setSaving(false)
+        savingRef.current = false
       }
     }
     navigate('home')
@@ -156,17 +191,28 @@ export default function Summary({ navigate, params }) {
       {/* Actions */}
       <div className="px-5 py-8 space-y-3 max-w-sm mx-auto w-full">
 
-        {/* Notes — logged-in only */}
-        {user && (
+        {/* Notes — logged-in only. Editable only on the immediate
+            post-finish flow, before the round has been saved. Once a round
+            is saved (game.synced) or is a past round opened from History
+            (game._fromDb), there is no save path for further edits here —
+            see the matching guard in handleGoHome — so the field goes
+            read-only rather than silently discarding anything typed into
+            it. Hidden entirely for an already-saved round with no note — a
+            read-only "Add a note..." placeholder would be a dead end. */}
+        {user && (!alreadySaved || notes) && (
           <div>
             <textarea
               value={notes}
               onChange={e => setNotes(e.target.value.slice(0, 300))}
               placeholder="Add a note about this round..."
               rows={2}
-              className="w-full px-4 py-3 rounded-md border border-border bg-bg-card font-ui text-base text-text placeholder:text-chrome resize-none focus:outline-none focus:ring-2 focus:ring-accent/40"
+              readOnly={alreadySaved}
+              disabled={saving}
+              className="w-full px-4 py-3 rounded-md border border-border bg-bg-card font-ui text-base text-text placeholder:text-chrome resize-none focus:outline-none focus:ring-2 focus:ring-accent/40 read-only:opacity-70"
             />
-            <p className="font-ui text-xs text-muted mt-1 pl-1">Round notes - optional</p>
+            <p className="font-ui text-xs text-muted mt-1 pl-1">
+              {alreadySaved ? 'Round notes' : 'Round notes - optional'}
+            </p>
           </div>
         )}
 

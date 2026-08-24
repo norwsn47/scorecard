@@ -111,3 +111,15 @@ export function deleteCompletedGame(id) {
   const games = getCompletedGames()
   return safeWrite(KEYS.COMPLETED_GAMES, games.filter(g => g.id !== id))
 }
+
+/**
+ * Marks a completed game as already synced to the server. Used to stop a
+ * revisited Summary screen (e.g. after browser back-navigation) from
+ * silently re-submitting a round that was already saved — see
+ * markCompletedGameSynced usage in Summary.jsx.
+ */
+export function markCompletedGameSynced(id) {
+  const games = getCompletedGames()
+  const next = games.map(g => (g.id === id ? { ...g, synced: true } : g))
+  return safeWrite(KEYS.COMPLETED_GAMES, next)
+}

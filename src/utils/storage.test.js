@@ -5,6 +5,7 @@ import {
   getCompletedGames,
   getPlayers,
   isStorageAvailable,
+  markCompletedGameSynced,
   saveActiveGame,
   saveCompletedGame,
   savePlayers,
@@ -181,5 +182,27 @@ describe('saveCompletedGame', () => {
 
   it('returns true on success', () => {
     expect(saveCompletedGame(COMPLETED_A)).toBe(true)
+  })
+})
+
+describe('markCompletedGameSynced', () => {
+  it('sets synced: true on the matching game only', () => {
+    saveCompletedGame(COMPLETED_A)
+    saveCompletedGame(COMPLETED_B)
+    markCompletedGameSynced(COMPLETED_A.id)
+    const games = getCompletedGames()
+    expect(games.find(g => g.id === COMPLETED_A.id).synced).toBe(true)
+    expect(games.find(g => g.id === COMPLETED_B.id).synced).toBeUndefined()
+  })
+
+  it('is a no-op when no game matches the id', () => {
+    saveCompletedGame(COMPLETED_A)
+    markCompletedGameSynced('does-not-exist')
+    expect(getCompletedGames()).toEqual([COMPLETED_A])
+  })
+
+  it('returns true on success', () => {
+    saveCompletedGame(COMPLETED_A)
+    expect(markCompletedGameSynced(COMPLETED_A.id)).toBe(true)
   })
 })
