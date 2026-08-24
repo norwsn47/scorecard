@@ -2,7 +2,7 @@
 ## Scorecard by Outbuild — Bruntsfield Links
 
 **Version:** 2.0
-**Last updated:** 12 July 2026
+**Last updated:** 24 August 2026 (documented the pre-existing `notes` column and its read-only-on-past-rounds behaviour in §11.3 — see product-owner PRD alignment check on `fix/summary-duplicate-save-idempotency`)
 
 ---
 
@@ -317,6 +317,8 @@ Four tables in Cloudflare D1:
 - `holes_played` — integer
 - `player_data` — JSON blob (array of players with name, per-hole scores, total, DNF flag)
 - `course_id` — UUID, foreign key → courses.id, nullable
+- `client_round_id` — text, nullable — the local (client-side) game's own id, sent by the client as an idempotency key on save so a given round can only ever produce one row, even if `POST /api/games` is called more than once for it (e.g. back-navigation to an already-saved Summary screen). Unique per `(user_id, client_round_id)`; added in migration `002_add_client_round_id.sql`, 24 August 2026.
+- `notes` — text, nullable — an optional free-text note (up to 300 characters, enforced client-side) attached to a round. Present since the initial schema (`001_initial.sql`). Captured and editable only on the immediate post-finish Summary screen; shown read-only (and hidden entirely if blank) when the same round is later reopened from History, consistent with History's read-only scorecard view (§11.9). No update-notes endpoint exists yet — editing notes on a past round is covered by the "Edit a past round" work in BUILDPLAN.md.
 - `created_at` — timestamp
 
 **courses**

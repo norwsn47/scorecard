@@ -1,7 +1,7 @@
 # Backlog
 ## Scorecard by Outbuild — Bruntsfield Links
 
-Last updated: 23 July 2026
+Last updated: 24 August 2026
 
 Items below are logged for future consideration. None are implemented.
 
@@ -199,7 +199,17 @@ No PRD section — tooling housekeeping.
 
 ---
 
-### 18. Scorecard.jsx setState-during-render warning on direct load
+### 18. Clean up pre-existing duplicate game rows in production D1
+
+**Added: 24 August 2026. Explicitly deferred by the user — fix the root cause first, clean up existing bad data separately later.**
+
+The duplicate-row hotfix (see BUILDPLAN.md Hotfix log, 24 August 2026) stops new duplicates from being created, but does not touch rows already duplicated in production before the fix shipped. Once the fix is live and confirmed, identify and remove the pre-existing duplicate `games` rows for the affected user (and check for any other affected users) via the Cloudflare D1 dashboard console. Likely detection query: group by `user_id, played_at, holes_played` (or a close match on `player_data`) and look for counts greater than one, since these predate the `client_round_id` column and will all have `client_round_id IS NULL`.
+
+No PRD section — data cleanup, not a feature.
+
+---
+
+### 19. Scorecard.jsx setState-during-render warning on direct load
 
 **Added: 23 July 2026. Raised by code-reviewer during Chunk 33 review (incidental finding, unrelated to Chunk 33's diff).**
 

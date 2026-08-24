@@ -1,5 +1,5 @@
 # CLAUDE.md
-Last updated: 19 July 2026
+Last updated: 24 August 2026
 > Ground rules for this project. Read this at the start of every session.
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
@@ -28,7 +28,7 @@ If a user sends a message without invoking an agent, the first response must alw
 ---
 
 ## Project context
-This is an Outbuild project, built on a work laptop.
+This is an Outbuild project, built on a personal machine (no longer a managed work laptop, confirmed 24 August 2026).
 The project lives in a dedicated folder (e.g. `~/Projects/[project-name]`).
 Tech stack is TBD — stack decisions will be made in Phase 2 before any code is written.
 
@@ -85,9 +85,10 @@ Do not invent a visual style. Do not default to generic patterns. Follow the pri
 ---
 
 ## Dependencies
-- **Do not install packages without asking first.** This is a work laptop — unexpected installs can trigger security alerts.
+- **Do not install packages without asking first.** This is a personal machine now, but installs should still be deliberate and intentional, not incidental.
 - When proposing a new dependency, explain: what it does, why it's needed, and what alternatives were considered.
 - Keep the dependency set lean. No installing things speculatively.
+- This applies to CLI tools too (Homebrew, gh, wrangler, Node/npm itself, etc.) — check with `which <tool>` before assuming availability either way, and ask before installing anything missing. Prefer minimal, reversible installs (e.g. a user-local install over a system-wide/sudo one) where practical.
 
 ---
 
@@ -113,7 +114,7 @@ This project's version control mode is set during setup. Check the project-speci
 - Push the branch to GitHub and show the user the branch name and a summary of what's on it.
 - Wait for the user to explicitly say "go ahead and merge" before running any merge command.
 - Never auto-clean up branches without asking — always confirm before deleting local or remote branches.
-- gh CLI is not available on this machine — use standard git commands only.
+- gh CLI may be available or installable (check `which gh` — see Dependencies section); if not, fall back to standard git commands and manual GitHub UI steps.
 - Never use direct merge as a fallback — always create a named branch, push it, and wait for confirmation before merging.
 
 **Hard git rules - these apply even if the project-manager has not been invoked:**
@@ -158,7 +159,7 @@ After every significant task, provide a short summary covering:
 
 ## Notes
 - Stack is TBD — do not assume any framework, database, or tooling until decisions are confirmed in Phase 2.
-- This is a personal project on a work machine. Err on the side of caution with anything that touches system-level settings, global installs, or network calls.
+- This is a personal project on a personal machine (no longer a corporate/managed work laptop, confirmed 24 August 2026). Standard caution still applies to system-level settings, global installs, and network calls — ask first, explain what's being installed and why, prefer minimal/reversible installs — but this is not a locked-down device requiring the extra corporate-machine caution used previously.
 - Update this file if project-specific rules need to be added below.
 
 ---
@@ -172,9 +173,8 @@ After every significant task, provide a short summary covering:
 <!-- Version control: git local (Mode B — no remote)   -->
 Version control: git + GitHub (Mode C — full)
 
-Work laptop constraints - CLI tools:
-- Wrangler CLI is not available on this machine
-- gh CLI is not available on this machine
-- Homebrew is not available on this machine
-- Do not attempt to run any of these commands
-- If a task requires one of these tools, stop and output clear manual instructions for the human to follow instead - using the Cloudflare dashboard, GitHub UI, or Resend dashboard as appropriate
+CLI tools (Homebrew, gh, wrangler, Node/npm):
+- This is a personal machine (confirmed 24 August 2026, no longer a managed work laptop) — these tools may already be installed, or may be installed on request, subject to the same Dependencies rule as anything else: ask first, explain what it does and why.
+- Always check with `which <tool>` before assuming a tool is available or unavailable — do not assume either way.
+- If a tool is missing and a task needs it, ask before installing it rather than defaulting straight to manual dashboard instructions.
+- If the user declines an install, or it isn't practical, fall back to clear, specific manual instructions via the Cloudflare dashboard, GitHub UI, or Resend dashboard as appropriate.
