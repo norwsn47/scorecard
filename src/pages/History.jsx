@@ -205,7 +205,7 @@ export default function History({ navigate }) {
             className="relative bg-bg-card rounded-md border border-border shadow-card"
           >
             <button
-              onClick={() => navigate('summary', { game })}
+              onClick={() => navigate('summary', { game, fromHistory: true })}
               className="w-full text-left px-4 pt-4 pb-4 pr-10 active:opacity-70"
             >
               {/* Course name */}

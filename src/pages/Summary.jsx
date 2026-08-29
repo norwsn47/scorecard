@@ -43,6 +43,15 @@ export default function Summary({ navigate, params }) {
   // field going read-only, so the two never disagree with each other.
   const alreadySaved = game._fromDb || game.synced
 
+  // Two modes share this screen. `viewingSaved` is the "opened from History"
+  // mode: a round that already lives somewhere permanent, here to be read
+  // (and maybe edited), not finished. `params.fromHistory` is set by the
+  // History list; `_fromDb` / `synced` cover the case where browser
+  // back/forward has cleared params on a round that was already saved. When
+  // false we're on the immediate post-finish flow, where "Done" still owns
+  // the save and the layout stays exactly as it was.
+  const viewingSaved = params?.fromHistory || alreadySaved
+
   // The Edit button is offered on a round that's actually stored somewhere we
   // can write back to: a D1 round opened from History (_fromDb) for a
   // logged-in user, or any local completed round for a logged-out user.
@@ -109,15 +118,58 @@ export default function Summary({ navigate, params }) {
   return (
     <div className="h-full bg-bg flex flex-col">
 
-      {/* Header */}
-      <header className="px-5 pt-10 pb-4 border-b border-border text-center">
-        {game.courseName && (
-          <h1 className="font-display italic text-2xl text-text mb-1">{game.courseName}</h1>
-        )}
-        <p className="font-ui text-xs tracking-[0.15em] uppercase text-muted">
-          {formatDateOnly(game.completedAt)}
+      {/* Header — post-finish flow keeps the centred editorial header;
+          a round opened from History gets navigation chrome instead: a
+          back affordance to the list on the left, and Edit on the right,
+          both at text scale so the scorecard below keeps its room. */}
+      {viewingSaved ? (
+        <header className="relative flex items-center justify-between px-5 pt-10 pb-4 border-b border-border shrink-0">
+          <div className="relative shrink-0 z-10">
+            <button
+              onClick={() => navigate('history')}
+              className="py-3 min-h-[44px] flex items-center text-muted font-ui text-sm tracking-[0.08em] uppercase"
+            >
+              ← Rounds
+            </button>
+          </div>
+
+          <div className="absolute inset-x-0 text-center px-20 pointer-events-none">
+            {game.courseName && (
+              <h1 className="font-display italic text-2xl text-text truncate">{game.courseName}</h1>
+            )}
+            <p className="font-ui text-xs tracking-[0.15em] uppercase text-muted truncate">
+              {formatDateOnly(game.completedAt)}
+            </p>
+          </div>
+
+          <div className="relative shrink-0 z-10 flex justify-end">
+            {canEdit && (
+              <button
+                onClick={handleEditRound}
+                disabled={saving}
+                className="py-3 min-h-[44px] flex items-center text-accent font-ui text-sm tracking-[0.08em] uppercase disabled:opacity-40"
+              >
+                Edit
+              </button>
+            )}
+          </div>
+        </header>
+      ) : (
+        <header className="px-5 pt-10 pb-4 border-b border-border text-center">
+          {game.courseName && (
+            <h1 className="font-display italic text-2xl text-text mb-1">{game.courseName}</h1>
+          )}
+          <p className="font-ui text-xs tracking-[0.15em] uppercase text-muted">
+            {formatDateOnly(game.completedAt)}
+          </p>
+        </header>
+      )}
+
+      {viewingSaved && editBlocked && (
+        <p className="font-ui text-xs text-accent tracking-wide mt-2 px-5 text-center leading-relaxed shrink-0">
+          Finish your current round before editing a past one.
         </p>
-      </header>
+      )}
 
       {/* Winner — only shown for multi-player rounds */}
       {(game.players?.length ?? 0) > 1 && (
@@ -208,54 +260,67 @@ export default function Summary({ navigate, params }) {
       {/* Actions */}
       <div className="px-5 py-8 space-y-3 max-w-sm mx-auto w-full">
 
-        {/* Notes — logged-in only. Editable only on the immediate
-            post-finish flow, before the round has been saved. Once a round
-            is saved (game.synced) or is a past round opened from History
-            (game._fromDb), there is no save path for further edits here —
-            see the matching guard in handleGoHome — so the field goes
-            read-only rather than silently discarding anything typed into
-            it. Hidden entirely for an already-saved round with no note — a
-            read-only "Add a note..." placeholder would be a dead end. */}
-        {user && (!alreadySaved || notes) && (
-          <div>
-            <textarea
-              value={notes}
-              onChange={e => setNotes(e.target.value.slice(0, 300))}
-              placeholder="Add a note about this round..."
-              rows={2}
-              readOnly={alreadySaved}
-              disabled={saving}
-              className="w-full px-4 py-3 rounded-md border border-border bg-bg-card font-ui text-base text-text placeholder:text-chrome resize-none focus:outline-none focus:ring-2 focus:ring-accent/40 read-only:opacity-70"
-            />
-            <p className="font-ui text-xs text-muted mt-1 pl-1">
-              {alreadySaved ? 'Round notes' : 'Round notes - optional'}
+        {viewingSaved ? (
+          /* A past round is read-only here — editing happens via the header
+             Edit button, which routes back through Setup. Any saved note is
+             shown as quiet static text; nothing to edit, nothing to submit. */
+          game.notes ? (
+            <p className="font-ui text-xs text-muted leading-relaxed whitespace-pre-wrap">
+              {game.notes}
             </p>
-          </div>
-        )}
-
-        <button
-          onClick={handleGoHome}
-          disabled={saving}
-          className="w-full py-4 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn disabled:opacity-60"
-        >
-          {saving ? 'Saving…' : 'Done'}
-        </button>
-
-        {canEdit && (
-          <div>
-            <button
-              onClick={handleEditRound}
-              disabled={saving}
-              className="w-full py-4 rounded-sm border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card disabled:opacity-40"
-            >
-              Edit round
-            </button>
-            {editBlocked && (
-              <p className="font-ui text-xs text-accent tracking-wide mt-2 text-center leading-relaxed">
-                Finish your current round before editing a past one.
-              </p>
+          ) : null
+        ) : (
+          <>
+            {/* Notes — logged-in only. Editable only on the immediate
+                post-finish flow, before the round has been saved. Once a round
+                is saved (game.synced) there is no save path for further edits
+                here — see the matching guard in handleGoHome — so the field
+                goes read-only rather than silently discarding anything typed
+                into it. Hidden entirely for an already-saved round with no
+                note — a read-only "Add a note..." placeholder would be a dead
+                end. */}
+            {user && (!alreadySaved || notes) && (
+              <div>
+                <textarea
+                  value={notes}
+                  onChange={e => setNotes(e.target.value.slice(0, 300))}
+                  placeholder="Add a note about this round..."
+                  rows={2}
+                  readOnly={alreadySaved}
+                  disabled={saving}
+                  className="w-full px-4 py-3 rounded-md border border-border bg-bg-card font-ui text-base text-text placeholder:text-chrome resize-none focus:outline-none focus:ring-2 focus:ring-accent/40 read-only:opacity-70"
+                />
+                <p className="font-ui text-xs text-muted mt-1 pl-1">
+                  {alreadySaved ? 'Round notes' : 'Round notes - optional'}
+                </p>
+              </div>
             )}
-          </div>
+
+            <button
+              onClick={handleGoHome}
+              disabled={saving}
+              className="w-full py-4 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn disabled:opacity-60"
+            >
+              {saving ? 'Saving…' : 'Done'}
+            </button>
+
+            {canEdit && (
+              <div>
+                <button
+                  onClick={handleEditRound}
+                  disabled={saving}
+                  className="w-full py-4 rounded-sm border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card disabled:opacity-40"
+                >
+                  Edit round
+                </button>
+                {editBlocked && (
+                  <p className="font-ui text-xs text-accent tracking-wide mt-2 text-center leading-relaxed">
+                    Finish your current round before editing a past one.
+                  </p>
+                )}
+              </div>
+            )}
+          </>
         )}
 
         <div className="text-center -mt-2">
