@@ -150,3 +150,44 @@ export function createGame(playerNames, courseId = null, courseName = null, past
     ...(pastDate ? { pastDate } : {}),
   }
 }
+
+/**
+ * Builds a working active-game object for editing an existing completed round
+ * (Chunk 40). Unlike createGame, this does NOT zero the scores — it carries
+ * the existing per-player score arrays forward so they can be adjusted on the
+ * Scorecard screen.
+ *
+ * `editedNames` is mapped POSITIONALLY onto the existing player rows: renaming
+ * "Bob" to "Robert" in slot 1 keeps slot 1's scores, re-keyed under the new
+ * name. Adding or removing players is not supported here — `editedNames` is
+ * expected to be the same length as `existingGame.players`.
+ *
+ * Each row is copied into a fresh MAX_HOLES-slot array so the Scorecard grid
+ * (which assumes 36 slots) and finishGame both behave exactly as they do for
+ * a live round. The original `id` is pinned. `pastDate` is set to `dateIso`
+ * so finishGame stamps the chosen date rather than "now". Winner, DNF,
+ * holesPlayed and completedAt are all left for finishGame to recompute.
+ */
+export function buildEditGame(existingGame, editedNames, courseId = null, courseName = null, dateIso = null) {
+  const oldNames = existingGame.players ?? []
+  const scores = {}
+  editedNames.forEach((name, i) => {
+    const row = Array(MAX_HOLES).fill(null)
+    const oldRow = existingGame.scores?.[oldNames[i]] ?? []
+    oldRow.forEach((s, idx) => {
+      if (idx < MAX_HOLES) row[idx] = s ?? null
+    })
+    scores[name] = row
+  })
+
+  return {
+    ...existingGame,
+    id: existingGame.id,
+    players: [...editedNames],
+    holes: MAX_HOLES,
+    scores,
+    courseId: courseId ?? null,
+    courseName: courseName ?? null,
+    ...(dateIso ? { pastDate: dateIso } : {}),
+  }
+}

@@ -2,7 +2,7 @@
 ## Scorecard by Outbuild — Bruntsfield Links
 
 **Version:** 2.0
-**Last updated:** 29 August 2026 (added §11.13 "Edit a past round" ahead of Chunk 40 build — covers both D1 and quick-play rounds, notes/score/name editing, overwrite-in-place; updated §11.3 and §4.5 cross-references)
+**Last updated:** 29 August 2026 (added §11.13 "Edit a past round" ahead of Chunk 40 build — covers both D1 and quick-play rounds, date/name/score/notes editing, overwrite-in-place; updated §11.3 and §4.5 cross-references)
 
 ---
 
@@ -463,7 +463,8 @@ Quick-play edits are localStorage-only and device-specific, consistent with all 
 - An **"Edit round"** button on the round-detail (Summary) view, shown when viewing an already-saved round.
 - Editing is blocked while a game is in progress. In that state the action is unavailable and the user is told to finish their current round first.
 
-**What can be edited in v1:**
+**What can be edited in v1 (both round types unless noted):**
+- **Round date** (`played_at`) — pre-filled with the existing date and re-stamped on save. Editable for both local/quick-play and logged-in D1 rounds.
 - **Player names** — rename existing players.
 - **Per-hole scores** — for existing players, using the same scoring grid and controls as normal play (§4.3), including the 14-stroke cap.
 - **Notes** — a pre-filled free-text notes field on the edit screen (same 300-character client-side limit as §11.3), saved with the rest of the round. This is the only route to editing notes on an already-saved round.
@@ -478,7 +479,7 @@ Quick-play edits are localStorage-only and device-specific, consistent with all 
 - Winner, DNF status, and per-player totals are all recalculated from the edited scores, applying the same rules as finishing a game (§4.4, §5): a player who has not scored every hole is DNF and excluded from the winner calculation; the winner is the lowest total among those who finished; ties and all-DNF cases are handled exactly as in the normal finish flow and the share image (§4.7).
 
 **Persistence and identity:**
-- The round keeps its original identity and date. `id`, `client_round_id`, `played_at`, and `created_at` are unchanged by an edit — this is a correction to an existing round, not a new round.
+- The round keeps its original identity — same row, same `id`. Only `id`, `client_round_id`, and `created_at` are guaranteed unchanged by an edit. `played_at` (the round date) may change because it is user-editable (see above); this is still a correction to an existing round, not a new round.
 - Logged-in: a `PATCH` on `functions/api/games/[id].js` updates the existing row, gated by the session cookie and by ownership (the round must belong to the requesting user).
 - Logged-out: an update path in `storage.js` overwrites the existing localStorage record in place, keyed on its existing id.
 

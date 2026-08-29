@@ -4,7 +4,7 @@ import PageHeader from '../components/PageHeader.jsx'
 import { track } from '../utils/analytics.js'
 import { computeDisplayedHoles, finishGame } from '../utils/game.js'
 import { playerTotal } from '../utils/scores.js'
-import { clearActiveCell, clearActiveGame, getActiveCell, getActiveGame, saveActiveCell, saveActiveGame, saveCompletedGame } from '../utils/storage.js'
+import { clearActiveCell, clearActiveGame, getActiveCell, getActiveGame, saveActiveCell, saveActiveGame, saveCompletedGame, updateCompletedGame } from '../utils/storage.js'
 
 function initialCellFor(g) {
   if (!g) return { holeIndex: 0, playerIndex: 0 }
@@ -20,7 +20,13 @@ function initialCellFor(g) {
 export default function Scorecard({ navigate, params }) {
   const [[initialGame, initialCell]]  = useState(() => {
     const g = params?.game ?? getActiveGame()
-    return [g, getActiveCell() ?? initialCellFor(g)]
+    const saved = getActiveCell()
+    // When editing an existing round, land on hole 1 — the likely target is
+    // an existing score to correct, not the next empty hole.
+    const fallback = (params?.editContext || g?._edit)
+      ? { holeIndex: 0, playerIndex: 0 }
+      : initialCellFor(g)
+    return [g, saved ?? fallback]
   })
   const [game, setGame]               = useState(initialGame)
   const [showConfirm, setShowConfirm] = useState(false)
@@ -28,8 +34,19 @@ export default function Scorecard({ navigate, params }) {
   const fromBruntsfield               = params?.bruntsfield ?? false
   const [showMap, setShowMap]         = useState(false)
   const [saveError, setSaveError]     = useState(false)
+  const [finishing, setFinishing]     = useState(false)
+  const finishingRef                  = useRef(false)
   const [activeCell, setActiveCell]   = useState(initialCell)
   const activeRowRef = useRef(null)
+
+  // Edit context: set when this Scorecard is editing an existing completed
+  // round rather than playing a new one. Read from the router param AND from
+  // a marker stamped on the game object — App.jsx clears params on browser
+  // back/forward (popstate), so the param alone can't be trusted after a
+  // navigation bounce. This is the same failure class as the 24 Aug
+  // duplicate-save hotfix.
+  const editContext = params?.editContext ?? initialGame?._edit ?? null
+  const isEdit      = !!editContext
 
   useEffect(() => {
     activeRowRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
@@ -93,8 +110,75 @@ export default function Scorecard({ navigate, params }) {
     }
   }
 
-  function handleConfirmFinish() {
+  function buildPlayerData(completed) {
+    return completed.players.map(p => ({
+      name: p,
+      scores: (completed.scores[p] ?? []).slice(0, completed.holesPlayed),
+      total: playerTotal(completed.scores, p) || 0,
+      dnf: completed.dnf?.includes(p) ?? false,
+    }))
+  }
+
+  async function handleConfirmFinish() {
+    if (finishingRef.current) return
     const completed = finishGame(game)
+
+    // ── Editing an existing round: overwrite in place, never create a new row ──
+    if (isEdit) {
+      finishingRef.current = true
+      setFinishing(true)
+      setSaveError(false)
+      try {
+        if (editContext.fromDb) {
+          const res = await fetch('/api/games/' + editContext.id, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              course_id: completed.courseId || null,
+              played_at: completed.completedAt,
+              holes_played: completed.holesPlayed,
+              player_data: buildPlayerData(completed),
+              notes: (completed.notes ?? '').trim() || null,
+            }),
+          })
+          if (!res.ok) throw new Error('patch failed')
+        } else {
+          const ok = updateCompletedGame(editContext.id, {
+            players: completed.players,
+            scores: completed.scores,
+            courseId: completed.courseId ?? null,
+            courseName: completed.courseName ?? null,
+            completedAt: completed.completedAt,
+            holesPlayed: completed.holesPlayed,
+            winner: completed.winner,
+            dnf: completed.dnf,
+            notes: (completed.notes ?? '').trim() || null,
+          })
+          if (!ok) throw new Error('storage write failed')
+        }
+      } catch {
+        setSaveError(true)
+        setFinishing(false)
+        finishingRef.current = false
+        setShowConfirm(false)
+        return
+      }
+
+      clearActiveGame()
+      clearActiveCell()
+      track('Game Edited', { players: completed.players.length, holes: completed.holesPlayed })
+      // Hand a read-only round to Summary. The _fromDb / synced flags stop
+      // that screen re-saving it (see the alreadySaved guard in Summary).
+      const summaryGame = editContext.fromDb
+        ? { ...completed, _fromDb: true }
+        : { ...completed, synced: true }
+      delete summaryGame._edit
+      navigate('summary', { game: summaryGame })
+      return
+    }
+
+    // ── Normal finish flow ──
     saveCompletedGame(completed)
     clearActiveGame()
     clearActiveCell()
@@ -107,20 +191,30 @@ export default function Scorecard({ navigate, params }) {
 
       {saveError && (
         <div className="bg-accent text-bg text-center font-ui text-xs py-2 px-4 tracking-wide">
-          Couldn't save – storage may be full
+          {isEdit
+            ? "Couldn't save your changes – check your connection and try again"
+            : "Couldn't save – storage may be full"}
         </div>
       )}
 
       <PageHeader
-        title="Scorecard"
+        title={isEdit ? 'Edit Round' : 'Scorecard'}
         subtitle={null}
-        onBack={() => navigate('home')}
+        onBack={() => {
+          if (isEdit) {
+            clearActiveGame()
+            clearActiveCell()
+            navigate('history')
+          } else {
+            navigate('home')
+          }
+        }}
         right={
           <button
             onClick={() => setShowConfirm(true)}
             className="py-2 px-4 rounded-sm border border-accent text-accent font-ui text-xs tracking-[0.1em] uppercase font-semibold"
           >
-            Finish
+            {isEdit ? 'Save' : 'Finish'}
           </button>
         }
       />
@@ -249,9 +343,11 @@ export default function Scorecard({ navigate, params }) {
         <div className="absolute inset-0 flex items-end justify-center z-50" style={{ background: 'var(--overlay-backdrop)' }}>
           <div className="bg-bg rounded-t-2xl w-full max-w-[430px] px-6 pt-6 pb-10 shadow-card">
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-6" />
-            <h2 className="font-display italic text-2xl text-text mb-1">Finish Game?</h2>
+            <h2 className="font-display italic text-2xl text-text mb-1">
+              {isEdit ? 'Save changes?' : 'Finish Game?'}
+            </h2>
             <p className="font-ui text-xs text-muted tracking-wide mb-6">
-              Scores are final
+              {isEdit ? 'This replaces the saved round. Winner and totals update.' : 'Scores are final'}
             </p>
             <div className="space-y-2 mb-8">
               {players.map(player => (
@@ -264,15 +360,17 @@ export default function Scorecard({ navigate, params }) {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowConfirm(false)}
-                className="flex-1 py-3 rounded-sm border border-border font-ui text-sm tracking-[0.08em] uppercase text-text"
+                disabled={finishing}
+                className="flex-1 py-3 rounded-sm border border-border font-ui text-sm tracking-[0.08em] uppercase text-text disabled:opacity-40"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmFinish}
-                className="flex-1 py-3 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.08em] uppercase font-semibold"
+                disabled={finishing}
+                className="flex-1 py-3 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.08em] uppercase font-semibold disabled:opacity-60"
               >
-                Confirm
+                {isEdit ? (finishing ? 'Saving…' : 'Save changes') : 'Confirm'}
               </button>
             </div>
           </div>
