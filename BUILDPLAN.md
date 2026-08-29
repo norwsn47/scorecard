@@ -1,7 +1,7 @@
 # Build Plan
 ## Scorecard by Outbuild
 
-**Last updated:** 29 August 2026 (Chunk 40 "Edit a past round" passed code review and PRD alignment; detail block archived; docs made push-ready for `feat/edit-past-round`)
+**Last updated:** 29 August 2026 (Chunk 40 "Edit a past round" passed code review and PRD alignment; detail block archived; docs made push-ready for `feat/edit-past-round`; past-round Summary view slimmed down on branch `fix/summary-past-round-actions`, pending merge)
 
 > Phase 4 (Chunks 1–29), Wave 5 (Chunks 30–32), and Wave 6 Chunks 33, 34, and 40 are complete — their detail blocks are in BUILDPLAN-ARCHIVE.md. Wave 6 Chunks 35–39 remain active below. (Chunk 40 is code-complete and archived but its `feat/edit-past-round` branch is not yet merged to `main` — see Current status.)
 
@@ -36,6 +36,7 @@ Fix, in three layers (defence in depth, no single layer relied on alone):
 
 - **Done:** Chunk 33 (UI feedback pass), Chunk 34 (hole-reset display bug), Chunk 40 (Edit a past round) — detail blocks archived in BUILDPLAN-ARCHIVE.md.
 - **Chunk 40 — pending merge.** Built on branch `feat/edit-past-round`. Code review passed (CLEAR WITH NOTES, no Critical; 2 findings fixed on-branch). product-owner PRD alignment check passed (CLEAR). Human localhost review is the final gate step, in progress. Branch is push-ready; not yet merged to `main`.
+- **Chunk 40 follow-up refinement — pending merge.** On branch `fix/summary-past-round-actions` (29 Aug 2026): the past-round Summary view (opened from History) was slimmed down to navigation chrome — "← Rounds" back button top-left, "Edit" action top-right — the full-width "Done" button removed, and the saved note shown as small static text (notes are edited only in edit mode). UI refinement of an existing screen: no new patterns or tokens, no PRD deviation (§11.13 entry-point wording updated to match). Human localhost review passed; code review CLEAR WITH NOTES, no Critical (3 minor findings logged as BACKLOG items 25-27).
 - **Paused:** Chunk 35 (course map reliability) — an implementation attempt was flagged wrong by the user; needs fresh explicit instruction before an agent resumes.
 - **Next up:** Chunk 36 (sign-in email branding) — or Chunk 35 if it gets unblocked first.
 - **Remaining:** Chunks 35, 36, 37, 38, 39.

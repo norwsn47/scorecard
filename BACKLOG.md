@@ -13,7 +13,7 @@ Wave 5 items (generic home + Bruntsfield course page refactor, added 19 July 202
 
 Items 13 and 14 below were added 23 July 2026 from a 15-item user feedback list. The user explicitly flagged both as "future addition, not to be done now" at the time of request — see Chunks 33-40 in BUILDPLAN.md for the rest of that list, which was actioned into the current build plan.
 
-Item 20 was spun out of Chunk 40 ("Edit a past round", PRD §11.13) on 29 August 2026 — a piece of that feature deliberately held back from v1. Items 21-24 are P3 follow-ups raised by the code-reviewer during the Chunk 40 review.
+Item 20 was spun out of Chunk 40 ("Edit a past round", PRD §11.13) on 29 August 2026 — a piece of that feature deliberately held back from v1. Items 21-24 are P3 follow-ups raised by the code-reviewer during the Chunk 40 review; items 25-27 are P3 follow-ups from the Chunk 40 Summary-refinement review (`fix/summary-past-round-actions`).
 
 ---
 
@@ -272,3 +272,33 @@ Priority: P3. Related PRD section: 11.3, 11.13.
 `onRequestPatch` supports updating `game_name`, but the Chunk 40 edit client never sends it. After a rename via the edit flow, the D1 `game_name` column can go stale relative to `player_data`. Currently harmless — `game_name` is not rendered anywhere the edited round is shown — but either wire the client to send it or drop it from the handler.
 
 Priority: P3. Related PRD section: 11.3, 11.13.
+
+---
+
+### 25. Summary saved-note body renders at text-xs (12px)
+
+**Added: 29 August 2026. Raised by code-reviewer during the Chunk 40 follow-up review (`fix/summary-past-round-actions`), P3.**
+
+On the past-round Summary view the saved note is rendered as static text at `text-xs` (12px). This is a readability trade-off for user-authored content read on a phone — `text-sm` would be more comfortable. The user explicitly asked for the note to be "very small", so this was deliberate. Revisit only if user feedback says it is too small to read.
+
+Priority: P3. Related PRD section: 11.13.
+
+---
+
+### 26. Past-round Summary "← Rounds" back button always targets History
+
+**Added: 29 August 2026. Raised by code-reviewer during the Chunk 40 follow-up review (`fix/summary-past-round-actions`), P3.**
+
+The "← Rounds" back button on the past-round Summary view always navigates to History, even when the user reached this Summary via the post-edit-finish path or via browser-back-after-Done — routes where they may not have come from History. Minor misdirection; no broken state. Consider making the back target reflect actual navigation history.
+
+Priority: P3. Related PRD section: 11.13.
+
+---
+
+### 27. Podium.jsx "See full card" is a dead path
+
+**Added: 29 August 2026. Raised by code-reviewer during the Chunk 40 follow-up review (`fix/summary-past-round-actions`), P3. Pre-existing, not introduced by Chunk 40.**
+
+`Podium.jsx`'s "See full card" action has no corresponding `navigate('podium')` anywhere in the app, so it is unreachable in normal use. If reached by direct URL as a logged-in user it can now enter `viewingSaved` mode. Low value — clean up or remove the dead action next time `Podium.jsx` is touched.
+
+Priority: P3. No PRD section — dead code / pre-existing behaviour.

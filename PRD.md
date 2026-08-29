@@ -2,7 +2,7 @@
 ## Scorecard by Outbuild — Bruntsfield Links
 
 **Version:** 2.0
-**Last updated:** 29 August 2026 (added §11.13 "Edit a past round" ahead of Chunk 40 build — covers both D1 and quick-play rounds, date/name/score/notes editing, overwrite-in-place; updated §11.3 and §4.5 cross-references)
+**Last updated:** 29 August 2026 (added §11.13 "Edit a past round" ahead of Chunk 40 build — covers both D1 and quick-play rounds, date/name/score/notes editing, overwrite-in-place; updated §11.3 and §4.5 cross-references; §11.13 entry-point updated for the slimmed-down past-round Summary view — nav chrome, "Edit" action, static note text)
 
 ---
 
@@ -460,8 +460,9 @@ Users can correct a previously saved round from its detail (Summary) view. Editi
 Quick-play edits are localStorage-only and device-specific, consistent with all other quick-play behaviour (§4.6, §11.10). A quick-play round can only be edited on the device that holds it.
 
 **Entry point:**
-- An **"Edit round"** button on the round-detail (Summary) view, shown when viewing an already-saved round.
-- Editing is blocked while a game is in progress. In that state the action is unavailable and the user is told to finish their current round first.
+- When a saved round is opened from History, the round-detail (Summary) view uses navigation chrome rather than the immediate post-finish layout: a **"← Rounds"** back button top-left and an **"Edit"** action top-right. There is no full-width "Done" button on this view, and the saved note (if any) is shown as small static text — notes are edited only in edit mode.
+- The immediate post-finish Summary (shown right after finishing a round) is unchanged — it keeps its "Done" button and inline notes field (§4.4, §11.3).
+- Editing is blocked while a game is in progress. In that state the Edit action does nothing and the user is told to finish their current round first.
 
 **What can be edited in v1 (both round types unless noted):**
 - **Round date** (`played_at`) — pre-filled with the existing date and re-stamped on save. Editable for both local/quick-play and logged-in D1 rounds.
