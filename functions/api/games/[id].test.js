@@ -6,7 +6,7 @@ vi.mock('../../_lib/session.js', () => ({ getSessionUser: vi.fn() }))
 
 // Minimal fake of the D1 prepared-statement API used by the handler:
 // prepare(sql).bind(...args).first() / .run()
-function makeDB(games) {
+function makeDB(games, courses = []) {
   return {
     prepare(sql) {
       return {
@@ -21,6 +21,11 @@ function makeDB(games) {
             const [id, userId] = this.args
             const g = games.find((x) => x.id === id && x.user_id === userId)
             return g ? { id: g.id } : null
+          }
+          if (/SELECT id FROM courses WHERE id = \? AND user_id = \?/.test(this.sql)) {
+            const [id, userId] = this.args
+            const c = courses.find((x) => x.id === id && x.user_id === userId)
+            return c ? { id: c.id } : null
           }
           return null
         },
@@ -151,6 +156,40 @@ describe('onRequestPatch /api/games/[id]', () => {
     const res = await onRequestPatch(ctx)
 
     expect(res.status).toBe(400)
+  })
+
+  it("rejects a course_id that is not one of the user's courses", async () => {
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+    const ctx = patch({ course_id: 'course-owned-by-u2' })
+    ctx.env.DB = makeDB(games, [{ id: 'course-u1', user_id: 'u1' }])
+
+    const res = await onRequestPatch(ctx)
+
+    expect(res.status).toBe(400)
+    expect(games[0].course_id).toBeNull()
+  })
+
+  it("accepts a course_id that belongs to the user", async () => {
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+    const ctx = patch({ course_id: 'course-u1' })
+    ctx.env.DB = makeDB(games, [{ id: 'course-u1', user_id: 'u1' }])
+
+    const res = await onRequestPatch(ctx)
+
+    expect(res.status).toBe(200)
+    expect(games[0].course_id).toBe('course-u1')
+  })
+
+  it('allows clearing course_id to null without a course lookup', async () => {
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+    games[0].course_id = 'course-u1'
+    const ctx = patch({ course_id: null })
+    ctx.env.DB = makeDB(games, [])
+
+    const res = await onRequestPatch(ctx)
+
+    expect(res.status).toBe(200)
+    expect(games[0].course_id).toBeNull()
   })
 
   it('rejects notes longer than 300 characters', async () => {

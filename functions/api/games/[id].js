@@ -47,6 +47,15 @@ export async function onRequestPatch(context) {
     values.push(game_name || null)
   }
   if ('course_id' in body) {
+    // A non-null course must be one of this user's own courses — otherwise a
+    // caller could attach an arbitrary (or another user's) course id, which the
+    // History LEFT JOIN would then surface as a foreign course name.
+    if (course_id) {
+      const course = await DB.prepare(
+        'SELECT id FROM courses WHERE id = ? AND user_id = ?'
+      ).bind(course_id, user.id).first()
+      if (!course) return Response.json({ error: 'Invalid course' }, { status: 400 })
+    }
     columns.push('course_id = ?')
     values.push(course_id || null)
   }

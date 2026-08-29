@@ -243,9 +243,9 @@ describe('updateCompletedGame', () => {
     expect(games[0]).toEqual(COMPLETED_B)
   })
 
-  it('is a successful no-op when no record matches the id', () => {
+  it('returns false and writes nothing when no record matches the id', () => {
     saveCompletedGame(COMPLETED_A)
-    expect(updateCompletedGame('does-not-exist', { winner: 'Bob' })).toBe(true)
+    expect(updateCompletedGame('does-not-exist', { winner: 'Bob' })).toBe(false)
     expect(getCompletedGames()).toEqual([COMPLETED_A])
   })
 })

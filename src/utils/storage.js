@@ -118,11 +118,19 @@ export function deleteCompletedGame(id) {
  * rather than creating a new one, so winner/totals/date all update without
  * a duplicate row appearing in History. List order is preserved and the id
  * is pinned so a stray `id` in `updated` can never repoint the record.
- * A no-op (but still a successful write) when no record matches.
+ * Returns false when no record matched the id (nothing was persisted) so the
+ * caller can surface a save error rather than a false success, and also false
+ * when the underlying write fails.
  */
 export function updateCompletedGame(id, updated) {
   const games = getCompletedGames()
-  const next = games.map(g => (g.id === id ? { ...g, ...updated, id } : g))
+  let matched = false
+  const next = games.map(g => {
+    if (g.id !== id) return g
+    matched = true
+    return { ...g, ...updated, id }
+  })
+  if (!matched) return false
   return safeWrite(KEYS.COMPLETED_GAMES, next)
 }
 
