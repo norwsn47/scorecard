@@ -2,7 +2,7 @@
 ## Scorecard by Outbuild — Bruntsfield Links
 
 **Version:** 2.0
-**Last updated:** 24 August 2026 (documented the pre-existing `notes` column and its read-only-on-past-rounds behaviour in §11.3 — see product-owner PRD alignment check on `fix/summary-duplicate-save-idempotency`)
+**Last updated:** 29 August 2026 (added §11.13 "Edit a past round" ahead of Chunk 40 build — covers both D1 and quick-play rounds, date/name/score/notes editing, overwrite-in-place; updated §11.3 and §4.5 cross-references)
 
 ---
 
@@ -108,6 +108,7 @@ Outbuild palette applied for outdoor sunlight legibility on a phone:
   - Games without a name — whether saved before the game naming feature or left intentionally blank — display the date as their primary identifier in History
 - Tapping a game shows the full scorecard for that game
 - Tapping a player name filters to all games that player has appeared in
+- A saved game can be edited from its detail view — see §11.13 (applies to both quick-play and logged-in rounds)
 
 ### 4.6 Player profiles (lightweight)
 - Name-based recall only — not a login system
@@ -318,7 +319,7 @@ Four tables in Cloudflare D1:
 - `player_data` — JSON blob (array of players with name, per-hole scores, total, DNF flag)
 - `course_id` — UUID, foreign key → courses.id, nullable
 - `client_round_id` — text, nullable — the local (client-side) game's own id, sent by the client as an idempotency key on save so a given round can only ever produce one row, even if `POST /api/games` is called more than once for it (e.g. back-navigation to an already-saved Summary screen). Unique per `(user_id, client_round_id)`; added in migration `002_add_client_round_id.sql`, 24 August 2026.
-- `notes` — text, nullable — an optional free-text note (up to 300 characters, enforced client-side) attached to a round. Present since the initial schema (`001_initial.sql`). Captured and editable only on the immediate post-finish Summary screen; shown read-only (and hidden entirely if blank) when the same round is later reopened from History, consistent with History's read-only scorecard view (§11.9). No update-notes endpoint exists yet — editing notes on a past round is covered by the "Edit a past round" work in BUILDPLAN.md.
+- `notes` — text, nullable — an optional free-text note (up to 300 characters, enforced client-side) attached to a round. Present since the initial schema (`001_initial.sql`). Captured on the immediate post-finish Summary screen; shown read-only (and hidden entirely if blank) when the same round is later reopened from History, consistent with History's read-only scorecard view (§11.9). Editing notes on an already-saved round is done through the "Edit a past round" flow (§11.13), not a standalone update-notes endpoint.
 - `created_at` — timestamp
 
 **courses**
@@ -445,3 +446,41 @@ When Scorecard Plus is live, the information page (PRD 4.8) must be updated to r
 - That logged-in users' data is stored in a Cloudflare D1 database, not only in local storage
 - That email addresses are processed by Resend for authentication purposes
 - The contact email should be updated to hello@outbuild.co once that address is configured via Resend (see BACKLOG.md)
+
+---
+
+### 11.13 Edit a past round
+
+Users can correct a previously saved round from its detail (Summary) view. Editing **overwrites the existing record in place** — no new row is created, no duplicate is produced. Covers user item 14; delivered as Chunk 40 (pulled forward into Wave 6, 29 August 2026). Scope decisions below all confirmed by the user on 29 August 2026.
+
+**Applies to both round types:**
+- Logged-in (D1-backed) rounds — Scorecard Plus
+- Logged-out localStorage quick-play rounds
+
+Quick-play edits are localStorage-only and device-specific, consistent with all other quick-play behaviour (§4.6, §11.10). A quick-play round can only be edited on the device that holds it.
+
+**Entry point:**
+- An **"Edit round"** button on the round-detail (Summary) view, shown when viewing an already-saved round.
+- Editing is blocked while a game is in progress. In that state the action is unavailable and the user is told to finish their current round first.
+
+**What can be edited in v1 (both round types unless noted):**
+- **Round date** (`played_at`) — pre-filled with the existing date and re-stamped on save. Editable for both local/quick-play and logged-in D1 rounds.
+- **Player names** — rename existing players.
+- **Per-hole scores** — for existing players, using the same scoring grid and controls as normal play (§4.3), including the 14-stroke cap.
+- **Notes** — a pre-filled free-text notes field on the edit screen (same 300-character client-side limit as §11.3), saved with the rest of the round. This is the only route to editing notes on an already-saved round.
+- **Course** — logged-in D1 rounds only, via the existing course selector (§11.7). For local/quick-play rounds the course is fixed and not editable in v1.
+
+**What is NOT editable in v1 (deferred — see BACKLOG.md):**
+- Adding or removing players during an edit. v1 is renames and score changes only.
+- Changing the course on a local/quick-play round.
+- Holes played is not a directly editable field — it is derived from the edited scores (see recalculation below).
+
+**Recalculation on save:**
+- Winner, DNF status, and per-player totals are all recalculated from the edited scores, applying the same rules as finishing a game (§4.4, §5): a player who has not scored every hole is DNF and excluded from the winner calculation; the winner is the lowest total among those who finished; ties and all-DNF cases are handled exactly as in the normal finish flow and the share image (§4.7).
+
+**Persistence and identity:**
+- The round keeps its original identity — same row, same `id`. Only `id`, `client_round_id`, and `created_at` are guaranteed unchanged by an edit. `played_at` (the round date) may change because it is user-editable (see above); this is still a correction to an existing round, not a new round.
+- Logged-in: a `PATCH` on `functions/api/games/[id].js` updates the existing row, gated by the session cookie and by ownership (the round must belong to the requesting user).
+- Logged-out: an update path in `storage.js` overwrites the existing localStorage record in place, keyed on its existing id.
+
+**Sharing:** unchanged. After an edit is saved, the Summary view reflects the recalculated result and the existing Share button (§4.7) generates the share image from the updated data.

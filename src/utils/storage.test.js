@@ -9,6 +9,7 @@ import {
   saveActiveGame,
   saveCompletedGame,
   savePlayers,
+  updateCompletedGame,
 } from './storage.js'
 
 beforeEach(() => {
@@ -204,5 +205,47 @@ describe('markCompletedGameSynced', () => {
   it('returns true on success', () => {
     saveCompletedGame(COMPLETED_A)
     expect(markCompletedGameSynced(COMPLETED_A.id)).toBe(true)
+  })
+})
+
+describe('updateCompletedGame', () => {
+  it('overwrites the matching record in place', () => {
+    saveCompletedGame(COMPLETED_A)
+    updateCompletedGame(COMPLETED_A.id, { winner: 'Bob', scores: { Alice: [9, 9, 9], Bob: [1, 1, 1] } })
+    const updated = getCompletedGames().find(g => g.id === COMPLETED_A.id)
+    expect(updated.winner).toBe('Bob')
+    expect(updated.scores.Bob).toEqual([1, 1, 1])
+  })
+
+  it('merges — fields not passed are kept', () => {
+    saveCompletedGame(COMPLETED_A)
+    updateCompletedGame(COMPLETED_A.id, { notes: 'windy day' })
+    const updated = getCompletedGames().find(g => g.id === COMPLETED_A.id)
+    expect(updated.notes).toBe('windy day')
+    expect(updated.players).toEqual(['Alice', 'Bob'])
+  })
+
+  it('pins the id even if a different id is passed in the update', () => {
+    saveCompletedGame(COMPLETED_A)
+    updateCompletedGame(COMPLETED_A.id, { id: 'hacked', winner: 'Bob' })
+    const games = getCompletedGames()
+    expect(games).toHaveLength(1)
+    expect(games[0].id).toBe(COMPLETED_A.id)
+  })
+
+  it('preserves list order and leaves other records untouched', () => {
+    saveCompletedGame(COMPLETED_A)
+    saveCompletedGame(COMPLETED_B) // B is now first
+    updateCompletedGame(COMPLETED_A.id, { winner: 'Bob' })
+    const games = getCompletedGames()
+    expect(games[0].id).toBe(COMPLETED_B.id)
+    expect(games[1].id).toBe(COMPLETED_A.id)
+    expect(games[0]).toEqual(COMPLETED_B)
+  })
+
+  it('returns false and writes nothing when no record matches the id', () => {
+    saveCompletedGame(COMPLETED_A)
+    expect(updateCompletedGame('does-not-exist', { winner: 'Bob' })).toBe(false)
+    expect(getCompletedGames()).toEqual([COMPLETED_A])
   })
 })

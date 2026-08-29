@@ -1,7 +1,7 @@
 # Build Plan Archive
 ## Scorecard by Outbuild — Bruntsfield Links
 
-Last updated: 19 July 2026
+Last updated: 29 August 2026 (added Wave 6 Chunks 33, 34 & 40 detail blocks, archived from BUILDPLAN.md)
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
 This file contains the full detail blocks for all completed chunks, moved here from BUILDPLAN.md as each chunk was finished. The chunk order summary table is also here — it migrated from BUILDPLAN.md once all planned work was complete.
@@ -624,3 +624,51 @@ Added from PRD v1.5. The hotfix runs before everything else. Chunks 16–20 are 
 | 32 | Rules content update + context-aware flow | 30, 31 | Done |
 
 **Verify:** Rules link visible on home screen, below New Game and History. Rules tab visible inside the Map overlay. Rules text matches PRD 4.9 verbatim. No enforcement logic added. Both entry points open the same rules content. Styling is readable and consistent with the rest of the app.
+
+---
+
+## Wave 6 — User feedback batch (23 July 2026)
+*Chunks 33, 34, and 40 archived 29 August 2026. Remaining Wave 6 chunks (35–39) are still active in BUILDPLAN.md.*
+
+---
+
+## Chunk 33 — UI feedback pass: sign-in & scorecard polish
+**Status: Done (23 July 2026)**
+**Mode: UI feedback (bundled, single review/commit)**
+
+Covered user items 1, 2, 3, 4, 12, 15. All cosmetic/layout — no data model or logic changes.
+
+- **Item 1 — Email autofill/autocomplete (verify only):** `Login.jsx` already sets `type="email"` and `autoComplete="email"`. No code change expected — confirm on a real device during this pass and close out.
+- **Item 2 — Email field position:** move the email input higher on the sign-in screen so the iOS keyboard doesn't obscure it. Likely means trimming/collapsing the heading and value-prop copy above the form, or restructuring so the input sits above the fold on a standard iPhone viewport with keyboard open.
+- **Item 3 — New Game name entry overflow:** root cause identified in `Setup.jsx` — the "new course name" input (shown to logged-in users creating a course) is a flex child without `min-w-0`, which can force it wider than its flex container. Add `min-w-0` (or equivalent) so it stays within the content wrapper. Verify against the reported case (logged-in, New Game, creating/entering a course name).
+- **Item 4 — Header centering:** `PageHeader.jsx` currently centres the title between the back button and right-side slot (flex layout), not against total page width. `DESIGN.md` already specifies the correct pattern (title absolutely positioned, `inset-x-0 text-center`, back/right floating above it) — bring the component in line with its own design spec. Applies to all pages using `PageHeader`.
+- **Item 12 — Text input font size:** the "Add a note" textarea on `Summary.jsx` (shown after a round is finished, logged-in only) uses `text-sm` (14px). iOS Safari auto-zooms on focus for inputs under 16px — confirmed behaviour, not just the user's belief. Bump to `text-base` (16px) or explicit 16px.
+- **Item 15 — GDPR statement on Info page:** a full GDPR-aligned Privacy page already exists at `/privacy` (linked from the Login screen) and already covers UK GDPR rights, retention, and third parties. This item is a small addition, not new policy drafting — add a short statement + link to `/privacy` at the bottom of `Info.jsx`, visible in the logged-in Account section (and reasonably shown to logged-out users too, since quick-play users may also want to find it).
+
+Code-reviewer raised BACKLOG.md items 15, 16, 17, and 19 as incidental findings during this chunk's review.
+
+**Verify:** all five changes visible and correct on a real mobile viewport. Header centering checked on at least one page with a back button + right-side content (e.g. Scorecard) and one without. No regression to existing truncation behaviour on long titles.
+
+---
+
+## Chunk 34 — Bug fix: hole reset no longer hides later holes
+**Status: Done (23 July 2026)**
+**Depends on: nothing**
+
+Covered user item 9.
+
+- Root cause: `computeDisplayedHoles()` (`src/utils/game.js`) returns the row count based on the first hole (from the start) where not all players have scored. Resetting a middle hole back to empty makes that function think the round hasn't progressed past that point, so it hides — but does not delete — every later hole's row from the live scorecard view. Data in `game.scores` is untouched; this is a display bug, not data loss, but it looks and feels like data loss to the user.
+- Fix: change the row-count logic so any hole with an existing score (for any player) stays visible, regardless of gaps earlier in the sequence. The "empty" display (`–`) already exists for unscored cells — extend that same treatment to a hole that's been reset to empty after being played, rather than hiding the row. (Implemented as the `lastScoredHole` pass in `computeDisplayedHoles`.)
+- Confirm `calculateResult` / `finishGame` (which already use a different, correct trailing-hole calculation) are unaffected by this change — they are not driven by `computeDisplayedHoles`.
+
+**Verify:** score a few holes, reset a middle hole to empty, confirm later holes and their scores remain visible in the grid (showing `–` only for the reset hole), confirm totals and DNF/winner calculation at finish are unaffected.
+
+---
+
+## Chunk 40 — Edit a past round
+**Status: Done (29 August 2026) — shipped on branch `feat/edit-past-round`, pending merge to `main` after human localhost review.**
+**Covered user item 14.** Pulled forward ahead of Chunks 35–39 at the user's request on 29 August 2026.
+
+**What shipped:** A `PATCH` handler on `functions/api/games/[id].js` for logged-in (D1-backed) rounds, guarded by session auth, row ownership (`WHERE id = ? AND user_id = ?`), and course ownership (a supplied `course_id` must belong to the same user); it overwrites the existing `games` row in place rather than creating a new one. A `updateCompletedGame(id, updated)` helper in `src/utils/storage.js` does the equivalent in-place overwrite for logged-out quick-play rounds in localStorage, preserving list position and pinning `id`. A `buildEditGame()` helper in `src/utils/game.js` reconstructs a working game from an existing round, mapping scores positionally so renames keep each player's scores and preserving the original `id` and chosen date. `Setup.jsx` gained an `editRound` mode (pre-fills date, course, and player names; "Save changes" button). `Scorecard.jsx`'s finish path detects edit mode and overwrites the record (PATCH for D1, `updateCompletedGame` for local) instead of appending a new one, with the edit target stamped on the persisted active game so a browser back/forward can't drop it. `Summary.jsx` gained an "Edit round" button, shown for D1 rounds (logged-in) and local completed rounds (logged-out) and blocked while a game is in progress. Both round types are covered. Editable fields: player names (rename), per-hole scores, date, and notes; course is editable for D1 rounds only (quick-play has no course selector). Adding or removing players during an edit is out of scope for v1 — logged as BACKLOG.md item 20. Winner, DNF, and totals are recalculated on save via the existing `finishGame` / `calculateResult`. Code review: CLEAR WITH NOTES, no Critical findings; 2 findings fixed on-branch. product-owner PRD alignment check: CLEAR (PRD section added for the feature).
+
+**Verify:** edit a past round's player names, scores, date, and notes (and course, for a signed-in D1 round); confirm the change is saved and reflected in History and Summary; confirm no duplicate row/record is created; confirm winner/DNF/totals recalculate correctly after edits; confirm the "Edit round" button is hidden while a round is in progress.

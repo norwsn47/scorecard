@@ -113,6 +113,28 @@ export function deleteCompletedGame(id) {
 }
 
 /**
+ * Overwrites a single completed game in place, matched by id. Used when a
+ * past round is edited (Chunk 40) — the edit replaces the existing record
+ * rather than creating a new one, so winner/totals/date all update without
+ * a duplicate row appearing in History. List order is preserved and the id
+ * is pinned so a stray `id` in `updated` can never repoint the record.
+ * Returns false when no record matched the id (nothing was persisted) so the
+ * caller can surface a save error rather than a false success, and also false
+ * when the underlying write fails.
+ */
+export function updateCompletedGame(id, updated) {
+  const games = getCompletedGames()
+  let matched = false
+  const next = games.map(g => {
+    if (g.id !== id) return g
+    matched = true
+    return { ...g, ...updated, id }
+  })
+  if (!matched) return false
+  return safeWrite(KEYS.COMPLETED_GAMES, next)
+}
+
+/**
  * Marks a completed game as already synced to the server. Used to stop a
  * revisited Summary screen (e.g. after browser back-navigation) from
  * silently re-submitting a round that was already saved — see

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { calculateResult, canStartGame, computeDisplayedHoles, createGame, findDuplicateIndices, finishGame } from './game.js'
+import { buildEditGame, calculateResult, canStartGame, computeDisplayedHoles, createGame, findDuplicateIndices, finishGame } from './game.js'
 
 // ── findDuplicateIndices ──────────────────────────────────────────────────────
 
@@ -226,5 +226,75 @@ describe('finishGame', () => {
     expect(finished.id).toBe(game.id)
     expect(finished.players).toEqual(game.players)
     expect(finished.holes).toBe(36)
+  })
+})
+
+// ── buildEditGame ─────────────────────────────────────────────────────────────
+
+describe('buildEditGame', () => {
+  const existing = {
+    id: 'row-abc',
+    _fromDb: true,
+    completedAt: '2026-01-01T12:00:00.000Z',
+    holesPlayed: 3,
+    winner: 'Bob',
+    dnf: [],
+    courseId: 'course-1',
+    courseName: 'Old Course',
+    players: ['Alice', 'Bob'],
+    scores: { Alice: [5, 5, 5], Bob: [3, 3, 3] },
+  }
+
+  it('remaps scores positionally when a player is renamed', () => {
+    const game = buildEditGame(existing, ['Alice', 'Robert'], 'course-1', 'Old Course', '2026-01-01T12:00:00.000Z')
+    expect(game.players).toEqual(['Alice', 'Robert'])
+    expect(game.scores.Robert.slice(0, 3)).toEqual([3, 3, 3])
+    expect(game.scores.Alice.slice(0, 3)).toEqual([5, 5, 5])
+    expect(game.scores.Bob).toBeUndefined()
+  })
+
+  it('pads each score row to 36 slots', () => {
+    const game = buildEditGame(existing, ['Alice', 'Bob'])
+    expect(game.scores.Alice).toHaveLength(36)
+    expect(game.scores.Alice.slice(3).every(s => s === null)).toBe(true)
+    expect(game.holes).toBe(36)
+  })
+
+  it('pins the original id', () => {
+    const game = buildEditGame(existing, ['Alice', 'Bob'])
+    expect(game.id).toBe('row-abc')
+  })
+
+  it('sets pastDate so finishGame stamps the chosen date', () => {
+    const game = buildEditGame(existing, ['Alice', 'Bob'], null, null, '2025-07-04T12:00:00.000Z')
+    expect(game.pastDate).toBe('2025-07-04T12:00:00.000Z')
+    const finished = finishGame(game)
+    expect(finished.completedAt).toBe('2025-07-04T12:00:00.000Z')
+  })
+
+  it('updates course id and name', () => {
+    const game = buildEditGame(existing, ['Alice', 'Bob'], 'course-9', 'New Links')
+    expect(game.courseId).toBe('course-9')
+    expect(game.courseName).toBe('New Links')
+  })
+
+  it('recalculates winner and totals via finishGame after a score edit', () => {
+    const game = buildEditGame(existing, ['Alice', 'Bob'], 'course-1', 'Old Course', existing.completedAt)
+    // Alice birdies every hole in the edit — she should now win
+    game.scores.Alice[0] = 1
+    game.scores.Alice[1] = 1
+    game.scores.Alice[2] = 1
+    const finished = finishGame(game)
+    expect(finished.winner).toBe('Alice')
+    expect(finished.holesPlayed).toBe(3)
+    expect(finished.dnf).toEqual([])
+  })
+
+  it('carries an edited player to DNF when a score is cleared', () => {
+    const game = buildEditGame(existing, ['Alice', 'Bob'], 'course-1', 'Old Course', existing.completedAt)
+    game.scores.Bob[1] = null
+    const finished = finishGame(game)
+    expect(finished.dnf).toContain('Bob')
+    expect(finished.winner).toBe('Alice')
   })
 })

@@ -3,7 +3,7 @@ import { track } from '../utils/analytics.js'
 import { formatDate, formatDateOnly } from '../utils/format.js'
 import { playerAverage, playerTotal } from '../utils/scores.js'
 import { shareScorecard } from '../utils/share.js'
-import { getCompletedGames, markCompletedGameSynced } from '../utils/storage.js'
+import { getActiveGame, getCompletedGames, markCompletedGameSynced } from '../utils/storage.js'
 import { useAuth } from '../hooks/useAuth.jsx'
 
 export default function Summary({ navigate, params }) {
@@ -23,10 +23,11 @@ export default function Summary({ navigate, params }) {
   // screen from silently re-submitting a duplicate round in either case.
   const game = params?.game ?? getCompletedGames()[0] ?? null
 
-  const [sharing, setSharing] = useState(false)
-  const [notes, setNotes]     = useState(() => game?.notes ?? '')
-  const [saving, setSaving]   = useState(false)
-  const savingRef             = useRef(false)
+  const [sharing, setSharing]       = useState(false)
+  const [notes, setNotes]           = useState(() => game?.notes ?? '')
+  const [saving, setSaving]         = useState(false)
+  const [editBlocked, setEditBlocked] = useState(false)
+  const savingRef                   = useRef(false)
 
   if (!game) {
     navigate('home')
@@ -41,6 +42,22 @@ export default function Summary({ navigate, params }) {
   // this screen (synced). Drives both the save guard below and the notes
   // field going read-only, so the two never disagree with each other.
   const alreadySaved = game._fromDb || game.synced
+
+  // The Edit button is offered on a round that's actually stored somewhere we
+  // can write back to: a D1 round opened from History (_fromDb) for a
+  // logged-in user, or any local completed round for a logged-out user.
+  const canEdit = user ? !!game._fromDb : true
+
+  function handleEditRound() {
+    // One round at a time. A game in progress must be finished before a past
+    // round can be edited — editing swaps the active-game slot for a working
+    // copy, which would strand the in-progress round.
+    if (getActiveGame()) {
+      setEditBlocked(true)
+      return
+    }
+    navigate('setup', { editRound: true, game })
+  }
 
   async function handleGoHome() {
     // Only ever save on the immediate post-finish flow. A round already
@@ -223,6 +240,23 @@ export default function Summary({ navigate, params }) {
         >
           {saving ? 'Saving…' : 'Done'}
         </button>
+
+        {canEdit && (
+          <div>
+            <button
+              onClick={handleEditRound}
+              disabled={saving}
+              className="w-full py-4 rounded-sm border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card disabled:opacity-40"
+            >
+              Edit round
+            </button>
+            {editBlocked && (
+              <p className="font-ui text-xs text-accent tracking-wide mt-2 text-center leading-relaxed">
+                Finish your current round before editing a past one.
+              </p>
+            )}
+          </div>
+        )}
 
         <div className="text-center -mt-2">
           <button

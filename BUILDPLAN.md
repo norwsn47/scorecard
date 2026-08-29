@@ -1,9 +1,9 @@
 # Build Plan
 ## Scorecard by Outbuild
 
-**Last updated:** 24 August 2026 (urgent hotfix — duplicate game rows on save, resolved: reviewed, merged to main, and pushed)
+**Last updated:** 29 August 2026 (Chunk 40 "Edit a past round" passed code review and PRD alignment; detail block archived; docs made push-ready for `feat/edit-past-round`)
 
-> All planned work through Phase 4 (Chunks 1–29) and Wave 5 (Chunks 30–32) is complete and archived in BUILDPLAN-ARCHIVE.md.
+> Phase 4 (Chunks 1–29), Wave 5 (Chunks 30–32), and Wave 6 Chunks 33, 34, and 40 are complete — their detail blocks are in BUILDPLAN-ARCHIVE.md. Wave 6 Chunks 35–39 remain active below. (Chunk 40 is code-complete and archived but its `feat/edit-past-round` branch is not yet merged to `main` — see Current status.)
 
 ## Hotfix log
 
@@ -32,9 +32,15 @@ Fix, in three layers (defence in depth, no single layer relied on alone):
 
 ## Current status
 
-Priority hotfix resolved (see Hotfix log above) — duplicate game rows on save. Merged to `main` and pushed. Wave 6 resumes next.
+**Wave 6 in progress.** Scoped from a 15-item feedback/bug/feature list provided by the user on 23 July 2026.
 
-Wave 6 defined below — not yet started. Scoped from a 15-item feedback/bug/feature list provided by the user on 23 July 2026. Triage, grouping, and chunk order are pending user confirmation before any coding begins.
+- **Done:** Chunk 33 (UI feedback pass), Chunk 34 (hole-reset display bug), Chunk 40 (Edit a past round) — detail blocks archived in BUILDPLAN-ARCHIVE.md.
+- **Chunk 40 — pending merge.** Built on branch `feat/edit-past-round`. Code review passed (CLEAR WITH NOTES, no Critical; 2 findings fixed on-branch). product-owner PRD alignment check passed (CLEAR). Human localhost review is the final gate step, in progress. Branch is push-ready; not yet merged to `main`.
+- **Paused:** Chunk 35 (course map reliability) — an implementation attempt was flagged wrong by the user; needs fresh explicit instruction before an agent resumes.
+- **Next up:** Chunk 36 (sign-in email branding) — or Chunk 35 if it gets unblocked first.
+- **Remaining:** Chunks 35, 36, 37, 38, 39.
+
+The priority hotfix for duplicate game rows on save is resolved, merged to `main`, and pushed (see Hotfix log above).
 
 ---
 
@@ -48,46 +54,17 @@ Vite + React · Tailwind CSS · localStorage · Cloudflare Pages · Cloudflare D
 
 Mode C — Git + GitHub (full). See CLAUDE.md for rules.
 
-**Flag:** the current session branch (`claude/game-app-ui-auth-h2kngb`) is a session-assigned name and does not meet CLAUDE.md's hard branch-naming rule. No coding has happened yet, so nothing needs fixing retroactively — but a properly named branch (`feat/`, `fix/`, `chore/`, `refactor/`, or `security/` prefix) must be created before Wave 6 work starts, per chunk.
+**Current working branch:** `feat/edit-past-round` (Chunk 40 — push-ready, pending human localhost review then merge to `main`).
+
+Wave 6 chunks have each shipped on a descriptive branch per the Mode C rule: Chunks 33 and 34 are merged to `main`; Chunk 40 is on `feat/edit-past-round` awaiting merge.
 
 ---
 
 ## Wave 6 — User feedback batch (23 July 2026)
 
-Source: 15-item list from the user (bugs, small features, one backend-touching feature set). Two items were explicitly deferred to backlog by the user at the time of request (see BACKLOG.md items 13–14). Item 15 (GDPR statement on Info page) was judged suitable to action now rather than defer — see rationale below chunk 33.
+Source: 15-item list from the user (bugs, small features, one backend-touching feature set). Two items were explicitly deferred to backlog by the user at the time of request (see BACKLOG.md items 13–14). Item 15 (GDPR statement on Info page) was actioned within Chunk 33 (now archived in BUILDPLAN-ARCHIVE.md).
 
-**Track A runs as UI feedback mode** (per project-manager rules) — cosmetic/layout-only changes, single bundled review and commit. **Track B runs as the standard build loop** — one chunk per logical change, each through the full completion gate.
-
----
-
-### Chunk 33 — UI feedback pass: sign-in & scorecard polish
-**Status: Complete (23 July 2026)**
-**Mode: UI feedback (bundled, single review/commit)**
-
-Covers user items 1, 2, 3, 4, 12, 15. All cosmetic/layout — no data model or logic changes.
-
-- **Item 1 — Email autofill/autocomplete (verify only):** `Login.jsx` already sets `type="email"` and `autoComplete="email"`. No code change expected — confirm on a real device during this pass and close out.
-- **Item 2 — Email field position:** move the email input higher on the sign-in screen so the iOS keyboard doesn't obscure it. Likely means trimming/collapsing the heading and value-prop copy above the form, or restructuring so the input sits above the fold on a standard iPhone viewport with keyboard open.
-- **Item 3 — New Game name entry overflow:** root cause identified in `Setup.jsx` — the "new course name" input (shown to logged-in users creating a course) is a flex child without `min-w-0`, which can force it wider than its flex container. Add `min-w-0` (or equivalent) so it stays within the content wrapper. Verify against the reported case (logged-in, New Game, creating/entering a course name).
-- **Item 4 — Header centering:** `PageHeader.jsx` currently centres the title between the back button and right-side slot (flex layout), not against total page width. `DESIGN.md` already specifies the correct pattern (title absolutely positioned, `inset-x-0 text-center`, back/right floating above it) — bring the component in line with its own design spec. Applies to all pages using `PageHeader`.
-- **Item 12 — Text input font size:** the "Add a note" textarea on `Summary.jsx` (shown after a round is finished, logged-in only) uses `text-sm` (14px). iOS Safari auto-zooms on focus for inputs under 16px — confirmed behaviour, not just the user's belief. Bump to `text-base` (16px) or explicit 16px.
-- **Item 15 — GDPR statement on Info page:** a full GDPR-aligned Privacy page already exists at `/privacy` (linked from the Login screen) and already covers UK GDPR rights, retention, and third parties. This item is a small addition, not new policy drafting — add a short statement + link to `/privacy` at the bottom of `Info.jsx`, visible in the logged-in Account section (and reasonably shown to logged-out users too, since quick-play users may also want to find it).
-
-**Verify:** all five changes visible and correct on a real mobile viewport. Header centering checked on at least one page with a back button + right-side content (e.g. Scorecard) and one without. No regression to existing truncation behaviour on long titles.
-
----
-
-### Chunk 34 — Bug fix: hole reset no longer hides later holes
-**Status: Complete (23 July 2026)**
-**Depends on: nothing**
-
-Covers user item 9.
-
-- Root cause: `computeDisplayedHoles()` (`src/utils/game.js`) returns the row count based on the first hole (from the start) where not all players have scored. Resetting a middle hole back to empty makes that function think the round hasn't progressed past that point, so it hides — but does not delete — every later hole's row from the live scorecard view. Data in `game.scores` is untouched; this is a display bug, not data loss, but it looks and feels like data loss to the user.
-- Fix: change the row-count logic so any hole with an existing score (for any player) stays visible, regardless of gaps earlier in the sequence. The "empty" display (`–`) already exists for unscored cells — extend that same treatment to a hole that's been reset to empty after being played, rather than hiding the row.
-- Confirm `calculateResult` / `finishGame` (which already use a different, correct trailing-hole calculation) are unaffected by this change — they are not driven by `computeDisplayedHoles`.
-
-**Verify:** score a few holes, reset a middle hole to empty, confirm later holes and their scores remain visible in the grid (showing `–` only for the reset hole), confirm totals and DNF/winner calculation at finish are unaffected.
+**Track A ran as UI feedback mode** (per project-manager rules) — cosmetic/layout-only changes, single bundled review and commit (Chunk 33). **Track B runs as the standard build loop** — one chunk per logical change, each through the full completion gate (Chunks 34–40).
 
 ---
 
@@ -162,31 +139,19 @@ Covers user item 5.
 
 ---
 
-### Chunk 40 — Edit a past round
-**Status: Not started**
-**Depends on: nothing directly, but benefits from Chunk 39 being in place first for consistent "own player" handling**
-
-Covers user item 14.
-
-- Add `PATCH`/`PUT` support to `functions/api/games/[id].js` for logged-in (D1-backed) rounds.
-- Build an edit flow reusing the existing "past round" setup pattern (`Setup.jsx`'s `pastRound` mode) and the scorecard grid, pre-populated with the existing round's data, saving back on completion instead of creating a new record.
-- **Open decision needed before building (see questions):** does this need to cover logged-out (localStorage) quick-play rounds too, or D1 rounds only for v1? Quick-play editing is technically simpler (no API call) but doubles the surface area to test.
-
-**Verify:** edit a past round's player names, scores, and course; confirm the change is saved and reflected in History and Summary; confirm winner/DNF/totals recalculate correctly after edits.
-
----
-
 ## Chunk order summary — Wave 6
 
 | Chunk | What | Depends on | Status |
 |-------|------|------------|--------|
-| 33 | UI feedback pass (items 1, 2, 3, 4, 12, 15) | Nothing | Not started |
-| 34 | Bug fix: hole reset display bug (item 9) | Nothing | Not started |
-| 35 | Course map reliability (items 10, 11) | Nothing | Not started |
+| 33 | UI feedback pass (items 1, 2, 3, 4, 12, 15) | Nothing | Done (23 Jul 2026, archived) |
+| 34 | Bug fix: hole reset display bug (item 9) | Nothing | Done (23 Jul 2026, archived) |
+| 35 | Course map reliability (items 10, 11) | Nothing | Paused (needs fresh instruction) |
 | 36 | Sign-in email branding (item 13) | Nothing | Not started |
 | 37 | Backend: user profile foundation (items 5/6 backend) | Nothing | Not started |
 | 38 | Settings panel (item 6 UI) | 37 | Not started |
 | 39 | Logged-in identity in gameplay (item 5) | 37, 38 | Not started |
-| 40 | Edit a past round (item 14) | Benefits from 39 | Not started |
+| 40 | Edit a past round (item 14) | Benefits from 39 | Done (29 Aug 2026) — pending merge of `feat/edit-past-round`; detail archived |
 
-**Recommended build order:** 33 → 34 → 35 → 36 → 37 → 38 → 39 → 40 (fastest, lowest-risk wins first; backend/auth-touching and largest features last).
+**Original recommended build order:** 33 → 34 → 35 → 36 → 37 → 38 → 39 → 40.
+
+**Actual order (user override, 29 August 2026):** 33 → 34 → **40** → 36 → 37 → 38 → 39, with 35 slotted back in once unblocked. Chunk 40 was pulled forward at the user's request. Trade-off accepted: Chunk 39's "own player" handling is not yet in place, so highlighting the logged-in user's own row in the edit view is deferred to Chunk 39 rather than built into Chunk 40.

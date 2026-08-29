@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import PageHeader from '../components/PageHeader.jsx'
-import { canStartGame, createGame, findDuplicateIndices } from '../utils/game.js'
+import { buildEditGame, canStartGame, createGame, findDuplicateIndices } from '../utils/game.js'
 import { getPlayers, saveActiveGame, savePlayers } from '../utils/storage.js'
 import { useAuth } from '../hooks/useAuth.jsx'
 
@@ -8,19 +8,33 @@ const MAX_PLAYERS = 6
 
 export default function Setup({ navigate, params }) {
   const pastRound                          = params?.pastRound ?? false
+  const editRound                          = params?.editRound ?? false
+  const editGame                           = editRound ? (params?.game ?? null) : null
+  const isDbEdit                           = !!editGame?._fromDb
   const fromBruntsfield                   = params?.bruntsfield ?? false
   const { user }                          = useAuth()
-  const [names, setNames]                 = useState([''])
+  const [names, setNames]                 = useState(() =>
+    editGame?.players?.length ? [...editGame.players] : ['']
+  )
   const [savedNames]                      = useState(() => getPlayers())
   const [courses, setCourses]             = useState([])
-  const [selectedCourseId, setSelectedCourseId] = useState(null)
+  const [selectedCourseId, setSelectedCourseId] = useState(() => editGame?.courseId ?? null)
   const [creatingCourse, setCreatingCourse]     = useState(false)
   const [newCourseName, setNewCourseName]       = useState('')
   const [courseError, setCourseError]           = useState(null)
-  const [pastDate, setPastDate]                 = useState(() => new Date().toISOString().slice(0, 10))
+  const [notes, setNotes]                       = useState(() => editGame?.notes ?? '')
+  const [pastDate, setPastDate]                 = useState(() =>
+    editGame?.completedAt
+      ? String(editGame.completedAt).slice(0, 10)
+      : new Date().toISOString().slice(0, 10)
+  )
 
+  // Course selector is shown for logged-in users, except when editing a
+  // local/quick-play round — its course is not editable (confirmed scope).
+  const showCourse  = !!user && (!editRound || isDbEdit)
+  const showDate    = pastRound || editRound
   const dupeIndices = findDuplicateIndices(names)
-  const courseReady = !user || !creatingCourse || newCourseName.trim().length > 0
+  const courseReady = !showCourse || !creatingCourse || newCourseName.trim().length > 0
   const ready       = canStartGame(names, names.length) && courseReady
 
   useEffect(() => {
@@ -30,12 +44,16 @@ export default function Setup({ navigate, params }) {
       .then(data => {
         if (data.courses?.length) {
           setCourses(data.courses)
-          const def = data.courses.find(c => c.is_default) ?? data.courses[0]
-          setSelectedCourseId(def.id)
+          // When editing, keep the round's own course selection untouched
+          // (including "no course") rather than snapping to a default.
+          if (!editRound) {
+            const def = data.courses.find(c => c.is_default) ?? data.courses[0]
+            setSelectedCourseId(def.id)
+          }
         }
       })
       .catch(() => {})
-  }, [user])
+  }, [user, editRound])
 
   function handleNameChange(i, value) {
     const next = [...names]
@@ -58,6 +76,31 @@ export default function Setup({ navigate, params }) {
     return savedNames.filter(n => !otherLower.includes(n.toLowerCase()))
   }
 
+  // Resolves the final course id/name, creating a new course first if the
+  // user is mid "+ New course". Returns null on a failed creation (the error
+  // banner is already set) so the caller can bail out.
+  async function resolveCourse(currentId, currentName) {
+    if (!(showCourse && creatingCourse && newCourseName.trim())) {
+      return { courseId: currentId, courseName: currentName }
+    }
+    setCourseError(null)
+    try {
+      const res = await fetch('/api/courses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ name: newCourseName.trim() }),
+      })
+      const data = await res.json()
+      if (res.ok) return { courseId: data.course.id, courseName: data.course.name }
+      setCourseError(data.error || 'Could not create course')
+      return null
+    } catch {
+      setCourseError('Could not create course - please try again')
+      return null
+    }
+  }
+
   async function handleStart() {
     if (!ready) return
     const trimmed = names.map(n => n.trim())
@@ -66,38 +109,34 @@ export default function Setup({ navigate, params }) {
     const merged = [...new Set([...trimmed, ...existing])].slice(0, 20)
     savePlayers(merged)
 
-    let courseId   = user ? (selectedCourseId ?? null) : null
-    let courseName = user
-      ? (courses.find(c => c.id === courseId)?.name ?? null)
-      : (fromBruntsfield ? 'Bruntsfield Short Hole Golf Course' : null)
+    if (editRound && editGame) {
+      const startId   = isDbEdit ? (selectedCourseId ?? null) : null
+      const startName = isDbEdit
+        ? (courses.find(c => c.id === startId)?.name ?? editGame.courseName ?? null)
+        : null
+      const resolved = await resolveCourse(startId, startName)
+      if (!resolved) return
 
-    if (user && creatingCourse && newCourseName.trim()) {
-      setCourseError(null)
-      try {
-        const res = await fetch('/api/courses', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ name: newCourseName.trim() }),
-        })
-        const data = await res.json()
-        if (res.ok) {
-          courseId   = data.course.id
-          courseName = data.course.name
-        } else {
-          setCourseError(data.error || 'Could not create course')
-          return
-        }
-      } catch {
-        setCourseError('Could not create course - please try again')
-        return
-      }
+      const dateIso = new Date(pastDate + 'T12:00:00').toISOString()
+      const working = buildEditGame(editGame, trimmed, resolved.courseId, resolved.courseName, dateIso)
+      working.notes = notes.trim() || null
+      working._edit = { id: editGame.id, fromDb: isDbEdit }
+      saveActiveGame(working)
+      navigate('scorecard', { game: working, editContext: working._edit })
+      return
     }
+
+    const startId   = user ? (selectedCourseId ?? null) : null
+    const startName = user
+      ? (courses.find(c => c.id === startId)?.name ?? null)
+      : (fromBruntsfield ? 'Bruntsfield Short Hole Golf Course' : null)
+    const resolved = await resolveCourse(startId, startName)
+    if (!resolved) return
 
     const dateIso = pastRound
       ? new Date(pastDate + 'T12:00:00').toISOString()
       : null
-    const game = createGame(trimmed, courseId, courseName, dateIso)
+    const game = createGame(trimmed, resolved.courseId, resolved.courseName, dateIso)
     saveActiveGame(game)
     navigate('scorecard', { game, bruntsfield: fromBruntsfield })
   }
@@ -105,12 +144,27 @@ export default function Setup({ navigate, params }) {
   return (
     <div className="h-full bg-bg flex flex-col">
 
-      <PageHeader title={pastRound ? 'Add Past Round' : 'New Game'} onBack={() => pastRound ? navigate('history') : navigate(fromBruntsfield ? 'bruntsfield' : 'home')} />
+      <PageHeader
+        title={editRound ? 'Edit Round' : pastRound ? 'Add Past Round' : 'New Game'}
+        onBack={() =>
+          editRound
+            ? navigate('summary', { game: editGame })
+            : pastRound
+              ? navigate('history')
+              : navigate(fromBruntsfield ? 'bruntsfield' : 'home')
+        }
+      />
 
       <main className="flex-1 overflow-y-auto px-5 pt-6 pb-10 w-full space-y-3">
 
-        {/* Course selector — logged-in only */}
-        {user && (
+        {editRound && (
+          <p className="font-ui text-xs text-muted leading-relaxed pb-1">
+            Rename players, fix the date{showCourse ? ', switch the course' : ''} or add a note here. You'll adjust hole scores on the next screen.
+          </p>
+        )}
+
+        {/* Course selector — logged-in only; not shown for local-round edits */}
+        {showCourse && (
           <div className="pb-1">
             {!creatingCourse ? (
               <select
@@ -157,8 +211,8 @@ export default function Setup({ navigate, params }) {
           </div>
         )}
 
-        {/* Date picker — past rounds only */}
-        {pastRound && (
+        {/* Date picker — past rounds and edits */}
+        {showDate && (
           <div className="pb-1">
             <input
               type="date"
@@ -171,9 +225,14 @@ export default function Setup({ navigate, params }) {
           </div>
         )}
 
+        {editRound && names.length > 0 && (
+          <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted pt-2 pl-1">Players</p>
+        )}
+
         {names.map((name, i) => {
           const listId = `player-suggestions-${i}`
           const isDupe = dupeIndices.includes(i)
+          const canRemove = names.length > 1 && !editRound
           return (
             <div key={i}>
               <div className="relative">
@@ -185,15 +244,15 @@ export default function Setup({ navigate, params }) {
                   list={listId}
                   maxLength={30}
                   autoComplete="off"
-                  autoFocus={i === names.length - 1}
+                  autoFocus={!editRound && i === names.length - 1}
                   className={[
                     'w-full py-3 pl-4 rounded-md border font-ui text-base bg-bg-card text-text',
                     'placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40',
-                    names.length > 1 ? 'pr-10' : 'pr-4',
+                    canRemove ? 'pr-10' : 'pr-4',
                     isDupe ? 'border-accent' : 'border-border',
                   ].join(' ')}
                 />
-                {names.length > 1 && (
+                {canRemove && (
                   <button
                     onClick={() => handleRemovePlayer(i)}
                     aria-label={`Remove player ${i + 1}`}
@@ -219,13 +278,27 @@ export default function Setup({ navigate, params }) {
           )
         })}
 
-        {names.length < MAX_PLAYERS && (
+        {!editRound && names.length < MAX_PLAYERS && (
           <button
             onClick={handleAddPlayer}
             className="w-full py-3 px-4 rounded-md border border-dashed border-border bg-bg-card text-muted font-ui text-sm active:bg-border"
           >
             + Add player
           </button>
+        )}
+
+        {/* Notes — edit mode only */}
+        {editRound && (
+          <div className="pt-2 pb-1">
+            <textarea
+              value={notes}
+              onChange={e => setNotes(e.target.value.slice(0, 300))}
+              placeholder="Add a note about this round..."
+              rows={2}
+              className="w-full px-4 py-3 rounded-md border border-border bg-bg-card font-ui text-base text-text placeholder:text-chrome resize-none focus:outline-none focus:ring-2 focus:ring-accent/40"
+            />
+            <p className="font-ui text-xs text-muted mt-1.5 pl-1">Round notes - optional</p>
+          </div>
         )}
 
         {fromBruntsfield && (
@@ -253,8 +326,13 @@ export default function Setup({ navigate, params }) {
                 : 'bg-accent text-bg opacity-40 cursor-not-allowed',
             ].join(' ')}
           >
-            {pastRound ? 'Enter scores' : 'Start the round'}
+            {editRound ? 'Edit hole scores' : pastRound ? 'Enter scores' : 'Start the round'}
           </button>
+          {editRound && (
+            <p className="font-ui text-xs text-muted text-center mt-2 leading-relaxed">
+              Nothing is saved until you confirm on the next screen.
+            </p>
+          )}
         </div>
 
       </main>
