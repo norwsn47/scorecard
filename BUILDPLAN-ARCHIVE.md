@@ -1,7 +1,7 @@
 # Build Plan Archive
 ## Scorecard by Outbuild — Bruntsfield Links
 
-Last updated: 29 August 2026 (added Wave 6 Chunks 33 & 34 detail blocks, archived from BUILDPLAN.md)
+Last updated: 29 August 2026 (added Wave 6 Chunks 33, 34 & 40 detail blocks, archived from BUILDPLAN.md)
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
 This file contains the full detail blocks for all completed chunks, moved here from BUILDPLAN.md as each chunk was finished. The chunk order summary table is also here — it migrated from BUILDPLAN.md once all planned work was complete.
@@ -628,7 +628,7 @@ Added from PRD v1.5. The hotfix runs before everything else. Chunks 16–20 are 
 ---
 
 ## Wave 6 — User feedback batch (23 July 2026)
-*Chunks 33–34 archived 29 August 2026. Remaining Wave 6 chunks (35–40) are still active in BUILDPLAN.md.*
+*Chunks 33, 34, and 40 archived 29 August 2026. Remaining Wave 6 chunks (35–39) are still active in BUILDPLAN.md.*
 
 ---
 
@@ -662,3 +662,13 @@ Covered user item 9.
 - Confirm `calculateResult` / `finishGame` (which already use a different, correct trailing-hole calculation) are unaffected by this change — they are not driven by `computeDisplayedHoles`.
 
 **Verify:** score a few holes, reset a middle hole to empty, confirm later holes and their scores remain visible in the grid (showing `–` only for the reset hole), confirm totals and DNF/winner calculation at finish are unaffected.
+
+---
+
+## Chunk 40 — Edit a past round
+**Status: Done (29 August 2026) — shipped on branch `feat/edit-past-round`, pending merge to `main` after human localhost review.**
+**Covered user item 14.** Pulled forward ahead of Chunks 35–39 at the user's request on 29 August 2026.
+
+**What shipped:** A `PATCH` handler on `functions/api/games/[id].js` for logged-in (D1-backed) rounds, guarded by session auth, row ownership (`WHERE id = ? AND user_id = ?`), and course ownership (a supplied `course_id` must belong to the same user); it overwrites the existing `games` row in place rather than creating a new one. A `updateCompletedGame(id, updated)` helper in `src/utils/storage.js` does the equivalent in-place overwrite for logged-out quick-play rounds in localStorage, preserving list position and pinning `id`. A `buildEditGame()` helper in `src/utils/game.js` reconstructs a working game from an existing round, mapping scores positionally so renames keep each player's scores and preserving the original `id` and chosen date. `Setup.jsx` gained an `editRound` mode (pre-fills date, course, and player names; "Save changes" button). `Scorecard.jsx`'s finish path detects edit mode and overwrites the record (PATCH for D1, `updateCompletedGame` for local) instead of appending a new one, with the edit target stamped on the persisted active game so a browser back/forward can't drop it. `Summary.jsx` gained an "Edit round" button, shown for D1 rounds (logged-in) and local completed rounds (logged-out) and blocked while a game is in progress. Both round types are covered. Editable fields: player names (rename), per-hole scores, date, and notes; course is editable for D1 rounds only (quick-play has no course selector). Adding or removing players during an edit is out of scope for v1 — logged as BACKLOG.md item 20. Winner, DNF, and totals are recalculated on save via the existing `finishGame` / `calculateResult`. Code review: CLEAR WITH NOTES, no Critical findings; 2 findings fixed on-branch. product-owner PRD alignment check: CLEAR (PRD section added for the feature).
+
+**Verify:** edit a past round's player names, scores, date, and notes (and course, for a signed-in D1 round); confirm the change is saved and reflected in History and Summary; confirm no duplicate row/record is created; confirm winner/DNF/totals recalculate correctly after edits; confirm the "Edit round" button is hidden while a round is in progress.

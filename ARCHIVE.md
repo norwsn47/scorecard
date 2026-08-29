@@ -1,5 +1,5 @@
 # ARCHIVE.md
-Last updated: 11 July 2026
+Last updated: 29 August 2026
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
 *Completed backlog items are moved here. Items in BACKLOG.md should be open only — anything checked off belongs here.*
@@ -7,6 +7,17 @@ Last updated: 11 July 2026
 ---
 
 <!-- Archived items go below this line, most recent first -->
+
+---
+
+## Resolved during v2.0 (Scorecard Plus)
+*Archived: 29 August 2026*
+
+### 11. Data clause for logged-in users
+*Was BACKLOG.md item 11. Added 12 July 2026, resolved 12 July 2026.*
+A plain-English data clause for logged-in users (what is stored server-side, and that email addresses are processed by Resend for authentication). Resolved by building a dedicated Privacy page at `/privacy`, linked from the login screen, covering UK GDPR rights, retention, and third parties. Item number 11 is retired in BACKLOG.md, not reused, so existing cross-references remain valid.
+
+Related PRD section: 11.12.
 
 ---
 

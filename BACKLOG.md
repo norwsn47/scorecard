@@ -125,7 +125,7 @@ Related PRD section: 11.7
 
 ### 11. Data clause for logged-in users
 
-**Added: 12 July 2026. Resolved 12 July 2026 - implemented as a dedicated Privacy page (`/privacy`) linked from the login screen.**
+**Resolved 12 July 2026. Moved to ARCHIVE.md on 29 August 2026.** Number 11 is retired, not reused, so existing cross-references stay valid.
 
 ---
 

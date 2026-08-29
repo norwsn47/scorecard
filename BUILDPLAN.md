@@ -1,9 +1,9 @@
 # Build Plan
 ## Scorecard by Outbuild
 
-**Last updated:** 29 August 2026 (doc reconciliation — Chunks 33 & 34 marked Done and their detail blocks archived; Chunk 40 "Edit a past round" pulled forward by the user as the next chunk)
+**Last updated:** 29 August 2026 (Chunk 40 "Edit a past round" passed code review and PRD alignment; detail block archived; docs made push-ready for `feat/edit-past-round`)
 
-> All planned work through Phase 4 (Chunks 1–29), Wave 5 (Chunks 30–32), and Wave 6 Chunks 33–34 is complete and archived in BUILDPLAN-ARCHIVE.md.
+> Phase 4 (Chunks 1–29), Wave 5 (Chunks 30–32), and Wave 6 Chunks 33, 34, and 40 are complete — their detail blocks are in BUILDPLAN-ARCHIVE.md. Wave 6 Chunks 35–39 remain active below. (Chunk 40 is code-complete and archived but its `feat/edit-past-round` branch is not yet merged to `main` — see Current status.)
 
 ## Hotfix log
 
@@ -34,10 +34,11 @@ Fix, in three layers (defence in depth, no single layer relied on alone):
 
 **Wave 6 in progress.** Scoped from a 15-item feedback/bug/feature list provided by the user on 23 July 2026.
 
-- **Done:** Chunk 33 (UI feedback pass) and Chunk 34 (hole-reset display bug) — both completed 23 July 2026, detail blocks now archived in BUILDPLAN-ARCHIVE.md.
+- **Done:** Chunk 33 (UI feedback pass), Chunk 34 (hole-reset display bug), Chunk 40 (Edit a past round) — detail blocks archived in BUILDPLAN-ARCHIVE.md.
+- **Chunk 40 — pending merge.** Built on branch `feat/edit-past-round`. Code review passed (CLEAR WITH NOTES, no Critical; 2 findings fixed on-branch). product-owner PRD alignment check passed (CLEAR). Human localhost review is the final gate step, in progress. Branch is push-ready; not yet merged to `main`.
 - **Paused:** Chunk 35 (course map reliability) — an implementation attempt was flagged wrong by the user; needs fresh explicit instruction before an agent resumes.
-- **Next:** Chunk 40 (Edit a past round). Pulled forward ahead of Chunks 35–39 by the user on 29 August 2026. v1 scope confirmed by the user to cover **both** D1 (logged-in) rounds **and** logged-out localStorage quick-play rounds. Not yet started — needs a product-owner PRD subsection, a named branch, and the implementation brief agreed before coding begins.
-- **Remaining after 40:** Chunks 36, 37, 38, 39 (and 35 once unblocked).
+- **Next up:** Chunk 36 (sign-in email branding) — or Chunk 35 if it gets unblocked first.
+- **Remaining:** Chunks 35, 36, 37, 38, 39.
 
 The priority hotfix for duplicate game rows on save is resolved, merged to `main`, and pushed (see Hotfix log above).
 
@@ -53,15 +54,17 @@ Vite + React · Tailwind CSS · localStorage · Cloudflare Pages · Cloudflare D
 
 Mode C — Git + GitHub (full). See CLAUDE.md for rules.
 
-**Flag:** the current session branch (`claude/game-app-ui-auth-h2kngb`) is a session-assigned name and does not meet CLAUDE.md's hard branch-naming rule. No coding has happened yet, so nothing needs fixing retroactively — but a properly named branch (`feat/`, `fix/`, `chore/`, `refactor/`, or `security/` prefix) must be created before Wave 6 work starts, per chunk.
+**Current working branch:** `feat/edit-past-round` (Chunk 40 — push-ready, pending human localhost review then merge to `main`).
+
+Wave 6 chunks have each shipped on a descriptive branch per the Mode C rule: Chunks 33 and 34 are merged to `main`; Chunk 40 is on `feat/edit-past-round` awaiting merge.
 
 ---
 
 ## Wave 6 — User feedback batch (23 July 2026)
 
-Source: 15-item list from the user (bugs, small features, one backend-touching feature set). Two items were explicitly deferred to backlog by the user at the time of request (see BACKLOG.md items 13–14). Item 15 (GDPR statement on Info page) was judged suitable to action now rather than defer — see rationale below chunk 33.
+Source: 15-item list from the user (bugs, small features, one backend-touching feature set). Two items were explicitly deferred to backlog by the user at the time of request (see BACKLOG.md items 13–14). Item 15 (GDPR statement on Info page) was actioned within Chunk 33 (now archived in BUILDPLAN-ARCHIVE.md).
 
-**Track A runs as UI feedback mode** (per project-manager rules) — cosmetic/layout-only changes, single bundled review and commit. **Track B runs as the standard build loop** — one chunk per logical change, each through the full completion gate.
+**Track A ran as UI feedback mode** (per project-manager rules) — cosmetic/layout-only changes, single bundled review and commit (Chunk 33). **Track B runs as the standard build loop** — one chunk per logical change, each through the full completion gate (Chunks 34–40).
 
 ---
 
@@ -136,22 +139,6 @@ Covers user item 5.
 
 ---
 
-### Chunk 40 — Edit a past round
-**Status: Not started**
-**Depends on: nothing directly, but benefits from Chunk 39 being in place first for consistent "own player" handling**
-
-Covers user item 14.
-
-- Add `PATCH` support to `functions/api/games/[id].js` for logged-in (D1-backed) rounds.
-- Add a localStorage update path (`updateCompletedGame` in `storage.js`) for logged-out quick-play rounds.
-- Build an edit flow reusing the existing "past round" setup pattern (`Setup.jsx`'s `pastRound` mode) and the scorecard grid, pre-populated with the existing round's data, saving back on completion instead of creating a new record.
-- **Scope decision — RESOLVED 29 August 2026 (user):** v1 covers **both** logged-in (D1) rounds **and** logged-out (localStorage) quick-play rounds.
-- **Status: pulled forward by the user on 29 August 2026 — this is the next chunk, ahead of Chunks 35–39.**
-
-**Verify:** edit a past round's player names, scores, and course; confirm the change is saved and reflected in History and Summary; confirm winner/DNF/totals recalculate correctly after edits.
-
----
-
 ## Chunk order summary — Wave 6
 
 | Chunk | What | Depends on | Status |
@@ -163,8 +150,8 @@ Covers user item 14.
 | 37 | Backend: user profile foundation (items 5/6 backend) | Nothing | Not started |
 | 38 | Settings panel (item 6 UI) | 37 | Not started |
 | 39 | Logged-in identity in gameplay (item 5) | 37, 38 | Not started |
-| 40 | Edit a past round (item 14) | Benefits from 39 | **Next — pulled forward 29 Aug 2026** |
+| 40 | Edit a past round (item 14) | Benefits from 39 | Done (29 Aug 2026) — pending merge of `feat/edit-past-round`; detail archived |
 
 **Original recommended build order:** 33 → 34 → 35 → 36 → 37 → 38 → 39 → 40.
 
-**Actual order (user override, 29 August 2026):** 33 → 34 → **40** → 36 → 37 → 38 → 39, with 35 slotted back in once unblocked. Chunk 40 pulled forward at the user's request. Trade-off accepted: Chunk 39's "own player" handling is not yet in place, so highlighting the logged-in user's own row in the edit view is deferred to Chunk 39 rather than built here.
+**Actual order (user override, 29 August 2026):** 33 → 34 → **40** → 36 → 37 → 38 → 39, with 35 slotted back in once unblocked. Chunk 40 was pulled forward at the user's request. Trade-off accepted: Chunk 39's "own player" handling is not yet in place, so highlighting the logged-in user's own row in the edit view is deferred to Chunk 39 rather than built into Chunk 40.
