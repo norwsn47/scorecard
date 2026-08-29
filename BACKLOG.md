@@ -1,7 +1,7 @@
 # Backlog
 ## Scorecard by Outbuild — Bruntsfield Links
 
-Last updated: 24 August 2026
+Last updated: 29 August 2026
 
 Items below are logged for future consideration. None are implemented.
 
@@ -12,6 +12,8 @@ Items from the v2.0 planning session (July 2026) that were explicitly deferred: 
 Wave 5 items (generic home + Bruntsfield course page refactor, added 19 July 2026) were planned directly into the build plan — see Chunks 30-32 in BUILDPLAN.md. They are not listed as separate backlog items here.
 
 Items 13 and 14 below were added 23 July 2026 from a 15-item user feedback list. The user explicitly flagged both as "future addition, not to be done now" at the time of request — see Chunks 33-40 in BUILDPLAN.md for the rest of that list, which was actioned into the current build plan.
+
+Item 20 was spun out of Chunk 40 ("Edit a past round", PRD §11.13) on 29 August 2026 — a piece of that feature deliberately held back from v1.
 
 ---
 
@@ -216,3 +218,17 @@ No PRD section — data cleanup, not a feature.
 Loading `/scorecard` directly with no active game in storage triggers a React warning: "Cannot update a component (`AppContent`) while rendering a different component (`Scorecard`)." `Scorecard.jsx` (around line 35) appears to call `navigate()`/setState synchronously during render rather than inside a `useEffect` for this no-active-game case. Needs a debugger pass to confirm root cause and fix.
 
 No PRD section — bug, pre-existing behaviour.
+
+---
+
+### 20. Add / remove players during a past-round edit
+
+**Added: 29 August 2026. Explicitly deferred by the user from Chunk 40 ("Edit a past round") v1.**
+
+Chunk 40 v1 lets a user edit a saved round's player names, per-hole scores, notes, and (logged-in rounds only) course — but not the set of players. Adding a forgotten player or removing one who was entered by mistake is not possible in v1; the workaround is to delete the round and re-enter it as a past round.
+
+Follow-up: allow adding a new player (with a full set of hole scores) and removing an existing player during an edit, then recalculating winner/DNF/totals across the changed roster. Needs a decision on what removing a player does to a round that then has only one player, and how the edit grid handles a newly added player's empty columns.
+
+Related PRD section: 11.13 (Edit a past round).
+
+**Note:** editing notes on a past round is *not* a backlog item — it is covered by Chunk 40 / PRD §11.13 as part of v1, via the pre-filled notes field on the edit screen.
