@@ -13,7 +13,7 @@ Wave 5 items (generic home + Bruntsfield course page refactor, added 19 July 202
 
 Items 13 and 14 below were added 23 July 2026 from a 15-item user feedback list. The user explicitly flagged both as "future addition, not to be done now" at the time of request — see Chunks 33-40 in BUILDPLAN.md for the rest of that list, which was actioned into the current build plan.
 
-Item 20 was spun out of Chunk 40 ("Edit a past round", PRD §11.13) on 29 August 2026 — a piece of that feature deliberately held back from v1.
+Item 20 was spun out of Chunk 40 ("Edit a past round", PRD §11.13) on 29 August 2026 — a piece of that feature deliberately held back from v1. Items 21-24 are P3 follow-ups raised by the code-reviewer during the Chunk 40 review.
 
 ---
 
@@ -225,10 +225,50 @@ No PRD section — bug, pre-existing behaviour.
 
 **Added: 29 August 2026. Explicitly deferred by the user from Chunk 40 ("Edit a past round") v1.**
 
-Chunk 40 v1 lets a user edit a saved round's player names, per-hole scores, notes, and (logged-in rounds only) course — but not the set of players. Adding a forgotten player or removing one who was entered by mistake is not possible in v1; the workaround is to delete the round and re-enter it as a past round.
+Chunk 40 v1 lets a user edit a saved round's date, player names, per-hole scores, notes, and (logged-in rounds only) course — but not the set of players. Adding a forgotten player or removing one who was entered by mistake is not possible in v1; the workaround is to delete the round and re-enter it as a past round.
 
 Follow-up: allow adding a new player (with a full set of hole scores) and removing an existing player during an edit, then recalculating winner/DNF/totals across the changed roster. Needs a decision on what removing a player does to a round that then has only one player, and how the edit grid handles a newly added player's empty columns.
 
 Related PRD section: 11.13 (Edit a past round).
 
 **Note:** editing notes on a past round is *not* a backlog item — it is covered by Chunk 40 / PRD §11.13 as part of v1, via the pre-filled notes field on the edit screen.
+
+---
+
+### 21. Flow test for the Setup → Scorecard → Summary edit path
+
+**Added: 29 August 2026. Raised by code-reviewer during Chunk 40 review (P3).**
+
+There is no integration/component test covering the full edit flow (open edit from Summary, change data on the scorecard, save back from Summary). The duplicate-save regression class — the bug fixed on `fix/summary-duplicate-save-idempotency` and re-touched by Chunk 40 — is not protected by an automated flow test. Add one that asserts a single record in/out (no new row, no duplicate) for both the D1 and localStorage paths.
+
+Priority: P3. No PRD section — test coverage.
+
+---
+
+### 22. Browser Back from the edit Scorecard lands on a mislabelled "New Game" Setup screen
+
+**Added: 29 August 2026. Raised by code-reviewer during Chunk 40 review (P3).**
+
+Pressing the browser Back button from the edit-mode Scorecard drops the user on a Setup screen that is labelled "New Game" and leaves an active game stranded in storage. No data loss and no duplicate record results, but the label is wrong for an edit context and the stranded active game is confusing. Cosmetic + UX clarity issue.
+
+Priority: P3. Related PRD section: 11.13 (Edit a past round).
+
+---
+
+### 23. onRequestPatch input validation is minimal
+
+**Added: 29 August 2026. Raised by code-reviewer during Chunk 40 review (P3).**
+
+`onRequestPatch` on `functions/api/games/[id].js` accepts any non-empty string for `played_at` (no date-format validation) and only checks that `player_data` is a non-empty array (element shape not validated). Both inputs are client-controlled. This is consistent with the existing `onRequestPost` handler, so it is not a new weakness — but both handlers would benefit from stricter schema validation.
+
+Priority: P3. Related PRD section: 11.3, 11.13.
+
+---
+
+### 24. onRequestPatch accepts game_name but the client never sends it
+
+**Added: 29 August 2026. Raised by code-reviewer during Chunk 40 review (P3).**
+
+`onRequestPatch` supports updating `game_name`, but the Chunk 40 edit client never sends it. After a rename via the edit flow, the D1 `game_name` column can go stale relative to `player_data`. Currently harmless — `game_name` is not rendered anywhere the edited round is shown — but either wire the client to send it or drop it from the handler.
+
+Priority: P3. Related PRD section: 11.3, 11.13.
