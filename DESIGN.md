@@ -200,11 +200,13 @@ with remove button: pr-10   without: pr-4
 
 ### Page header (PageHeader component)
 ```
-relative flex items-center px-5 pt-12 pb-6 border-b border-border shrink-0
+relative flex items-center justify-between px-5 pt-10 pb-4 border-b border-border shrink-0
 ```
-- Title: `absolute inset-x-0 text-center font-display italic text-2xl text-text pointer-events-none`
-- Back: `py-2 text-muted font-ui text-sm tracking-[0.08em] uppercase` — ← prefix, no button chrome
-- Right slot: optional, used for Finish button
+- Title: `absolute inset-x-0 text-center px-20 font-display italic text-2xl text-text truncate pointer-events-none`
+- Back: `py-3 min-h-[44px] text-muted font-ui text-sm tracking-[0.08em] uppercase` — ← prefix, no button chrome
+- Right slot: optional (Finish button, Edit action) — same `py-3 min-h-[44px]` touch target
+
+**Title-length budget:** the centred title sits behind a fixed `px-20` (80px) clearance on each side and `truncate`s rather than wrapping. At 390px that leaves ~230px for the title. "← Back" plus a one-word right action is the widest side content the header is designed for; a longer right-side label needs the clearance revisited (measure sibling widths at render).
 
 ### Bottom sheet / confirmation modal
 ```

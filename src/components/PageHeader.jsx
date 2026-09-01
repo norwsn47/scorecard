@@ -12,7 +12,7 @@ export default function PageHeader({ title, subtitle, onBack, right = null }) {
         )}
       </div>
 
-      <div className="absolute inset-x-0 text-center px-16 pointer-events-none">
+      <div className="absolute inset-x-0 text-center px-20 pointer-events-none">
         <h1 className="font-display italic text-2xl text-text truncate">{title}</h1>
         {subtitle && (
           <p className="font-ui text-xs tracking-[0.08em] uppercase text-muted mt-0.5 truncate">{subtitle}</p>
