@@ -8,7 +8,7 @@
 
 **Last updated:** 1 September 2026
 
-Shipped and removed on 1 September 2026 (housekeeping batch A): 20, 24, 26, 27, 30, 32 — see `CHANGELOG.md`.
+Shipped and removed on 1 September 2026: batch A — 20, 24, 26, 27, 30, 32; batch B — 17, 18, 28. See `CHANGELOG.md`.
 
 ---
 
@@ -82,14 +82,8 @@ Used/expired magic tokens are never deleted, so email addresses from abandoned s
 ### 16. Pre-existing duplicate game rows in production D1
 The 24 Aug hotfix (live since 24 August 2026) stopped new duplicates but didn't touch rows already duplicated before it shipped. Identify and remove them via the Cloudflare D1 console — group by `user_id, played_at, holes_played` looking for counts > 1 (all predate `client_round_id` so all have it `NULL`). Check for other affected users too. Close this once the cleanup has been run.
 
-### 17. `Scorecard.jsx` setState-during-render warning on direct load
-Loading `/scorecard` directly with no active game triggers "Cannot update a component while rendering a different component". `Scorecard.jsx`'s `if (!game) { navigate('home') }` guard runs in the render body instead of a `useEffect`. Needs a debugger pass.
-
-### 18. Edit-mode browser Back lands on a mislabelled "New Game" screen
-Pressing browser Back from the edit-mode Scorecard drops the user on a Setup screen labelled "New Game", with a stranded active game in storage. No data loss or duplicate record — cosmetic + UX clarity. (PRD §11.13.)
-
 ### 19. Past-round "← Rounds" back button always targets History
-On the round detail view the back button always goes to History, even when the user reached it another way (post-edit-finish, or browser-back after Done). Minor misdirection, no broken state. (PRD §11.13.)
+On the round detail view the back button always navigates to History, regardless of how the user reached the view. Reviewed in batch B (1 Sep 2026): History is the correct destination in every real path (opened from History; post-edit-finish of a round that lives in History; browser-back after finishing a new round that is now in History). No fix improves it — recommend closing as won't-fix. Kept only pending a final call.
 
 ---
 
