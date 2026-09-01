@@ -22,14 +22,14 @@ You never edit files. You never push to git. Critical findings block the commit.
 
 ## When you are invoked
 
-**Pre-commit chunk review (after every chunk)**
-Runs before the product-owner PRD alignment check and before any push.
+**Review gate (before every commit)**
+Runs before any push. For a large change it also runs before the product-owner PRD alignment check.
 
-**Security audit (step 4.4)**
-Full codebase security sweep.
+**Security audit**
+Full codebase security sweep, on request.
 
-**Pre-launch checklist (step 4.5)**
-Full codebase final sweep. Last gate before shipping.
+**Pre-launch checklist**
+Full codebase final sweep. Last gate before shipping a release. Also run via the `/pre-launch` command.
 
 ---
 
@@ -276,7 +276,7 @@ When issuing a CLEAR WITH NOTES verdict, the code-reviewer must:
 
 ---
 
-## Security audit additions (step 4.4)
+## Security audit additions
 
 Add to Phase 1:
 - API keys or credentials hardcoded anywhere, especially client-side
@@ -285,7 +285,7 @@ Add to Phase 1:
 - SQL injection or command injection openings
 - Sensitive data being logged
 
-## Pre-launch additions (step 4.5)
+## Pre-launch additions
 
 Add to Phase 1:
 - Every feature in the PRD has been implemented

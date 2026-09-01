@@ -29,6 +29,7 @@ Decide which category a piece of work falls into and follow that path.
 - Build it directly (or via frontend-developer / backend-developer if you want).
 - Review gate: code-reviewer static + render check → human localhost review (mandatory for anything visible in the browser) → commit.
 - No PRD update, no project-manager, no CHANGELOG entry unless it's notable.
+- A batch of small cosmetic changes given together is still "small": make them all on one branch, one code-review pass, one localhost review, one commit (`fix/...` describing the batch).
 
 **Large** — backend logic, database schema or migration, auth, an API contract change, a new feature or user-facing capability, or anything touching several files across concerns.
 - Start with the project-manager to scope and plan it.

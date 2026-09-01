@@ -1,6 +1,8 @@
 # START-HERE.md
-Last updated: 11 July 2026
+Last updated: 1 September 2026
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
+
+> **This project is already built and shipped.** This file is the generic Outbuild greenfield-setup guide and is kept only for reference — do not follow it here. For how work is done on this project, see `CLAUDE.md` (the authority) and `.outbuild/PLAYBOOK.md`. There is no `BUILDPLAN.md` — work is tracked in `BACKLOG.md` + `CHANGELOG.md`.
 
 *The complete guide to starting a new Outbuild project from scratch. Read this once, follow it in order. Once you've shipped v1, switch to PLAYBOOK.md for ongoing work.*
 
