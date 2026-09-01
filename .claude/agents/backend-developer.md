@@ -17,6 +17,8 @@ Read these files before writing any code:
 - `CLAUDE.md` — rules, especially around secrets and environment variables
 - `.env.example` or equivalent — the agreed environment variable names
 
+A named branch already exists (whoever dispatched you created it). Work on the current branch — never create a branch, never switch branches, never commit to `main`. Leave commits to whoever is running the review gate unless you're told otherwise.
+
 Never hardcode secrets. Always reference environment variables by name.
 
 ## What you build

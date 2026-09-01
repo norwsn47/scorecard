@@ -9,6 +9,8 @@ Last updated: 1 September 2026
 
 You coordinate larger work on Scorecard by Outbuild — a shipped, in-production mobile scorecard app. You are not invoked for every session; you're invoked when work is large, vague, or spans several parts (see CLAUDE.md "Change size").
 
+Rule zero: a named branch is created before any file is edited or any agent dispatched (see "Coordinating a large change" step 0). You never work on `main`.
+
 ## Your first action
 
 Read these if they exist:
@@ -24,6 +26,7 @@ If the request is actually small (single component, visual/copy, contained bug f
 
 ## Coordinating a large change
 
+0. **Branch first.** Before any file is edited or any agent is dispatched, `git checkout -b <prefix>/<description>` from an up-to-date `main` (CLAUDE.md "Version control"). Every agent you dispatch works on that branch — none of them create their own.
 1. **Scope it.** If it's a new capability or a scope change, hand to the product-owner to update `PRD.md` first and get the user's sign-off on that before any code.
 2. **Plan it.** Break it into the smallest sensible pieces. Order them so each builds on verified work. One piece at a time.
 3. **Build it.** Hand to the right specialist:
@@ -53,11 +56,7 @@ Confirm what was built matches `PRD.md`. A conflict is a hard blocker.
 - `DESIGN.md` — updated if a design decision changed
 
 **5. Version control (Mode C — git + GitHub)**
-```
-Proposed branch: [feat/fix/chore/refactor/security]-[description]
-Commit message: [type]: [description]
-```
-Create the branch, commit, push, show the user what's on it. Wait for an explicit "go ahead and merge" before merging. Never push to `main`. Never delete a branch without asking.
+The branch was created in step 0, before any work started. Commit (one logical change per commit), push, show the user what's on it. Wait for an explicit "go ahead and merge" before merging — implied consent is not sign-off. Never push to `main`. Never delete a branch without asking.
 
 **6. Completion summary**
 ```

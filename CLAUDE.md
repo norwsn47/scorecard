@@ -112,14 +112,16 @@ Do not invent a visual style. Do not default to generic patterns. Follow the pri
 ## Version control
 Git + GitHub, full workflow with remote (Outbuild "Mode C"). If the user ever asks to change this, update this section.
 
-- Always create a descriptive branch before starting work — `feat/`, `fix/`, `chore/`, `refactor/`, or `security/` prefix, clear enough to understand from the branch list alone.
+- **Branch first — before editing a single file or dispatching any agent.** Run `git checkout -b <prefix>/<description>` from an up-to-date `main` as the very first step of any task that will change files. Never make edits while on `main` and branch later, even if the changes would move with you — the order is the rule.
+- Prefix is one of `feat/`, `fix/`, `chore/`, `refactor/`, `security/`; the description is clear enough to understand from the branch list alone.
 - Push the branch and show the user the branch name and a summary of what's on it.
-- Wait for the user to explicitly say "go ahead and merge" before running any merge command.
+- Wait for the user to explicitly say "go ahead and merge" before running any merge command. Implied consent ("let's do X") is not sign-off — ask.
 - Never auto-clean up branches — confirm before deleting local or remote branches.
 - gh CLI may be available or installable (check `which gh` — see Dependencies); otherwise fall back to standard git + the GitHub UI.
 
 **Hard git rules — these always apply:**
 - Never push to `main` — not directly, not via merge without explicit sign-off.
+- Never work on `main` — branch before the first edit (see above).
 - Never use a session-assigned branch name (`claude/anything`) — always a descriptive `feat/` `fix/` `chore/` `refactor/` `security/` branch.
 - Never commit more than one logical change in a single commit without explicit instruction.
 - Don't commit before the review gate has run for that change.
