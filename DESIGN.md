@@ -211,13 +211,13 @@ relative flex items-center justify-between px-5 pt-10 pb-4 border-b border-borde
 Text links inside body copy (`text-sm` / `text-xs`, underlined accent) are visually small but still need a comfortable hit area. Grow the tap target with vertical padding cancelled by an equal negative margin, so the clickable box expands without shifting surrounding layout:
 
 ```
-inline-block py-3 -my-3        /* default — reaches a 44px target on text-sm */
-inline-block py-2.5 -my-2.5    /* where line height is tight — ~40px */
+inline-block py-3 -my-3        /* default — ~44px on text-sm, ~40px on text-xs */
+inline-block py-2.5 -my-2.5    /* where line height is tight — ~36-38px */
 ```
 
 Match `inline-flex` instead of `inline-block` where the link already uses it (e.g. links with a trailing ↗ icon) — just add the `py-* -my-*`.
 
-**Target:** 44px where the surrounding layout allows it. ~40px is acceptable for links sitting inline within flowing paragraph text, where more vertical padding would risk overlapping adjacent lines.
+**Target:** 44px where the surrounding layout allows it (wrap the link so the padding can grow freely). ~36-40px is the practical floor for a `text-xs` link sitting inline within flowing paragraph text, where more vertical padding would overlap adjacent lines — better than the bare ~16px text height, accepted as a trade-off.
 
 **`space-y-*` caveat:** if the link is a direct child of a `space-y-*` container, that container's `> :not([hidden]) ~ :not([hidden])` selector out-specifies `-my-*` (specificity 0,3,0 vs 0,1,0), so the negative margin is ignored and the padding shifts the layout. Fix: wrap the link in an unclassed `<div>`. The wrapper absorbs the `space-y` margin and the negative margin then resolves cleanly inside it. Links sitting inline within a `<p>`, or as the sole child of a padded container, need no wrapper.
 

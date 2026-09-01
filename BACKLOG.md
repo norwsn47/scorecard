@@ -101,9 +101,6 @@ No integration/component test covers open-edit → change on the scorecard → s
 ### 25. Crisper course map image
 `public/course_map_v2.png` lacks sharpness when zoomed on high-res screens. Replace with a higher-resolution source, or SVG/vector if the course can provide one. (Distinct from #1, which is about when the map appears and its loading state.)
 
-### 28. Sub-44px tap targets on inline text links
-Several inline text-link buttons (`Info.jsx`, `Login.jsx`, `Summary.jsx`, `CourseMapModal.jsx`, `RulesContent.jsx`) have no padding/min-height, giving tap targets under the 44×44px guideline. App-wide convention. The Setup course-rules link was widened already; the rest remain. Do a pass.
-
 ### 29. Summary saved-note body is very small (12px)
 The read-only note on the past-round detail view renders at `text-xs`. Deliberate ("very small" was the ask), but it's user-authored content read on a phone — revisit to `text-sm` if it reads as too small in practice.
 
@@ -115,3 +112,9 @@ Scaffolding is in place: `src/utils/analytics.js` (Plausible wrapper, no-ops if 
 
 ### 33. `game_name` is dead plumbing beyond the PATCH handler
 Game-naming was removed from the UI but `game_name` remains in the `games` schema, the `POST /api/games` handler (client always sends `null`), and `History.normalizeDbGame` (`name:` field, never rendered). Backlog 24 removed it from the PATCH handler only. Finish the job: drop it from POST + `normalizeDbGame`, and decide whether to keep the nullable column or migrate it out.
+
+### 34. `text-xs` inline links land ~36-38px, below the ~40px floor
+From the batch-B tap-target pass (#28). Three inline-in-paragraph `text-xs` links — `Login.jsx` "How we handle your data", `Info.jsx` "Read our privacy policy", `Summary.jsx` "Share scorecard" — use `py-2.5 -my-2.5` (~36-38px) because more padding would overlap adjacent lines. Better than the bare ~16px but under the documented floor. Revisit if a cleaner pattern turns up (e.g. giving them their own line).
+
+### 35. No render/flow tests for the SPA navigation behaviours
+The suite covers `src/utils/*` and `functions/api/*` only. The batch-B fixes (#17 direct `/scorecard` bounce, #18 stranded-edit cleanup) and the edit flow (existing #22) have no automated coverage. One follow-up item to add a component/render test harness (React Testing Library) and cover these.
