@@ -144,7 +144,6 @@ The Home screen breaks the centred-app convention deliberately:
 - Accent divider rule: left-aligned (`ml-0`, not `mx-auto`)
 - Value-proposition lines: left-aligned
 - Action buttons: full-width (no change)
-- Heritage footer: left-aligned
 
 All other screens retain their existing centred or page-header layout.
 
