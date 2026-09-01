@@ -1,14 +1,14 @@
 # Product Requirements Document
-## Scorecard by Outbuild — Bruntsfield Links
+## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
 **Version:** 2.0
-**Last updated:** 29 August 2026 (added §11.13 "Edit a past round" ahead of Chunk 40 build — covers both D1 and quick-play rounds, date/name/score/notes editing, overwrite-in-place; updated §11.3 and §4.5 cross-references; §11.13 entry-point updated for the slimmed-down past-round Summary view — nav chrome, "Edit" action, static note text)
+**Last updated:** 1 September 2026 (tidied build-plan vocabulary; course name aligned to "Bruntsfield Short Hole Golf Course" throughout)
 
 ---
 
 ## 1. Goal
 
-A web app by Outbuild that lets anyone create and track a golf scorecard for Bruntsfield Links — no login required, as few taps as possible, designed to feel like a physical scorecard on your phone. Built for use on the course, in the sun, by anyone.
+A web app by Outbuild that lets anyone create and track a golf scorecard for Bruntsfield Short Hole Golf Course — no login required, as few taps as possible, designed to feel like a physical scorecard on your phone. Built for use on the course, in the sun, by anyone.
 
 ---
 
@@ -16,7 +16,7 @@ A web app by Outbuild that lets anyone create and track a golf scorecard for Bru
 
 - **Built by:** Outbuild
 - **Tone:** Warm, Scottish, restrained — rooted in place. Not corporate, not generic.
-- **Course:** Bruntsfield Links — one of Scotland's oldest public golf courses, Edinburgh
+- **Course:** Bruntsfield Short Hole Golf Course — one of Scotland's oldest public golf courses, Edinburgh
 
 ### Visual direction
 Outbuild palette applied for outdoor sunlight legibility on a phone:
@@ -31,14 +31,14 @@ Outbuild palette applied for outdoor sunlight legibility on a phone:
 ## 3. Users
 
 **Quick-play (logged-out):**
-- Golfers playing Bruntsfield Links who want to score a round immediately with no setup
+- Golfers playing Bruntsfield Short Hole Golf Course who want to score a round immediately with no setup
 - No account required — scores saved locally to the device
 - Accessed via mobile browser on the course
 
 **Scorecard Plus (logged-in):**
 - Users who want history that persists across devices and browsers
 - Authenticated via magic link (email only — no password)
-- Can create and name custom courses, with Bruntsfield Links pre-loaded as the default
+- Can create and name custom courses, with Bruntsfield Short Hole Golf Course pre-loaded as the default
 
 ---
 
@@ -46,7 +46,7 @@ Outbuild palette applied for outdoor sunlight legibility on a phone:
 
 ### 4.1 Home screen
 - Two options only: **New Game** and **History**
-- Scorecard by Outbuild branding and Bruntsfield Links course name displayed prominently
+- Scorecard by Outbuild branding and Bruntsfield Short Hole Golf Course course name displayed prominently
 - A small **ⓘ** icon sits in the top-right corner — tapping it opens the information page (see 4.8)
 - A **Rules** text link sits below the main New Game and History buttons — tapping it opens the course rules (see 4.9)
 - If a game is in progress and the user navigates to the home screen mid-game, a **Resume Game** prompt appears between the two buttons
@@ -80,7 +80,7 @@ Outbuild palette applied for outdoor sunlight legibility on a phone:
   - Tapping **+** on an empty cell sets it to 1; tapping **+** on a scored cell increments by 1
   - Tapping **−** on a cell showing 1 returns it to empty (—); tapping **−** on a cell showing 2+ decrements by 1
   - The **−** button is visually disabled when the active cell is empty
-  - **Maximum score per hole: 14 strokes.** The **+** button is disabled once 14 is reached. Note: the official Bruntsfield Links stroke limit is 7 per hole (see 4.9); the app uses a higher practical cap of 14 to accommodate casual play without being as restrictive as the official rule.
+  - **Maximum score per hole: 14 strokes.** The **+** button is disabled once 14 is reached. Note: the official Bruntsfield Short Hole Golf Club stroke limit is 7 per hole (see 4.9); the app uses a higher practical cap of 14 to accommodate casual play without being as restrictive as the official rule.
   - The **→** button advances focus to the next player on the same hole, or the next hole's first player
 - Running totals shown above the control bar, always visible
 - The scorecard header displays the game name if one was set
@@ -122,7 +122,7 @@ Outbuild palette applied for outdoor sunlight legibility on a phone:
 A **Share** button appears on the end-of-game summary screen (see 4.4). Tapping it generates a PNG and triggers the native device share sheet (iOS/Android share API).
 
 **Share image layout (top to bottom):**
-- "Bruntsfield Links" — main heading in bold
+- The course name (e.g. "Bruntsfield Short Hole Golf Course") — main heading in bold
 - Outbuild logo mark — directly below the heading
 - Game name — shown below the logo mark, only if the user set one
 - Winner callout:
@@ -143,7 +143,7 @@ A **Share** button appears on the end-of-game summary screen (see 4.4). Tapping 
 
 **OG preview image:**
 - `public/og-image.png` is replaced with a static branded card in the app's cream and terracotta palette
-- Text reads "Scorecard by Outbuild — Bruntsfield Links"
+- Text reads "Scorecard by Outbuild — Bruntsfield Short Hole Golf Course"
 - Not a scorecard screenshot — a clean brand card only
 
 ### 4.8 Information page
@@ -164,11 +164,11 @@ Accessed via the **ⓘ** icon in the top-right corner of the home screen (see 4.
 - A contact link (mailto:) — tapping opens an email to williamadamgriffiths@gmail.com
   - This is a placeholder pending setup of hello@outbuild.co via Resend (see Backlog)
 
-**Note for maintainers:** When analytics (Chunk 15) is added, both this PRD section and the in-app disclaimer text must be updated to reflect what data is collected and by whom.
+**Note for maintainers:** If analytics is ever added (see BACKLOG.md), both this PRD section and the in-app disclaimer text must be updated to reflect what data is collected and by whom.
 
 ### 4.9 Course rules
 
-The official rules of Bruntsfield Links are accessible in two places:
+The official rules of Bruntsfield Short Hole Golf Club are accessible in two places:
 - A **Rules** text link on the home screen, positioned below the New Game and History buttons — for pre-game reference (see 4.1)
 - A **Rules** tab within the course Map overlay — accessible mid-game without leaving the scorecard
 
@@ -210,7 +210,7 @@ MANY THANKS FOR YOUR CO-OPERATION — ENJOY YOUR GAME
 
 ## 6. Course
 
-- Single course: **Bruntsfield Links**, Edinburgh
+- Single course: **Bruntsfield Short Hole Golf Course**, Edinburgh
 - Up to **36 holes**
 - UI includes a **"More courses coming soon"** placeholder where course selection will eventually live
 - No hole-level metadata (no par, no yardage, no difficulty rating) in MVP
@@ -248,7 +248,7 @@ The following were out of scope in v1.x and are now addressed in v2.0:
 
 ## 9. Success metrics (MVP)
 
-- Any golfer at Bruntsfield Links can pick it up and use it without explanation
+- Any golfer at Bruntsfield Short Hole Golf Course can pick it up and use it without explanation
 - A group can complete a full round and save it without confusion
 - Returning users can see their previous games on the same device
 - Closing and reopening the browser mid-round resumes the game correctly
@@ -330,7 +330,7 @@ Four tables in Cloudflare D1:
 - `is_default` — boolean, default false
 - `created_at` — timestamp
 
-**Seed data:** On new account creation, Bruntsfield Links is inserted into `courses` for that user as their default course (`is_default = true`, `holes = 36`).
+**Seed data:** On new account creation, Bruntsfield Short Hole Golf Course is inserted into `courses` for that user as their default course (`is_default = true`, `holes = 36`).
 
 ---
 
@@ -344,7 +344,7 @@ No passwords. Users authenticate with their email address only.
 3. User sees a confirmation screen: "Check your email — we've sent a link to [email]"
 4. User taps the link in their email
 5. `GET /api/auth/verify?token=<token>` — validates the token (exists, not expired, not used), marks it as used, creates or finds the user record, creates a session, sets the HttpOnly session cookie, redirects to the app
-6. On first-time sign-in (new user), Bruntsfield Links is seeded as the user's default course
+6. On first-time sign-in (new user), Bruntsfield Short Hole Golf Course is seeded as the user's default course
 7. User is now in the logged-in state
 
 **Session expiry:** Sessions last 30 days. A new session is created on each successful verification.
@@ -380,7 +380,7 @@ No passwords. Users authenticate with their email address only.
 
 **For logged-in users:**
 - When starting a new game, a course selector appears above the player setup
-- Default selected: the user's default course (Bruntsfield Links on first use)
+- Default selected: the user's default course (Bruntsfield Short Hole Golf Course on first use)
 - User can select from their existing courses or create a new one
 - Creating a course: a single text input for the course name — any name the user types is valid
 - New courses default to 36 holes — no per-hole configuration in v2.0
@@ -388,7 +388,7 @@ No passwords. Users authenticate with their email address only.
 - Course names appear in the game history list
 
 **For logged-out users:**
-- Quick-play remains hardcoded to Bruntsfield Links — no course selection UI
+- Quick-play remains hardcoded to Bruntsfield Short Hole Golf Course — no course selection UI
 - No change to the logged-out experience
 
 **Backlog:** Allow quick-play games (localStorage) to be imported into the user's DB after sign-in — logged in BACKLOG.md as a future item, not in v2.0.
@@ -451,7 +451,7 @@ When Scorecard Plus is live, the information page (PRD 4.8) must be updated to r
 
 ### 11.13 Edit a past round
 
-Users can correct a previously saved round from its detail (Summary) view. Editing **overwrites the existing record in place** — no new row is created, no duplicate is produced. Covers user item 14; delivered as Chunk 40 (pulled forward into Wave 6, 29 August 2026). Scope decisions below all confirmed by the user on 29 August 2026.
+Users can correct a previously saved round from its detail (Summary) view. Editing **overwrites the existing record in place** — no new row is created, no duplicate is produced. Scope decisions below were confirmed by the user on 29 August 2026.
 
 **Applies to both round types:**
 - Logged-in (D1-backed) rounds — Scorecard Plus

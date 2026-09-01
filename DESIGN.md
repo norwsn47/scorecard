@@ -1,7 +1,7 @@
 # Design
-## Scorecard by Outbuild — Bruntsfield Links
+## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
-Last updated: 12 July 2026
+Last updated: 1 September 2026
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
 ---
@@ -144,7 +144,6 @@ The Home screen breaks the centred-app convention deliberately:
 - Accent divider rule: left-aligned (`ml-0`, not `mx-auto`)
 - Value-proposition lines: left-aligned
 - Action buttons: full-width (no change)
-- Heritage footer: left-aligned
 
 All other screens retain their existing centred or page-header layout.
 
@@ -259,16 +258,6 @@ Outbuild ↗        text-xs text-muted font-normal underline underline-offset-2
                   → links to https://outbuild.uk, target="_blank"
 ```
 Inline, same baseline, `items-baseline gap-1`.
-
-### Heritage footer (Home screen only)
-```
-font-display italic text-[11px] text-muted opacity-70 text-left pb-3
-```
-Text: "Bruntsfield Links, Edinburgh · Golf played here since 1456"
-- Uses existing `font-display` (Cormorant Garamond italic)
-- `text-[11px]` — deliberately smaller than any standard text step
-- `text-muted` + `opacity-70` — an inscription, not a UI element
-- Left-aligned, no interactive behaviour
 
 ---
 
