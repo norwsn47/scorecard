@@ -260,16 +260,6 @@ Outbuild ↗        text-xs text-muted font-normal underline underline-offset-2
 ```
 Inline, same baseline, `items-baseline gap-1`.
 
-### Heritage footer (Home screen only)
-```
-font-display italic text-[11px] text-muted opacity-70 text-left pb-3
-```
-Text: "Bruntsfield Links, Edinburgh · Golf played here since 1456"
-- Uses existing `font-display` (Cormorant Garamond italic)
-- `text-[11px]` — deliberately smaller than any standard text step
-- `text-muted` + `opacity-70` — an inscription, not a UI element
-- Left-aligned, no interactive behaviour
-
 ---
 
 ## Email design — magic link
