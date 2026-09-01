@@ -1,7 +1,7 @@
 # Design
-## Scorecard by Outbuild — Bruntsfield Links
+## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
-Last updated: 12 July 2026
+Last updated: 1 September 2026
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
 ---
