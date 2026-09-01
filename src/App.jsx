@@ -5,7 +5,6 @@ import Login                from './pages/Login.jsx'
 import Privacy              from './pages/Privacy.jsx'
 import Rules                from './pages/Rules.jsx'
 import Home                 from './pages/Home.jsx'
-import Podium               from './pages/Podium.jsx'
 import Scorecard            from './pages/Scorecard.jsx'
 import Setup                from './pages/Setup.jsx'
 import Summary              from './pages/Summary.jsx'
@@ -48,7 +47,6 @@ const PAGES = {
   rules:       Rules,
   setup:       Setup,
   scorecard:   Scorecard,
-  podium:      Podium,
   summary:     Summary,
   history:     History,
   bruntsfield: BruntsfiledCoursePage,

@@ -11,6 +11,7 @@
 
 ## 1 September 2026
 
+- **Backlog housekeeping batch A.** Six small items cleared: removed the orphaned `Podium` screen (nothing navigated to it — finish goes straight to Summary), and its now-dead references in DESIGN.md/PRD.md (#20); extracted the Bruntsfield course name to `src/constants.js` (#26); widened the `PageHeader` title clearance and documented a title-length budget (#27); renamed the npm package to `scorecard-by-outbuild` (#30); updated the three `index.html` SEO/social meta tags to the current course name (#32); dropped the unused `game_name` field from the games PATCH handler (#24 — the rest of that dead plumbing is now #33).
 - **Project docs simplified.** Retired `BUILDPLAN.md`, `BUILDPLAN-ARCHIVE.md`, and `ARCHIVE.md` — they had become a hand-maintained parallel copy of git history plus a status section that needed reconciling every session. Work is now tracked as a flat `BACKLOG.md` (open items only) plus this changelog. Session ritual lightened: the project-manager is no longer mandatory for small changes, and the review gate scales with change size (see CLAUDE.md).
 
 ## 29 August 2026

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import PageHeader from '../components/PageHeader.jsx'
+import { BRUNTSFIELD_COURSE_NAME } from '../constants.js'
 import { buildEditGame, canStartGame, createGame, findDuplicateIndices } from '../utils/game.js'
 import { getPlayers, saveActiveGame, savePlayers } from '../utils/storage.js'
 import { useAuth } from '../hooks/useAuth.jsx'
@@ -129,7 +130,7 @@ export default function Setup({ navigate, params }) {
     const startId   = user ? (selectedCourseId ?? null) : null
     const startName = user
       ? (courses.find(c => c.id === startId)?.name ?? null)
-      : (fromBruntsfield ? 'Bruntsfield Short Hole Golf Course' : null)
+      : (fromBruntsfield ? BRUNTSFIELD_COURSE_NAME : null)
     const resolved = await resolveCourse(startId, startName)
     if (!resolved) return
 

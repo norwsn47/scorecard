@@ -98,7 +98,7 @@ describe('onRequestPatch /api/games/[id]', () => {
 
   it('applies a partial update and leaves other fields untouched', async () => {
     getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
-    const ctx = patch({ notes: 'Great round', game_name: 'New name' })
+    const ctx = patch({ notes: 'Great round' })
     ctx.env.DB = makeDB(games)
 
     const res = await onRequestPatch(ctx)
@@ -107,12 +107,22 @@ describe('onRequestPatch /api/games/[id]', () => {
     expect(res.status).toBe(200)
     expect(json).toEqual({ ok: true, id: 'g1' })
     expect(games[0].notes).toBe('Great round')
-    expect(games[0].game_name).toBe('New name')
     // Untouched
     expect(games[0].holes_played).toBe(18)
     expect(games[0].played_at).toBe('2026-08-01T10:00:00.000Z')
     expect(games[0].client_round_id).toBe('local-1')
     expect(games[0].created_at).toBe('2026-08-01T11:00:00.000Z')
+  })
+
+  it('ignores game_name - it is not an editable field', async () => {
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+    const ctx = patch({ notes: 'x', game_name: 'New name' })
+    ctx.env.DB = makeDB(games)
+
+    const res = await onRequestPatch(ctx)
+
+    expect(res.status).toBe(200)
+    expect(games[0].game_name).toBe('Old name')
   })
 
   it('accepts player_data as a JSON string and stores it verbatim', async () => {

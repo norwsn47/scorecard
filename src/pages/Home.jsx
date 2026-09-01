@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { BRUNTSFIELD_COURSE_NAME } from '../constants.js'
 import { track } from '../utils/analytics.js'
 import { formatShortDate } from '../utils/format.js'
 import { getActiveGame, getCompletedGames } from '../utils/storage.js'
@@ -109,7 +110,7 @@ export default function Home({ navigate }) {
               </svg>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-ui text-xs font-semibold text-text">Bruntsfield Short Hole Golf Course</p>
+              <p className="font-ui text-xs font-semibold text-text">{BRUNTSFIELD_COURSE_NAME}</p>
               <p className="font-ui text-xs text-muted">Course map, rules &amp; scorecard</p>
             </div>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-muted shrink-0">

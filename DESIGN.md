@@ -50,7 +50,7 @@ Two registers. The display font is used once, deliberately, for a specific edito
 
 | Font | Token | Usage |
 |---|---|---|
-| `Cormorant Garamond` | `--font-display` | Editorial: app name, page titles, player names on Podium |
+| `Cormorant Garamond` | `--font-display` | Editorial: app name, page titles, course name and section headings |
 | `Inter` | `--font-ui` | All UI: buttons, labels, table cells, inputs, body text |
 | `Caveat` | *(no token)* | Desktop wrapper note only — never inside the app |
 
@@ -60,11 +60,10 @@ Two registers. The display font is used once, deliberately, for a specific edito
 |---|---|
 | App name (Home) | `font-display text-5xl italic text-text` |
 | Page header title | `font-display text-2xl italic text-text` |
-| Section heading (Podium) | `font-display text-4xl italic text-text` |
-| Player names (Podium) | `font-display text-2xl italic` |
-| Logo lockup (Podium header) | `font-display text-lg italic text-text` |
+| Course name (Summary header, Course Map modal) | `font-display text-2xl italic text-text` / `text-xl` |
+| Winner callout name (Summary) | `font-display text-sm italic text-accent` |
 
-**Home screen alignment exception:** The `h1` title and subtitle on the Home screen are left-aligned (`text-left`). This is a deliberate departure from centred editorial screens (Podium, page headers). The Home screen follows a printed-document convention.
+**Home screen alignment exception:** The `h1` title and subtitle on the Home screen are left-aligned (`text-left`). This is a deliberate departure from the centred page-header title used on every other screen. The Home screen follows a printed-document convention.
 
 ### UI register — Inter
 
@@ -79,7 +78,6 @@ Two registers. The display font is used once, deliberately, for a specific edito
 | Total score | `font-ui text-base font-semibold text-text` |
 | Score cell | `font-ui text-sm` |
 | Error / banner | `font-ui text-xs tracking-wide` |
-| Ordinal rank (Podium) | `font-ui text-xs tracking-widest uppercase` |
 
 ### Caveat — desktop note only
 `font-family: 'Caveat', cursive; font-size: 1.15rem; line-height: 1.35` — rotated 5deg, muted colour, opacity 0.75. Never used inside the app itself.
@@ -110,7 +108,7 @@ Base unit: 4px (Tailwind default).
 | Value | Tailwind | Use |
 |---|---|---|
 | `4px` | `rounded-sm` | Primary and secondary CTA buttons — sharp, printed-document feel |
-| `8px` | `rounded-md` | All other interactive controls: inputs, cards, Podium rows |
+| `8px` | `rounded-md` | All other interactive controls: inputs, cards, list rows |
 | `12px` | `rounded-lg` | (Available — larger panels) |
 | `50%` | `rounded-full` | Circular control bar buttons (64×64) |
 | `16px top` | `rounded-t-2xl` | Bottom sheet / confirmation modal |
@@ -200,11 +198,13 @@ with remove button: pr-10   without: pr-4
 
 ### Page header (PageHeader component)
 ```
-relative flex items-center px-5 pt-12 pb-6 border-b border-border shrink-0
+relative flex items-center justify-between px-5 pt-10 pb-4 border-b border-border shrink-0
 ```
-- Title: `absolute inset-x-0 text-center font-display italic text-2xl text-text pointer-events-none`
-- Back: `py-2 text-muted font-ui text-sm tracking-[0.08em] uppercase` — ← prefix, no button chrome
-- Right slot: optional, used for Finish button
+- Title: `absolute inset-x-0 text-center px-20 font-display italic text-2xl text-text truncate pointer-events-none`
+- Back: `py-3 min-h-[44px] text-muted font-ui text-sm tracking-[0.08em] uppercase` — ← prefix, no button chrome
+- Right slot: optional (Finish button, Edit action) — same `py-3 min-h-[44px]` touch target
+
+**Title-length budget:** the centred title sits behind a fixed `px-20` (80px) clearance on each side and `truncate`s rather than wrapping. At 390px that leaves ~230px for the title. "← Back" plus a one-word right action is the widest side content the header is designed for; a longer right-side label needs the clearance revisited (measure sibling widths at render).
 
 ### Bottom sheet / confirmation modal
 ```
@@ -230,18 +230,11 @@ table-fixed border-collapse w-full
 | Hole # (inactive) | `text-chrome` |
 | Empty score | `—` (em dash) |
 
-### Podium result cards
-| State | Classes |
-|---|---|
-| 1st place | `bg-accent border-accent rounded-md border px-5 py-4` — text inverts to bg colour |
-| 2nd+ place | `bg-bg-card border-border rounded-md border px-5 py-4` |
-| DNF | `bg-bg-card border-border rounded-md border px-5 py-4 opacity-40` |
-
 ### Accent divider rule
 ```
 w-10 h-0.5 bg-accent mx-auto
 ```
-Used to separate major sections on editorial screens (Home, Podium). Not used on utility screens.
+Used to separate major sections on the Home screen (left-aligned `ml-0` variant). Not used on utility screens.
 On the Home screen the rule is left-aligned: `ml-0` replaces `mx-auto`.
 
 ### Error / notification banner
@@ -317,16 +310,17 @@ The app shell class `.app-shell` triggers this layout. The app itself is entirel
 
 ## Navigation
 
-State-machine router in `App.jsx` — no URL routing.
+State-machine router in `App.jsx` with light URL sync (path per page, `popstate` handled).
 
 ```
-home → setup → scorecard → podium → summary
-home → history
-home → courseinfo
-scorecard → courseinfo (modal, via CourseMapModal)
+home → setup → scorecard → summary
+home → history → summary
+home → info
+home → /bruntsfield-short-course
+scorecard / course page → course map (modal, via CourseMapModal)
 ```
 
-`navigate(to, params)` passed as prop to every page. Back buttons call `navigate('home')` or the appropriate parent.
+`navigate(to, params)` passed as a prop to every page. Back buttons call `navigate('home')` or the appropriate parent. `popstate` clears `params` — pages that need context across a browser back/forward stamp it on the active game (see the edit-round flow).
 
 ---
 
@@ -365,6 +359,3 @@ The `control-warm` token is currently unused. Fix: change `bg-muted border-2 bor
 
 **3. Focus ring hardcodes the accent RGB**
 `focus:ring-[rgba(26,67,41,0.4)]` — same pattern as above. Could be extracted to a consistent named value.
-
-**4. Podium screen uses a bespoke header instead of PageHeader**
-All other screens use the shared `PageHeader` component. Podium has a custom inline header. Low priority — but worth standardising if Podium header ever needs updating.
