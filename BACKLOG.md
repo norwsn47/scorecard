@@ -1,304 +1,133 @@
 # Backlog
-## Scorecard by Outbuild — Bruntsfield Links
+## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
-Last updated: 29 August 2026
+> Open items only — ideas, deferred work, and known issues not yet done.
+> When something ships, delete its line and add a note to `CHANGELOG.md`.
+> Nothing here is actioned without explicit instruction — tell the project-manager (or Claude directly) to pull an item into work.
+> Numbers are stable IDs for cross-reference — don't renumber existing items when deleting one.
 
-Items below are logged for future consideration. None are implemented.
-
-Items previously in this backlog that have moved into the build plan: Podium (Chunk 11), Course Map (Chunk 12), Outbuild credit (Chunk 13), Share scorecard (Chunk 14). Analytics was briefly promoted to Chunk 15 but moved back here — see item 4 below.
-
-Items from the v2.0 planning session (July 2026) that were explicitly deferred: quick-play history import (item 7), magic link resend (item 8), auth rate limiting (item 9), quick-play course future-proofing (item 10).
-
-Wave 5 items (generic home + Bruntsfield course page refactor, added 19 July 2026) were planned directly into the build plan — see Chunks 30-32 in BUILDPLAN.md. They are not listed as separate backlog items here.
-
-Items 13 and 14 below were added 23 July 2026 from a 15-item user feedback list. The user explicitly flagged both as "future addition, not to be done now" at the time of request — see Chunks 33-40 in BUILDPLAN.md for the rest of that list, which was actioned into the current build plan.
-
-Item 20 was spun out of Chunk 40 ("Edit a past round", PRD §11.13) on 29 August 2026 — a piece of that feature deliberately held back from v1. Items 21-24 are P3 follow-ups raised by the code-reviewer during the Chunk 40 review; items 25-27 are P3 follow-ups from the Chunk 40 Summary-refinement review (`fix/summary-past-round-actions`).
+**Last updated:** 1 September 2026
 
 ---
 
-### 1. All-time leaderboard
+## Features not yet built
 
-A screen showing top scores and records across all games ever played (lowest round, most wins per player, etc.). Requires database — post-MVP only. Blocked until backend storage is added.
+### 1. Course map reliability
+Two parts, from the July 2026 feedback list. **A previous implementation attempt was flagged wrong by the user and reverted — needs a fresh approach before restarting.**
+- The map button in `Scorecard.jsx` only renders when a game was started from the `/bruntsfield-short-course` route. A user who starts from the generic home "New Game", or a signed-in user who picks Bruntsfield from the course selector, never sees it. Show the button whenever the active game's course is Bruntsfield (by course name/id, not by navigation route). Note: this reverses a deliberate Wave 5 scoping decision.
+- `CourseMapModal.jsx` shows no loading state — add an instant placeholder/spinner, replaced on the image's `onLoad` (or an error state).
 
-Related PRD section: 8 (Future considerations)
+### 2. Sign-in email branding
+- `functions/api/auth/request-link.js` — subject line and in-email wordmark read plain "Scorecard". Update to "Scorecard by Outbuild" per DESIGN.md's email pattern.
+- Manual step (not code): the inbox sender name is set by the `RESEND_FROM_EMAIL` env var format. Update via the Cloudflare Pages dashboard (Settings → Environment variables).
 
----
+### 3. User profile foundation (backend)
+Groundwork for name capture and account settings. Touches auth data — confirm before starting.
+- Add a nullable `name` column to `users` (D1 migration).
+- Extend `GET /api/auth/me` to return `name`.
+- `PATCH /api/users` — update name and/or email for the current session's user. Open decision: does an email change require re-verification via magic link, or take effect immediately?
+- `DELETE /api/users` — delete the current user's account, send a notification email to williamadamgriffiths@gmail.com via Resend, clear the session.
 
-### 2. Contact email — switch to hello@outbuild.co via Resend
+### 4. Settings panel (UI)
+Depends on #3.
+- Settings (gear) icon on Home, visible only when signed in. Pair with a clearer signed-in vs signed-out indicator on Home.
+- Settings screen: edit name, update email, delete account (confirmation dialog matching the delete-round pattern in `History.jsx`).
 
-**Status: On pause — blocked pending Resend setup**
+### 5. Signed-in identity in gameplay
+Depends on #3, #4.
+- When a signed-in user has no name yet, prompt once (lightweight inline prompt, not a full onboarding flow) or direct them to Settings.
+- Pre-fill the first player slot with the user's own name on New Game; other players stay "guest".
+- Highlight the user's own score as primary in the scorecard, summary, and history views; guest scores stay visually secondary. (This is the "own player" handling the past-round edit view currently defers.)
 
-The information page (PRD 4.8) currently uses williamadamgriffiths@gmail.com as a placeholder contact email. Once hello@outbuild.co is configured via Resend, the mailto: link in the information page must be updated to that address.
+### 6. Add / remove players during a past-round edit
+Deferred from the edit-past-round feature. v1 lets you edit a saved round's date, names, scores, notes, and (signed-in only) course — but not the set of players. Follow-up: allow adding a player (with a full set of hole scores) and removing one, then recalculating winner/DNF/totals. Needs decisions on: what removing a player does to a round left with one player, and how the grid handles a newly added player's empty columns. (PRD §11.13.)
 
-Action required when ready: configure Resend, verify hello@outbuild.co, then update the contact link in the information page component.
+### 7. All-time leaderboard
+A screen showing records across all games — lowest round, most wins per player, etc. Requires the database (so signed-in only). Post-MVP. (PRD §8.)
 
-Related PRD section: 4.8 (Information page)
+### 8. Quick-play history import after sign-in
+Offer a one-time prompt after first sign-in to migrate localStorage game history into the new account (`POST` each local game with a migrated flag). Deferred because the two histories are deliberately separate in v2.0 (PRD §11.9) and this adds complexity without blocking the core Plus experience.
 
----
+### 9. Magic link resend
+A "Resend link" button on the post-send confirmation screen. Currently a missed email means starting over. Needs throttling. (PRD §11.4.)
 
-### 4. Analytics
+### 10. Full onboarding journey (name + home course + par)
+A proper sign-up flow capturing name and home course together, with editable per-hole par. Introduces par as a first-class concept — currently explicitly out of scope for MVP and v2.0 (PRD §7). Materially bigger than the lightweight name capture in #5; needs a decision on how par interacts with the raw-stroke scoring model (PRD §5) before any code.
 
-Track meaningful usage without cookie consent requirements.
-
-- Confirm Cloudflare Pages built-in analytics are active for basic traffic data
-- Evaluate and integrate a privacy-friendly product analytics tool (Plausible, Fathom, or PostHog)
-- Track in-app events already instrumented: New Game Started, Game Completed (with player count and holes played), Scorecard Shared
-- Confirm no cookie consent banner is required
-- If analytics are added, update the information page copy (PRD 4.8) to reflect what is collected and by whom
-
-Related PRD section: 4.5 (Analytics)
-
----
-
-### 3. package.json internal rename
-
-**Status: Low priority — no user impact**
-
-The npm package name is currently "golf-tavern-scorecard" (package.json line 2). This is an internal identifier only — not user-facing. Rename to "scorecard-by-outbuild" or similar when convenient, as part of routine housekeeping.
-
-No PRD section — housekeeping only.
-
----
-
-### 5. Crisper course map image
-
-The current course map image (`public/course_map_v2.png`) lacks sharpness when zoomed in on high-resolution screens. Replace with a higher-resolution source image, or explore SVG/vector format if one is available from the course.
-
-No PRD section — visual quality improvement.
+### 11. Multi-course architecture
+The architecture for properly supporting multiple courses, beyond the current v2.0 model where a signed-in user's "course" is a name string with a default hole count (PRD §11.7). Would cover structured per-course data (holes, par), how quick-play coexists with it, and whether system-provided courses become browsable. Planning item, not a single chunk — revisit once real usage shows users creating multiple distinct courses.
 
 ---
 
-### 6. Official Bruntsfield Links logo
+## Blocked / waiting on something external
 
-**Status: Blocked — awaiting permissions**
+### 12. Contact email → hello@outbuild.co
+The Info page uses williamadamgriffiths@gmail.com as a placeholder. Once hello@outbuild.co is configured and verified via Resend, update the `mailto:` link. (PRD §4.8.)
 
-Add the official Bruntsfield Short Hole Golf Club logo to the app (likely the home screen or course information section) once permission to use it has been obtained from the club.
-
-No PRD section — pending permissions.
-
----
-
-### 7. Quick-play history import (post sign-in migration)
-
-**Added: 12 July 2026. Deferred from v2.0 planning.**
-
-Allow users who have been playing in quick-play (localStorage) mode to migrate their existing local game history into their new DB account after they sign in for the first time.
-
-**Proposed flow:** After the magic link verification and account creation, detect whether the user's device has localStorage game history. If so, offer a one-time prompt: "You have X saved games on this device — import them to your Scorecard Plus account?" Importing would POST each game to `/api/games` with a flag indicating it was migrated from local storage.
-
-Deferred because: the two histories are deliberately kept separate in v2.0 (PRD 11.9), and the migration flow adds meaningful complexity without blocking the core Plus experience. Revisit post-launch once users have used the product.
-
-Related PRD section: 11.7, 11.9, 8 (Future considerations)
+### 13. Official Bruntsfield logo
+Add the club's official logo (likely Home or the course info section) once permission to use it is obtained.
 
 ---
 
-### 8. Magic link resend
+## Known issues
 
-**Added: 12 July 2026. Deferred from v2.0.**
+### 14. No rate limiting on `POST /api/auth/request-link`
+No per-email or per-IP rate limiting, so a target address could be flooded with magic-link emails. Evaluate Cloudflare Workers' built-in Rate Limiting API first. (PRD §11.4.) Medium priority — address before significant user numbers.
 
-A "Resend link" button on the post-send confirmation screen (Chunk 25). The first version has no resend — if the user misses the email they must go back and start again. A resend button reduces friction. Requires throttling to prevent abuse.
+### 15. `magic_tokens` table never cleaned up
+Used/expired magic tokens are never deleted, so email addresses from abandoned sign-in attempts accumulate indefinitely — inconsistent with GDPR data-minimisation. Add a scheduled Worker (or a cleanup step in `verify.js`) that deletes rows older than 24 hours. All tokens expire after 15 minutes and are marked `used` after verification. (PRD §11.12.) Medium priority.
 
-Related PRD section: 11.4
+### 16. Pre-existing duplicate game rows in production D1
+The 24 Aug hotfix stopped new duplicates but didn't touch rows already duplicated before it shipped. Identify and remove them via the Cloudflare D1 console — group by `user_id, played_at, holes_played` looking for counts > 1 (all predate `client_round_id` so all have it `NULL`). Check for other affected users too.
 
----
+### 17. `Scorecard.jsx` setState-during-render warning on direct load
+Loading `/scorecard` directly with no active game triggers "Cannot update a component while rendering a different component". `Scorecard.jsx` (~line 35) calls `navigate()`/setState during render instead of in a `useEffect` for the no-active-game case. Needs a debugger pass.
 
-### 9. Auth rate limiting
+### 18. Edit-mode browser Back lands on a mislabelled "New Game" screen
+Pressing browser Back from the edit-mode Scorecard drops the user on a Setup screen labelled "New Game", with a stranded active game in storage. No data loss or duplicate record — cosmetic + UX clarity. (PRD §11.13.)
 
-**Added: 12 July 2026. Deferred from v2.0.**
+### 19. Past-round "← Rounds" back button always targets History
+On the round detail view the back button always goes to History, even when the user reached it another way (post-edit-finish, or browser-back after Done). Minor misdirection, no broken state. (PRD §11.13.)
 
-`POST /api/auth/request-link` currently has no rate limiting. Add per-email and per-IP rate limiting to prevent abuse (e.g. flooding a target email address with magic link emails). Cloudflare Workers has built-in rate limiting via the Rate Limiting API — evaluate this first.
-
-Related PRD section: 11.4
-
----
-
-### 10. Quick-play course future-proofing
-
-**Added: 12 July 2026. Deferred from v2.0.**
-
-Quick-play is currently hardcoded to Bruntsfield Links. If the app ever expands to other courses, quick-play will need a lightweight course selector. For now it stays hardcoded — no UI change needed. Log this so the hardcoded course reference is easy to find when the time comes: it lives in the new-game setup screen (logged-out path) and should be a named constant, not an inline string.
-
-Related PRD section: 11.7
+### 20. `Podium.jsx` "See full card" is a dead path
+No `navigate('podium')` exists anywhere in the app. If the route is hit by direct URL as a signed-in user it can now enter the read-only detail view. Pre-existing, low value — clean up next time `Podium.jsx` is touched.
 
 ---
 
-### 11. Data clause for logged-in users
+## Housekeeping & tech debt
 
-**Resolved 12 July 2026. Moved to ARCHIVE.md on 29 August 2026.** Number 11 is retired, not reused, so existing cross-references stay valid.
+### 21. No linter configured
+No ESLint (or equivalent) and no `lint` script. Reviews rely on manual reading. Add ESLint with a sensible React/JSX config.
 
----
+### 22. No flow test for the edit-past-round path
+No integration/component test covers open-edit → change on the scorecard → save back. The duplicate-save regression class isn't protected by an automated flow test. Add one asserting a single record in/out (no new row) for both the D1 and localStorage paths.
 
-### 12. magic_tokens table cleanup - expired token retention
+### 23. `onRequestPatch` / `onRequestPost` input validation is minimal
+`played_at` accepts any non-empty string (no date-format check); `player_data` is only checked for being a non-empty array (element shape not validated). Both client-controlled and consistent with each other, but both would benefit from stricter schema validation.
 
-**Added: 12 July 2026.**
+### 24. `onRequestPatch` accepts `game_name` but the client never sends it
+After a rename via the edit flow, the D1 `game_name` column can go stale relative to `player_data`. Harmless today (`game_name` isn't rendered anywhere the edited round shows) — either wire the client to send it or drop it from the handler.
 
-Used and expired magic tokens are never deleted from the D1 `magic_tokens` table. This means email addresses from abandoned sign-in attempts (where the user never clicked the link) accumulate in the database indefinitely. This is inconsistent with the UK GDPR data minimisation and storage limitation principles (Articles 5(1)(c) and (e)).
+### 25. Crisper course map image
+`public/course_map_v2.png` lacks sharpness when zoomed on high-res screens. Replace with a higher-resolution source, or SVG/vector if the course can provide one. (Distinct from #1, which is about when the map appears and its loading state.)
 
-Fix: add a scheduled Cloudflare Worker (or a cleanup step in `verify.js`) that deletes `magic_tokens` rows older than 24 hours. All tokens expire after 15 minutes and are marked `used = 1` after verification - there is no legitimate reason to retain them beyond 24 hours.
+### 26. Quick-play hardcoded course reference
+Quick-play is hardcoded to Bruntsfield. If the app expands to other courses it'll need a lightweight selector on the logged-out new-game path. For now, make sure the hardcoded reference is a named constant, not an inline string. (Related to #11.)
 
-Priority: medium. Not a launch blocker, but should be addressed before significant user numbers.
+### 27. `PageHeader` title-clearance margin is fixed, not proportional
+The absolutely-centred title uses a fixed `px-16` clearance. Safe against every current title/button combination (smallest measured margin: 20px) but doesn't scale with sibling content width. Either document a safe title-length budget in DESIGN.md or make the clearance responsive next time the component is touched.
 
-Related PRD section: 11.12
+### 28. Sub-44px tap targets on inline text links
+Several inline text-link buttons (`Info.jsx`, `Login.jsx`, `Summary.jsx`, `CourseMapModal.jsx`, `RulesContent.jsx`) have no padding/min-height, giving tap targets under the 44×44px guideline. App-wide convention. The Setup course-rules link was widened already; the rest remain. Do a pass.
 
----
+### 29. Summary saved-note body is very small (12px)
+The read-only note on the past-round detail view renders at `text-xs`. Deliberate ("very small" was the ask), but it's user-authored content read on a phone — revisit to `text-sm` if it reads as too small in practice.
 
-### 13. Full onboarding journey (name + home course + par)
+### 30. `package.json` internal rename
+The npm package name is `golf-tavern-scorecard` — internal only, not user-facing. Rename to `scorecard-by-outbuild` or similar when convenient.
 
-**Added: 23 July 2026. Explicitly deferred by the user — "future addition, not to be done now."**
-
-A proper onboarding flow on sign-up: prompt for name and home course together (rather than the lightweight name-only capture being built now in Chunk 39 of BUILDPLAN.md), with the ability to add/edit a home course and its par scores when created. Par would then appear on the course record and on the scorecard, with running over/under-par totals alongside the existing raw stroke totals.
-
-This is a materially bigger feature than the current v2.0 scope: it introduces par as a first-class concept, which PRD section 7 currently lists as explicitly out of scope for both MVP and v2.0. Building this properly means deciding how par interacts with the existing raw-stroke scoring model (PRD section 5) before writing any code — not a small addition.
-
-Related PRD sections: 5 (Scoring), 7 (Out of scope), 8 (Future considerations), 11.7 (Course creation).
-
----
-
-### 14. Multi-course architecture
-
-**Added: 23 July 2026. Explicitly deferred by the user — "future addition, not to be done now."**
-
-Consider the site architecture needed to properly support multiple courses, beyond the current v2.0 model where a logged-in user's "course" is just a name string with a default hole count (PRD 11.7). Would need to cover: structured per-course data (holes, par per hole if item 13 is ever built), how quick-play (currently hardcoded to Bruntsfield) would coexist with a multi-course model, and whether system-provided courses (beyond the Bruntsfield default) become a thing users can browse rather than only create themselves.
-
-This is an architecture/planning item, not a single buildable chunk — revisit once real usage data shows whether users are actually creating multiple distinct courses in practice.
-
-Related PRD sections: 6 (Course), 11.7 (Course creation and selection), 8 (Future considerations).
-
----
-
-### 15. PageHeader title-clearance margin is fixed, not proportional
-
-**Added: 23 July 2026. Raised by code-reviewer during Chunk 33 review.**
-
-`PageHeader.jsx`'s absolutely-centred title layer uses a fixed `px-16` clearance from the header edges to avoid overlapping the back button and right-side slot. Verified safe against every title/button combination currently in the app (smallest real margin measured: 20px), but the margin doesn't scale with the actual rendered width of sibling content — a future long title paired with a wide right-side button could overlap with no truncation-based safety net protecting against that specific case.
-
-Fix: either document a safe title-length budget in DESIGN.md, or make the clearance responsive to actual sibling widths (e.g. measure at render time) next time this component is touched.
-
-No PRD section — component-level implementation detail.
-
----
-
-### 16. Sub-44px tap targets on inline text links
-
-**Added: 23 July 2026. Raised by code-reviewer during Chunk 33 review.**
-
-Several inline text-link buttons across the app (e.g. `Info.jsx`, `Login.jsx`, `Setup.jsx`, `Summary.jsx`, `CourseMapModal.jsx`, `RulesContent.jsx`) have no padding/min-height, giving a tap target well under the 44×44px accessibility guideline. This is an existing app-wide convention, not introduced by any single chunk. Consider a pass to bring these in line with the guideline.
-
-**Partially addressed 23 July 2026:** the "Read the course rules before you start" link in `Setup.jsx` (Bruntsfield New Game screen) now has a widened touch target (`inline-block py-2 -my-2`) as part of the course-rules-prompt chunk. `Info.jsx`, `Login.jsx`, `Summary.jsx`, `CourseMapModal.jsx`, and `RulesContent.jsx` are still unaddressed — item stays open.
-
-No PRD section — accessibility housekeeping.
-
----
-
-### 17. No linter configured
-
-**Added: 23 July 2026. Raised by code-reviewer during Chunk 33 review.**
-
-The project has no ESLint (or other linter) configured — no `.eslintrc*`/`eslint.config.*` and no `lint` script in `package.json`. Code review currently relies on manual reading rather than tool-assisted static analysis. Add ESLint with a reasonable React/JSX config when convenient.
-
-No PRD section — tooling housekeeping.
-
----
-
-### 18. Clean up pre-existing duplicate game rows in production D1
-
-**Added: 24 August 2026. Explicitly deferred by the user — fix the root cause first, clean up existing bad data separately later.**
-
-The duplicate-row hotfix (see BUILDPLAN.md Hotfix log, 24 August 2026) stops new duplicates from being created, but does not touch rows already duplicated in production before the fix shipped. Once the fix is live and confirmed, identify and remove the pre-existing duplicate `games` rows for the affected user (and check for any other affected users) via the Cloudflare D1 dashboard console. Likely detection query: group by `user_id, played_at, holes_played` (or a close match on `player_data`) and look for counts greater than one, since these predate the `client_round_id` column and will all have `client_round_id IS NULL`.
-
-No PRD section — data cleanup, not a feature.
-
----
-
-### 19. Scorecard.jsx setState-during-render warning on direct load
-
-**Added: 23 July 2026. Raised by code-reviewer during Chunk 33 review (incidental finding, unrelated to Chunk 33's diff).**
-
-Loading `/scorecard` directly with no active game in storage triggers a React warning: "Cannot update a component (`AppContent`) while rendering a different component (`Scorecard`)." `Scorecard.jsx` (around line 35) appears to call `navigate()`/setState synchronously during render rather than inside a `useEffect` for this no-active-game case. Needs a debugger pass to confirm root cause and fix.
-
-No PRD section — bug, pre-existing behaviour.
-
----
-
-### 20. Add / remove players during a past-round edit
-
-**Added: 29 August 2026. Explicitly deferred by the user from Chunk 40 ("Edit a past round") v1.**
-
-Chunk 40 v1 lets a user edit a saved round's date, player names, per-hole scores, notes, and (logged-in rounds only) course — but not the set of players. Adding a forgotten player or removing one who was entered by mistake is not possible in v1; the workaround is to delete the round and re-enter it as a past round.
-
-Follow-up: allow adding a new player (with a full set of hole scores) and removing an existing player during an edit, then recalculating winner/DNF/totals across the changed roster. Needs a decision on what removing a player does to a round that then has only one player, and how the edit grid handles a newly added player's empty columns.
-
-Related PRD section: 11.13 (Edit a past round).
-
-**Note:** editing notes on a past round is *not* a backlog item — it is covered by Chunk 40 / PRD §11.13 as part of v1, via the pre-filled notes field on the edit screen.
-
----
-
-### 21. Flow test for the Setup → Scorecard → Summary edit path
-
-**Added: 29 August 2026. Raised by code-reviewer during Chunk 40 review (P3).**
-
-There is no integration/component test covering the full edit flow (open edit from Summary, change data on the scorecard, save back from Summary). The duplicate-save regression class — the bug fixed on `fix/summary-duplicate-save-idempotency` and re-touched by Chunk 40 — is not protected by an automated flow test. Add one that asserts a single record in/out (no new row, no duplicate) for both the D1 and localStorage paths.
-
-Priority: P3. No PRD section — test coverage.
-
----
-
-### 22. Browser Back from the edit Scorecard lands on a mislabelled "New Game" Setup screen
-
-**Added: 29 August 2026. Raised by code-reviewer during Chunk 40 review (P3).**
-
-Pressing the browser Back button from the edit-mode Scorecard drops the user on a Setup screen that is labelled "New Game" and leaves an active game stranded in storage. No data loss and no duplicate record results, but the label is wrong for an edit context and the stranded active game is confusing. Cosmetic + UX clarity issue.
-
-Priority: P3. Related PRD section: 11.13 (Edit a past round).
-
----
-
-### 23. onRequestPatch input validation is minimal
-
-**Added: 29 August 2026. Raised by code-reviewer during Chunk 40 review (P3).**
-
-`onRequestPatch` on `functions/api/games/[id].js` accepts any non-empty string for `played_at` (no date-format validation) and only checks that `player_data` is a non-empty array (element shape not validated). Both inputs are client-controlled. This is consistent with the existing `onRequestPost` handler, so it is not a new weakness — but both handlers would benefit from stricter schema validation.
-
-Priority: P3. Related PRD section: 11.3, 11.13.
-
----
-
-### 24. onRequestPatch accepts game_name but the client never sends it
-
-**Added: 29 August 2026. Raised by code-reviewer during Chunk 40 review (P3).**
-
-`onRequestPatch` supports updating `game_name`, but the Chunk 40 edit client never sends it. After a rename via the edit flow, the D1 `game_name` column can go stale relative to `player_data`. Currently harmless — `game_name` is not rendered anywhere the edited round is shown — but either wire the client to send it or drop it from the handler.
-
-Priority: P3. Related PRD section: 11.3, 11.13.
-
----
-
-### 25. Summary saved-note body renders at text-xs (12px)
-
-**Added: 29 August 2026. Raised by code-reviewer during the Chunk 40 follow-up review (`fix/summary-past-round-actions`), P3.**
-
-On the past-round Summary view the saved note is rendered as static text at `text-xs` (12px). This is a readability trade-off for user-authored content read on a phone — `text-sm` would be more comfortable. The user explicitly asked for the note to be "very small", so this was deliberate. Revisit only if user feedback says it is too small to read.
-
-Priority: P3. Related PRD section: 11.13.
-
----
-
-### 26. Past-round Summary "← Rounds" back button always targets History
-
-**Added: 29 August 2026. Raised by code-reviewer during the Chunk 40 follow-up review (`fix/summary-past-round-actions`), P3.**
-
-The "← Rounds" back button on the past-round Summary view always navigates to History, even when the user reached this Summary via the post-edit-finish path or via browser-back-after-Done — routes where they may not have come from History. Minor misdirection; no broken state. Consider making the back target reflect actual navigation history.
-
-Priority: P3. Related PRD section: 11.13.
-
----
-
-### 27. Podium.jsx "See full card" is a dead path
-
-**Added: 29 August 2026. Raised by code-reviewer during the Chunk 40 follow-up review (`fix/summary-past-round-actions`), P3. Pre-existing, not introduced by Chunk 40.**
-
-`Podium.jsx`'s "See full card" action has no corresponding `navigate('podium')` anywhere in the app, so it is unreachable in normal use. If reached by direct URL as a logged-in user it can now enter `viewingSaved` mode. Low value — clean up or remove the dead action next time `Podium.jsx` is touched.
-
-Priority: P3. No PRD section — dead code / pre-existing behaviour.
+### 31. Analytics
+- Confirm Cloudflare Pages built-in analytics are active.
+- Evaluate a privacy-friendly product analytics tool (Plausible, Fathom, PostHog) — no cookie-consent banner required.
+- In-app events already instrumented: New Game Started, Game Completed (player count, holes), Scorecard Shared.
+- If added, update the Info page copy (PRD §4.8) to say what's collected and by whom.

@@ -1,6 +1,8 @@
 # PLAYBOOK.md
-Last updated: 11 July 2026
+Last updated: 1 September 2026
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
+
+> **This project has streamlined the Outbuild workflow (1 September 2026).** `CLAUDE.md` is the authority. In short: no `BUILDPLAN.md` (retired; work is tracked in `BACKLOG.md` + `CHANGELOG.md`), the project-manager is only for large or vague work, and the review gate scales with change size (CLAUDE.md "Change size" / "Review gate"). The "moves" below have been updated to match; use them as a menu.
 
 *The ongoing reference for working on an Outbuild project after v1 is shipped. Not a linear process — pick the move you need.*
 
@@ -8,16 +10,13 @@ Last updated: 11 July 2026
 
 ## Starting a session
 
-Every session starts the same way, regardless of what you're working on:
+*On this project (see the banner above): skim `BACKLOG.md` and recent `CHANGELOG.md` entries yourself; only bring in the project-manager for large or vague work.*
+
+The generic Outbuild flow: start with
 
 > "Use the project-manager to start this session."
 
-It reads CLAUDE.md, PRD.md, BUILDPLAN.md, DESIGN.md, and BACKLOG.md and tells you:
-- Where the project is
-- What was last worked on
-- What's next or what you told it to do next time
-
-Confirm you're happy with that context before doing anything.
+It reads CLAUDE.md, PRD.md, DESIGN.md, BACKLOG.md, and CHANGELOG.md and tells you where things stand and what's next. Confirm you're happy with that context before doing anything.
 
 ---
 
@@ -32,11 +31,7 @@ If this is going into the current version, the PRD needs to be updated first. If
 
 > "Use the product-owner to add [feature] to the PRD. Confirm it fits the current scope or flag if it changes what we're building."
 
-If it's in scope, the product-owner updates the PRD. Then:
-
-> "Use the project-manager to add [feature] to BUILDPLAN.md as a new chunk."
-
-Then run the build loop as normal — the same process as Phase 4 in START-HERE.md.
+If it's in scope, the product-owner updates the PRD. Then the project-manager plans the build (breaking it into small pieces, one at a time) and runs each through the review gate. See CLAUDE.md "Change size" and "Review gate".
 
 ---
 
@@ -54,7 +49,7 @@ This means updating DESIGN.md first. Changing a token affects everything that us
 Confirm the updated DESIGN.md before any code changes. Then:
 > "Use the frontend-developer to apply the updated DESIGN.md token to the affected components."
 
-The pre-push gate still runs — the code-reviewer checks design token consistency as part of Phase 1.
+The review gate still runs — the code-reviewer checks design token consistency as part of Phase 1.
 
 ---
 
@@ -80,7 +75,7 @@ The debugger will look at environment differences, async timing, and data-specif
 
 **When:** Something loads slowly, interactions feel sluggish, or you want to check before launching.
 
-> "Use the performance-auditor. [Describe what feels slow — which page, which interaction, or ask for a full audit]. Compare against the baseline from scaffolding if one exists."
+> "Use the performance-auditor. [Describe what feels slow — which page, which interaction, or ask for a full audit]."
 
 The performance-auditor measures actual runtime — load times, Core Web Vitals, API response times, bundle size, N+1 queries. It reports numbers, not impressions, and proposes optimisations with before/after measurements.
 
@@ -88,7 +83,7 @@ The performance-auditor measures actual runtime — load times, Core Web Vitals,
 
 ### PRD has drifted
 
-**When:** You've built several chunks and want to check that what you've built still matches what you planned.
+**When:** After a run of changes, you want to check that what's built still matches the PRD.
 
 > "Use the product-owner to run a PRD drift check. Compare the current codebase against PRD.md. Flag anything built outside scope, anything different from the spec, and anything in the PRD not yet addressed."
 
@@ -98,16 +93,11 @@ The product-owner produces a prioritised list. Bring it to the project-manager t
 
 ### Backlog grooming
 
-**When:** The backlog has grown and you want to plan what's next, or you're about to start a new wave of work.
+**When:** The backlog has grown and you want to plan what's next.
 
-> "Use the product-owner to review the backlog. Organise it into waves — group related items, order them logically, and flag anything that conflicts with the current PRD."
+> "Use the product-owner to review the backlog — regroup related items, reorder by priority, and flag anything that conflicts with the current PRD."
 
-The product-owner updates BACKLOG.md with the wave structure. Review it and confirm before starting any wave.
-
-**Starting a new wave:**
-> "Use the project-manager to add wave [N] from the backlog to BUILDPLAN.md as new chunks."
-
-Then run the build loop as normal.
+The product-owner updates `BACKLOG.md`. Review it and confirm. When you're ready to action items, the project-manager scopes them (large ones first through a PRD update) and runs each through the review gate.
 
 ---
 
@@ -126,7 +116,7 @@ Review every finding manually before accepting any change. The code-reviewer wil
 **When:** A decision has changed, a tool has been swapped, or something in the PRD needs correcting.
 
 - PRD changes → product-owner
-- BUILDPLAN changes → project-manager
+- BACKLOG / CHANGELOG changes → product-owner or project-manager
 - DESIGN changes → design-director
 - CLAUDE.md changes → you, directly
 
@@ -160,8 +150,8 @@ Once all four are clear, you're ready to ship.
 
 | Situation | Agent |
 |-----------|-------|
-| Starting a session | project-manager |
-| New feature — scoping | product-owner |
+| Large or vague piece of work — scoping and coordination | project-manager |
+| New feature — PRD section | product-owner |
 | New feature — building UI | frontend-developer |
 | New feature — building backend | backend-developer |
 | Design tweak — token level | design-director |
@@ -171,22 +161,21 @@ Once all four are clear, you're ready to ship.
 | PRD drift | product-owner |
 | Backlog grooming | product-owner |
 | Security concern | code-reviewer |
-| Pre-push gate | code-reviewer (automatic) |
+| Review gate | code-reviewer |
 | Pre-launch | code-reviewer + performance-auditor + product-owner |
 
 ---
 
 ## Things to remember
 
-**The completion gate runs automatically** — you don't need to invoke the code-reviewer manually, the project-manager coordinates it. But you do need to open localhost and test it yourself when the human review prompt appears. That step cannot be skipped regardless of version control mode.
+**The review gate always runs** — for a large change the project-manager coordinates it; for a small one it's code-reviewer then commit. Either way you open localhost and test it yourself when the human review prompt appears. That step is never skipped.
 
-**The PRD is always current** — if a decision changes mid-build, the product-owner updates the PRD immediately. It should always describe what you're actually building, not what you originally planned.
+**The PRD is always current** — if a decision changes, the product-owner updates the PRD immediately. It should always describe what the app actually does.
 
-**New ideas go to the backlog, not the build** — when something comes up mid-chunk that isn't in scope, log it:
+**New ideas go to the backlog, not straight into work** — when something comes up that isn't in scope, log it:
 > "Add this to BACKLOG.md: [idea]. Don't implement it now."
 
-**Version control is mode-dependent** — the project-manager knows which mode you're using. If you're on Mode C (GitHub), every push goes to a named branch — never main. If you're on Mode A or B, there's no push, just a local commit or nothing. You can switch modes at any time:
-> "Switch version control to Mode [A/B/C] and update CLAUDE.md."
+**Version control** — git + GitHub. Every push goes to a named branch, never `main`; merges wait for an explicit "go ahead and merge". Full rules in CLAUDE.md.
 
-**One thing at a time** — the agents are built around this. Don't try to build two chunks simultaneously or skip the review gate. Each chunk should be a safe point you can return to.
+**One thing at a time** — don't build two things simultaneously or skip the review gate. Each commit should be a safe point you can return to.
 
