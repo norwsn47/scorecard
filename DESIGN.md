@@ -63,7 +63,7 @@ Two registers. The display font is used once, deliberately, for a specific edito
 | Course name (Summary header, Course Map modal) | `font-display text-2xl italic text-text` / `text-xl` |
 | Winner callout name (Summary) | `font-display text-sm italic text-accent` |
 
-**Home screen alignment exception:** The `h1` title and subtitle on the Home screen are left-aligned (`text-left`). This is a deliberate departure from centred editorial screens (page headers, Summary). The Home screen follows a printed-document convention.
+**Home screen alignment exception:** The `h1` title and subtitle on the Home screen are left-aligned (`text-left`). This is a deliberate departure from the centred page-header title used on every other screen. The Home screen follows a printed-document convention.
 
 ### UI register — Inter
 
@@ -234,7 +234,7 @@ table-fixed border-collapse w-full
 ```
 w-10 h-0.5 bg-accent mx-auto
 ```
-Used to separate major sections on editorial screens (Home, Summary). Not used on utility screens.
+Used to separate major sections on the Home screen (left-aligned `ml-0` variant). Not used on utility screens.
 On the Home screen the rule is left-aligned: `ml-0` replaces `mx-auto`.
 
 ### Error / notification banner

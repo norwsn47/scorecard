@@ -4,9 +4,11 @@
 > Open items only — ideas, deferred work, and known issues not yet done.
 > When something ships, delete its line and add a note to `CHANGELOG.md`.
 > Nothing here is actioned without explicit instruction — tell the project-manager (or Claude directly) to pull an item into work.
-> Numbers are stable IDs for cross-reference — don't renumber existing items when deleting one.
+> Numbers are stable IDs for cross-reference — don't renumber existing items when deleting one, so gaps are expected.
 
 **Last updated:** 1 September 2026
+
+Shipped and removed on 1 September 2026 (housekeeping batch A): 20, 24, 26, 27, 30, 32 — see `CHANGELOG.md`.
 
 ---
 
@@ -81,16 +83,13 @@ Used/expired magic tokens are never deleted, so email addresses from abandoned s
 The 24 Aug hotfix (live since 24 August 2026) stopped new duplicates but didn't touch rows already duplicated before it shipped. Identify and remove them via the Cloudflare D1 console — group by `user_id, played_at, holes_played` looking for counts > 1 (all predate `client_round_id` so all have it `NULL`). Check for other affected users too. Close this once the cleanup has been run.
 
 ### 17. `Scorecard.jsx` setState-during-render warning on direct load
-Loading `/scorecard` directly with no active game triggers "Cannot update a component while rendering a different component". `Scorecard.jsx` (~line 35) calls `navigate()`/setState during render instead of in a `useEffect` for the no-active-game case. Needs a debugger pass.
+Loading `/scorecard` directly with no active game triggers "Cannot update a component while rendering a different component". `Scorecard.jsx`'s `if (!game) { navigate('home') }` guard runs in the render body instead of a `useEffect`. Needs a debugger pass.
 
 ### 18. Edit-mode browser Back lands on a mislabelled "New Game" screen
 Pressing browser Back from the edit-mode Scorecard drops the user on a Setup screen labelled "New Game", with a stranded active game in storage. No data loss or duplicate record — cosmetic + UX clarity. (PRD §11.13.)
 
 ### 19. Past-round "← Rounds" back button always targets History
 On the round detail view the back button always goes to History, even when the user reached it another way (post-edit-finish, or browser-back after Done). Minor misdirection, no broken state. (PRD §11.13.)
-
-### 20. `Podium.jsx` "See full card" is a dead path
-No `navigate('podium')` exists anywhere in the app. If the route is hit by direct URL as a signed-in user it can now enter the read-only detail view. Pre-existing, low value — clean up next time `Podium.jsx` is touched.
 
 ---
 
@@ -105,17 +104,8 @@ No integration/component test covers open-edit → change on the scorecard → s
 ### 23. `onRequestPatch` / `onRequestPost` input validation is minimal
 `played_at` accepts any non-empty string (no date-format check); `player_data` is only checked for being a non-empty array (element shape not validated). Both client-controlled and consistent with each other, but both would benefit from stricter schema validation.
 
-### 24. `onRequestPatch` accepts `game_name` but the client never sends it
-After a rename via the edit flow, the D1 `game_name` column can go stale relative to `player_data`. Harmless today (`game_name` isn't rendered anywhere the edited round shows) — either wire the client to send it or drop it from the handler.
-
 ### 25. Crisper course map image
 `public/course_map_v2.png` lacks sharpness when zoomed on high-res screens. Replace with a higher-resolution source, or SVG/vector if the course can provide one. (Distinct from #1, which is about when the map appears and its loading state.)
-
-### 26. Quick-play hardcoded course reference
-Quick-play is hardcoded to Bruntsfield. If the app expands to other courses it'll need a lightweight selector on the logged-out new-game path. For now, make sure the hardcoded reference is a named constant, not an inline string. (Related to #11.)
-
-### 27. `PageHeader` title-clearance margin is fixed, not proportional
-The absolutely-centred title uses a fixed `px-16` clearance. Safe against every current title/button combination (smallest measured margin: 20px) but doesn't scale with sibling content width. Either document a safe title-length budget in DESIGN.md or make the clearance responsive next time the component is touched.
 
 ### 28. Sub-44px tap targets on inline text links
 Several inline text-link buttons (`Info.jsx`, `Login.jsx`, `Summary.jsx`, `CourseMapModal.jsx`, `RulesContent.jsx`) have no padding/min-height, giving tap targets under the 44×44px guideline. App-wide convention. The Setup course-rules link was widened already; the rest remain. Do a pass.
@@ -123,14 +113,11 @@ Several inline text-link buttons (`Info.jsx`, `Login.jsx`, `Summary.jsx`, `Cours
 ### 29. Summary saved-note body is very small (12px)
 The read-only note on the past-round detail view renders at `text-xs`. Deliberate ("very small" was the ask), but it's user-authored content read on a phone — revisit to `text-sm` if it reads as too small in practice.
 
-### 30. `package.json` internal rename
-The npm package name is `golf-tavern-scorecard` — internal only, not user-facing. Rename to `scorecard-by-outbuild` or similar when convenient.
-
 ### 31. Activate analytics
 Scaffolding is in place: `src/utils/analytics.js` (Plausible wrapper, no-ops if the script isn't loaded) and events instrumented — New Game Started, Game Completed (player count, holes), Scorecard Shared, Game Edited. Open:
 - Activate the Plausible `<script>` in `index.html` (currently commented out) and create the account — or pick another privacy-friendly tool (Fathom, PostHog). Must not require a cookie-consent banner.
 - Confirm Cloudflare Pages built-in analytics are active for basic traffic data.
 - Update the Info page copy (PRD §4.8) to say what's collected and by whom.
 
-### 32. index.html meta tags still say "Bruntsfield Links"
-The three SEO/social meta descriptions in `index.html` (`description`, `og:description`, `twitter:description`) read "Track your round at Bruntsfield Links". Update to the current course name to match the app, PRD, and DESIGN. Small user-facing change — check the link preview after deploy.
+### 33. `game_name` is dead plumbing beyond the PATCH handler
+Game-naming was removed from the UI but `game_name` remains in the `games` schema, the `POST /api/games` handler (client always sends `null`), and `History.normalizeDbGame` (`name:` field, never rendered). Backlog 24 removed it from the PATCH handler only. Finish the job: drop it from POST + `normalizeDbGame`, and decide whether to keep the nullable column or migrate it out.
