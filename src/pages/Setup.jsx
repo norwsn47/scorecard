@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import PageHeader from '../components/PageHeader.jsx'
 import { BRUNTSFIELD_COURSE_NAME } from '../constants.js'
 import { buildEditGame, canStartGame, createGame, findDuplicateIndices } from '../utils/game.js'
-import { getPlayers, saveActiveGame, savePlayers } from '../utils/storage.js'
+import { clearActiveGame, getActiveGame, getPlayers, saveActiveGame, savePlayers } from '../utils/storage.js'
 import { useAuth } from '../hooks/useAuth.jsx'
 
 const MAX_PLAYERS = 6
@@ -37,6 +37,19 @@ export default function Setup({ navigate, params }) {
   const dupeIndices = findDuplicateIndices(names)
   const courseReady = !showCourse || !creatingCourse || newCourseName.trim().length > 0
   const ready       = canStartGame(names, names.length) && courseReady
+
+  // Browser Back out of an in-progress edit lands here with params cleared
+  // (App.jsx wipes params on popstate), so this screen would render as a
+  // mislabelled "New Game" while the edit working copy sits stranded in the
+  // active-game slot. Detect that, discard the abandoned edit, and send the
+  // user to their rounds list where the original round is untouched.
+  useEffect(() => {
+    if (editRound || pastRound) return
+    if (getActiveGame()?._edit) {
+      clearActiveGame()
+      navigate('history')
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!user) return
