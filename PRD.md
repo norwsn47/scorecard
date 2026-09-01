@@ -401,7 +401,7 @@ When a user is authenticated, the game save behaviour changes:
 
 - On game completion, the game is saved to D1 (via `POST /api/games`) in addition to (or instead of) localStorage — this is to be determined during implementation, but the preferred approach is DB only for logged-in users to keep the two histories cleanly separate
 - The game record includes: user_id, game_name, played_at, holes_played, player_data (JSON), course_id
-- The existing finish-game flow (podium screen, summary screen, share) is unchanged — only the save destination changes
+- The existing finish-game flow (summary screen, share) is unchanged — only the save destination changes
 
 **Active game state:** While a game is in progress, the active game is still tracked in localStorage (same as the quick-play flow). On game completion, the final record is written to D1.
 
