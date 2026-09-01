@@ -127,7 +127,7 @@ export default function Login({ navigate }) {
           <button
             type="button"
             onClick={() => navigate('privacy', { from: 'login' })}
-            className="text-accent underline underline-offset-2 active:opacity-70"
+            className="inline-block py-2.5 -my-2.5 text-accent underline underline-offset-2 active:opacity-70"
           >
             How we handle your data
           </button>

@@ -52,10 +52,14 @@ export default function Scorecard({ navigate, params }) {
     activeRowRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
   }, [activeCell.holeIndex])
 
-  if (!game) {
-    navigate('home')
-    return null
-  }
+  // No active game (e.g. /scorecard opened directly with nothing in storage).
+  // Bounce home from an effect, not an inline navigate() during render -
+  // navigate() sets state on the parent, which React rejects mid-render.
+  useEffect(() => {
+    if (!game) navigate('home')
+  }, [game]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!game) return null
 
   const players       = Array.isArray(game.players) ? game.players : []
   const displayedHoles = computeDisplayedHoles(players, game.scores ?? {}, game.holes)

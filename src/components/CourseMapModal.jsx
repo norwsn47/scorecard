@@ -27,7 +27,7 @@ export default function CourseMapModal({ onClose }) {
           <button
             onClick={onClose}
             aria-label="Close"
-            className="absolute top-3 right-4 w-8 h-8 flex items-center justify-center text-muted active:text-text"
+            className="absolute top-1.5 right-2.5 w-11 h-11 flex items-center justify-center text-muted active:text-text"
           >
             ✕
           </button>
@@ -64,7 +64,7 @@ export default function CourseMapModal({ onClose }) {
         <div className="border-t border-border px-5 py-3 shrink-0">
           <button
             onClick={() => setShowRules(r => !r)}
-            className="font-ui text-xs text-accent underline underline-offset-2 active:text-text"
+            className="inline-block py-2.5 -my-2.5 font-ui text-xs text-accent underline underline-offset-2 active:text-text"
           >
             {showRules ? '← Back to map' : 'Course rules'}
           </button>

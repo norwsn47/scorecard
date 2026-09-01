@@ -50,7 +50,7 @@ export default function RulesContent() {
           href="https://www.bruntsfieldshortholegolfclub.co.uk"
           target="_blank"
           rel="noopener noreferrer"
-          className="underline underline-offset-2 active:opacity-70"
+          className="inline-block py-2.5 -my-2.5 underline underline-offset-2 active:opacity-70"
         >
           Bruntsfield Short Hole Golf Club
         </a>

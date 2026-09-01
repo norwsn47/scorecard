@@ -8,7 +8,7 @@
 
 **Last updated:** 1 September 2026
 
-Shipped and removed on 1 September 2026 (housekeeping batch A): 20, 24, 26, 27, 30, 32 — see `CHANGELOG.md`.
+Shipped and removed on 1 September 2026: batch A — 20, 24, 26, 27, 30, 32; batch B — 17, 18, 28. See `CHANGELOG.md`.
 
 ---
 
@@ -82,14 +82,8 @@ Used/expired magic tokens are never deleted, so email addresses from abandoned s
 ### 16. Pre-existing duplicate game rows in production D1
 The 24 Aug hotfix (live since 24 August 2026) stopped new duplicates but didn't touch rows already duplicated before it shipped. Identify and remove them via the Cloudflare D1 console — group by `user_id, played_at, holes_played` looking for counts > 1 (all predate `client_round_id` so all have it `NULL`). Check for other affected users too. Close this once the cleanup has been run.
 
-### 17. `Scorecard.jsx` setState-during-render warning on direct load
-Loading `/scorecard` directly with no active game triggers "Cannot update a component while rendering a different component". `Scorecard.jsx`'s `if (!game) { navigate('home') }` guard runs in the render body instead of a `useEffect`. Needs a debugger pass.
-
-### 18. Edit-mode browser Back lands on a mislabelled "New Game" screen
-Pressing browser Back from the edit-mode Scorecard drops the user on a Setup screen labelled "New Game", with a stranded active game in storage. No data loss or duplicate record — cosmetic + UX clarity. (PRD §11.13.)
-
 ### 19. Past-round "← Rounds" back button always targets History
-On the round detail view the back button always goes to History, even when the user reached it another way (post-edit-finish, or browser-back after Done). Minor misdirection, no broken state. (PRD §11.13.)
+On the round detail view the back button always navigates to History, regardless of how the user reached the view. Reviewed in batch B (1 Sep 2026): History is the correct destination in every real path (opened from History; post-edit-finish of a round that lives in History; browser-back after finishing a new round that is now in History). No fix improves it — recommend closing as won't-fix. Kept only pending a final call.
 
 ---
 
@@ -107,9 +101,6 @@ No integration/component test covers open-edit → change on the scorecard → s
 ### 25. Crisper course map image
 `public/course_map_v2.png` lacks sharpness when zoomed on high-res screens. Replace with a higher-resolution source, or SVG/vector if the course can provide one. (Distinct from #1, which is about when the map appears and its loading state.)
 
-### 28. Sub-44px tap targets on inline text links
-Several inline text-link buttons (`Info.jsx`, `Login.jsx`, `Summary.jsx`, `CourseMapModal.jsx`, `RulesContent.jsx`) have no padding/min-height, giving tap targets under the 44×44px guideline. App-wide convention. The Setup course-rules link was widened already; the rest remain. Do a pass.
-
 ### 29. Summary saved-note body is very small (12px)
 The read-only note on the past-round detail view renders at `text-xs`. Deliberate ("very small" was the ask), but it's user-authored content read on a phone — revisit to `text-sm` if it reads as too small in practice.
 
@@ -121,3 +112,9 @@ Scaffolding is in place: `src/utils/analytics.js` (Plausible wrapper, no-ops if 
 
 ### 33. `game_name` is dead plumbing beyond the PATCH handler
 Game-naming was removed from the UI but `game_name` remains in the `games` schema, the `POST /api/games` handler (client always sends `null`), and `History.normalizeDbGame` (`name:` field, never rendered). Backlog 24 removed it from the PATCH handler only. Finish the job: drop it from POST + `normalizeDbGame`, and decide whether to keep the nullable column or migrate it out.
+
+### 34. `text-xs` inline links land ~36-38px, below the ~40px floor
+From the batch-B tap-target pass (#28). Three inline-in-paragraph `text-xs` links — `Login.jsx` "How we handle your data", `Info.jsx` "Read our privacy policy", `Summary.jsx` "Share scorecard" — use `py-2.5 -my-2.5` (~36-38px) because more padding would overlap adjacent lines. Better than the bare ~16px but under the documented floor. Revisit if a cleaner pattern turns up (e.g. giving them their own line).
+
+### 35. No render/flow tests for the SPA navigation behaviours
+The suite covers `src/utils/*` and `functions/api/*` only. The batch-B fixes (#17 direct `/scorecard` bounce, #18 stranded-edit cleanup) and the edit flow (existing #22) have no automated coverage. One follow-up item to add a component/render test harness (React Testing Library) and cover these.

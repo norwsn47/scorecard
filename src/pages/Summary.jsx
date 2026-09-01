@@ -337,7 +337,7 @@ export default function Summary({ navigate, params }) {
               }
             }}
             disabled={sharing}
-            className="font-ui text-xs text-muted underline underline-offset-2 active:opacity-70 disabled:opacity-40"
+            className="inline-block py-2.5 -my-2.5 font-ui text-xs text-muted underline underline-offset-2 active:opacity-70 disabled:opacity-40"
           >
             {sharing ? 'Generating…' : 'Share scorecard'}
           </button>
@@ -348,12 +348,14 @@ export default function Summary({ navigate, params }) {
             <p className="font-ui text-xs text-muted leading-relaxed">
               Results saved on this device only — may be lost in private browsing or if you clear your browser data.
             </p>
-            <button
-              onClick={() => navigate('login')}
-              className="font-ui text-xs text-accent active:opacity-70"
-            >
-              To save your rounds, <span className="underline underline-offset-2">create an account</span>
-            </button>
+            <div>
+              <button
+                onClick={() => navigate('login')}
+                className="inline-block py-3.5 -my-3.5 font-ui text-xs text-accent active:opacity-70"
+              >
+                To save your rounds, <span className="underline underline-offset-2">create an account</span>
+              </button>
+            </div>
           </div>
         )}
 
