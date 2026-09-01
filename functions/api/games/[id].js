@@ -35,17 +35,14 @@ export async function onRequestPatch(context) {
     return Response.json({ error: 'Invalid request body' }, { status: 400 })
   }
 
-  const { game_name, course_id, played_at, holes_played, player_data, notes } = body
+  const { course_id, played_at, holes_played, player_data, notes } = body
 
   // Build the UPDATE from only the fields actually present in the body.
   // id, user_id, client_round_id and created_at are never touched.
+  // game_name is not editable - the UI has no game-naming feature.
   const columns = []
   const values = []
 
-  if ('game_name' in body) {
-    columns.push('game_name = ?')
-    values.push(game_name || null)
-  }
   if ('course_id' in body) {
     // A non-null course must be one of this user's own courses — otherwise a
     // caller could attach an arbitrary (or another user's) course id, which the
