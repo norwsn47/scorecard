@@ -321,7 +321,7 @@ export default function Setup({ navigate, params }) {
               New here?{' '}
               <button
                 onClick={() => navigate('rules', { from: 'setup', bruntsfield: fromBruntsfield })}
-                className="inline-block py-2 -my-2 text-accent underline underline-offset-2 active:opacity-70"
+                className="inline-block py-3 -my-3 text-accent underline underline-offset-2 active:opacity-70"
               >
                 Read the course rules before you start
               </button>

@@ -32,17 +32,19 @@ export default function Info({ navigate, params }) {
               <p className="font-ui text-sm text-muted leading-relaxed">
                 One of the world's oldest golf links, Bruntsfield Short Hole Golf Club has been a fixture in Edinburgh since 1895. The 36-hole course features par-3 holes of 45–90 yards – unique to world golf.
               </p>
-              <a
-                href="https://www.bruntsfieldshortholegolfclub.co.uk"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 font-ui text-sm text-accent underline underline-offset-2"
-              >
-                bruntsfieldshortholegolfclub.co.uk
-                <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5 relative top-px">
-                  <path d="M2 8L8 2M8 2H4M8 2V6" />
-                </svg>
-              </a>
+              <div>
+                <a
+                  href="https://www.bruntsfieldshortholegolfclub.co.uk"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2"
+                >
+                  bruntsfieldshortholegolfclub.co.uk
+                  <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5 relative top-px">
+                    <path d="M2 8L8 2M8 2H4M8 2V6" />
+                  </svg>
+                </a>
+              </div>
             </section>
 
             <div className="w-8 h-0.5 bg-border" />
@@ -52,15 +54,17 @@ export default function Info({ navigate, params }) {
               <p className="font-ui text-sm text-muted leading-relaxed">
                 Please read the rules before playing.
               </p>
-              <button
-                onClick={() => navigate('rules', { from: 'info' })}
-                className="inline-flex items-center gap-1 font-ui text-sm text-accent underline underline-offset-2 active:opacity-70"
-              >
-                View full course rules
-                <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5 relative top-px">
-                  <path d="M2 8L8 2M8 2H4M8 2V6" />
-                </svg>
-              </button>
+              <div>
+                <button
+                  onClick={() => navigate('rules', { from: 'info' })}
+                  className="inline-flex items-center gap-1 py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2 active:opacity-70"
+                >
+                  View full course rules
+                  <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5 relative top-px">
+                    <path d="M2 8L8 2M8 2H4M8 2V6" />
+                  </svg>
+                </button>
+              </div>
             </section>
 
             <div className="w-8 h-0.5 bg-border" />
@@ -73,17 +77,19 @@ export default function Info({ navigate, params }) {
           <p className="font-ui text-sm text-muted leading-relaxed">
             Scorecard is made by Outbuild, a small design collective based in Edinburgh.
           </p>
-          <a
-            href="https://outbuild.uk"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 font-ui text-sm text-accent underline underline-offset-2"
-          >
-            outbuild.uk
-            <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5 relative top-px">
-              <path d="M2 8L8 2M8 2H4M8 2V6" />
-            </svg>
-          </a>
+          <div>
+            <a
+              href="https://outbuild.uk"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2"
+            >
+              outbuild.uk
+              <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5 relative top-px">
+                <path d="M2 8L8 2M8 2H4M8 2V6" />
+              </svg>
+            </a>
+          </div>
         </section>
 
         <div className="w-8 h-0.5 bg-border" />
@@ -93,12 +99,14 @@ export default function Info({ navigate, params }) {
           <section className="space-y-3">
             <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted">Account</p>
             <p className="font-ui text-sm text-muted truncate">{user.email}</p>
-            <button
-              onClick={async () => { await logout(); navigate('home') }}
-              className="font-ui text-sm text-accent underline underline-offset-2 active:opacity-70"
-            >
-              Sign out
-            </button>
+            <div>
+              <button
+                onClick={async () => { await logout(); navigate('home') }}
+                className="inline-block py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2 active:opacity-70"
+              >
+                Sign out
+              </button>
+            </div>
           </section>
         ) : (
           <section className="space-y-3">
@@ -106,12 +114,14 @@ export default function Info({ navigate, params }) {
             <p className="font-ui text-sm text-muted leading-relaxed">
               Sign in to save your rounds across devices and keep your history.
             </p>
-            <button
-              onClick={() => navigate('login')}
-              className="font-ui text-sm text-accent underline underline-offset-2 active:opacity-70"
-            >
-              Sign in or create account
-            </button>
+            <div>
+              <button
+                onClick={() => navigate('login')}
+                className="inline-block py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2 active:opacity-70"
+              >
+                Sign in or create account
+              </button>
+            </div>
           </section>
         )}
 
@@ -119,7 +129,7 @@ export default function Info({ navigate, params }) {
           Your data is handled under UK GDPR.{' '}
           <button
             onClick={() => navigate('privacy', { from: 'info' })}
-            className="text-accent underline underline-offset-2 active:opacity-70"
+            className="inline-block py-2.5 -my-2.5 text-accent underline underline-offset-2 active:opacity-70"
           >
             Read our privacy policy
           </button>
