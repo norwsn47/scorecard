@@ -2,6 +2,8 @@
 Last updated: 11 July 2026
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
+> **This project has streamlined the Outbuild workflow (1 September 2026).** `CLAUDE.md` is the authority — follow it where it differs from this file. In short: no `BUILDPLAN.md` (retired; work is tracked in `BACKLOG.md` + `CHANGELOG.md`), the project-manager is only for large work, and the review gate scales with change size. The move descriptions below are still a useful menu; ignore the `BUILDPLAN.md` mechanics.
+
 *The ongoing reference for working on an Outbuild project after v1 is shipped. Not a linear process — pick the move you need.*
 
 ---

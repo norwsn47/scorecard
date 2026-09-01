@@ -1,54 +1,70 @@
 # CLAUDE.md
-Last updated: 24 August 2026
+Last updated: 1 September 2026
 > Ground rules for this project. Read this at the start of every session.
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
 ---
 
-## Before anything else
-Every session must start by invoking the project-manager agent. This is not optional.
+## Starting work
 
-If a task, question, or request arrives without the project-manager being invoked first, do not action it. Instead respond with:
+The app is shipped and in production. Work now arrives as individual requests, not a linear build plan.
 
-'Please start this session with the project-manager agent first: Use the project-manager agent to start this session.'
+At the start of a session, skim `BACKLOG.md` and the most recent `CHANGELOG.md` entries for context. You don't need the project-manager agent for every session — invoke it when:
+- the work is large or spans several parts (see "Change size" below)
+- you want a considered plan before starting
+- the request is vague and needs shaping into scoped work
+- the user asks for it
 
-Do not make any file changes, run any commands, write any code, or commit anything until the project-manager has been invoked and has confirmed the current project state.
+For a small, well-defined change, just do it (following "Change size" and the review gate).
+
+If a new idea comes up that isn't being actioned now, add it to `BACKLOG.md` — one entry, no ceremony.
 
 ---
 
-## How to start every session
+## Change size
 
-Always begin by invoking the project-manager agent before doing anything else. Never respond to tasks, questions, or requests directly without going through the agent system first.
+Decide which category a piece of work falls into and follow that path.
 
-The correct way to start every session:
-> "Use the project-manager agent to start this session."
+**Small** — a single component or file, visual/copy/layout, a contained bug fix, config. No database schema, no auth, no API contract change, no new user-facing capability.
+- Build it directly (or via frontend-developer / backend-developer if you want).
+- Review gate: code-reviewer static + render check → human localhost review (mandatory for anything visible in the browser) → commit.
+- No PRD update, no project-manager, no CHANGELOG entry unless it's notable.
 
-If a user sends a message without invoking an agent, the first response must always be to remind them to start with the project-manager agent before proceeding. Do not start any work until this has happened.
+**Large** — backend logic, database schema or migration, auth, an API contract change, a new feature or user-facing capability, or anything touching several files across concerns.
+- Start with the project-manager to scope and plan it.
+- product-owner updates `PRD.md` first if it's a new capability or a scope change.
+- Build via the right specialist agent.
+- Full review gate (below), including PRD alignment.
+- Add a `CHANGELOG.md` entry. Update `BACKLOG.md` (remove done items, log any follow-ups).
+
+If a "small" change turns out to need schema/auth/API/feature work once you're in it, stop and treat it as large.
 
 ---
 
 ## Project context
-This is an Outbuild project, built on a personal machine (no longer a managed work laptop, confirmed 24 August 2026).
-The project lives in a dedicated folder (e.g. `~/Projects/[project-name]`).
-Tech stack is TBD — stack decisions will be made in Phase 2 before any code is written.
+Scorecard by Outbuild — a mobile scorecard for the Bruntsfield Short Hole Golf Course. Shipped and in production on Cloudflare Pages.
+An Outbuild project on a personal machine (no longer a managed work laptop, confirmed 24 August 2026).
+Stack: Vite + React + Tailwind CSS · localStorage (quick-play) · Cloudflare Pages, D1, Pages Functions · Resend (magic-link auth). Full detail in `PRD.md`.
 
 ---
 
 ## Agent setup
-This project uses a set of specialist agents located in `.claude/agents/`:
-- **project-manager** — start every session with this agent
-- **product-owner** — owns PRD.md and BACKLOG.md
-- **design-director** — produces DESIGN.md at step 2.4
+Specialist agents live in `.claude/agents/`. In active use:
+- **project-manager** — scopes and coordinates large work
+- **product-owner** — owns PRD.md and BACKLOG.md; PRD alignment checks
 - **frontend-developer** — builds UI, always reads DESIGN.md first
 - **backend-developer** — builds APIs, database, auth, integrations
-- **code-reviewer** — runs the pre-push gate after every chunk
-- **debugger** — invoked when something is broken and needs root-cause investigation
-- **performance-auditor** — runs after scaffolding (baseline) and before launch
+- **code-reviewer** — runs the review gate
+- **debugger** — root-cause investigation when something is broken
 
-The following project documents live in the root and must be kept current:
-`CLAUDE.md` · `PRD.md` · `BUILDPLAN.md` · `DESIGN.md` · `BACKLOG.md`
+Situational (did their main job pre-launch, still available):
+- **design-director** — token-level design changes to DESIGN.md
+- **performance-auditor** — performance measurement
 
-**Date rule:** Whenever any agent edits a project document, it must update the `Last updated:` line at the top of that file to today's date before saving.
+Project documents in the root, kept current:
+`CLAUDE.md` · `PRD.md` · `DESIGN.md` · `BACKLOG.md` · `CHANGELOG.md`
+
+**Date rule:** Whenever a project document is edited, update its `Last updated:` line to today's date before saving.
 
 ---
 
@@ -56,7 +72,7 @@ The following project documents live in the root and must be kept current:
 This project follows the Outbuild design language. Before writing any UI code, read:
 - `.outbuild/OUTBUILD-PRINCIPLES.md` — product philosophy
 - `.outbuild/OUTBUILD-DESIGN-LANGUAGE.md` — transferable design principles
-- `DESIGN.md` — project-specific tokens (created at step 2.4)
+- `DESIGN.md` — project-specific tokens and component patterns
 
 Do not invent a visual style. Do not default to generic patterns. Follow the principles.
 
@@ -93,50 +109,36 @@ Do not invent a visual style. Do not default to generic patterns. Follow the pri
 ---
 
 ## Version control
-This project's version control mode is set during setup. Check the project-specific rules section at the bottom of this file for the confirmed mode. If nothing is set, ask the user before assuming anything.
+Git + GitHub, full workflow with remote (Outbuild "Mode C"). If the user ever asks to change this, update this section.
 
-**Mode A — No git (local files only)**
-- No git commands. No commits, no branches, no push.
-- Save checkpoints by asking the user to manually copy the folder if they want a backup.
-- The pre-push gate does not apply. The code-reviewer still runs static analysis and rendering verification, and the human review step still applies — but there is no commit or push at the end.
-
-**Mode B — Git local (version control, no remote)**
-- Use git for local commits and branches. No `git push` — ever.
-- Use branches for all significant work: `feat/`, `fix/`, `chore/`, `refactor/`, `security/` prefix.
-- Commit after every verified chunk — each commit is a safe point to return to.
-- Never merge to `main` without explicit sign-off.
-- The pre-push gate applies up to and including the human review and document update steps. No push step.
-
-**Mode C — Git + GitHub (full setup)**
-- Full git workflow with remote. All Mode B rules apply, plus:
-- **Never merge directly to main without explicit confirmation.**
-- Always create a descriptive branch before any work starts — feat/, fix/, chore/, refactor/, or security/ prefix, descriptive enough to understand from the branch list alone.
-- Push the branch to GitHub and show the user the branch name and a summary of what's on it.
+- Always create a descriptive branch before starting work — `feat/`, `fix/`, `chore/`, `refactor/`, or `security/` prefix, clear enough to understand from the branch list alone.
+- Push the branch and show the user the branch name and a summary of what's on it.
 - Wait for the user to explicitly say "go ahead and merge" before running any merge command.
-- Never auto-clean up branches without asking — always confirm before deleting local or remote branches.
-- gh CLI may be available or installable (check `which gh` — see Dependencies section); if not, fall back to standard git commands and manual GitHub UI steps.
-- Never use direct merge as a fallback — always create a named branch, push it, and wait for confirmation before merging.
+- Never auto-clean up branches — confirm before deleting local or remote branches.
+- gh CLI may be available or installable (check `which gh` — see Dependencies); otherwise fall back to standard git + the GitHub UI.
 
-**Hard git rules - these apply even if the project-manager has not been invoked:**
-- Never push to main under any circumstances - not directly, not via merge without explicit sign-off
-- Never use a session-assigned branch name (claude/anything) - always create a descriptive branch with feat/, fix/, chore/, refactor/, or security/ prefix
-- Never commit more than one logical change in a single commit without explicit instruction
-- If the completion gate has not been run, do not commit - remind the user to invoke the project-manager first
+**Hard git rules — these always apply:**
+- Never push to `main` — not directly, not via merge without explicit sign-off.
+- Never use a session-assigned branch name (`claude/anything`) — always a descriptive `feat/` `fix/` `chore/` `refactor/` `security/` branch.
+- Never commit more than one logical change in a single commit without explicit instruction.
+- Don't commit before the review gate has run for that change.
 
 ---
 
-## Pre-push gate
-*Applies to Mode B (up to step 5) and Mode C (all steps). Does not apply to Mode A.*
+## Review gate
+Runs before a change is committed. Scales with change size (see "Change size").
 
-Before any chunk is finalised, the following runs in order:
-1. code-reviewer runs static analysis — Critical findings block completion
-2. code-reviewer runs rendering verification — dev server started, tests run, routes checked
-3. Human reviews the running app at localhost and confirms before proceeding
-4. product-owner runs PRD alignment check — conflicts block completion
-5. All project documents updated (BUILDPLAN.md, PRD.md, BACKLOG.md, DESIGN.md)
-6. *(Mode C only)* Branch name confirmed — then push runs
+**Small changes:**
+1. code-reviewer — static analysis (Critical findings block) + rendering verification (dev server, tests, routes)
+2. Human reviews the running app at localhost and confirms — mandatory for anything visible in the browser
+3. Commit on a named branch → push → wait for merge sign-off (Mode C rules below)
 
-This gate is mandatory for all modes. Step 6 only applies if using GitHub.
+**Large changes:** all of the above, plus —
+- product-owner updates `PRD.md` first if it's a new capability or scope change
+- product-owner runs a PRD alignment check after the build — conflicts block the commit
+- `CHANGELOG.md` entry added; `BACKLOG.md` updated (done items removed, follow-ups logged)
+
+The human localhost review is never skipped, regardless of how small the change looks.
 
 ---
 
@@ -158,20 +160,14 @@ After every significant task, provide a short summary covering:
 ---
 
 ## Notes
-- Stack is TBD — do not assume any framework, database, or tooling until decisions are confirmed in Phase 2.
 - This is a personal project on a personal machine (no longer a corporate/managed work laptop, confirmed 24 August 2026). Standard caution still applies to system-level settings, global installs, and network calls — ask first, explain what's being installed and why, prefer minimal/reversible installs — but this is not a locked-down device requiring the extra corporate-machine caution used previously.
 - Update this file if project-specific rules need to be added below.
 
 ---
 
 ## Project-specific rules
-<!-- Add any rules specific to this project below this line -->
 
-<!-- VERSION CONTROL MODE — set this during setup -->
-<!-- Uncomment the line that applies:              -->
-<!-- Version control: none (Mode A — local files only) -->
-<!-- Version control: git local (Mode B — no remote)   -->
-Version control: git + GitHub (Mode C — full)
+Version control: git + GitHub (full remote workflow). See the "Version control" section above.
 
 CLI tools (Homebrew, gh, wrangler, Node/npm):
 - This is a personal machine (confirmed 24 August 2026, no longer a managed work laptop) — these tools may already be installed, or may be installed on request, subject to the same Dependencies rule as anything else: ask first, explain what it does and why.
