@@ -61,8 +61,8 @@ The architecture for properly supporting multiple courses, beyond the current v2
 
 ## Blocked / waiting on something external
 
-### 12. Contact email → hello@outbuild.co
-The Info page uses williamadamgriffiths@gmail.com as a placeholder. Once hello@outbuild.co is configured and verified via Resend, update the `mailto:` link. (PRD §4.8.)
+### 12. Contact email — decide the final address and whether Info needs a link
+The placeholder gmail is already gone: `Privacy.jsx` uses `scorecard@outbuild.uk`, and the Info page (PRD §4.8) currently has no contact `mailto:` at all. Decide whether the Info page should carry a contact link, and confirm `scorecard@outbuild.uk` is the address to standardise on (PRD §4.8 and earlier notes assumed `hello@outbuild.co`). Align both pages and the PRD once decided.
 
 ### 13. Official Bruntsfield logo
 Add the club's official logo (likely Home or the course info section) once permission to use it is obtained.
@@ -78,7 +78,7 @@ No per-email or per-IP rate limiting, so a target address could be flooded with 
 Used/expired magic tokens are never deleted, so email addresses from abandoned sign-in attempts accumulate indefinitely — inconsistent with GDPR data-minimisation. Add a scheduled Worker (or a cleanup step in `verify.js`) that deletes rows older than 24 hours. All tokens expire after 15 minutes and are marked `used` after verification. (PRD §11.12.) Medium priority.
 
 ### 16. Pre-existing duplicate game rows in production D1
-The 24 Aug hotfix stopped new duplicates but didn't touch rows already duplicated before it shipped. Identify and remove them via the Cloudflare D1 console — group by `user_id, played_at, holes_played` looking for counts > 1 (all predate `client_round_id` so all have it `NULL`). Check for other affected users too.
+The 24 Aug hotfix (live since 24 August 2026) stopped new duplicates but didn't touch rows already duplicated before it shipped. Identify and remove them via the Cloudflare D1 console — group by `user_id, played_at, holes_played` looking for counts > 1 (all predate `client_round_id` so all have it `NULL`). Check for other affected users too. Close this once the cleanup has been run.
 
 ### 17. `Scorecard.jsx` setState-during-render warning on direct load
 Loading `/scorecard` directly with no active game triggers "Cannot update a component while rendering a different component". `Scorecard.jsx` (~line 35) calls `navigate()`/setState during render instead of in a `useEffect` for the no-active-game case. Needs a debugger pass.
@@ -126,8 +126,11 @@ The read-only note on the past-round detail view renders at `text-xs`. Deliberat
 ### 30. `package.json` internal rename
 The npm package name is `golf-tavern-scorecard` — internal only, not user-facing. Rename to `scorecard-by-outbuild` or similar when convenient.
 
-### 31. Analytics
-- Confirm Cloudflare Pages built-in analytics are active.
-- Evaluate a privacy-friendly product analytics tool (Plausible, Fathom, PostHog) — no cookie-consent banner required.
-- In-app events already instrumented: New Game Started, Game Completed (player count, holes), Scorecard Shared.
-- If added, update the Info page copy (PRD §4.8) to say what's collected and by whom.
+### 31. Activate analytics
+Scaffolding is in place: `src/utils/analytics.js` (Plausible wrapper, no-ops if the script isn't loaded) and events instrumented — New Game Started, Game Completed (player count, holes), Scorecard Shared, Game Edited. Open:
+- Activate the Plausible `<script>` in `index.html` (currently commented out) and create the account — or pick another privacy-friendly tool (Fathom, PostHog). Must not require a cookie-consent banner.
+- Confirm Cloudflare Pages built-in analytics are active for basic traffic data.
+- Update the Info page copy (PRD §4.8) to say what's collected and by whom.
+
+### 32. index.html meta tags still say "Bruntsfield Links"
+The three SEO/social meta descriptions in `index.html` (`description`, `og:description`, `twitter:description`) read "Track your round at Bruntsfield Links". Update to the current course name to match the app, PRD, and DESIGN. Small user-facing change — check the link preview after deploy.
