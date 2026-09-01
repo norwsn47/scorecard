@@ -10,6 +10,8 @@
 
 Shipped and removed on 1 September 2026: batch A — 20, 24, 26, 27, 30, 32; batch B — 17, 18, 28. See `CHANGELOG.md`.
 
+Items 36-44 added 1 September 2026 from a golf-feedback list. Several (36, 37, 38, 39, 40, 42) change what the PRD currently specifies (winner calc, par explicitly out of scope, magic-link-only auth) — each needs a product-owner PRD decision before it can be built.
+
 ---
 
 ## Features not yet built
@@ -59,6 +61,24 @@ A proper sign-up flow capturing name and home course together, with editable per
 ### 11. Multi-course architecture
 The architecture for properly supporting multiple courses, beyond the current v2.0 model where a signed-in user's "course" is a name string with a default hole count (PRD §11.7). Would cover structured per-course data (holes, par), how quick-play coexists with it, and whether system-provided courses become browsable. Planning item, not a single chunk — revisit once real usage shows users creating multiple distinct courses.
 
+### 36. Ties count as joint first (draw)
+Currently `calculateResult` / `normalizeDbGame` pick a single lowest-total finisher as the winner (PRD §4.4: "Winner = player with the lowest total among those who finished"). When two or more finishers share the lowest total they should be **joint first — a draw**, shown as such on the Summary, Podium-less finish, History card and share image. Apply retrospectively: the winner is recomputed client-side from `player_data` on every History load, so a D1 round updates on next view; localStorage rounds store `game.winner` and would need a one-time re-derivation on read (or a migration). PRD §4.4 / §5 change needed.
+
+### 37. Par as a first-class concept — set per course, shown while scoring
+When creating a course, let the user enter par (per hole, or a single value applied to every hole; default 3). Store it on the course record. While entering scores, show each hole's par. This is the enabling work for #38, #39 and part of #10; relates to #11 (structured per-course data). PRD currently lists par as explicitly out of scope for MVP and v2.0 (§7) — needs a product-owner decision on how par sits alongside the raw-stroke model (§5) before building. Quick-play (Bruntsfield) can assume par 3 for all 36 holes.
+
+### 38. Score-against-par indicator while entering scores
+With par available (#37), show each entered score's result vs par — e.g. a small superscript or bracketed `+1` / `-1` / `E` next to the number in the scorecard grid. Live as the score is entered. Depends on #37.
+
+### 39. End-of-round tally: eagles / birdies / bogeys / double-bogeys
+On finishing a round, count and show per player how many holes they scored eagle (−2), birdie (−1), par (E), bogey (+1) and double-bogey-or-worse (+2+) — a small summary block on the finish/Summary screen and a candidate for the share image. Depends on #37. Decide exact buckets and labels with the product-owner (the user's terms were "eagles, biggies, double biggies").
+
+### 40. Optional match-play game mode (win each hole)
+A game-mode toggle at setup: **stroke play** (current — lowest total wins) or **match play** (win the most holes; each hole won by the lowest score, halved on a tie). Changes the winner calculation, the Summary, and the share image. Explicitly flagged by the user as a future edition. PRD §5 change needed.
+
+### 42. "Sign in with Google" (OAuth)
+Add Google as a sign-in option alongside the magic link (PRD §11.4 is currently magic-link-only). Needs: an OAuth client (Google Cloud console), the redirect/callback Pages Function, and a decision on account linking — a user who has signed in by magic link and then uses Google with the same email address should land on the same account, not a duplicate. PRD §11.4 change needed. Assistance requested.
+
 ---
 
 ## Blocked / waiting on something external
@@ -83,7 +103,10 @@ Used/expired magic tokens are never deleted, so email addresses from abandoned s
 The 24 Aug hotfix (live since 24 August 2026) stopped new duplicates but didn't touch rows already duplicated before it shipped. Identify and remove them via the Cloudflare D1 console — group by `user_id, played_at, holes_played` looking for counts > 1 (all predate `client_round_id` so all have it `NULL`). Check for other affected users too. Close this once the cleanup has been run.
 
 ### 19. Past-round "← Rounds" back button always targets History
-On the round detail view the back button always navigates to History, regardless of how the user reached the view. Reviewed in batch B (1 Sep 2026): History is the correct destination in every real path (opened from History; post-edit-finish of a round that lives in History; browser-back after finishing a new round that is now in History). No fix improves it — recommend closing as won't-fix. Kept only pending a final call.
+Superseded by #43 (proper back-a-step navigation across all pages). The narrow "always targets History" concern is fine on its own (History is the right destination for that view) — the real ask is the app-wide one in #43.
+
+### 43. Proper "back a step" navigation on every page
+The router is a state machine with light URL sync (`App.jsx`). Back buttons currently navigate to a hard-coded parent (`navigate('home')` or a `from` param), so from a deep screen the user often jumps straight to Home instead of retracing one step. Give every non-Home screen a visible back affordance that goes **back one step** in the actual navigation history (a small nav stack, or lean on `window.history.back()` where the pushState history is reliable), with a sensible fallback when there's no prior entry. Absorbs #19. Check interaction with the popstate-clears-params behaviour and the edit-flow guards (#18).
 
 ---
 
@@ -104,11 +127,12 @@ No integration/component test covers open-edit → change on the scorecard → s
 ### 29. Summary saved-note body is very small (12px)
 The read-only note on the past-round detail view renders at `text-xs`. Deliberate ("very small" was the ask), but it's user-authored content read on a phone — revisit to `text-sm` if it reads as too small in practice.
 
-### 31. Activate analytics
-Scaffolding is in place: `src/utils/analytics.js` (Plausible wrapper, no-ops if the script isn't loaded) and events instrumented — New Game Started, Game Completed (player count, holes), Scorecard Shared, Game Edited. Open:
-- Activate the Plausible `<script>` in `index.html` (currently commented out) and create the account — or pick another privacy-friendly tool (Fathom, PostHog). Must not require a cookie-consent banner.
+### 31. Set up analytics
+The user wants **Google Analytics (GA4)** specifically (assistance requested). Scaffolding is already in place for a different tool: `src/utils/analytics.js` (a Plausible `window.plausible?.(...)` wrapper) and events instrumented — New Game Started, Game Completed (player count, holes), Scorecard Shared, Game Edited. Open:
+- **Decision / conflict to resolve first:** GA4 sets cookies and, under UK PECR + UK GDPR, generally needs a consent banner — which the app has deliberately avoided, and PRD §4.8 currently tells users "No tracking, no analytics, and no third-party services". Either (a) accept a consent banner + rewrite the Info/Privacy copy and PRD §4.8/§4.5, or (b) use GA in a cookieless/consent-exempt configuration, or (c) reconsider a cookieless tool (Plausible/Fathom) that needs no banner. Product-owner call.
+- Wire the chosen tool: swap `analytics.js` to the GA `gtag` API (or keep Plausible), add the script to `index.html`, create the account.
 - Confirm Cloudflare Pages built-in analytics are active for basic traffic data.
-- Update the Info page copy (PRD §4.8) to say what's collected and by whom.
+- Update the Info page + Privacy page copy and PRD §4.8/§4.5 to state exactly what is collected and by whom.
 
 ### 33. `game_name` is dead plumbing beyond the PATCH handler
 Game-naming was removed from the UI but `game_name` remains in the `games` schema, the `POST /api/games` handler (client always sends `null`), and `History.normalizeDbGame` (`name:` field, never rendered). Backlog 24 removed it from the PATCH handler only. Finish the job: drop it from POST + `normalizeDbGame`, and decide whether to keep the nullable column or migrate it out.
@@ -118,3 +142,9 @@ From the batch-B tap-target pass (#28). Three inline-in-paragraph `text-xs` link
 
 ### 35. No render/flow tests for the SPA navigation behaviours
 The suite covers `src/utils/*` and `functions/api/*` only. The batch-B fixes (#17 direct `/scorecard` bounce, #18 stranded-edit cleanup) and the edit flow (existing #22) have no automated coverage. One follow-up item to add a component/render test harness (React Testing Library) and cover these.
+
+### 41. Page load performance pass
+Measure and tune actual load performance — Core Web Vitals (LCP, CLS, INP), bundle size (currently ~248 kB / ~76 kB gzip), font loading (three families via Google Fonts with `display=swap`), image weight (`course_map_v2.png` is ~455 kB), and Cloudflare Pages caching headers. Establish a baseline, fix the obvious wins, re-measure. Assistance requested. (The `performance-auditor` agent covers this.)
+
+### 44. Design-system consolidation + page/header templates
+DESIGN.md has component patterns but no formal system. The user wants: a mobile header review (spacing and sizing rules — `PageHeader` `pt-10 pb-4`, `px-20` title clearance, the Summary bespoke header, etc.), documented design-system rules for the app, and page/header templates so new screens are built to a pattern rather than ad hoc. Design-director work; produces an expanded DESIGN.md (tokens → components → page templates → header rules) plus, ideally, a shared layout/header primitive the pages compose. Related: #27 (closed — PageHeader clearance), #34 (tap-target floor), the DESIGN.md "Inline link tap targets" and "Navigation" sections.
