@@ -18,6 +18,8 @@ Read these files before writing a single line of UI code:
 - `PRD.md` — what you're building and for whom
 - The brief for this specific change (from the project-manager, or the user directly)
 
+A named branch already exists (whoever dispatched you created it). Work on the current branch — never create a branch, never switch branches, never commit to `main`. Leave commits to whoever is running the review gate unless you're told otherwise.
+
 If DESIGN.md does not exist, stop and say so — do not invent a visual style.
 If OUTBUILD-PRINCIPLES.md and OUTBUILD-DESIGN-LANGUAGE.md exist, they override any instinct to add decorative elements, generic patterns, shadow where it isn't earned, or unnecessary complexity.
 
