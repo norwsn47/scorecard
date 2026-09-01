@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { BRUNTSFIELD_COURSE_NAME } from '../constants.js'
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch'
 import RulesContent from './RulesContent.jsx'
 
@@ -18,7 +19,7 @@ export default function CourseMapModal({ onClose }) {
         {/* Header */}
         <div className="relative px-5 py-4 border-b border-border shrink-0">
           <p className="font-display italic text-xl text-text leading-tight">
-            Bruntsfield Short Hole Golf Course
+            {BRUNTSFIELD_COURSE_NAME}
           </p>
           <p className="font-ui text-xs tracking-[0.15em] uppercase text-muted mt-0.5">
             {showRules ? 'Course Rules' : 'Course Map'}
@@ -45,7 +46,7 @@ export default function CourseMapModal({ onClose }) {
             >
               <img
                 src="/course_map_v2.png"
-                alt="Bruntsfield Short Hole Golf Course course map"
+                alt={`${BRUNTSFIELD_COURSE_NAME} course map`}
                 className="w-full block"
               />
             </TransformComponent>
