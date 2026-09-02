@@ -2,7 +2,7 @@
 ## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
 **Version:** 2.0
-**Last updated:** 2 September 2026 (item 36 — finishers level on the lowest total now finish joint first, shown as "Tied"; §4.4, §4.5, §4.7, §5, §11.9. Item 37 — per-hole par added as a first-class display concept: new §5.1, updates to §6, §7, §8, §11.3, §11.7. Item 36 build follow-up — DNF rule stated precisely in §4.4; result-label copy standardised on " - " (spaced hyphen) across §4.4/§4.5/§4.7)
+**Last updated:** 2 September 2026 (item 36 — finishers level on the lowest total now finish joint first, shown as "Tied"; §4.4, §4.5, §4.7, §5, §11.9. Item 37 — per-hole par added as a first-class display concept: new §5.1, updates to §6, §7, §8, §11.3, §11.7. Item 36 build follow-up — DNF rule stated precisely in §4.4; result-label copy standardised on " - " (spaced hyphen) and " & " across §4.4/§4.5/§4.7. Item 37 shipped — §5.1 notes par renders as a raised (N) in the live and read-only scorecards)
 
 ---
 
@@ -220,7 +220,9 @@ MANY THANKS FOR YOUR CO-OPERATION — ENJOY YOUR GAME
 
 ### 5.1 Par
 
-Par is a **per-hole** attribute of a course, used for display and derived stats only. It has no effect on totals, the winner, DNF or the draw rule (§5) — scoring stays raw-stroke throughout. This exists to enable the score-vs-par indicator (#38) and the end-of-round tally (#39).
+Par is a **per-hole** attribute of a course, used for display and derived stats only. It has no effect on totals, the winner, DNF or the draw rule (§5) — scoring stays raw-stroke throughout. It also enables the score-vs-par indicator (#38) and the end-of-round tally (#39).
+
+**Where par is shown:** as a small raised `(N)` next to the hole number, in both the live scorecard grid and the read-only Summary scorecard table (the post-finish view and the History detail view). The share image does not show par. There is no vs-par indicator yet — that is #38.
 
 **Model:**
 - Every course carries a par value for each of its holes — a `hole_pars` array of integers, length = the course's hole count
