@@ -144,7 +144,7 @@ export function calculateResult(players, scores, holes) {
  */
 export function deriveResult(game) {
   const players = Array.isArray(game?.players) ? game.players : []
-  const holes = game?.holesPlayed ?? game?.holes ?? 36
+  const holes = game?.holesPlayed ?? game?.holes ?? MAX_HOLES
   return calculateResult(players, game?.scores ?? {}, holes)
 }
 
