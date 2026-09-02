@@ -8,7 +8,7 @@
 
 **Last updated:** 1 September 2026
 
-Shipped and removed on 1 September 2026: batch A — 20, 24, 26, 27, 30, 32; batch B — 17, 18, 28. See `CHANGELOG.md`.
+Shipped and removed on 1 September 2026: batch A — 20, 24, 26, 27, 30, 32; batch B — 17, 18, 28; batch C — 2 (code part; sender-name step lives on as 2b), 29, 33. See `CHANGELOG.md`.
 
 Items 36-44 added 1 September 2026 from a golf-feedback list. Several (36, 37, 38, 39, 40, 42) change what the PRD currently specifies (winner calc, par explicitly out of scope, magic-link-only auth) — each needs a product-owner PRD decision before it can be built.
 
@@ -21,9 +21,8 @@ Two parts, from the July 2026 feedback list. **A previous implementation attempt
 - The map button in `Scorecard.jsx` only renders when a game was started from the `/bruntsfield-short-course` route. A user who starts from the generic home "New Game", or a signed-in user who picks Bruntsfield from the course selector, never sees it. Show the button whenever the active game's course is Bruntsfield (by course name/id, not by navigation route). Note: this reverses a deliberate Wave 5 scoping decision.
 - `CourseMapModal.jsx` shows no loading state — add an instant placeholder/spinner, replaced on the image's `onLoad` (or an error state).
 
-### 2. Sign-in email branding
-- `functions/api/auth/request-link.js` — subject line and in-email wordmark read plain "Scorecard". Update to "Scorecard by Outbuild" per DESIGN.md's email pattern.
-- Manual step (not code): the inbox sender name is set by the `RESEND_FROM_EMAIL` env var format. Update via the Cloudflare Pages dashboard (Settings → Environment variables).
+### 2b. Sign-in email — inbox sender name (manual, not code)
+The email copy/wordmark now read "Scorecard by Outbuild" (shipped 1 Sep). Remaining: the inbox *sender name* is set by the `RESEND_FROM_EMAIL` env var format — set it to a `Scorecard by Outbuild <address>` display-name format via the Cloudflare Pages dashboard (Settings → Environment variables). No code.
 
 ### 3. User profile foundation (backend)
 Groundwork for name capture and account settings. Touches auth data — confirm before starting.
@@ -124,18 +123,12 @@ No integration/component test covers open-edit → change on the scorecard → s
 ### 25. Crisper course map image
 `public/course_map_v2.png` lacks sharpness when zoomed on high-res screens. Replace with a higher-resolution source, or SVG/vector if the course can provide one. (Distinct from #1, which is about when the map appears and its loading state.)
 
-### 29. Summary saved-note body is very small (12px)
-The read-only note on the past-round detail view renders at `text-xs`. Deliberate ("very small" was the ask), but it's user-authored content read on a phone — revisit to `text-sm` if it reads as too small in practice.
-
 ### 31. Set up analytics
 The user wants **Google Analytics (GA4)** specifically (assistance requested). Scaffolding is already in place for a different tool: `src/utils/analytics.js` (a Plausible `window.plausible?.(...)` wrapper) and events instrumented — New Game Started, Game Completed (player count, holes), Scorecard Shared, Game Edited. Open:
 - **Decision / conflict to resolve first:** GA4 sets cookies and, under UK PECR + UK GDPR, generally needs a consent banner — which the app has deliberately avoided, and PRD §4.8 currently tells users "No tracking, no analytics, and no third-party services". Either (a) accept a consent banner + rewrite the Info/Privacy copy and PRD §4.8/§4.5, or (b) use GA in a cookieless/consent-exempt configuration, or (c) reconsider a cookieless tool (Plausible/Fathom) that needs no banner. Product-owner call.
 - Wire the chosen tool: swap `analytics.js` to the GA `gtag` API (or keep Plausible), add the script to `index.html`, create the account.
 - Confirm Cloudflare Pages built-in analytics are active for basic traffic data.
 - Update the Info page + Privacy page copy and PRD §4.8/§4.5 to state exactly what is collected and by whom.
-
-### 33. `game_name` is dead plumbing beyond the PATCH handler
-Game-naming was removed from the UI but `game_name` remains in the `games` schema, the `POST /api/games` handler (client always sends `null`), and `History.normalizeDbGame` (`name:` field, never rendered). Backlog 24 removed it from the PATCH handler only. Finish the job: drop it from POST + `normalizeDbGame`, and decide whether to keep the nullable column or migrate it out.
 
 ### 34. `text-xs` inline links land ~36-38px, below the ~40px floor
 From the batch-B tap-target pass (#28). Three inline-in-paragraph `text-xs` links — `Login.jsx` "How we handle your data", `Info.jsx` "Read our privacy policy", `Summary.jsx` "Share scorecard" — use `py-2.5 -my-2.5` (~36-38px) because more padding would overlap adjacent lines. Better than the bare ~16px but under the documented floor. Revisit if a cleaner pattern turns up (e.g. giving them their own line).
