@@ -4,7 +4,7 @@ description: Read-only reviewer with active rendering verification. Runs as the 
 tools: Read, Bash, Glob, Grep
 model: sonnet
 ---
-Last updated: 1 September 2026
+Last updated: 2 September 2026
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
 Note: "chunk" throughout this file means "the change being reviewed" — it does not imply a formal build-plan chunk.
@@ -99,12 +99,13 @@ npm run dev   # or yarn dev / pnpm dev as appropriate
 ```
 Wait for the server to confirm it's running.
 
-**Step 2 — Run the test suite**
+**Step 2 — Run the test suite and the linter**
 ```bash
+npm run lint    # ESLint (flat config) — rules-of-hooks, no-undef, unused vars
 npm test        # unit and integration tests
 npm run e2e     # end-to-end tests if configured
 ```
-Report full output — pass counts, failures, errors. If tests fail, flag as Critical.
+Report full output — pass counts, failures, errors. If tests fail, flag as Critical. A lint error (not warning) introduced by the change is a Should-fix at minimum; a `react-hooks/rules-of-hooks` violation is Critical.
 
 **Step 3 — Verify new routes and components render**
 Check every route and component built in this chunk:
