@@ -139,5 +139,8 @@ Measure and tune actual load performance — Core Web Vitals (LCP, CLS, INP), bu
 ### 45. Dependency audit — update the build/dev toolchain
 `npm audit` (first run 2 Sep, surfaced during #21) reports 5 vulnerabilities in the **pre-existing** toolchain, not from ESLint: `browserslist`, `nanoid`, `postcss` (all fixable with a non-breaking `npm audit fix`); `esbuild` ≤0.24.2 → the dev server can be probed by any website (moderate, dev-only), fixable only by a Vite major bump. Do a deliberate `npm audit fix` for the three easy ones, then evaluate the Vite/esbuild upgrade separately (breaking). Not urgent — none affect the production bundle's runtime.
 
+### 46. `POST /api/games` doesn't validate `holes_played` type/range
+`onRequestPost` only truthy-checks `holes_played`; the PATCH handler validates integer 1..36. A malformed `holes_played` on a create still inserts. Surfaced during the #37 chunk-3 review. Align POST with PATCH.
+
 ### 44. Design-system consolidation + page/header templates
 DESIGN.md has component patterns but no formal system. The user wants: a mobile header review (spacing and sizing rules — `PageHeader` `pt-10 pb-4`, `px-20` title clearance, the Summary bespoke header, etc.), documented design-system rules for the app, and page/header templates so new screens are built to a pattern rather than ad hoc. Design-director work; produces an expanded DESIGN.md (tokens → components → page templates → header rules) plus, ideally, a shared layout/header primitive the pages compose. Related: #27 (closed — PageHeader clearance), #34 (tap-target floor), the DESIGN.md "Inline link tap targets" and "Navigation" sections.
