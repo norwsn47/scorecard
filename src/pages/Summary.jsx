@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { track } from '../utils/analytics.js'
 import { formatDateOnly } from '../utils/format.js'
 import { deriveResult } from '../utils/game.js'
+import { tiedNames } from '../utils/result.js'
 import { playerAverage, playerTotal } from '../utils/scores.js'
 import { shareScorecard } from '../utils/share.js'
 import { getActiveGame, getCompletedGames, markCompletedGameSynced } from '../utils/storage.js'
@@ -41,7 +42,13 @@ export default function Summary({ navigate, params }) {
   }
 
   const isDnf    = player => game.dnf?.includes(player)
-  const isWinner = player => player === game.winner
+  // Every tied winner gets the accent treatment, not just winners[0] (item 36).
+  const winners  = game.winners ?? []
+  const isWinner = player => winners.includes(player)
+
+  const resultBase = 'font-ui text-xs tracking-[0.12em] uppercase text-muted shrink-0'
+  const resultName = 'mx-1.5 font-display italic text-sm text-accent normal-case tracking-normal'
+  const resultStrokes = 'font-ui text-xs text-muted normal-case tracking-normal'
 
   // True once this round can no longer be (re-)saved here: either it's a
   // past round opened from History (_fromDb), or it was already POSTed on
@@ -176,18 +183,29 @@ export default function Summary({ navigate, params }) {
         </p>
       )}
 
-      {/* Winner — only shown for multi-player rounds */}
+      {/* Result — only shown for multi-player rounds (item 36). Re-derived on
+          read; "Tied" for a draw, all winners named up to three, a count for
+          four or more. " - " is the shared separator across every surface. */}
       {(game.players?.length ?? 0) > 1 && (
         <div className="px-5 pt-3 pb-1">
           <div className="flex items-center gap-3">
             <div className="flex-1 h-px bg-border" />
-            {game.winner ? (
-              <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted shrink-0">
-                Winner — <span className="font-display italic text-sm text-accent normal-case tracking-normal">{game.winner}</span>
-                <span className="ml-2 font-ui text-xs text-muted normal-case tracking-normal">{playerTotal(game.scores, game.winner)} strokes</span>
+            {winners.length === 0 ? (
+              <p className={resultBase}>No winner</p>
+            ) : winners.length === 1 ? (
+              <p className={resultBase}>
+                <span>Winner -</span>
+                <span className={resultName}>{winners[0]}</span>
+                <span className={resultStrokes}>- {game.winningTotal} strokes</span>
+              </p>
+            ) : winners.length <= 3 ? (
+              <p className={resultBase}>
+                <span>Tied -</span>
+                <span className={resultName}>{tiedNames(winners)}</span>
+                <span className={resultStrokes}>- {game.winningTotal} strokes</span>
               </p>
             ) : (
-              <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted shrink-0">Nobody finished</p>
+              <p className={resultBase}>Tied - {winners.length} players level on {game.winningTotal} strokes</p>
             )}
             <div className="flex-1 h-px bg-border" />
           </div>

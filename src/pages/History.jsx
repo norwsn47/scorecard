@@ -4,6 +4,7 @@ import { formatShortDate } from '../utils/format.js'
 import { playerAverage, playerTotal } from '../utils/scores.js'
 import { deleteCompletedGame, getCompletedGames } from '../utils/storage.js'
 import { deriveResult } from '../utils/game.js'
+import { historyResultLabel } from '../utils/result.js'
 import { useAuth } from '../hooks/useAuth.jsx'
 
 // The result (winner / Tied / No winner, and DNF) is re-derived from the
@@ -195,7 +196,10 @@ export default function History({ navigate }) {
           </div>
         )}
 
-        {!loading && displayed.map(game => (
+        {!loading && displayed.map(game => {
+          const resultLabel = historyResultLabel(game)
+          const winners     = game.winners ?? []
+          return (
           <div
             key={game.id}
             className="relative bg-bg-card rounded-md border border-border shadow-card"
@@ -222,7 +226,7 @@ export default function History({ navigate }) {
               {/* Players */}
               <div className="space-y-1">
                 {(game.players ?? []).map(name => {
-                  const isWinner = name === game.winner
+                  const isWinner = winners.includes(name)
                   const avg      = playerAverage(game.scores, name)
                   const isDnf    = game.dnf?.includes(name)
                   const total    = playerTotal(game.scores, name)
@@ -249,6 +253,11 @@ export default function History({ navigate }) {
                 })}
               </div>
 
+              {/* Result label — re-derived on read; hidden for solo rounds */}
+              {resultLabel && (
+                <p className="font-ui text-xs text-muted mt-2 tracking-wide">{resultLabel}</p>
+              )}
+
               {/* Notes */}
               {game.notes && (
                 <p className="font-ui text-xs text-muted mt-2 italic leading-relaxed line-clamp-2">{game.notes}</p>
@@ -266,7 +275,8 @@ export default function History({ navigate }) {
               </svg>
             </button>
           </div>
-        ))}
+          )
+        })}
 
       </main>
 

@@ -17,8 +17,8 @@ function winnerLabel({ winners, winningTotal }) {
   const strokes = `${winningTotal} strokes`
   if (winners.length === 1) return `Winner: ${winners[0]} - ${strokes}`
   const names = winners.length === 2
-    ? `${winners[0]} and ${winners[1]}`
-    : `${winners.slice(0, -1).join(', ')}, and ${winners.at(-1)}`
+    ? `${winners[0]} & ${winners[1]}`
+    : `${winners.slice(0, -1).join(', ')} & ${winners.at(-1)}`
   return `Tied: ${names} - ${strokes}`
 }
 
