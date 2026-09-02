@@ -243,7 +243,7 @@ export default function Scorecard({ navigate, params }) {
             <tr className="border-b border-border bg-bg-card">
               <th className="py-2 px-2 text-center font-ui text-xs tracking-[0.12em] uppercase text-muted">
                 <span className="block">Hole</span>
-                <span className="block text-[10px] tracking-[0.1em] text-chrome">Par</span>
+                <span className="block text-[11px] tracking-[0.1em] text-muted">Par</span>
               </th>
               {players.map(player => (
                 <th key={player} className="py-2 px-1 text-center font-ui text-xs tracking-[0.12em] uppercase text-muted">
@@ -272,7 +272,7 @@ export default function Scorecard({ navigate, params }) {
                     ].join(' ')}>
                       {holeIndex + 1}
                     </span>
-                    <span className="block font-ui text-[10px] leading-tight text-muted">
+                    <span className="block font-ui text-xs leading-tight text-muted">
                       {holePars[holeIndex]}
                     </span>
                   </td>

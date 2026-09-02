@@ -258,7 +258,7 @@ export default function Setup({ navigate, params }) {
                           type="button"
                           onClick={() => setNewCoursePars(Array(HOLE_COUNT).fill(n))}
                           className={[
-                            'flex-1 h-9 rounded-md border font-ui text-sm active:bg-bg-card',
+                            'flex-1 h-11 rounded-md border font-ui text-sm active:bg-bg-card',
                             newCoursePars.every(p => p === n)
                               ? 'border-accent text-accent'
                               : 'border-border text-text',
@@ -281,7 +281,7 @@ export default function Setup({ navigate, params }) {
                         )}
                         className="h-11 rounded-md border border-border bg-bg-card flex flex-col items-center justify-center leading-none active:bg-border"
                       >
-                        <span className="font-ui text-[10px] text-chrome mb-0.5">{i + 1}</span>
+                        <span className="font-ui text-[11px] text-muted mb-0.5">{i + 1}</span>
                         <span className="font-ui text-sm text-text">{par}</span>
                       </button>
                     ))}

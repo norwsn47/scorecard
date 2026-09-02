@@ -67,4 +67,8 @@ describe('deriveHolePars', () => {
   it('replaces non-integer or nonsensical entries with par 3', () => {
     expect(deriveHolePars([3, 'x', 4.5, 0, -2, null], 6)).toEqual([3, 3, 3, 3, 3, 3])
   })
+
+  it('clamps out-of-band entries (1 or >7) to par 3', () => {
+    expect(deriveHolePars([1, 7, 8, 42, 2, 5], 6)).toEqual([3, 7, 3, 3, 2, 5])
+  })
 })

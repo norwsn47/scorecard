@@ -44,7 +44,9 @@ export function deriveHolePars(raw, holeCount) {
   const out = []
   for (let i = 0; i < holeCount; i++) {
     const v = arr[i]
-    out.push(Number.isInteger(v) && v >= 1 ? v : DEFAULT_PAR)
+    // Same 2..7 band the backend validator enforces on write; a corrupted
+    // stored value outside it falls back to par 3 rather than rendering junk.
+    out.push(Number.isInteger(v) && v >= 2 && v <= 7 ? v : DEFAULT_PAR)
   }
   return out
 }
