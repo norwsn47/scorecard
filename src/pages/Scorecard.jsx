@@ -3,7 +3,7 @@ import CourseMapModal from '../components/CourseMapModal.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import { track } from '../utils/analytics.js'
 import { computeDisplayedHoles, finishGame } from '../utils/game.js'
-import { playerTotal } from '../utils/scores.js'
+import { deriveHolePars, playerTotal } from '../utils/scores.js'
 import { clearActiveCell, clearActiveGame, getActiveCell, getActiveGame, saveActiveCell, saveActiveGame, saveCompletedGame, updateCompletedGame } from '../utils/storage.js'
 
 function initialCellFor(g) {
@@ -63,6 +63,7 @@ export default function Scorecard({ navigate, params }) {
 
   const players       = Array.isArray(game.players) ? game.players : []
   const displayedHoles = computeDisplayedHoles(players, game.scores ?? {}, game.holes)
+  const holePars      = deriveHolePars(game.holePars, game.holes ?? 36)
 
   // Active cell values
   const activePlayer = players[activeCell.playerIndex] ?? null
@@ -143,6 +144,7 @@ export default function Scorecard({ navigate, params }) {
               played_at: completed.completedAt,
               holes_played: completed.holesPlayed,
               player_data: buildPlayerData(completed),
+              hole_pars: completed.holePars ?? null,
               notes: (completed.notes ?? '').trim() || null,
             }),
           })
@@ -155,6 +157,7 @@ export default function Scorecard({ navigate, params }) {
             courseName: completed.courseName ?? null,
             completedAt: completed.completedAt,
             holesPlayed: completed.holesPlayed,
+            holePars: completed.holePars,
             // Result fields are re-derived on read, but persist the full shape
             // finishGame stamps so the stored record stays self-consistent.
             winner: completed.winner,
@@ -232,14 +235,15 @@ export default function Scorecard({ navigate, params }) {
       <div className="flex-1 overflow-y-auto">
         <table className="w-full table-fixed border-collapse">
           <colgroup>
-            <col className="w-14" />
+            <col className="w-16" />
             {players.map((_, i) => <col key={i} />)}
           </colgroup>
 
           <thead className="sticky top-0 z-10">
             <tr className="border-b border-border bg-bg-card">
               <th className="py-2 px-2 text-center font-ui text-xs tracking-[0.12em] uppercase text-muted">
-                Hole
+                <span className="block">Hole</span>
+                <span className="block text-[10px] tracking-[0.1em] text-chrome">Par</span>
               </th>
               {players.map(player => (
                 <th key={player} className="py-2 px-1 text-center font-ui text-xs tracking-[0.12em] uppercase text-muted">
@@ -261,11 +265,16 @@ export default function Scorecard({ navigate, params }) {
                     isActiveRow ? 'bg-accent-tint' : '',
                   ].join(' ')}
                 >
-                  <td className={[
-                    'py-3 px-2 font-ui text-xs text-center',
-                    isActiveRow ? 'text-accent font-semibold' : 'text-chrome',
-                  ].join(' ')}>
-                    {holeIndex + 1}
+                  <td className="py-3 px-2 text-center">
+                    <span className={[
+                      'block font-ui text-xs',
+                      isActiveRow ? 'text-accent font-semibold' : 'text-chrome',
+                    ].join(' ')}>
+                      {holeIndex + 1}
+                    </span>
+                    <span className="block font-ui text-[10px] leading-tight text-muted">
+                      {holePars[holeIndex]}
+                    </span>
                   </td>
                   {players.map((player, playerIndex) => {
                     const score    = (game.scores?.[player] ?? [])[holeIndex] ?? null
@@ -292,7 +301,7 @@ export default function Scorecard({ navigate, params }) {
 
       {/* Totals bar — always visible */}
       <div className="bg-bg-card border-t-2 border-border flex">
-        <div className="w-14 py-3 px-2 font-ui text-xs tracking-[0.12em] uppercase text-muted flex items-center justify-center">
+        <div className="w-16 py-3 px-2 font-ui text-xs tracking-[0.12em] uppercase text-muted flex items-center justify-center">
           Total
         </div>
         {players.map(player => (

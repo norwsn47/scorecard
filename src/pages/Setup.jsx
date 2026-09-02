@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react'
 import PageHeader from '../components/PageHeader.jsx'
-import { BRUNTSFIELD_COURSE_NAME } from '../constants.js'
+import { BRUNTSFIELD_COURSE_NAME, BRUNTSFIELD_HOLE_PARS } from '../constants.js'
 import { buildEditGame, canStartGame, createGame, findDuplicateIndices } from '../utils/game.js'
+import { deriveHolePars } from '../utils/scores.js'
 import { clearActiveGame, getActiveGame, getPlayers, saveActiveGame, savePlayers } from '../utils/storage.js'
 import { useAuth } from '../hooks/useAuth.jsx'
 
 const MAX_PLAYERS = 6
+const HOLE_COUNT = 36
+const PAR_CHOICES = [2, 3, 4, 5, 6, 7]
 
 export default function Setup({ navigate, params }) {
   const pastRound                          = params?.pastRound ?? false
@@ -22,6 +25,7 @@ export default function Setup({ navigate, params }) {
   const [selectedCourseId, setSelectedCourseId] = useState(() => editGame?.courseId ?? null)
   const [creatingCourse, setCreatingCourse]     = useState(false)
   const [newCourseName, setNewCourseName]       = useState('')
+  const [newCoursePars, setNewCoursePars]       = useState(() => Array(HOLE_COUNT).fill(3))
   const [courseError, setCourseError]           = useState(null)
   const [notes, setNotes]                       = useState(() => editGame?.notes ?? '')
   const [pastDate, setPastDate]                 = useState(() =>
@@ -93,9 +97,14 @@ export default function Setup({ navigate, params }) {
   // Resolves the final course id/name, creating a new course first if the
   // user is mid "+ New course". Returns null on a failed creation (the error
   // banner is already set) so the caller can bail out.
+  function holeParsForCourse(courseId) {
+    const c = courses.find(x => x.id === courseId)
+    return c ? deriveHolePars(c.hole_pars, HOLE_COUNT) : null
+  }
+
   async function resolveCourse(currentId, currentName) {
     if (!(showCourse && creatingCourse && newCourseName.trim())) {
-      return { courseId: currentId, courseName: currentName }
+      return { courseId: currentId, courseName: currentName, holePars: holeParsForCourse(currentId) }
     }
     setCourseError(null)
     try {
@@ -103,10 +112,16 @@ export default function Setup({ navigate, params }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ name: newCourseName.trim() }),
+        body: JSON.stringify({ name: newCourseName.trim(), hole_pars: newCoursePars }),
       })
       const data = await res.json()
-      if (res.ok) return { courseId: data.course.id, courseName: data.course.name }
+      if (res.ok) {
+        return {
+          courseId: data.course.id,
+          courseName: data.course.name,
+          holePars: deriveHolePars(data.course.hole_pars, HOLE_COUNT),
+        }
+      }
       setCourseError(data.error || 'Could not create course')
       return null
     } catch {
@@ -132,7 +147,11 @@ export default function Setup({ navigate, params }) {
       if (!resolved) return
 
       const dateIso = new Date(pastDate + 'T12:00:00').toISOString()
-      const working = buildEditGame(editGame, trimmed, resolved.courseId, resolved.courseName, dateIso)
+      // Par: adopt the new course's par when a D1 edit creates or switches
+      // course; otherwise the round keeps its own saved snapshot (§11.7).
+      const courseChanged = isDbEdit && (resolved.courseId ?? null) !== (editGame.courseId ?? null)
+      const editHolePars = (creatingCourse || courseChanged) ? resolved.holePars : editGame.holePars
+      const working = buildEditGame(editGame, trimmed, resolved.courseId, resolved.courseName, dateIso, editHolePars)
       working.notes = notes.trim() || null
       working._edit = { id: editGame.id, fromDb: isDbEdit }
       saveActiveGame(working)
@@ -150,7 +169,9 @@ export default function Setup({ navigate, params }) {
     const dateIso = pastRound
       ? new Date(pastDate + 'T12:00:00').toISOString()
       : null
-    const game = createGame(trimmed, resolved.courseId, resolved.courseName, dateIso)
+    // Quick-play → Bruntsfield par 3s; logged-in → the selected course's par.
+    const holePars = resolved.holePars ?? (user ? undefined : BRUNTSFIELD_HOLE_PARS)
+    const game = createGame(trimmed, resolved.courseId, resolved.courseName, dateIso, holePars)
     saveActiveGame(game)
     navigate('scorecard', { game, bruntsfield: fromBruntsfield })
   }
@@ -187,6 +208,7 @@ export default function Setup({ navigate, params }) {
                   if (e.target.value === '__new__') {
                     setCreatingCourse(true)
                     setSelectedCourseId(null)
+                    setNewCoursePars(Array(HOLE_COUNT).fill(3))
                   } else {
                     setSelectedCourseId(e.target.value)
                   }
@@ -199,27 +221,74 @@ export default function Setup({ navigate, params }) {
                 <option value="__new__">+ New course</option>
               </select>
             ) : (
-              <div className="space-y-1">
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newCourseName}
-                    onChange={e => { setNewCourseName(e.target.value.slice(0, 60)); setCourseError(null) }}
-                    placeholder="Course name"
-                    autoFocus
-                    className="flex-1 min-w-0 py-3 pl-4 pr-4 rounded-md border border-border font-ui text-base bg-bg-card text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40"
-                  />
-                  <button
-                    onClick={() => { setCreatingCourse(false); setNewCourseName(''); setCourseError(null) }}
-                    className="px-4 py-3 rounded-sm border border-border text-muted font-ui text-sm active:bg-bg-card"
-                  >
-                    Cancel
-                  </button>
+              <>
+                <div className="space-y-1">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newCourseName}
+                      onChange={e => { setNewCourseName(e.target.value.slice(0, 60)); setCourseError(null) }}
+                      placeholder="Course name"
+                      autoFocus
+                      className="flex-1 min-w-0 py-3 pl-4 pr-4 rounded-md border border-border font-ui text-base bg-bg-card text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40"
+                    />
+                    <button
+                      onClick={() => { setCreatingCourse(false); setNewCourseName(''); setCourseError(null); setNewCoursePars(Array(HOLE_COUNT).fill(3)) }}
+                      className="px-4 py-3 rounded-sm border border-border text-muted font-ui text-sm active:bg-bg-card"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                  {courseError && (
+                    <p className="font-ui text-xs text-accent pl-1">{courseError}</p>
+                  )}
                 </div>
-                {courseError && (
-                  <p className="font-ui text-xs text-accent pl-1">{courseError}</p>
-                )}
-              </div>
+
+                {/* Per-hole par — course creation only. Every hole starts at
+                    par 3; tap a hole to cycle it, or set them all at once. */}
+                <div className="mt-4">
+                  <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted mb-2 pl-1">Par for each hole</p>
+
+                  <div className="mb-2.5">
+                    <p className="font-ui text-xs text-muted mb-1.5 pl-1">Set every hole to</p>
+                    <div className="flex gap-2">
+                      {PAR_CHOICES.map(n => (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() => setNewCoursePars(Array(HOLE_COUNT).fill(n))}
+                          className={[
+                            'flex-1 h-9 rounded-md border font-ui text-sm active:bg-bg-card',
+                            newCoursePars.every(p => p === n)
+                              ? 'border-accent text-accent'
+                              : 'border-border text-text',
+                          ].join(' ')}
+                        >
+                          {n}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-6 gap-1">
+                    {newCoursePars.map((par, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        aria-label={`Hole ${i + 1} par ${par}`}
+                        onClick={() => setNewCoursePars(prev =>
+                          prev.map((p, idx) => idx === i ? (p >= 7 ? 2 : p + 1) : p)
+                        )}
+                        className="h-11 rounded-md border border-border bg-bg-card flex flex-col items-center justify-center leading-none active:bg-border"
+                      >
+                        <span className="font-ui text-[10px] text-chrome mb-0.5">{i + 1}</span>
+                        <span className="font-ui text-sm text-text">{par}</span>
+                      </button>
+                    ))}
+                  </div>
+                  <p className="font-ui text-xs text-muted mt-2 pl-1">Tap a hole to change its par.</p>
+                </div>
+              </>
             )}
             <p className="font-ui text-xs text-muted mt-1.5 pl-1">Course</p>
           </div>
