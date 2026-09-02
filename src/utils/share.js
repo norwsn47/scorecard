@@ -16,6 +16,7 @@ function winnerLabel({ winners, winningTotal }) {
   if (winners.length === 0) return 'No winner - all players DNF'
   const strokes = `${winningTotal} strokes`
   if (winners.length === 1) return `Winner: ${winners[0]} - ${strokes}`
+  if (winners.length >= 4) return `Tied: ${winners.length} players level on ${strokes}`
   const names = winners.length === 2
     ? `${winners[0]} & ${winners[1]}`
     : `${winners.slice(0, -1).join(', ')} & ${winners.at(-1)}`

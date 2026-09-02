@@ -46,7 +46,7 @@ export default function Summary({ navigate, params }) {
   const winners  = game.winners ?? []
   const isWinner = player => winners.includes(player)
 
-  const resultBase = 'font-ui text-xs tracking-[0.12em] uppercase text-muted shrink-0'
+  const resultBase = 'font-ui text-xs tracking-[0.12em] uppercase text-muted text-center'
   const resultName = 'mx-1.5 font-display italic text-sm text-accent normal-case tracking-normal'
   const resultStrokes = 'font-ui text-xs text-muted normal-case tracking-normal'
 
@@ -188,27 +188,31 @@ export default function Summary({ navigate, params }) {
           four or more. " - " is the shared separator across every surface. */}
       {(game.players?.length ?? 0) > 1 && (
         <div className="px-5 pt-3 pb-1">
-          <div className="flex items-center gap-3">
-            <div className="flex-1 h-px bg-border" />
-            {winners.length === 0 ? (
-              <p className={resultBase}>No winner</p>
-            ) : winners.length === 1 ? (
-              <p className={resultBase}>
-                <span>Winner -</span>
-                <span className={resultName}>{winners[0]}</span>
-                <span className={resultStrokes}>- {game.winningTotal} strokes</span>
-              </p>
-            ) : winners.length <= 3 ? (
-              <p className={resultBase}>
-                <span>Tied -</span>
-                <span className={resultName}>{tiedNames(winners)}</span>
-                <span className={resultStrokes}>- {game.winningTotal} strokes</span>
-              </p>
-            ) : (
-              <p className={resultBase}>Tied - {winners.length} players level on {game.winningTotal} strokes</p>
-            )}
-            <div className="flex-1 h-px bg-border" />
-          </div>
+          {winners.length >= 4 ? (
+            <p className={`${resultBase} block text-center leading-relaxed`}>
+              Tied <span className={resultStrokes}>- {winners.length} players level on {game.winningTotal} strokes</span>
+            </p>
+          ) : (
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-border" />
+              {winners.length === 0 ? (
+                <p className={resultBase}>No winner</p>
+              ) : winners.length === 1 ? (
+                <p className={`${resultBase} min-w-0 leading-relaxed`}>
+                  <span>Winner -</span>
+                  <span className={resultName}>{winners[0]}</span>
+                  <span className={resultStrokes}>- {game.winningTotal} strokes</span>
+                </p>
+              ) : (
+                <p className={`${resultBase} min-w-0 leading-relaxed`}>
+                  <span>Tied -</span>
+                  <span className={resultName}>{tiedNames(winners)}</span>
+                  <span className={resultStrokes}>- {game.winningTotal} strokes</span>
+                </p>
+              )}
+              <div className="flex-1 h-px bg-border" />
+            </div>
+          )}
         </div>
       )}
 
