@@ -95,7 +95,6 @@ export default function Summary({ navigate, params }) {
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify({
-            game_name: null,
             course_id: game.courseId || null,
             played_at: game.completedAt,
             holes_played: game.holesPlayed,
