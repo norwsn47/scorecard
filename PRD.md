@@ -2,7 +2,7 @@
 ## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
 **Version:** 2.0
-**Last updated:** 2 September 2026 (item 36 — finishers level on the lowest total now finish joint first, shown as "Tied"; §4.4, §4.5, §4.7, §5, §11.9. Item 37 — per-hole par added as a first-class display concept: new §5.1, updates to §6, §7, §8, §11.3, §11.7)
+**Last updated:** 2 September 2026 (item 36 — finishers level on the lowest total now finish joint first, shown as "Tied"; §4.4, §4.5, §4.7, §5, §11.9. Item 37 — per-hole par added as a first-class display concept: new §5.1, updates to §6, §7, §8, §11.3, §11.7. Item 36 build follow-up — DNF rule stated precisely in §4.4; result-label copy standardised on " - " (spaced hyphen) across §4.4/§4.5/§4.7)
 
 ---
 
@@ -92,13 +92,13 @@ Outbuild palette applied for outdoor sunlight legibility on a phone:
 - User taps **Finish Game**
 - A **confirmation dialog** appears — user must confirm before the game ends (prevents accidental taps)
 - Final scores shown in a summary view (all players, all holes, totals)
-- **Players who did not complete all holes are excluded from the result** — marked as DNF
+- **DNF (did not finish):** a player is DNF when they completed fewer holes than the furthest player in that round, and is excluded from the result. If every player stopped at the same hole, nobody is DNF. A solo round is never DNF once at least one hole is scored.
 - **The result:**
   - **Outright winner** — a single finisher has the lowest total
-  - **Tied** — two or more finishers are level on the lowest total. The round is a draw (joint first). There is no tie-break and no countback. The Summary shows "Tied — [Name] & [Name] · [X] strokes"; for four or more level it falls back to "Tied — N players level on [X] strokes"
+  - **Tied** — two or more finishers are level on the lowest total. The round is a draw (joint first). There is no tie-break and no countback. The Summary shows "Tied - [Name] & [Name] - [X] strokes"; for four or more level it falls back to "Tied - N players level on [X] strokes"
   - **No winner** — every player is DNF (all dropped out). The round is saved with no winner
   - **Solo rounds** (one player) — winner and draw concepts do not apply; nothing is highlighted as a result on any screen
-- The result is derived from the per-hole scores by one shared `calculateResult` helper, returning `{ winners, dnf, isDraw }` plus a `winner = winners[0] ?? null` convenience field. It is **re-derived on read** for saved rounds — the stored `game.winner` string on legacy localStorage rounds and the legacy single winner on D1 rounds are not authoritative and are not migrated
+- The result is derived from the per-hole scores by one shared `calculateResult` helper, returning `{ winners, dnf, isDraw, winningTotal }` plus a `winner = winners[0] ?? null` convenience field. It is **re-derived on read** for saved rounds (via the `deriveResult` wrapper) — the stored `game.winner` string on legacy localStorage rounds and the legacy single winner on D1 rounds are not authoritative and are not migrated
 - A **Share** button appears on the summary screen — tapping it generates the share image and triggers the native device share sheet (see 4.7)
 - Completed game saved to local browser storage with:
   - Game name (if set)
@@ -110,7 +110,7 @@ Outbuild palette applied for outdoor sunlight legibility on a phone:
 
 ### 4.5 Game history
 - Accessible from the home screen via **History**
-- Lists all previously saved games, each showing: game name (if set), date, players, number of holes, and a **result label line** — "Winner: X" / "Tied: X & Y" / "No winner" (four or more level: "Tied: N players level on [X]"). Solo rounds show no result label, matching the Summary
+- Lists all previously saved games, each showing: game name (if set), date, players, number of holes, and a **result label line** — "Winner: X - N strokes" / "Tied: X & Y - N strokes" / "No winner" (four or more level: "Tied: N players level on X strokes"). Two or three level winners are named; " - " (spaced hyphen) is the separator, matching the Summary and share image. Solo rounds show no result label, matching the Summary
   - The result label is re-derived from the stored scores on every History load (see 4.4) — it is not read from a stored winner field
   - Games without a name — whether saved before the game naming feature or left intentionally blank — display the date as their primary identifier in History
 - Tapping a game shows the full scorecard for that game
@@ -133,10 +133,11 @@ A **Share** button appears on the end-of-game summary screen (see 4.4). Tapping 
 - Outbuild logo mark — directly below the heading
 - Game name — shown below the logo mark, only if the user set one
 - Result callout:
-  - Single winner: "Winner: [Name] — [X] strokes"
-  - Tied: "Tied: [Name] and [Name] — [X] strokes" (or "[Name], [Name], and [Name]" for three-way ties)
-  - All players DNF: "No winner — all players DNF"
-  - The term **"Tied"** is used here and on the Summary and History (item 36) — one vocabulary across every surface. The share image already renders the tied and all-DNF cases from the recomputed result; item 36 is a wording alignment only, no functional change to this section
+  - Single winner: "Winner: [Name] - [X] strokes"
+  - Tied: "Tied: [Name] & [Name] - [X] strokes" (or "[Name], [Name] & [Name]" for three-way ties)
+  - All players DNF: "No winner - all players DNF"
+  - Solo rounds: no result callout is drawn at all
+  - The term **"Tied"** and the " - " (spaced hyphen) separator are used here and on the Summary and History (item 36) — one vocabulary across every surface. The share image renders the tied, all-DNF and solo cases from the recomputed result
 - Full hole-by-hole scorecard table:
   - Columns = players; rows = holes; cells = stroke count for that hole
   - Totals row at the bottom of each column
