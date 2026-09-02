@@ -298,7 +298,7 @@ Matches the app's primary button: `border-radius: 4px` (sharp), uppercase, `lett
 ### Structure
 - Outer background: `#F7F4EE`, `padding: 40px 20px`
 - Card: `max-width: 480px`, `background: #F5EFE3`, `border: 1px solid #D9D0C4`, `border-radius: 8px`, `padding: 40px`
-- Wordmark: `font-family: Georgia, serif` — "Scorecard" in muted (`#6B6560`), "Club" in accent (`#1A4329`); `font-size: 11px`, uppercase, `letter-spacing: 0.12em`
+- Wordmark: `font-family: Georgia, serif` — "Scorecard" in muted (`#6B6560`), "by Outbuild" in accent (`#1A4329`); `font-size: 11px`, uppercase, `letter-spacing: 0.12em`
 - Heading: Georgia, `font-weight: normal`, `font-size: 24px`, `color: #1A1A18`
 - Body copy: Arial, `font-size: 14px`, `line-height: 1.6`, `color: #6B6560`
 - Fallback link: `font-size: 12px`, muted label + `#1A1A18` URL, `word-break: break-all`
