@@ -3,46 +3,14 @@ import PageHeader from '../components/PageHeader.jsx'
 import { formatShortDate } from '../utils/format.js'
 import { playerAverage, playerTotal } from '../utils/scores.js'
 import { deleteCompletedGame, getCompletedGames } from '../utils/storage.js'
+import { normalizeDbGame, normalizeLocalGame } from '../utils/history.js'
+import { historyResultLabel } from '../utils/result.js'
 import { useAuth } from '../hooks/useAuth.jsx'
-
-function normalizeDbGame(row) {
-  const playerData = typeof row.player_data === 'string'
-    ? JSON.parse(row.player_data)
-    : (row.player_data ?? [])
-
-  const players = playerData.map(p => p.name)
-  const scores  = {}
-  const dnf     = []
-
-  playerData.forEach(p => {
-    scores[p.name] = p.scores ?? []
-    if (p.dnf) dnf.push(p.name)
-  })
-
-  const finishers = playerData.filter(p => !p.dnf && p.total > 0)
-  const winner = finishers.length > 0
-    ? finishers.reduce((best, p) => p.total < best.total ? p : best).name
-    : null
-
-  return {
-    id:          row.id,
-    completedAt: row.played_at,
-    holesPlayed: row.holes_played,
-    courseId:    row.course_id || null,
-    courseName:  row.course_name || null,
-    notes:       row.notes || null,
-    players,
-    scores,
-    winner,
-    dnf,
-    _fromDb: true,
-  }
-}
 
 export default function History({ navigate }) {
   const { user } = useAuth()
 
-  const [games, setGames]             = useState(() => user ? [] : getCompletedGames())
+  const [games, setGames]             = useState(() => user ? [] : getCompletedGames().map(normalizeLocalGame))
   const [loading, setLoading]         = useState(!!user)
   const [filter, setFilter]           = useState(null)
   const [courseFilter, setCourseFilter] = useState(null)
@@ -198,7 +166,10 @@ export default function History({ navigate }) {
           </div>
         )}
 
-        {!loading && displayed.map(game => (
+        {!loading && displayed.map(game => {
+          const resultLabel = historyResultLabel(game)
+          const winners     = game.winners ?? []
+          return (
           <div
             key={game.id}
             className="relative bg-bg-card rounded-md border border-border shadow-card"
@@ -225,7 +196,7 @@ export default function History({ navigate }) {
               {/* Players */}
               <div className="space-y-1">
                 {(game.players ?? []).map(name => {
-                  const isWinner = name === game.winner
+                  const isWinner = winners.includes(name)
                   const avg      = playerAverage(game.scores, name)
                   const isDnf    = game.dnf?.includes(name)
                   const total    = playerTotal(game.scores, name)
@@ -252,6 +223,11 @@ export default function History({ navigate }) {
                 })}
               </div>
 
+              {/* Result label — re-derived on read; hidden for solo rounds */}
+              {resultLabel && (
+                <p className="font-ui text-xs text-muted mt-2 tracking-wide">{resultLabel}</p>
+              )}
+
               {/* Notes */}
               {game.notes && (
                 <p className="font-ui text-xs text-muted mt-2 italic leading-relaxed line-clamp-2">{game.notes}</p>
@@ -269,7 +245,8 @@ export default function History({ navigate }) {
               </svg>
             </button>
           </div>
-        ))}
+          )
+        })}
 
       </main>
 

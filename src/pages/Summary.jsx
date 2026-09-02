@@ -1,7 +1,9 @@
 import { useRef, useState } from 'react'
 import { track } from '../utils/analytics.js'
 import { formatDateOnly } from '../utils/format.js'
-import { playerAverage, playerTotal } from '../utils/scores.js'
+import { deriveResult } from '../utils/game.js'
+import { tiedNames } from '../utils/result.js'
+import { deriveHolePars, playerAverage, playerTotal } from '../utils/scores.js'
 import { shareScorecard } from '../utils/share.js'
 import { getActiveGame, getCompletedGames, markCompletedGameSynced } from '../utils/storage.js'
 import { useAuth } from '../hooks/useAuth.jsx'
@@ -21,7 +23,12 @@ export default function Summary({ navigate, params }) {
   // already have been saved to the server on the first "Done" tap — see the
   // `game.synced` / `game._fromDb` checks in handleGoHome, which stop this
   // screen from silently re-submitting a duplicate round in either case.
-  const game = params?.game ?? getCompletedGames()[0] ?? null
+  // The result (winner / Tied / No winner, DNF) is always re-derived from the
+  // per-hole scores on read — the stored winner/dnf on a saved round are
+  // legacy and not authoritative (PRD §4.4). deriveResult is idempotent, so
+  // this is a no-op for a round that finishGame or History already stamped.
+  const rawGame = params?.game ?? getCompletedGames()[0] ?? null
+  const game = rawGame ? { ...rawGame, ...deriveResult(rawGame) } : null
 
   const [sharing, setSharing]       = useState(false)
   const [notes, setNotes]           = useState(() => game?.notes ?? '')
@@ -35,7 +42,17 @@ export default function Summary({ navigate, params }) {
   }
 
   const isDnf    = player => game.dnf?.includes(player)
-  const isWinner = player => player === game.winner
+  // Every tied winner gets the accent treatment, not just winners[0] (item 36).
+  const winners  = game.winners ?? []
+  const isWinner = player => winners.includes(player)
+
+  // Per-hole par for the read-only table — small bracketed reference next to
+  // each hole number, matching the live Scorecard grid (§5.1, item 37).
+  const holePars = deriveHolePars(game.holePars, game.holesPlayed ?? game.holes ?? 36)
+
+  const resultBase = 'font-ui text-xs tracking-[0.12em] uppercase text-muted text-center'
+  const resultName = 'mx-1.5 font-display italic text-sm text-accent normal-case tracking-normal'
+  const resultStrokes = 'font-ui text-xs text-muted normal-case tracking-normal'
 
   // True once this round can no longer be (re-)saved here: either it's a
   // past round opened from History (_fromDb), or it was already POSTed on
@@ -99,6 +116,7 @@ export default function Summary({ navigate, params }) {
             played_at: game.completedAt,
             holes_played: game.holesPlayed,
             player_data: playerData,
+            hole_pars: game.holePars ?? null,
             notes: notes.trim() || null,
             client_round_id: game.id,
           }),
@@ -170,21 +188,36 @@ export default function Summary({ navigate, params }) {
         </p>
       )}
 
-      {/* Winner — only shown for multi-player rounds */}
+      {/* Result — only shown for multi-player rounds (item 36). Re-derived on
+          read; "Tied" for a draw, all winners named up to three, a count for
+          four or more. " - " is the shared separator across every surface. */}
       {(game.players?.length ?? 0) > 1 && (
         <div className="px-5 pt-3 pb-1">
-          <div className="flex items-center gap-3">
-            <div className="flex-1 h-px bg-border" />
-            {game.winner ? (
-              <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted shrink-0">
-                Winner — <span className="font-display italic text-sm text-accent normal-case tracking-normal">{game.winner}</span>
-                <span className="ml-2 font-ui text-xs text-muted normal-case tracking-normal">{playerTotal(game.scores, game.winner)} strokes</span>
-              </p>
-            ) : (
-              <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted shrink-0">Nobody finished</p>
-            )}
-            <div className="flex-1 h-px bg-border" />
-          </div>
+          {winners.length >= 4 ? (
+            <p className={`${resultBase} block text-center leading-relaxed`}>
+              Tied <span className={resultStrokes}>- {winners.length} players level on {game.winningTotal} strokes</span>
+            </p>
+          ) : (
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-border" />
+              {winners.length === 0 ? (
+                <p className={resultBase}>No winner</p>
+              ) : winners.length === 1 ? (
+                <p className={`${resultBase} min-w-0 leading-relaxed`}>
+                  <span>Winner -</span>
+                  <span className={resultName}>{winners[0]}</span>
+                  <span className={resultStrokes}>- {game.winningTotal} strokes</span>
+                </p>
+              ) : (
+                <p className={`${resultBase} min-w-0 leading-relaxed`}>
+                  <span>Tied -</span>
+                  <span className={resultName}>{tiedNames(winners)}</span>
+                  <span className={resultStrokes}>- {game.winningTotal} strokes</span>
+                </p>
+              )}
+              <div className="flex-1 h-px bg-border" />
+            </div>
+          )}
         </div>
       )}
 
@@ -214,7 +247,10 @@ export default function Summary({ navigate, params }) {
           <tbody>
             {Array.from({ length: game.holesPlayed ?? game.holes }, (_, holeIndex) => (
               <tr key={holeIndex} className="border-b border-border">
-                <td className="py-2 px-3 font-ui text-xs text-muted">{holeIndex + 1}</td>
+                <td className="py-2 px-3 font-ui text-xs text-muted whitespace-nowrap">
+                  {holeIndex + 1}
+                  <span className="align-super text-[10px] text-chrome ml-0.5">({holePars[holeIndex]})</span>
+                </td>
                 {(game.players ?? []).map(player => {
                   const score = game.scores[player]?.[holeIndex]
                   return (

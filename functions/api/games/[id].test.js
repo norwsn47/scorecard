@@ -17,10 +17,10 @@ function makeDB(games, courses = []) {
           return this
         },
         async first() {
-          if (/SELECT id FROM games WHERE id = \? AND user_id = \?/.test(this.sql)) {
+          if (/SELECT id, holes_played FROM games WHERE id = \? AND user_id = \?/.test(this.sql)) {
             const [id, userId] = this.args
             const g = games.find((x) => x.id === id && x.user_id === userId)
-            return g ? { id: g.id } : null
+            return g ? { id: g.id, holes_played: g.holes_played } : null
           }
           if (/SELECT id FROM courses WHERE id = \? AND user_id = \?/.test(this.sql)) {
             const [id, userId] = this.args
@@ -211,6 +211,65 @@ describe('onRequestPatch /api/games/[id]', () => {
 
     expect(res.status).toBe(400)
     expect(games[0].notes).toBeNull()
+  })
+
+  it('stores a valid hole_pars matching the round holes_played', async () => {
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+    const pars = Array(18).fill(3)
+    const ctx = patch({ hole_pars: pars })
+    ctx.env.DB = makeDB(games)
+
+    const res = await onRequestPatch(ctx)
+
+    expect(res.status).toBe(200)
+    expect(games[0].hole_pars).toBe(JSON.stringify(pars))
+  })
+
+  it('length-checks hole_pars against the new holes_played when both are sent', async () => {
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+    const ctx = patch({ holes_played: 9, hole_pars: Array(9).fill(3) })
+    ctx.env.DB = makeDB(games)
+
+    const res = await onRequestPatch(ctx)
+
+    expect(res.status).toBe(200)
+    expect(games[0].hole_pars).toBe(JSON.stringify(Array(9).fill(3)))
+    expect(games[0].holes_played).toBe(9)
+  })
+
+  it('rejects a hole_pars whose length does not match the round', async () => {
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+    const ctx = patch({ hole_pars: Array(9).fill(3) }) // round is 18 holes
+    ctx.env.DB = makeDB(games)
+
+    const res = await onRequestPatch(ctx)
+
+    expect(res.status).toBe(400)
+    expect(games[0].hole_pars).toBeUndefined()
+  })
+
+  it('rejects a hole_pars with an out-of-range value', async () => {
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+    const bad = Array(18).fill(3)
+    bad[4] = 9
+    const ctx = patch({ hole_pars: bad })
+    ctx.env.DB = makeDB(games)
+
+    const res = await onRequestPatch(ctx)
+
+    expect(res.status).toBe(400)
+  })
+
+  it('allows clearing hole_pars to null', async () => {
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+    games[0].hole_pars = JSON.stringify(Array(18).fill(3))
+    const ctx = patch({ hole_pars: null })
+    ctx.env.DB = makeDB(games)
+
+    const res = await onRequestPatch(ctx)
+
+    expect(res.status).toBe(200)
+    expect(games[0].hole_pars).toBeNull()
   })
 
   it('returns ok without a write when the body has no editable fields', async () => {

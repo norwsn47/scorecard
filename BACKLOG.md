@@ -8,9 +8,9 @@
 
 **Last updated:** 2 September 2026
 
-Shipped and removed: 1 Sep — batch A (20, 24, 26, 27, 30, 32), batch B (17, 18, 28), batch C (2 code part / see 2b, 29, 33); 2 Sep — 21 (ESLint). See `CHANGELOG.md`.
+Shipped and removed: 1 Sep — batch A (20, 24, 26, 27, 30, 32), batch B (17, 18, 28), batch C (2 code part / see 2b, 29, 33); 2 Sep — 21 (ESLint), 36 (ties → draw), 37 (per-hole par). See `CHANGELOG.md`.
 
-Items 36-44 added 1 September 2026 from a golf-feedback list. Several (36, 37, 38, 39, 40, 42) change what the PRD currently specifies (winner calc, par explicitly out of scope, magic-link-only auth) — each needs a product-owner PRD decision before it can be built.
+Items 36-44 added 1 September 2026 from a golf-feedback list. **36 (ties → draw) and 37 (per-hole par) shipped 2 September** — see `CHANGELOG.md`; both unblock 38 and 39. 40 and 42 still need a product-owner PRD decision before build.
 
 ---
 
@@ -60,17 +60,11 @@ A proper sign-up flow capturing name and home course together, with editable per
 ### 11. Multi-course architecture
 The architecture for properly supporting multiple courses, beyond the current v2.0 model where a signed-in user's "course" is a name string with a default hole count (PRD §11.7). Would cover structured per-course data (holes, par), how quick-play coexists with it, and whether system-provided courses become browsable. Planning item, not a single chunk — revisit once real usage shows users creating multiple distinct courses.
 
-### 36. Ties count as joint first (draw)
-Currently `calculateResult` / `normalizeDbGame` pick a single lowest-total finisher as the winner (PRD §4.4: "Winner = player with the lowest total among those who finished"). When two or more finishers share the lowest total they should be **joint first — a draw**, shown as such on the Summary, Podium-less finish, History card and share image. Apply retrospectively: the winner is recomputed client-side from `player_data` on every History load, so a D1 round updates on next view; localStorage rounds store `game.winner` and would need a one-time re-derivation on read (or a migration). PRD §4.4 / §5 change needed.
-
-### 37. Par as a first-class concept — set per course, shown while scoring
-When creating a course, let the user enter par (per hole, or a single value applied to every hole; default 3). Store it on the course record. While entering scores, show each hole's par. This is the enabling work for #38, #39 and part of #10; relates to #11 (structured per-course data). PRD currently lists par as explicitly out of scope for MVP and v2.0 (§7) — needs a product-owner decision on how par sits alongside the raw-stroke model (§5) before building. Quick-play (Bruntsfield) can assume par 3 for all 36 holes.
-
 ### 38. Score-against-par indicator while entering scores
-With par available (#37), show each entered score's result vs par — e.g. a small superscript or bracketed `+1` / `-1` / `E` next to the number in the scorecard grid. Live as the score is entered. Depends on #37.
+With par now shipped (#37 — `hole_pars` on the game, `scoreToPar()` helper already in `src/utils/scores.js`), show each entered score's result vs par — a small superscript / bracketed `+1` / `-1` / `E` next to the number in the scorecard grid, live as it's entered. Also a candidate for the read-only Summary scorecard. **Unblocked.**
 
 ### 39. End-of-round tally: eagles / birdies / bogeys / double-bogeys
-On finishing a round, count and show per player how many holes they scored eagle (−2), birdie (−1), par (E), bogey (+1) and double-bogey-or-worse (+2+) — a small summary block on the finish/Summary screen and a candidate for the share image. Depends on #37. Decide exact buckets and labels with the product-owner (the user's terms were "eagles, biggies, double biggies").
+On finishing a round, count and show per player how many holes they scored eagle (−2), birdie (−1), par (E), bogey (+1) and double-bogey-or-worse (+2+) — a small block on the finish/Summary screen and a candidate for the share image. Uses `scoreToPar()` + the round's `hole_pars` snapshot (#37, **unblocked**). Decide exact buckets and labels with the product-owner (the user's terms were "eagles, biggies, double biggies").
 
 ### 40. Optional match-play game mode (win each hole)
 A game-mode toggle at setup: **stroke play** (current — lowest total wins) or **match play** (win the most holes; each hole won by the lowest score, halved on a tie). Changes the winner calculation, the Summary, and the share image. Explicitly flagged by the user as a future edition. PRD §5 change needed.
@@ -138,6 +132,9 @@ Measure and tune actual load performance — Core Web Vitals (LCP, CLS, INP), bu
 
 ### 45. Dependency audit — update the build/dev toolchain
 `npm audit` (first run 2 Sep, surfaced during #21) reports 5 vulnerabilities in the **pre-existing** toolchain, not from ESLint: `browserslist`, `nanoid`, `postcss` (all fixable with a non-breaking `npm audit fix`); `esbuild` ≤0.24.2 → the dev server can be probed by any website (moderate, dev-only), fixable only by a Vite major bump. Do a deliberate `npm audit fix` for the three easy ones, then evaluate the Vite/esbuild upgrade separately (breaking). Not urgent — none affect the production bundle's runtime.
+
+### 46. `POST /api/games` doesn't validate `holes_played` type/range
+`onRequestPost` only truthy-checks `holes_played`; the PATCH handler validates integer 1..36. A malformed `holes_played` on a create still inserts. Surfaced during the #37 chunk-3 review. Align POST with PATCH.
 
 ### 44. Design-system consolidation + page/header templates
 DESIGN.md has component patterns but no formal system. The user wants: a mobile header review (spacing and sizing rules — `PageHeader` `pt-10 pb-4`, `px-20` title clearance, the Summary bespoke header, etc.), documented design-system rules for the app, and page/header templates so new screens are built to a pattern rather than ad hoc. Design-director work; produces an expanded DESIGN.md (tokens → components → page templates → header rules) plus, ideally, a shared layout/header primitive the pages compose. Related: #27 (closed — PageHeader clearance), #34 (tap-target floor), the DESIGN.md "Inline link tap targets" and "Navigation" sections.

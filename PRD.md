@@ -2,7 +2,7 @@
 ## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
 **Version:** 2.0
-**Last updated:** 1 September 2026 (tidied build-plan vocabulary; course name aligned to "Bruntsfield Short Hole Golf Course" throughout; noted `game_name` as unused/retained)
+**Last updated:** 2 September 2026 (item 36 — finishers level on the lowest total now finish joint first, shown as "Tied"; §4.4, §4.5, §4.7, §5, §11.9. Item 37 — per-hole par added as a first-class display concept: new §5.1, updates to §6, §7, §8, §11.3, §11.7. Item 36 build follow-up — DNF rule stated precisely in §4.4; result-label copy standardised on " - " (spaced hyphen) and " & " across §4.4/§4.5/§4.7. Item 37 shipped — §5.1 notes par renders as a raised (N) in the live and read-only scorecards)
 
 ---
 
@@ -92,8 +92,13 @@ Outbuild palette applied for outdoor sunlight legibility on a phone:
 - User taps **Finish Game**
 - A **confirmation dialog** appears — user must confirm before the game ends (prevents accidental taps)
 - Final scores shown in a summary view (all players, all holes, totals)
-- **Players who did not complete all holes are excluded from the winner calculation** — marked as DNF
-- Winner = player with the lowest total among those who finished
+- **DNF (did not finish):** a player is DNF when they completed fewer holes than the furthest player in that round, and is excluded from the result. If every player stopped at the same hole, nobody is DNF. A solo round is never DNF once at least one hole is scored.
+- **The result:**
+  - **Outright winner** — a single finisher has the lowest total
+  - **Tied** — two or more finishers are level on the lowest total. The round is a draw (joint first). There is no tie-break and no countback. The Summary shows "Tied - [Name] & [Name] - [X] strokes"; for four or more level it falls back to "Tied - N players level on [X] strokes"
+  - **No winner** — every player is DNF (all dropped out). The round is saved with no winner
+  - **Solo rounds** (one player) — winner and draw concepts do not apply; nothing is highlighted as a result on any screen
+- The result is derived from the per-hole scores by one shared `calculateResult` helper, returning `{ winners, dnf, isDraw, winningTotal }` plus a `winner = winners[0] ?? null` convenience field. It is **re-derived on read** for saved rounds (via the `deriveResult` wrapper) — the stored `game.winner` string on legacy localStorage rounds and the legacy single winner on D1 rounds are not authoritative and are not migrated
 - A **Share** button appears on the summary screen — tapping it generates the share image and triggers the native device share sheet (see 4.7)
 - Completed game saved to local browser storage with:
   - Game name (if set)
@@ -101,10 +106,12 @@ Outbuild palette applied for outdoor sunlight legibility on a phone:
   - Player names and scores per hole
   - Number of holes played
   - DNF status where applicable
+  - `hole_pars` — the par array for the round (par 3 per hole for quick-play; see §5.1)
 
 ### 4.5 Game history
 - Accessible from the home screen via **History**
-- Lists all previously saved games, each showing: game name (if set), date, players, number of holes, winner
+- Lists all previously saved games, each showing: game name (if set), date, players, number of holes, and a **result label line** — "Winner: X - N strokes" / "Tied: X & Y - N strokes" / "No winner" (four or more level: "Tied: N players level on X strokes"). Two or three level winners are named; " - " (spaced hyphen) is the separator, matching the Summary and share image. Solo rounds show no result label, matching the Summary
+  - The result label is re-derived from the stored scores on every History load (see 4.4) — it is not read from a stored winner field
   - Games without a name — whether saved before the game naming feature or left intentionally blank — display the date as their primary identifier in History
 - Tapping a game shows the full scorecard for that game
 - Tapping a player name filters to all games that player has appeared in
@@ -125,10 +132,12 @@ A **Share** button appears on the end-of-game summary screen (see 4.4). Tapping 
 - The course name (e.g. "Bruntsfield Short Hole Golf Course") — main heading in bold
 - Outbuild logo mark — directly below the heading
 - Game name — shown below the logo mark, only if the user set one
-- Winner callout:
-  - Single winner: "Winner: [Name] — [X] strokes"
-  - Tied: "Tied: [Name] and [Name] — [X] strokes" (or "[Name], [Name], and [Name]" for three-way ties)
-  - All players DNF: "No winner — all players DNF"
+- Result callout:
+  - Single winner: "Winner: [Name] - [X] strokes"
+  - Tied: "Tied: [Name] & [Name] - [X] strokes" (or "[Name], [Name] & [Name]" for three-way ties)
+  - All players DNF: "No winner - all players DNF"
+  - Solo rounds: no result callout is drawn at all
+  - The term **"Tied"** and the " - " (spaced hyphen) separator are used here and on the Summary and History (item 36) — one vocabulary across every surface. The share image renders the tied, all-DNF and solo cases from the recomputed result
 - Full hole-by-hole scorecard table:
   - Columns = players; rows = holes; cells = stroke count for that hole
   - Totals row at the bottom of each column
@@ -200,11 +209,34 @@ MANY THANKS FOR YOUR CO-OPERATION — ENJOY YOUR GAME
 
 ## 5. Scoring
 
-- Raw strokes only — no par, no handicap, no course rating
+- Raw strokes only — totals, the winner, DNF and the draw rule are **all computed from raw strokes**. Par (§5.1) is display and derived-stats only; it never affects who wins. No handicap, no course rating
 - Lower total = better score
-- Winner = player with the lowest total among players who completed all holes
-- Players who drop out mid-round are marked DNF and excluded from winner calculation
-- No complex scoring modes in MVP
+- **Outright winner** = the single lowest total among players who completed all holes
+- **Tied (joint first)** = two or more finishers level on the lowest total — a draw, with no tie-break and no countback (see 4.4)
+- **No winner** = every player is DNF
+- Players who drop out mid-round are marked DNF and excluded from the result
+- One shared `calculateResult` helper produces the result for both live finishes and saved rounds (re-derived on read) — see 4.4
+- No par-based or alternative scoring modes (stableford, match play) in v2.0 — see §7
+
+### 5.1 Par
+
+Par is a **per-hole** attribute of a course, used for display and derived stats only. It has no effect on totals, the winner, DNF or the draw rule (§5) — scoring stays raw-stroke throughout. It also enables the score-vs-par indicator (#38) and the end-of-round tally (#39).
+
+**Where par is shown:** as a small raised `(N)` next to the hole number, in both the live scorecard grid and the read-only Summary scorecard table (the post-finish view and the History detail view). The share image does not show par. There is no vs-par indicator yet — that is #38.
+
+**Model:**
+- Every course carries a par value for each of its holes — a `hole_pars` array of integers, length = the course's hole count
+- On course creation the array defaults to **par 3 for every hole** (the Bruntsfield reality). The user can adjust individual holes and has a "set all to N" convenience control (§11.7)
+- Quick-play (logged-out) assumes **par 3 for all 36 holes** with no UI. A `BRUNTSFIELD_HOLE_PARS` constant (a length-36 array of 3s) in `src/constants.js` is the single source of this value
+- A round stores **its own copy of par** at completion (`games.hole_pars`, and the same field on completed localStorage records) so later edits to the course's par — or deleting the course — never rewrite the vs-par maths of a saved round (§11.3)
+
+**Shared helper:**
+- `scoreToPar(score, par)` returns the signed difference for a scored hole (`score - par`), or `null` when the hole is unscored. Callers own the presentation (`E`, `+1`, `-2`, etc.). Every score-vs-par surface goes through this one helper
+- Par must be threaded to **every surface that renders scores**: the active game object, the completed localStorage record, the D1 `games` row, and `normalizeDbGame` output — so #38 and #39 can rely on it always being present
+
+**Existing data:** `003` adds `hole_pars` as nullable with no backfill. Any course or round created before this migration has `hole_pars = null`; every reader treats a missing or null array as **par 3 for every hole** (correct for Bruntsfield, the only real-world course to date). No migration of saved rounds.
+
+**Wiring note:** `courses.holes` already exists in the schema but is currently stored and never read. Item 37 must actually wire the course-level par attribute through to gameplay and saved rounds, not just add the column — the same mistake must not be repeated.
 
 ---
 
@@ -213,7 +245,7 @@ MANY THANKS FOR YOUR CO-OPERATION — ENJOY YOUR GAME
 - Single course: **Bruntsfield Short Hole Golf Course**, Edinburgh
 - Up to **36 holes**
 - UI includes a **"More courses coming soon"** placeholder where course selection will eventually live
-- No hole-level metadata (no par, no yardage, no difficulty rating) in MVP
+- Per-hole par is stored per course and per saved round (see §5.1); it is display only. No other hole-level metadata (no yardage, no difficulty rating)
 
 ---
 
@@ -221,7 +253,8 @@ MANY THANKS FOR YOUR CO-OPERATION — ENJOY YOUR GAME
 
 The following are out of scope for both the MVP (v1.x) and the Scorecard Plus release (v2.0):
 
-- Par values or handicap calculations
+- Handicap calculations, course rating or slope
+- Par-based and alternative scoring modes — stableford, match play, points-based (raw strokes only; **per-hole par as a display concept is in scope — see §5.1**)
 - Leaderboards or social features
 - Push notifications
 - Native mobile app (web only)
@@ -237,7 +270,7 @@ The following were out of scope in v1.x and are now addressed in v2.0:
 
 ## 8. Future considerations (post v2.0)
 
-- Par values and scoring modes (stableford, etc.)
+- Par-based and alternative scoring modes (stableford, match play, etc.) — per-hole par itself now exists as a display concept (§5.1); this covers scoring that consumes it
 - Leaderboards or social features (requires account foundation — now built in v2.0)
 - All-time personal leaderboard per user (lowest round, most wins, etc.)
 - Quick-play history import — allow users to migrate existing localStorage games to their new DB account after signing in
@@ -318,6 +351,7 @@ Four tables in Cloudflare D1:
 - `holes_played` — integer
 - `player_data` — JSON blob (array of players with name, per-hole scores, total, DNF flag)
 - `course_id` — UUID, foreign key → courses.id, nullable
+- `hole_pars` — TEXT, JSON array of integers, length = `holes_played` — the course's par **as it stood when the round was saved**. Stored on the round so that later edits to the course's par, or deletion of the course, never change a saved round's score-vs-par figures. Completed localStorage records carry the same field. Added in migration `003_add_hole_pars.sql`, 2 September 2026
 - `client_round_id` — text, nullable — the local (client-side) game's own id, sent by the client as an idempotency key on save so a given round can only ever produce one row, even if `POST /api/games` is called more than once for it (e.g. back-navigation to an already-saved Summary screen). Unique per `(user_id, client_round_id)`; added in migration `002_add_client_round_id.sql`, 24 August 2026.
 - `notes` — text, nullable — an optional free-text note (up to 300 characters, enforced client-side) attached to a round. Present since the initial schema (`001_initial.sql`). Captured on the immediate post-finish Summary screen; shown read-only (and hidden entirely if blank) when the same round is later reopened from History, consistent with History's read-only scorecard view (§11.9). Editing notes on an already-saved round is done through the "Edit a past round" flow (§11.13), not a standalone update-notes endpoint.
 - `created_at` — timestamp
@@ -327,10 +361,13 @@ Four tables in Cloudflare D1:
 - `user_id` — UUID, foreign key → users.id (null for system-provided courses)
 - `name` — text, not null
 - `holes` — integer, default 36
+- `hole_pars` — TEXT, JSON array of integers, length = `holes` — the per-hole par for the course (§5.1). Set on creation, defaults to all 3s, editable per hole in the course-creation form (§11.7). Added in migration `003_add_hole_pars.sql`, 2 September 2026
 - `is_default` — boolean, default false
 - `created_at` — timestamp
 
-**Seed data:** On new account creation, Bruntsfield Short Hole Golf Course is inserted into `courses` for that user as their default course (`is_default = true`, `holes = 36`).
+**Seed data:** On new account creation, Bruntsfield Short Hole Golf Course is inserted into `courses` for that user as their default course (`is_default = true`, `holes = 36`, `hole_pars` = a length-36 array of 3s).
+
+**Why `hole_pars` is a JSON column, not a `course_holes` table:** par is always read and written as a whole array alongside its course or round — there is no query that needs a single hole's par in isolation, no per-hole row identity, and no other per-hole attributes planned for v2.0. A JSON TEXT column is consistent with `player_data` and keeps `003` a single additive migration with no joins. If structured per-course/per-hole data lands later (BACKLOG #11), a `course_holes` table can be introduced then.
 
 ---
 
@@ -382,9 +419,10 @@ No passwords. Users authenticate with their email address only.
 - When starting a new game, a course selector appears above the player setup
 - Default selected: the user's default course (Bruntsfield Short Hole Golf Course on first use)
 - User can select from their existing courses or create a new one
-- Creating a course: a single text input for the course name — any name the user types is valid
-- New courses default to 36 holes — no per-hole configuration in v2.0
-- The selected course is stored on the game record when the game is saved to D1
+- Creating a course: a text input for the course name — any name the user types is valid
+- New courses default to 36 holes — no per-hole *count* configuration in v2.0
+- **Par:** the course-creation form includes a per-hole par control. Every hole defaults to par 3. The user can change any individual hole, and a "set all to [N]" action applies one value across every hole. Par is stored as `courses.hole_pars` (§5.1, §11.3). Editing a course's par later does not alter rounds already saved against it — each round keeps its own `games.hole_pars` snapshot
+- The selected course is stored on the game record when the game is saved to D1, along with a copy of its `hole_pars`
 - Course names appear in the game history list
 
 **For logged-out users:**
@@ -400,7 +438,7 @@ No passwords. Users authenticate with their email address only.
 When a user is authenticated, the game save behaviour changes:
 
 - On game completion, the game is saved to D1 (via `POST /api/games`) in addition to (or instead of) localStorage — this is to be determined during implementation, but the preferred approach is DB only for logged-in users to keep the two histories cleanly separate
-- The game record includes: user_id, played_at, holes_played, player_data (JSON), course_id, notes, client_round_id (see §11.3). (The schema also has a nullable `game_name` column, unused since game-naming was removed from the UI.)
+- The game record includes: user_id, played_at, holes_played, player_data (JSON), course_id, hole_pars (JSON, copied from the course — see §5.1), notes, client_round_id (see §11.3). (The schema also has a nullable `game_name` column, unused since game-naming was removed from the UI.)
 - The existing finish-game flow (summary screen, share) is unchanged — only the save destination changes
 
 **Active game state:** While a game is in progress, the active game is still tracked in localStorage (same as the quick-play flow). On game completion, the final record is written to D1.
@@ -412,7 +450,7 @@ When a user is authenticated, the game save behaviour changes:
 - Logged-in users see their DB-backed game history — not their localStorage history
 - Logged-out users see their localStorage history — no change
 - The two histories are kept strictly separate — no merging in v2.0
-- Logged-in history screen shows: game name (if set), course name, date, player names, holes played, winner
+- Logged-in history screen shows: game name (if set), course name, date, player names, holes played, and the result label (Winner / Tied / No winner), consistent with §4.5
 - Tapping a game shows the full scorecard (read-only, same layout as the existing summary screen)
 - Tapping a player name filters to games that player appeared in
 - Empty state if no games saved yet

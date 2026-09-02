@@ -3,7 +3,7 @@ import CourseMapModal from '../components/CourseMapModal.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import { track } from '../utils/analytics.js'
 import { computeDisplayedHoles, finishGame } from '../utils/game.js'
-import { playerTotal } from '../utils/scores.js'
+import { deriveHolePars, playerTotal } from '../utils/scores.js'
 import { clearActiveCell, clearActiveGame, getActiveCell, getActiveGame, saveActiveCell, saveActiveGame, saveCompletedGame, updateCompletedGame } from '../utils/storage.js'
 
 function initialCellFor(g) {
@@ -63,6 +63,7 @@ export default function Scorecard({ navigate, params }) {
 
   const players       = Array.isArray(game.players) ? game.players : []
   const displayedHoles = computeDisplayedHoles(players, game.scores ?? {}, game.holes)
+  const holePars      = deriveHolePars(game.holePars, game.holes ?? 36)
 
   // Active cell values
   const activePlayer = players[activeCell.playerIndex] ?? null
@@ -143,6 +144,7 @@ export default function Scorecard({ navigate, params }) {
               played_at: completed.completedAt,
               holes_played: completed.holesPlayed,
               player_data: buildPlayerData(completed),
+              hole_pars: completed.holePars ?? null,
               notes: (completed.notes ?? '').trim() || null,
             }),
           })
@@ -155,7 +157,13 @@ export default function Scorecard({ navigate, params }) {
             courseName: completed.courseName ?? null,
             completedAt: completed.completedAt,
             holesPlayed: completed.holesPlayed,
+            holePars: completed.holePars,
+            // Result fields are re-derived on read, but persist the full shape
+            // finishGame stamps so the stored record stays self-consistent.
             winner: completed.winner,
+            winners: completed.winners,
+            isDraw: completed.isDraw,
+            winningTotal: completed.winningTotal,
             dnf: completed.dnf,
             notes: (completed.notes ?? '').trim() || null,
           })
@@ -257,10 +265,13 @@ export default function Scorecard({ navigate, params }) {
                   ].join(' ')}
                 >
                   <td className={[
-                    'py-3 px-2 font-ui text-xs text-center',
+                    'py-3 px-2 text-center font-ui text-xs whitespace-nowrap',
                     isActiveRow ? 'text-accent font-semibold' : 'text-chrome',
                   ].join(' ')}>
                     {holeIndex + 1}
+                    <span className="align-super text-[10px] font-normal text-chrome ml-0.5">
+                      ({holePars[holeIndex]})
+                    </span>
                   </td>
                   {players.map((player, playerIndex) => {
                     const score    = (game.scores?.[player] ?? [])[holeIndex] ?? null
