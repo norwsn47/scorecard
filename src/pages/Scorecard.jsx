@@ -155,7 +155,12 @@ export default function Scorecard({ navigate, params }) {
             courseName: completed.courseName ?? null,
             completedAt: completed.completedAt,
             holesPlayed: completed.holesPlayed,
+            // Result fields are re-derived on read, but persist the full shape
+            // finishGame stamps so the stored record stays self-consistent.
             winner: completed.winner,
+            winners: completed.winners,
+            isDraw: completed.isDraw,
+            winningTotal: completed.winningTotal,
             dnf: completed.dnf,
             notes: (completed.notes ?? '').trim() || null,
           })
