@@ -1,4 +1,5 @@
 import { getSessionUser } from '../../_lib/session.js'
+import { validateHolePars } from '../../_lib/hole-pars.js'
 
 export async function onRequestDelete(context) {
   const { DB } = context.env
@@ -22,7 +23,9 @@ export async function onRequestPatch(context) {
 
   // Ownership check first — a user must never be able to PATCH another user's
   // game id, and we don't reveal whether an id exists via a different error.
-  const game = await DB.prepare('SELECT id FROM games WHERE id = ? AND user_id = ?').bind(id, user.id).first()
+  // `holes_played` is fetched too so `hole_pars` can be length-checked against
+  // the round even when the body doesn't also change `holes_played`.
+  const game = await DB.prepare('SELECT id, holes_played FROM games WHERE id = ? AND user_id = ?').bind(id, user.id).first()
   if (!game) return Response.json({ error: 'Not found' }, { status: 404 })
 
   let body
@@ -35,7 +38,7 @@ export async function onRequestPatch(context) {
     return Response.json({ error: 'Invalid request body' }, { status: 400 })
   }
 
-  const { course_id, played_at, holes_played, player_data, notes } = body
+  const { course_id, played_at, holes_played, player_data, notes, hole_pars } = body
 
   // Build the UPDATE from only the fields actually present in the body.
   // id, user_id, client_round_id and created_at are never touched.
@@ -89,6 +92,20 @@ export async function onRequestPatch(context) {
     }
     columns.push('notes = ?')
     values.push(notes || null)
+  }
+  if ('hole_pars' in body) {
+    // Re-snapshots the round's par — sent when a D1 edit switches course (§5.1).
+    // Explicit null clears it (read back as par 3 per hole).
+    if (hole_pars === null) {
+      columns.push('hole_pars = ?')
+      values.push(null)
+    } else {
+      const expectedLen = 'holes_played' in body ? holes_played : game.holes_played
+      const v = validateHolePars(hole_pars, expectedLen)
+      if (!v.ok) return Response.json({ error: v.error }, { status: 400 })
+      columns.push('hole_pars = ?')
+      values.push(v.json)
+    }
   }
 
   if (columns.length === 0) {

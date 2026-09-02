@@ -93,3 +93,61 @@ describe('onRequestPost /api/games — course ownership', () => {
     expect(db.inserted).toHaveLength(1)
   })
 })
+
+describe('onRequestPost /api/games — hole_pars', () => {
+  // INSERT column order: id, user_id, course_id, played_at, holes_played,
+  // player_data, hole_pars, notes, client_round_id, created_at
+  const HOLE_PARS_ARG = 6
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+  })
+
+  it('stores NULL when hole_pars is absent', async () => {
+    const ctx = post({ ...validBody })
+    const db = makeDB()
+    ctx.env.DB = db
+
+    const res = await onRequestPost(ctx)
+
+    expect(res.status).toBe(201)
+    expect(db.inserted[0][HOLE_PARS_ARG]).toBeNull()
+  })
+
+  it('stores a valid hole_pars matching holes_played', async () => {
+    const pars = Array(18).fill(3)
+    const ctx = post({ ...validBody, hole_pars: pars })
+    const db = makeDB()
+    ctx.env.DB = db
+
+    const res = await onRequestPost(ctx)
+
+    expect(res.status).toBe(201)
+    expect(db.inserted[0][HOLE_PARS_ARG]).toBe(JSON.stringify(pars))
+  })
+
+  it('rejects a hole_pars whose length does not match holes_played', async () => {
+    const ctx = post({ ...validBody, hole_pars: Array(9).fill(3) })
+    const db = makeDB()
+    ctx.env.DB = db
+
+    const res = await onRequestPost(ctx)
+
+    expect(res.status).toBe(400)
+    expect(db.inserted).toHaveLength(0)
+  })
+
+  it('rejects a hole_pars with a non-integer or out-of-range entry', async () => {
+    const bad = Array(18).fill(3)
+    bad[2] = 12
+    const ctx = post({ ...validBody, hole_pars: bad })
+    const db = makeDB()
+    ctx.env.DB = db
+
+    const res = await onRequestPost(ctx)
+
+    expect(res.status).toBe(400)
+    expect(db.inserted).toHaveLength(0)
+  })
+})
