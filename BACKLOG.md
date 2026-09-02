@@ -6,9 +6,9 @@
 > Nothing here is actioned without explicit instruction — tell the project-manager (or Claude directly) to pull an item into work.
 > Numbers are stable IDs for cross-reference — don't renumber existing items when deleting one, so gaps are expected.
 
-**Last updated:** 1 September 2026
+**Last updated:** 2 September 2026
 
-Shipped and removed on 1 September 2026: batch A — 20, 24, 26, 27, 30, 32; batch B — 17, 18, 28; batch C — 2 (code part; sender-name step lives on as 2b), 29, 33. See `CHANGELOG.md`.
+Shipped and removed: 1 Sep — batch A (20, 24, 26, 27, 30, 32), batch B (17, 18, 28), batch C (2 code part / see 2b, 29, 33); 2 Sep — 21 (ESLint). See `CHANGELOG.md`.
 
 Items 36-44 added 1 September 2026 from a golf-feedback list. Several (36, 37, 38, 39, 40, 42) change what the PRD currently specifies (winner calc, par explicitly out of scope, magic-link-only auth) — each needs a product-owner PRD decision before it can be built.
 
@@ -111,9 +111,6 @@ The router is a state machine with light URL sync (`App.jsx`). Back buttons curr
 
 ## Housekeeping & tech debt
 
-### 21. No linter configured
-No ESLint (or equivalent) and no `lint` script. Reviews rely on manual reading. Add ESLint with a sensible React/JSX config.
-
 ### 22. No flow test for the edit-past-round path
 No integration/component test covers open-edit → change on the scorecard → save back. The duplicate-save regression class isn't protected by an automated flow test. Add one asserting a single record in/out (no new row) for both the D1 and localStorage paths.
 
@@ -138,6 +135,9 @@ The suite covers `src/utils/*` and `functions/api/*` only. The batch-B fixes (#1
 
 ### 41. Page load performance pass
 Measure and tune actual load performance — Core Web Vitals (LCP, CLS, INP), bundle size (currently ~248 kB / ~76 kB gzip), font loading (three families via Google Fonts with `display=swap`), image weight (`course_map_v2.png` is ~455 kB), and Cloudflare Pages caching headers. Establish a baseline, fix the obvious wins, re-measure. Assistance requested. (The `performance-auditor` agent covers this.)
+
+### 45. Dependency audit — update the build/dev toolchain
+`npm audit` (first run 2 Sep, surfaced during #21) reports 5 vulnerabilities in the **pre-existing** toolchain, not from ESLint: `browserslist`, `nanoid`, `postcss` (all fixable with a non-breaking `npm audit fix`); `esbuild` ≤0.24.2 → the dev server can be probed by any website (moderate, dev-only), fixable only by a Vite major bump. Do a deliberate `npm audit fix` for the three easy ones, then evaluate the Vite/esbuild upgrade separately (breaking). Not urgent — none affect the production bundle's runtime.
 
 ### 44. Design-system consolidation + page/header templates
 DESIGN.md has component patterns but no formal system. The user wants: a mobile header review (spacing and sizing rules — `PageHeader` `pt-10 pb-4`, `px-20` title clearance, the Summary bespoke header, etc.), documented design-system rules for the app, and page/header templates so new screens are built to a pattern rather than ad hoc. Design-director work; produces an expanded DESIGN.md (tokens → components → page templates → header rules) plus, ideally, a shared layout/header primitive the pages compose. Related: #27 (closed — PageHeader clearance), #34 (tap-target floor), the DESIGN.md "Inline link tap targets" and "Navigation" sections.
