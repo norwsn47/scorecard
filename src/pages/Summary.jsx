@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { track } from '../utils/analytics.js'
 import { formatDateOnly } from '../utils/format.js'
+import { deriveResult } from '../utils/game.js'
 import { playerAverage, playerTotal } from '../utils/scores.js'
 import { shareScorecard } from '../utils/share.js'
 import { getActiveGame, getCompletedGames, markCompletedGameSynced } from '../utils/storage.js'
@@ -21,7 +22,12 @@ export default function Summary({ navigate, params }) {
   // already have been saved to the server on the first "Done" tap — see the
   // `game.synced` / `game._fromDb` checks in handleGoHome, which stop this
   // screen from silently re-submitting a duplicate round in either case.
-  const game = params?.game ?? getCompletedGames()[0] ?? null
+  // The result (winner / Tied / No winner, DNF) is always re-derived from the
+  // per-hole scores on read — the stored winner/dnf on a saved round are
+  // legacy and not authoritative (PRD §4.4). deriveResult is idempotent, so
+  // this is a no-op for a round that finishGame or History already stamped.
+  const rawGame = params?.game ?? getCompletedGames()[0] ?? null
+  const game = rawGame ? { ...rawGame, ...deriveResult(rawGame) } : null
 
   const [sharing, setSharing]       = useState(false)
   const [notes, setNotes]           = useState(() => game?.notes ?? '')

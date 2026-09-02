@@ -64,28 +64,50 @@ export function computeDisplayedHoles(players, scores, maxHoles) {
 }
 
 /**
- * Calculates the winner and DNF players at the end of a game.
- * Trailing unplayed holes are ignored — a 9-hole round on a 24-slot
+ * Calculates the result of a game from raw per-hole strokes.
+ *
+ * Returns:
+ *  - `winners`      — names of every finisher level on the lowest total: one
+ *                     name for an outright win, two or more for a draw (joint
+ *                     first), empty when nobody finished or the round is solo.
+ *                     Ordered by the players array.
+ *  - `winner`       — `winners[0] ?? null`, a convenience for the common
+ *                     single-winner case and for legacy callers.
+ *  - `winningTotal` — the lowest finisher total, or null.
+ *  - `isDraw`       — true when two or more finishers share the lowest total.
+ *  - `dnf`          — players who did not complete every played hole.
+ *  - `finishers`    — [{ name, total }] for players who completed every hole.
+ *
+ * Solo rounds (fewer than two players) have no result concept anywhere
+ * (PRD §4.4 / §5): `winners` is empty, `isDraw` is false, `dnf` is empty.
+ *
+ * Trailing unplayed holes are ignored — a 9-hole round on a 36-slot
  * scorecard is treated as 9 holes, not as everyone DNF.
  */
 export function calculateResult(players, scores, holes) {
+  const roster = Array.isArray(players) ? players : []
+
+  if (roster.length < 2) {
+    return { winners: [], winner: null, winningTotal: null, isDraw: false, dnf: [], finishers: [] }
+  }
+
   let lastScoredHole = -1
   for (let i = holes - 1; i >= 0; i--) {
-    if (players.some(p => (scores[p]?.[i] ?? null) !== null)) {
+    if (roster.some(p => (scores[p]?.[i] ?? null) !== null)) {
       lastScoredHole = i
       break
     }
   }
 
   if (lastScoredHole === -1) {
-    return { winner: null, dnf: [...players], finishers: [] }
+    return { winners: [], winner: null, winningTotal: null, isDraw: false, dnf: [...roster], finishers: [] }
   }
 
   const activeHoles = lastScoredHole + 1
   const finishers = []
   const dnf = []
 
-  players.forEach(player => {
+  roster.forEach(player => {
     const playerScores = (scores[player] ?? []).slice(0, activeHoles)
     const allFilled = playerScores.length === activeHoles &&
       playerScores.every(s => s !== null && s >= 1)
@@ -99,19 +121,43 @@ export function calculateResult(players, scores, holes) {
     }
   })
 
-  const winner = finishers.length > 0
-    ? finishers.reduce((best, p) => p.total < best.total ? p : best).name
+  const winningTotal = finishers.length > 0
+    ? Math.min(...finishers.map(f => f.total))
     : null
+  const winners = finishers.filter(f => f.total === winningTotal).map(f => f.name)
 
-  return { winner, dnf, finishers }
+  return {
+    winners,
+    winner: winners[0] ?? null,
+    winningTotal,
+    isDraw: winners.length > 1,
+    dnf,
+    finishers,
+  }
 }
 
 /**
- * Stamps a finished game with completedAt, holesPlayed, winner, and dnf.
- * holesPlayed = holes where at least one player entered a score.
+ * Re-derives the result for a game-shaped object (live or saved) — the single
+ * entry point for computing the result on read. The `winner` / `dnf` fields
+ * stored on saved rounds (localStorage and D1) are legacy and not
+ * authoritative; every read surface recomputes through this helper (PRD §4.4).
+ */
+export function deriveResult(game) {
+  const players = Array.isArray(game?.players) ? game.players : []
+  const holes = game?.holesPlayed ?? game?.holes ?? 36
+  return calculateResult(players, game?.scores ?? {}, holes)
+}
+
+/**
+ * Stamps a finished game with completedAt, holesPlayed and the result fields
+ * (winner, winners, isDraw, winningTotal, dnf). holesPlayed = holes where at
+ * least one player entered a score. The result is recomputed on read anyway
+ * (deriveResult) — these stamped values are a convenience, not the source of
+ * truth (PRD §4.4).
  */
 export function finishGame(game) {
-  const { winner, dnf } = calculateResult(game.players, game.scores, game.holes)
+  const { winner, winners, isDraw, winningTotal, dnf } =
+    calculateResult(game.players, game.scores, game.holes)
 
   let holesPlayed = 0
   for (let i = game.holes - 1; i >= 0; i--) {
@@ -126,6 +172,9 @@ export function finishGame(game) {
     completedAt: game.pastDate ?? new Date().toISOString(),
     holesPlayed,
     winner,
+    winners,
+    isDraw,
+    winningTotal,
     dnf,
   }
 }

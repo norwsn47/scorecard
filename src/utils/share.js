@@ -1,3 +1,4 @@
+import { deriveResult } from './game.js'
 import { playerAverage, playerTotal } from './scores.js'
 
 const C = {
@@ -9,23 +10,15 @@ const C = {
   border: '#D9D0C4',
 }
 
-function findWinners(game) {
-  const players  = game.players ?? []
-  const dnf      = game.dnf ?? []
-  const finishers = players.filter(p => !dnf.includes(p))
-  if (finishers.length === 0) return []
-  const totals = finishers.map(p => ({ name: p, total: playerTotal(game.scores, p) }))
-  const min    = Math.min(...totals.map(t => t.total))
-  return totals.filter(t => t.total === min)
-}
-
-function winnerLabel(winners) {
+// "Tied" is the shared term across the Summary, History and this image
+// (PRD §4.7 / item 36). `result` is a deriveResult() output.
+function winnerLabel({ winners, winningTotal }) {
   if (winners.length === 0) return 'No winner - all players DNF'
-  const strokes = `${winners[0].total} strokes`
-  if (winners.length === 1) return `Winner: ${winners[0].name} - ${strokes}`
+  const strokes = `${winningTotal} strokes`
+  if (winners.length === 1) return `Winner: ${winners[0]} - ${strokes}`
   const names = winners.length === 2
-    ? `${winners[0].name} and ${winners[1].name}`
-    : `${winners.slice(0, -1).map(w => w.name).join(', ')}, and ${winners.at(-1).name}`
+    ? `${winners[0]} and ${winners[1]}`
+    : `${winners.slice(0, -1).join(', ')}, and ${winners.at(-1)}`
   return `Tied: ${names} - ${strokes}`
 }
 
@@ -34,9 +27,11 @@ async function buildCanvas(game) {
 
   const players = game.players ?? []
   const holes   = game.holesPlayed ?? game.holes
-  const winners = findWinners(game)
-  const isDnf   = p => (game.dnf ?? []).includes(p)
-  const isWin   = p => winners.some(w => w.name === p)
+  const result  = deriveResult(game)
+  const winners = result.winners
+  const isSolo  = players.length < 2
+  const isDnf   = p => result.dnf.includes(p)
+  const isWin   = p => winners.includes(p)
 
   const SCALE       = 2
   const W           = 390
@@ -57,7 +52,8 @@ async function buildCanvas(game) {
   const TOTAL_H   = 54   // totals + avg
   const BOT_PAD   = 20
 
-  const H = TOP_PAD + TITLE_H + BRAND_H + GAP1 + WIN_H + GAP2 + DIV_H + COL_H + holes * ROW_H + DIV_H + TOTAL_H + BOT_PAD
+  // Solo rounds carry no result — the winner callout box is omitted entirely.
+  const H = TOP_PAD + TITLE_H + BRAND_H + GAP1 + (isSolo ? 0 : WIN_H + GAP2) + DIV_H + COL_H + holes * ROW_H + DIV_H + TOTAL_H + BOT_PAD
 
   const canvas  = document.createElement('canvas')
   canvas.width  = W * SCALE
@@ -108,19 +104,21 @@ async function buildCanvas(game) {
 
   y += GAP1
 
-  // Winner callout box
-  ctx.fillStyle = C.card
-  ctx.fillRect(PAD, y, W - PAD * 2, WIN_H)
+  // Winner callout box — omitted for a solo round (no result concept)
+  if (!isSolo) {
+    ctx.fillStyle = C.card
+    ctx.fillRect(PAD, y, W - PAD * 2, WIN_H)
 
-  const label   = winnerLabel(winners)
-  const noWin   = winners.length === 0
-  ctx.fillStyle = noWin ? C.muted : C.accent
-  ctx.font      = noWin
-    ? '13px Inter, system-ui, sans-serif'
-    : 'bold 15px Inter, system-ui, sans-serif'
-  ctx.textAlign = 'center'
-  ctx.fillText(label, W / 2, y + WIN_H / 2 + 5, W - PAD * 2 - 16)
-  y += WIN_H + GAP2
+    const label   = winnerLabel(result)
+    const noWin   = winners.length === 0
+    ctx.fillStyle = noWin ? C.muted : C.accent
+    ctx.font      = noWin
+      ? '13px Inter, system-ui, sans-serif'
+      : 'bold 15px Inter, system-ui, sans-serif'
+    ctx.textAlign = 'center'
+    ctx.fillText(label, W / 2, y + WIN_H / 2 + 5, W - PAD * 2 - 16)
+    y += WIN_H + GAP2
+  }
 
   // Divider
   ctx.fillStyle = C.border

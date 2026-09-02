@@ -3,8 +3,12 @@ import PageHeader from '../components/PageHeader.jsx'
 import { formatShortDate } from '../utils/format.js'
 import { playerAverage, playerTotal } from '../utils/scores.js'
 import { deleteCompletedGame, getCompletedGames } from '../utils/storage.js'
+import { deriveResult } from '../utils/game.js'
 import { useAuth } from '../hooks/useAuth.jsx'
 
+// The result (winner / Tied / No winner, and DNF) is re-derived from the
+// stored per-hole scores on every History load — the stored winner/dnf fields
+// on a saved round are legacy and not authoritative (PRD §4.4 / §4.5).
 function normalizeDbGame(row) {
   const playerData = typeof row.player_data === 'string'
     ? JSON.parse(row.player_data)
@@ -12,19 +16,9 @@ function normalizeDbGame(row) {
 
   const players = playerData.map(p => p.name)
   const scores  = {}
-  const dnf     = []
+  playerData.forEach(p => { scores[p.name] = p.scores ?? [] })
 
-  playerData.forEach(p => {
-    scores[p.name] = p.scores ?? []
-    if (p.dnf) dnf.push(p.name)
-  })
-
-  const finishers = playerData.filter(p => !p.dnf && p.total > 0)
-  const winner = finishers.length > 0
-    ? finishers.reduce((best, p) => p.total < best.total ? p : best).name
-    : null
-
-  return {
+  const game = {
     id:          row.id,
     completedAt: row.played_at,
     holesPlayed: row.holes_played,
@@ -33,16 +27,19 @@ function normalizeDbGame(row) {
     notes:       row.notes || null,
     players,
     scores,
-    winner,
-    dnf,
     _fromDb: true,
   }
+  return { ...game, ...deriveResult(game) }
+}
+
+function normalizeLocalGame(game) {
+  return { ...game, ...deriveResult(game) }
 }
 
 export default function History({ navigate }) {
   const { user } = useAuth()
 
-  const [games, setGames]             = useState(() => user ? [] : getCompletedGames())
+  const [games, setGames]             = useState(() => user ? [] : getCompletedGames().map(normalizeLocalGame))
   const [loading, setLoading]         = useState(!!user)
   const [filter, setFilter]           = useState(null)
   const [courseFilter, setCourseFilter] = useState(null)
