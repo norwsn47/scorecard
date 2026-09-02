@@ -2,7 +2,7 @@
 ## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
 **Version:** 2.0
-**Last updated:** 1 September 2026 (tidied build-plan vocabulary; course name aligned to "Bruntsfield Short Hole Golf Course" throughout)
+**Last updated:** 1 September 2026 (tidied build-plan vocabulary; course name aligned to "Bruntsfield Short Hole Golf Course" throughout; noted `game_name` as unused/retained)
 
 ---
 
@@ -313,7 +313,7 @@ Four tables in Cloudflare D1:
 **games**
 - `id` — UUID, primary key
 - `user_id` — UUID, foreign key → users.id
-- `game_name` — text, nullable
+- `game_name` — text, nullable — unused; game-naming was removed from the UI and no API path writes it (column retained to avoid a table rebuild)
 - `played_at` — timestamp
 - `holes_played` — integer
 - `player_data` — JSON blob (array of players with name, per-hole scores, total, DNF flag)
@@ -400,7 +400,7 @@ No passwords. Users authenticate with their email address only.
 When a user is authenticated, the game save behaviour changes:
 
 - On game completion, the game is saved to D1 (via `POST /api/games`) in addition to (or instead of) localStorage — this is to be determined during implementation, but the preferred approach is DB only for logged-in users to keep the two histories cleanly separate
-- The game record includes: user_id, game_name, played_at, holes_played, player_data (JSON), course_id
+- The game record includes: user_id, played_at, holes_played, player_data (JSON), course_id, notes, client_round_id (see §11.3). (The schema also has a nullable `game_name` column, unused since game-naming was removed from the UI.)
 - The existing finish-game flow (summary screen, share) is unchanged — only the save destination changes
 
 **Active game state:** While a game is in progress, the active game is still tracked in localStorage (same as the quick-play flow). On game completion, the final record is written to D1.

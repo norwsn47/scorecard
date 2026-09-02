@@ -95,7 +95,6 @@ export default function Summary({ navigate, params }) {
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify({
-            game_name: null,
             course_id: game.courseId || null,
             played_at: game.completedAt,
             holes_played: game.holesPlayed,
@@ -265,7 +264,7 @@ export default function Summary({ navigate, params }) {
              Edit button, which routes back through Setup. Any saved note is
              shown as quiet static text; nothing to edit, nothing to submit. */
           game.notes ? (
-            <p className="font-ui text-xs text-muted leading-relaxed whitespace-pre-wrap">
+            <p className="font-ui text-sm text-muted leading-relaxed whitespace-pre-wrap">
               {game.notes}
             </p>
           ) : null

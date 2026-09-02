@@ -26,7 +26,6 @@ function normalizeDbGame(row) {
 
   return {
     id:          row.id,
-    name:        row.game_name || '',
     completedAt: row.played_at,
     holesPlayed: row.holes_played,
     courseId:    row.course_id || null,
