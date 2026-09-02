@@ -6,9 +6,9 @@
 > Nothing here is actioned without explicit instruction — tell the project-manager (or Claude directly) to pull an item into work.
 > Numbers are stable IDs for cross-reference — don't renumber existing items when deleting one, so gaps are expected.
 
-**Last updated:** 1 September 2026
+**Last updated:** 2 September 2026
 
-Shipped and removed on 1 September 2026: batch A — 20, 24, 26, 27, 30, 32; batch B — 17, 18, 28; batch C — 2 (code part; sender-name step lives on as 2b), 29, 33. See `CHANGELOG.md`.
+Shipped and removed: 1 Sep — batch A (20, 24, 26, 27, 30, 32), batch B (17, 18, 28), batch C (2 code part / see 2b, 29, 33); 2 Sep — 21 (ESLint). See `CHANGELOG.md`.
 
 Items 36-44 added 1 September 2026 from a golf-feedback list. Several (36, 37, 38, 39, 40, 42) change what the PRD currently specifies (winner calc, par explicitly out of scope, magic-link-only auth) — each needs a product-owner PRD decision before it can be built.
 
@@ -110,9 +110,6 @@ The router is a state machine with light URL sync (`App.jsx`). Back buttons curr
 ---
 
 ## Housekeeping & tech debt
-
-### 21. No linter configured
-No ESLint (or equivalent) and no `lint` script. Reviews rely on manual reading. Add ESLint with a sensible React/JSX config.
 
 ### 22. No flow test for the edit-past-round path
 No integration/component test covers open-edit → change on the scorecard → save back. The duplicate-save regression class isn't protected by an automated flow test. Add one asserting a single record in/out (no new row) for both the D1 and localStorage paths.

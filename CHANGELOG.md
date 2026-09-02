@@ -5,9 +5,13 @@
 > Git history is the full record; this file is for context and decision rationale that commit messages don't carry.
 > Update the date below whenever you add an entry.
 
-**Last updated:** 1 September 2026
+**Last updated:** 2 September 2026
 
 ---
+
+## 2 September 2026
+
+- **ESLint added (#21).** Flat config (`eslint.config.js`) — ESLint 9 with the recommended JS rules, `eslint-plugin-react` (automatic JSX runtime), and `eslint-plugin-react-hooks` (rules-of-hooks); per-area globals for `src/`, Cloudflare Functions, and vitest tests. `npm run lint` added and wired into the code-review gate — a `react-hooks/rules-of-hooks` violation is now a Critical block. First run was clean apart from one unused import (removed). `react/no-unescaped-entities` and `react/prop-types` are off (noise for this codebase).
 
 ## 1 September 2026
 
