@@ -3,7 +3,7 @@ import { track } from '../utils/analytics.js'
 import { formatDateOnly } from '../utils/format.js'
 import { deriveResult } from '../utils/game.js'
 import { tiedNames } from '../utils/result.js'
-import { playerAverage, playerTotal } from '../utils/scores.js'
+import { deriveHolePars, playerAverage, playerTotal } from '../utils/scores.js'
 import { shareScorecard } from '../utils/share.js'
 import { getActiveGame, getCompletedGames, markCompletedGameSynced } from '../utils/storage.js'
 import { useAuth } from '../hooks/useAuth.jsx'
@@ -45,6 +45,10 @@ export default function Summary({ navigate, params }) {
   // Every tied winner gets the accent treatment, not just winners[0] (item 36).
   const winners  = game.winners ?? []
   const isWinner = player => winners.includes(player)
+
+  // Per-hole par for the read-only table — small bracketed reference next to
+  // each hole number, matching the live Scorecard grid (§5.1, item 37).
+  const holePars = deriveHolePars(game.holePars, game.holesPlayed ?? game.holes ?? 36)
 
   const resultBase = 'font-ui text-xs tracking-[0.12em] uppercase text-muted text-center'
   const resultName = 'mx-1.5 font-display italic text-sm text-accent normal-case tracking-normal'
@@ -243,7 +247,10 @@ export default function Summary({ navigate, params }) {
           <tbody>
             {Array.from({ length: game.holesPlayed ?? game.holes }, (_, holeIndex) => (
               <tr key={holeIndex} className="border-b border-border">
-                <td className="py-2 px-3 font-ui text-xs text-muted">{holeIndex + 1}</td>
+                <td className="py-2 px-3 font-ui text-xs text-muted whitespace-nowrap">
+                  {holeIndex + 1}
+                  <span className="align-super text-[10px] text-chrome ml-0.5">({holePars[holeIndex]})</span>
+                </td>
                 {(game.players ?? []).map(player => {
                   const score = game.scores[player]?.[holeIndex]
                   return (

@@ -235,15 +235,14 @@ export default function Scorecard({ navigate, params }) {
       <div className="flex-1 overflow-y-auto">
         <table className="w-full table-fixed border-collapse">
           <colgroup>
-            <col className="w-16" />
+            <col className="w-14" />
             {players.map((_, i) => <col key={i} />)}
           </colgroup>
 
           <thead className="sticky top-0 z-10">
             <tr className="border-b border-border bg-bg-card">
               <th className="py-2 px-2 text-center font-ui text-xs tracking-[0.12em] uppercase text-muted">
-                <span className="block">Hole</span>
-                <span className="block text-[11px] tracking-[0.1em] text-muted">Par</span>
+                Hole
               </th>
               {players.map(player => (
                 <th key={player} className="py-2 px-1 text-center font-ui text-xs tracking-[0.12em] uppercase text-muted">
@@ -265,15 +264,13 @@ export default function Scorecard({ navigate, params }) {
                     isActiveRow ? 'bg-accent-tint' : '',
                   ].join(' ')}
                 >
-                  <td className="py-3 px-2 text-center">
-                    <span className={[
-                      'block font-ui text-xs',
-                      isActiveRow ? 'text-accent font-semibold' : 'text-chrome',
-                    ].join(' ')}>
-                      {holeIndex + 1}
-                    </span>
-                    <span className="block font-ui text-xs leading-tight text-muted">
-                      {holePars[holeIndex]}
+                  <td className={[
+                    'py-3 px-2 text-center font-ui text-xs whitespace-nowrap',
+                    isActiveRow ? 'text-accent font-semibold' : 'text-chrome',
+                  ].join(' ')}>
+                    {holeIndex + 1}
+                    <span className="align-super text-[10px] font-normal text-chrome ml-0.5">
+                      ({holePars[holeIndex]})
                     </span>
                   </td>
                   {players.map((player, playerIndex) => {
@@ -301,7 +298,7 @@ export default function Scorecard({ navigate, params }) {
 
       {/* Totals bar — always visible */}
       <div className="bg-bg-card border-t-2 border-border flex">
-        <div className="w-16 py-3 px-2 font-ui text-xs tracking-[0.12em] uppercase text-muted flex items-center justify-center">
+        <div className="w-14 py-3 px-2 font-ui text-xs tracking-[0.12em] uppercase text-muted flex items-center justify-center">
           Total
         </div>
         {players.map(player => (
