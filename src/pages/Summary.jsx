@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { track } from '../utils/analytics.js'
-import { formatDate, formatDateOnly } from '../utils/format.js'
+import { formatDateOnly } from '../utils/format.js'
 import { playerAverage, playerTotal } from '../utils/scores.js'
 import { shareScorecard } from '../utils/share.js'
 import { getActiveGame, getCompletedGames, markCompletedGameSynced } from '../utils/storage.js'
