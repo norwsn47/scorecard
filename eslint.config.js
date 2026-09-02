@@ -22,7 +22,7 @@ export default [
     rules: {
       ...react.configs.flat.recommended.rules,
       ...react.configs.flat['jsx-runtime'].rules,
-      ...reactHooks.configs.recommended.rules,
+      ...reactHooks.configs['recommended-latest'].rules,
       'react/prop-types': 'off',
       // Apostrophes/quotes in JSX copy render fine; this rule is pure noise here.
       'react/no-unescaped-entities': 'off',
@@ -30,13 +30,15 @@ export default [
     },
   },
 
-  // Cloudflare Pages Functions - Workers runtime globals
+  // Cloudflare Pages Functions - Workers runtime (fetch/Response/Request/URL/
+  // crypto/console are all in globals.node on Node 18+; no DOM globals so an
+  // accidental document.* in a Function is flagged).
   {
     files: ['functions/**/*.js'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
-      globals: { ...globals.browser, ...globals.node },
+      globals: { ...globals.node },
     },
     rules: {
       'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
