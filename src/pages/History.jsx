@@ -3,39 +3,9 @@ import PageHeader from '../components/PageHeader.jsx'
 import { formatShortDate } from '../utils/format.js'
 import { playerAverage, playerTotal } from '../utils/scores.js'
 import { deleteCompletedGame, getCompletedGames } from '../utils/storage.js'
-import { deriveResult } from '../utils/game.js'
+import { normalizeDbGame, normalizeLocalGame } from '../utils/history.js'
 import { historyResultLabel } from '../utils/result.js'
 import { useAuth } from '../hooks/useAuth.jsx'
-
-// The result (winner / Tied / No winner, and DNF) is re-derived from the
-// stored per-hole scores on every History load — the stored winner/dnf fields
-// on a saved round are legacy and not authoritative (PRD §4.4 / §4.5).
-function normalizeDbGame(row) {
-  const playerData = typeof row.player_data === 'string'
-    ? JSON.parse(row.player_data)
-    : (row.player_data ?? [])
-
-  const players = playerData.map(p => p.name)
-  const scores  = {}
-  playerData.forEach(p => { scores[p.name] = p.scores ?? [] })
-
-  const game = {
-    id:          row.id,
-    completedAt: row.played_at,
-    holesPlayed: row.holes_played,
-    courseId:    row.course_id || null,
-    courseName:  row.course_name || null,
-    notes:       row.notes || null,
-    players,
-    scores,
-    _fromDb: true,
-  }
-  return { ...game, ...deriveResult(game) }
-}
-
-function normalizeLocalGame(game) {
-  return { ...game, ...deriveResult(game) }
-}
 
 export default function History({ navigate }) {
   const { user } = useAuth()

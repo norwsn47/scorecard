@@ -1,3 +1,5 @@
+import { deriveHolePars } from './scores.js'
+
 const MAX_HOLES = 36
 
 /**
@@ -171,6 +173,9 @@ export function finishGame(game) {
     ...game,
     completedAt: game.pastDate ?? new Date().toISOString(),
     holesPlayed,
+    // Snapshot the round's par at completion, sliced to the holes actually
+    // played (§5.1) — later course edits never rewrite a saved round.
+    holePars: deriveHolePars(game.holePars, holesPlayed),
     winner,
     winners,
     isDraw,
@@ -183,7 +188,7 @@ export function finishGame(game) {
  * Builds a fresh active-game object. Always allocates MAX_HOLES slots;
  * the UI shows only as many rows as have been played.
  */
-export function createGame(playerNames, courseId = null, courseName = null, pastDate = null) {
+export function createGame(playerNames, courseId = null, courseName = null, pastDate = null, holePars = null) {
   const scores = {}
   playerNames.forEach(name => {
     scores[name] = Array(MAX_HOLES).fill(null)
@@ -196,6 +201,8 @@ export function createGame(playerNames, courseId = null, courseName = null, past
     scores,
     courseId,
     courseName,
+    // Always a length-36 array; null (quick-play with no course passed) → all 3s.
+    holePars: deriveHolePars(holePars, MAX_HOLES),
     ...(pastDate ? { pastDate } : {}),
   }
 }
@@ -217,7 +224,7 @@ export function createGame(playerNames, courseId = null, courseName = null, past
  * so finishGame stamps the chosen date rather than "now". Winner, DNF,
  * holesPlayed and completedAt are all left for finishGame to recompute.
  */
-export function buildEditGame(existingGame, editedNames, courseId = null, courseName = null, dateIso = null) {
+export function buildEditGame(existingGame, editedNames, courseId = null, courseName = null, dateIso = null, holePars = null) {
   const oldNames = existingGame.players ?? []
   const scores = {}
   editedNames.forEach((name, i) => {
@@ -237,6 +244,9 @@ export function buildEditGame(existingGame, editedNames, courseId = null, course
     scores,
     courseId: courseId ?? null,
     courseName: courseName ?? null,
+    // `holePars` passed in when a D1 edit switches course; otherwise the
+    // round keeps its own saved snapshot (§11.7).
+    holePars: deriveHolePars(holePars ?? existingGame.holePars, MAX_HOLES),
     ...(dateIso ? { pastDate: dateIso } : {}),
   }
 }

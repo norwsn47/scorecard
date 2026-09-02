@@ -83,6 +83,20 @@ describe('createGame', () => {
     const game = createGame(['Alice'])
     expect(game.holes).toBe(36)
   })
+
+  it('defaults holePars to a length-36 array of par 3', () => {
+    const game = createGame(['Alice'])
+    expect(game.holePars).toHaveLength(36)
+    expect(game.holePars.every(p => p === 3)).toBe(true)
+  })
+
+  it('carries a supplied holePars, normalised to 36 entries', () => {
+    const pars = Array(36).fill(3)
+    pars[0] = 4
+    const game = createGame(['Alice'], null, null, null, pars)
+    expect(game.holePars[0]).toBe(4)
+    expect(game.holePars).toHaveLength(36)
+  })
 })
 
 // ── computeDisplayedHoles ─────────────────────────────────────────────────────
@@ -313,6 +327,18 @@ describe('finishGame', () => {
     expect(finished.isDraw).toBe(true)
   })
 
+  it('snapshots holePars sliced to holesPlayed', () => {
+    const pars = Array(36).fill(3)
+    pars[1] = 5
+    const game = createGame(['Alice', 'Bob'], null, null, null, pars)
+    game.scores['Alice'][0] = 3
+    game.scores['Alice'][1] = 3
+    game.scores['Bob'][0] = 4
+    game.scores['Bob'][1] = 4
+    const finished = finishGame(game)
+    expect(finished.holePars).toEqual([3, 5])
+  })
+
   it('holesPlayed reflects only holes with at least one score', () => {
     const game = createGame(['Alice', 'Bob'])
     // Play 9 holes, rest are null
@@ -368,6 +394,24 @@ describe('buildEditGame', () => {
   it('pins the original id', () => {
     const game = buildEditGame(existing, ['Alice', 'Bob'])
     expect(game.id).toBe('row-abc')
+  })
+
+  it("keeps the round's own holePars snapshot by default, padded to 36", () => {
+    const game = buildEditGame({ ...existing, holePars: [3, 4, 5] }, ['Alice', 'Bob'])
+    expect(game.holePars.slice(0, 3)).toEqual([3, 4, 5])
+    expect(game.holePars).toHaveLength(36)
+    expect(game.holePars.slice(3).every(p => p === 3)).toBe(true)
+  })
+
+  it('adopts a supplied holePars when a D1 edit switches course', () => {
+    const game = buildEditGame({ ...existing, holePars: [3, 3, 3] }, ['Alice', 'Bob'], 'course-9', 'New Links', null, [4, 4, 4])
+    expect(game.holePars.slice(0, 3)).toEqual([4, 4, 4])
+  })
+
+  it('defaults holePars to par 3 when the round has none', () => {
+    const game = buildEditGame(existing, ['Alice', 'Bob'])
+    expect(game.holePars).toHaveLength(36)
+    expect(game.holePars.every(p => p === 3)).toBe(true)
   })
 
   it('sets pastDate so finishGame stamps the chosen date', () => {

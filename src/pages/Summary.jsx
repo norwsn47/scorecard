@@ -112,6 +112,7 @@ export default function Summary({ navigate, params }) {
             played_at: game.completedAt,
             holes_played: game.holesPlayed,
             player_data: playerData,
+            hole_pars: game.holePars ?? null,
             notes: notes.trim() || null,
             client_round_id: game.id,
           }),
