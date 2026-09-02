@@ -25,6 +25,9 @@ export function defaultHoleParsJson(holes) {
  * `{ ok: false, error }` with a message suitable for a 400 response.
  */
 export function validateHolePars(value, expectedLength) {
+  if (!Number.isInteger(expectedLength) || expectedLength < 1) {
+    return { ok: false, error: 'hole_pars length could not be determined' }
+  }
   let arr = value
   if (typeof value === 'string') {
     try {
@@ -36,7 +39,7 @@ export function validateHolePars(value, expectedLength) {
   if (!Array.isArray(arr)) {
     return { ok: false, error: 'hole_pars must be an array' }
   }
-  if (!Number.isInteger(expectedLength) || arr.length !== expectedLength) {
+  if (arr.length !== expectedLength) {
     return { ok: false, error: `hole_pars must have exactly ${expectedLength} entries` }
   }
   if (!arr.every(n => Number.isInteger(n) && n >= PAR_MIN && n <= PAR_MAX)) {
