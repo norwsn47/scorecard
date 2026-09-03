@@ -65,8 +65,8 @@ The architecture for properly supporting multiple courses, beyond the current v2
 ### 38. Score-against-par indicator while entering scores
 With par now shipped (#37 — `hole_pars` on the game, `scoreToPar()` helper already in `src/utils/scores.js`), show each entered score's result vs par — a small superscript / bracketed `+1` / `-1` / `E` next to the number in the scorecard grid, live as it's entered. Also a candidate for the read-only Summary scorecard. **Unblocked.**
 
-### 39. End-of-round tally: eagles / birdies / bogeys / double-bogeys
-On finishing a round, count and show per player how many holes they scored eagle (−2), birdie (−1), par (E), bogey (+1) and double-bogey-or-worse (+2+) — a small block on the finish/Summary screen and a candidate for the share image. Uses `scoreToPar()` + the round's `hole_pars` snapshot (#37, **unblocked**). Decide exact buckets and labels with the product-owner (the user's terms were "eagles, biggies, double biggies"). 2 Sep testing feedback: the user wants birdies/eagles/bogeys called out **in the final scorecard outline** specifically — treat that as the primary surface.
+### 39. End-of-round tally: eagles / birdies / pars / bogeys
+**In progress on `feat/end-of-round-tally` (3 Sep).** Per-player count of how holes landed vs par, on the post-finish Summary, the read-only History detail, and the share image. Spec confirmed with the user 3 Sep and written up as **PRD §5.2**: four buckets — Eagle (delta ≤ −2) / Birdie (−1) / Par (0) / Bogey (+1); holes of +2 or worse are counted in no bucket (intended); standard golf terms; only buckets a player in the round hit are shown; no semantic colour. Uses `scoreToPar()` + the round's `hole_pars` snapshot (#37). No schema/API/migration change.
 
 ### 40. Optional match-play game mode (win each hole)
 A game-mode toggle at setup: **stroke play** (current — lowest total wins) or **match play** (win the most holes; each hole won by the lowest score, halved on a tie). Changes the winner calculation, the Summary, and the share image. Explicitly flagged by the user as a future edition. PRD §5 change needed.
