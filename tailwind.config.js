@@ -17,6 +17,8 @@ export default {
         chrome:          'var(--color-chrome)',
         'control-warm':  'var(--color-control-warm)',
         'accent-tint':   'var(--color-accent-tint)',
+        'under-par':      'var(--color-under-par)',
+        'over-par':       'var(--color-over-par)',
       },
       fontFamily: {
         display: 'var(--font-display)',
