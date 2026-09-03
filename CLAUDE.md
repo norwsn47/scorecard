@@ -1,5 +1,5 @@
 # CLAUDE.md
-Last updated: 1 September 2026
+Last updated: 3 September 2026
 > Ground rules for this project. Read this at the start of every session.
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
@@ -159,6 +159,19 @@ After every significant task, provide a short summary covering:
 - Any known risks or loose ends
 - Recommended next steps
 - Confidence score (1–10)
+
+---
+
+## Output conventions
+These apply to all output - from the main session and from every agent in `.claude/agents/`. Agent files reference this section rather than restating it.
+
+**Questions go at the end.** When a response contains both information and questions, present all information, findings, recommendations and summaries first, then a clear separator (a horizontal rule or a bold "Questions for you:" heading), then the questions. Never split questions across different parts of a response - the reader should be able to scroll to the bottom to find everything that needs answering.
+
+**British English.** Colour not color, organise not organize, recognise not recognize, behaviour not behavior, centre not center, and so on.
+
+**No em dashes.** Use a standard hyphen-minus (-) to separate clauses or items in a sentence, never an em dash. This applies to every kind of output - summaries, instructions, questions, code comments, and document content.
+
+**Conversational responses are concise.** Lead with the answer or the action. Skip restating context the user already has. No multi-paragraph preamble before getting to the point. This governs back-and-forth explanation and reasoning - not the structured deliverables that have a fixed format of their own (the code-reviewer's phase-by-phase report, the `DONE` handoff summaries, the completion summary format). Those stay exactly as specified; they are scanned as reference output, not read as conversation.
 
 ---
 
