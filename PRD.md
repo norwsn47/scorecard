@@ -56,17 +56,15 @@ Outbuild palette applied for outdoor sunlight legibility on a phone:
 
 ### 4.2 Start a new game
 - User taps **New Game**
-- A **game name** field appears at the top of the setup screen, above the player name fields
-  - Pre-populated with the current day and date: e.g. "Saturday 11 July"
-  - A subtle hint makes clear the field is optional — user can edit or leave it unchanged
-  - If the field is cleared entirely, the game saves without a name
-  - The game name appears in four places: the scorecard header during play, the History list, the Resume Game prompt on the home screen, and the share image
+- The setup screen opens straight at the player name fields (for logged-in users a course selector sits above them — see §11.7)
 - Adds players dynamically (1–6) — tap **Add Player** to add, tap **✕** to remove; names can be typed or selected from suggestions
 - Each player enters or selects a name
   - Names previously used are suggested from local browser storage
   - **Duplicate names are not allowed** — the app blocks starting if two players share the same name
   - No login required — names are stored locally on the device
 - Taps **Start** — scorecard is created (no hole pre-selection required)
+
+> **Game naming (removed):** an earlier design opened this screen with an optional, pre-populated "game name" field that then appeared on the scorecard header, in History, in the Resume Game prompt, and on the share image. It was removed from the UI before the v2.0 release — no screen shows a game name. The `games.game_name` column is retained but unused (see §11.3, §11.8).
 
 ### 4.3 The scorecard
 - Resembles a physical scorecard — clean, full-width grid layout; no horizontal scrolling
@@ -85,7 +83,6 @@ Outbuild palette applied for outdoor sunlight legibility on a phone:
   - **Maximum score per hole: 14 strokes.** The **+** button is disabled once 14 is reached. Note: the official Bruntsfield Short Hole Golf Club stroke limit is 7 per hole (see 4.9); the app uses a higher practical cap of 14 to accommodate casual play without being as restrictive as the official rule.
   - The **→** button advances focus to the next player on the same hole, or the next hole's first player
 - Running totals shown above the control bar, always visible
-- The scorecard header displays the game name if one was set
 - Progress is **auto-saved to local storage continuously**
   - **On reopening the app with a game in progress:** the user is taken directly to the scorecard, bypassing the home screen. Focus is restored to the exact cell — the specific player and hole — that was active when the app was closed or the browser was shut.
   - If the user navigates back to the home screen during an active game, the Resume Game prompt appears there (see 4.1)
@@ -103,7 +100,6 @@ Outbuild palette applied for outdoor sunlight legibility on a phone:
 - The result is derived from the per-hole scores by one shared `calculateResult` helper, returning `{ winners, dnf, isDraw, winningTotal }` plus a `winner = winners[0] ?? null` convenience field. It is **re-derived on read** for saved rounds (via the `deriveResult` wrapper) — the stored `game.winner` string on legacy localStorage rounds and the legacy single winner on D1 rounds are not authoritative and are not migrated
 - A **Share** button appears on the summary screen — tapping it generates the share image and triggers the native device share sheet (see 4.7)
 - Completed game saved to local browser storage with:
-  - Game name (if set)
   - Date and time
   - Player names and scores per hole
   - Number of holes played
@@ -112,9 +108,9 @@ Outbuild palette applied for outdoor sunlight legibility on a phone:
 
 ### 4.5 Game history
 - Accessible from the home screen via **History**
-- Lists all previously saved games, each showing: game name (if set), date, players, number of holes, and a **result label line** — "Winner: X - N strokes" / "Tied: X & Y - N strokes" / "No winner" (four or more level: "Tied: N players level on X strokes"). Two or three level winners are named; " - " (spaced hyphen) is the separator, matching the Summary and share image. Solo rounds show no result label, matching the Summary
+- Lists all previously saved games, each showing: course name (where one is recorded), date, players, number of holes, and a **result label line** — "Winner: X - N strokes" / "Tied: X & Y - N strokes" / "No winner" (four or more level: "Tied: N players level on X strokes"). Two or three level winners are named; " - " (spaced hyphen) is the separator, matching the Summary and share image. Solo rounds show no result label, matching the Summary
   - The result label is re-derived from the stored scores on every History load (see 4.4) — it is not read from a stored winner field
-  - Games without a name — whether saved before the game naming feature or left intentionally blank — display the date as their primary identifier in History
+  - Each round is identified by its date; there is no game-name field (see §4.2)
 - Tapping a game shows the full scorecard for that game
 - Tapping a player name filters to all games that player has appeared in
 - A saved game can be edited from its detail view — see §11.13 (applies to both quick-play and logged-in rounds)
@@ -133,7 +129,6 @@ A **Share** button appears on the end-of-game summary screen (see 4.4). Tapping 
 **Share image layout (top to bottom):**
 - The course name (e.g. "Bruntsfield Short Hole Golf Course") — main heading in bold
 - Outbuild logo mark — directly below the heading
-- Game name — shown below the logo mark, only if the user set one
 - Result callout:
   - Single winner: "Winner: [Name] - [X] strokes"
   - Tied: "Tied: [Name] & [Name] - [X] strokes" (or "[Name], [Name] & [Name]" for three-way ties)
@@ -312,6 +307,8 @@ This section defines everything added in v2.0. The MVP (v1.x) remains fully func
 
 Scorecard Plus is the logged-in layer of the app. It adds persistent history, custom course creation, and cross-device sync for users who want more than quick-play offers. The two modes coexist: the app detects whether a user is authenticated and adapts accordingly.
 
+**"Scorecard Plus" is an internal name for the logged-in feature set only.** It is not shown anywhere in the UI — the app is "Scorecard by Outbuild" for everyone, signed in or not (§11.6). Where this PRD uses "Scorecard Plus" it means "the logged-in experience", never a label a user sees.
+
 ---
 
 ### 11.2 Technology stack additions
@@ -409,7 +406,7 @@ No passwords. Users authenticate with their email address only.
 
 As built, the logged-in layer carries **no separate brand in the UI**. The app is "Scorecard by Outbuild" for everyone — there is no "Plus" suffix, wordmark treatment, or accent-coloured badge in the header. The original spec here called for a "Scorecard Plus" wordmark; it was not shipped, and the app settled on a single "Scorecard by Outbuild" identity throughout.
 
-"Scorecard Plus" survives only as an internal shorthand for the logged-in feature set (this section, §11.1). Reconciling that name across the PRD is tracked in BACKLOG.md (#59).
+"Scorecard Plus" survives only as an internal shorthand for the logged-in feature set (see §11.1) — it is never shown to users and is not a header label, wordmark, or badge.
 
 The signed-in state is shown functionally, not through branding: a "Past Rounds" button on Home, and the "Want to save your scores? Sign in" nudge is hidden. A clearer signed-in vs signed-out indicator is a backlog item (BACKLOG #4).
 
