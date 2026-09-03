@@ -8,11 +8,11 @@
 
 **Last updated:** 3 September 2026
 
-Shipped and removed: 1 Sep — batch A (20, 24, 26, 27, 30, 32), batch B (17, 18, 28), batch C (2 code part / see 2b, 29, 33); 2 Sep — 21 (ESLint), 36 (ties → draw), 37 (per-hole par); 3 Sep — 47 (new game landed on wrong hole), 48/49/50/55 (par UI rework + 9/18 course length), 46/51/53 + the easy part of 45 (small-items batch). See `CHANGELOG.md`.
+Shipped and removed: 1 Sep — batch A (20, 24, 26, 27, 30, 32), batch B (17, 18, 28), batch C (2 code part / see 2b, 29, 33); 2 Sep — 21 (ESLint), 36 (ties → draw), 37 (per-hole par); 3 Sep — 47 (new game landed on wrong hole), 48/49/50/55 (par UI rework + 9/18 course length), 46/51/53 + the easy part of 45 (small-items batch), 39 (end-of-round vs-par tally, PRD §5.2). See `CHANGELOG.md`.
 
 Items 36-44 added 1 September 2026 from a golf-feedback list. **36 (ties → draw) and 37 (per-hole par) shipped 2 September** — see `CHANGELOG.md`; both unblock 38 and 39. 40 still needs a product-owner PRD decision before build; 42 (Google sign-in) moved to Blocked on 3 September — it needs an external Google Cloud OAuth client set up first.
 
-Items 47-55 added 2 September 2026 from a ties+par testing-feedback list, after 36/37 shipped. **47, 48, 49, 50 and 55 shipped 3 September** — see `CHANGELOG.md`. 52 still changes PRD-described behaviour and needs a product-owner PRD update before build; 54 needs a build-vs-admin decision first. Item 10 of that list was folded into #39. Items 56-58 added 3 September 2026 from the #48–#55 code review. #60 added 3 September 2026 (split from the closed #59, the PRD as-built pass). #61-62 added 3 September 2026 from the #46/#51/#53 review; #45 rescoped to the Vite major upgrade only.
+Items 47-55 added 2 September 2026 from a ties+par testing-feedback list, after 36/37 shipped. **47, 48, 49, 50 and 55 shipped 3 September** — see `CHANGELOG.md`. 52 still changes PRD-described behaviour and needs a product-owner PRD update before build; 54 needs a build-vs-admin decision first. Item 10 of that list was folded into #39, which shipped 3 September (PRD §5.2). Items 56-58 added 3 September 2026 from the #48–#55 code review. #60 added 3 September 2026 (split from the closed #59, the PRD as-built pass). #61-62 added 3 September 2026 from the #46/#51/#53 review; #45 rescoped to the Vite major upgrade only. #63 added 3 September 2026 from the #39 build.
 
 ---
 
@@ -64,9 +64,6 @@ The architecture for properly supporting multiple courses, beyond the current v2
 
 ### 38. Score-against-par indicator while entering scores
 With par now shipped (#37 — `hole_pars` on the game, `scoreToPar()` helper already in `src/utils/scores.js`), show each entered score's result vs par — a small superscript / bracketed `+1` / `-1` / `E` next to the number in the scorecard grid, live as it's entered. Also a candidate for the read-only Summary scorecard. **Unblocked.**
-
-### 39. End-of-round tally: eagles / birdies / bogeys / double-bogeys
-On finishing a round, count and show per player how many holes they scored eagle (−2), birdie (−1), par (E), bogey (+1) and double-bogey-or-worse (+2+) — a small block on the finish/Summary screen and a candidate for the share image. Uses `scoreToPar()` + the round's `hole_pars` snapshot (#37, **unblocked**). Decide exact buckets and labels with the product-owner (the user's terms were "eagles, biggies, double biggies"). 2 Sep testing feedback: the user wants birdies/eagles/bogeys called out **in the final scorecard outline** specifically — treat that as the primary surface.
 
 ### 40. Optional match-play game mode (win each hole)
 A game-mode toggle at setup: **stroke play** (current — lowest total wins) or **match play** (win the most holes; each hole won by the lowest score, halved on a tie). Changes the winner calculation, the Summary, and the share image. Explicitly flagged by the user as a future edition. PRD §5 change needed.
@@ -157,6 +154,9 @@ Surfaced in the #45/#46/#51/#53 review. Both the course-filter chip row and the 
 
 ### 62. `holes_played: 0` on `POST /api/games` returns the wrong error message
 Minor. A `holes_played` of `0` is caught by the earlier `!holes_played` truthy check and returns `"Missing required fields"` rather than `"Invalid holes_played"` (the message the PATCH handler and the new integer check use for every other bad value). Both reject `0`; only the message differs. Tidy when next in that file.
+
+### 63. Summary totals row no longer sticky while scrolling
+From the #39 build. The read-only scorecard's "Total" row was a `sticky bottom-0` `<tfoot>` that stayed pinned while scrolling a long hole list. #39 folded the totals + the vs-par tally into one `<tbody>` (so the tally columns stay locked to the players when the grid scrolls sideways), which meant dropping the sticky behaviour. Noticeable mainly on a 36-hole Bruntsfield round on a short screen. Restore it if it's missed — needs a way to keep totals pinned above a tally block that renders below it, or move the tally above the totals.
 
 ### 57. Hole-count picker uses `aria-pressed` rather than a radiogroup
 Surfaced in the #48–#55 code review. The 9 / 18 hole-count picker in course creation (`Setup.jsx`) is two buttons with `aria-pressed`. For a single-select control, `role="radio"` + `aria-checked` inside a `role="radiogroup"` would be more accurate. Low priority — consistent with the prior toggle pattern in the app; revisit alongside #44 (design-system) if a shared toggle primitive is introduced.
