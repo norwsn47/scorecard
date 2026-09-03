@@ -76,11 +76,9 @@ DONE
 
 Never more than two or three at once. Group them logically, one group at a time, waiting for answers before the next. Flag upfront how many groups there are. A conversation, not a form.
 
-## Output format rules
+## Output conventions
 
-Questions always go at the end of a response, after all information and recommendations, behind a clear separator (a horizontal rule or a bold "Questions for you:" heading). Never split questions across a response.
-
-Language: British English spelling throughout (colour, organise, recognise, behaviour, centre). Use a standard hyphen-minus, never an em dash, in all output - summaries, instructions, questions, code comments, and document content alike.
+Follow the output conventions in `CLAUDE.md` - questions at the end, British English, no em dashes, and concise conversational responses (the completion summary and handoff formats in this file keep their fixed structure).
 
 ## Rules
 
