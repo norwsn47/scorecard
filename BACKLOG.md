@@ -12,7 +12,7 @@ Shipped and removed: 1 Sep — batch A (20, 24, 26, 27, 30, 32), batch B (17, 18
 
 Items 36-44 added 1 September 2026 from a golf-feedback list. **36 (ties → draw) and 37 (per-hole par) shipped 2 September** — see `CHANGELOG.md`; both unblock 38 and 39. 40 and 42 still need a product-owner PRD decision before build.
 
-Items 47-55 added 2 September 2026 from a ties+par testing-feedback list, after 36/37 shipped. **47, 48, 49, 50 and 55 shipped 3 September** — see `CHANGELOG.md`. 52 still changes PRD-described behaviour and needs a product-owner PRD update before build; 54 needs a build-vs-admin decision first. Item 10 of that list was folded into #39. Items 56-58 added 3 September 2026 from the #48–#55 code review.
+Items 47-55 added 2 September 2026 from a ties+par testing-feedback list, after 36/37 shipped. **47, 48, 49, 50 and 55 shipped 3 September** — see `CHANGELOG.md`. 52 still changes PRD-described behaviour and needs a product-owner PRD update before build; 54 needs a build-vs-admin decision first. Item 10 of that list was folded into #39. Items 56-58 added 3 September 2026 from the #48–#55 code review; #59 added 3 September 2026 from the agent/docs efficiency cleanup.
 
 ---
 
@@ -161,6 +161,13 @@ Surfaced in the #48–#55 code review. The 9 / 18 hole-count picker in course cr
 
 ### 58. No render/interaction test for the par stepper or the new par markup
 Surfaced in the #48–#55 code review. The par stepper's 2–7 clamp (`Setup.jsx`, `stepPar`) and the bold-number + bracketed-par markup on `Scorecard.jsx` / `Summary.jsx` have no render/interaction coverage — the suite still tests `src/utils/*` and `functions/api/*` only. Ties into #35 (add a React Testing Library render-test harness); fold in when that lands.
+
+### 59. Reconcile "Scorecard Plus" naming and §4.8 across the PRD
+Surfaced during the 3 Sep agent/docs cleanup. Two loose ends the cleanup flagged but didn't fully resolve:
+- **"Scorecard Plus" naming.** §11.6 was rewritten to note the "Plus" wordmark was never shipped and the app is "Scorecard by Outbuild" throughout, but "Scorecard Plus" still appears as a section title and shorthand across §11. Decide whether to keep it as an internal term or rename it everywhere, then make §11 consistent.
+- **§4.8 vs the shipped Info page.** §4.8's "Contents" list was updated to match `Info.jsx` as-built, but a proper product-owner pass over §4.8 (and its relationship to the "Your data" privacy page, §11.12) would be worthwhile — the two describe overlapping things and the split between them is currently implicit.
+- **Section 4 game-naming staleness.** §4.2, §4.3 and §4.4 still describe a "game name" field as a live feature (setup field, scorecard header, History list, share image). Game naming was removed from the UI; the `game_name` column is retained but unused (§11.3, §11.8). Section 4 needs the same as-built pass §11 just had.
+Product-owner work, low priority — the PRD is accurate enough to use.
 
 ### 44. Design-system consolidation + page/header templates
 DESIGN.md has component patterns but no formal system. The user wants: a mobile header review (spacing and sizing rules — `PageHeader` `pt-10 pb-4`, `px-20` title clearance, the Summary bespoke header, etc.), documented design-system rules for the app, and page/header templates so new screens are built to a pattern rather than ad hoc. Design-director work; produces an expanded DESIGN.md (tokens → components → page templates → header rules) plus, ideally, a shared layout/header primitive the pages compose. Related: #27 (closed — PageHeader clearance), #34 (tap-target floor), the DESIGN.md "Inline link tap targets" and "Navigation" sections.

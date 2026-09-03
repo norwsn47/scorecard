@@ -161,21 +161,20 @@ A **Share** button appears on the end-of-game summary screen (see 4.4). Tapping 
 
 Accessed via the **ⓘ** icon in the top-right corner of the home screen (see 4.1). No first-launch prompt — passive access only.
 
-**Contents:**
-- Plain-English data explanation, written for golfers:
-  - Player names, game scores, and dates are stored locally on the user's device in browser local storage
-  - No data is ever sent to a server
-  - No tracking, no analytics, and no third-party services are used in this version of the app
+**Contents (as built):**
+- "Why we made this" — a short editorial note
 - Course section:
   - Short description: "One of the world's oldest golf links, Bruntsfield Short Hole Golf Club has been a fixture in Edinburgh since 1895. The 36-hole course features par-3 holes of 45–90 yards – unique to world golf."
   - "Find out more" external link to https://www.bruntsfieldshortholegolfclub.co.uk/history/
   - "Course rules" link (navigates to the rules page)
   - Permission line: "The course map is reproduced with permission from Bruntsfield Short Hole Golf Club."
-- Credit line: "Scorecard is made by Outbuild, a small design collective based in Edinburgh."
-- A contact link (mailto:) — tapping opens an email to williamadamgriffiths@gmail.com
-  - This is a placeholder pending setup of hello@outbuild.co via Resend (see Backlog)
+- "About Outbuild" credit
+- Account section: shows the signed-in email with a "Sign out" action, or a "Sign in or create account" prompt when signed out
+- Data line: "Your data is handled under UK GDPR." with a "Read our privacy policy" link to the "Your data" page (§11.12)
 
-**Note for maintainers:** If analytics is ever added (see BACKLOG.md), both this PRD section and the in-app disclaimer text must be updated to reflect what data is collected and by whom.
+The original v1.x plan for this page carried an inline "stored locally, nothing sent to a server, no third-party services" explanation. That is only true for quick-play; once accounts and the D1 database landed (§11), the detail moved to the dedicated privacy page rather than an inline disclaimer.
+
+**Note for maintainers:** If analytics is ever added (see BACKLOG.md), this PRD section, the privacy page, and any in-app disclaimer text must all be updated to reflect what data is collected and by whom.
 
 ### 4.9 Course rules
 
@@ -319,7 +318,7 @@ Scorecard Plus is the logged-in layer of the app. It adds persistent history, cu
 
 - **API layer:** Cloudflare Pages Functions — serverless functions co-deployed with the Cloudflare Pages site, living in the `/functions` directory
 - **Database:** Cloudflare D1 — SQLite-compatible database, bound to the Pages project via wrangler
-- **Email:** Resend — transactional email for magic link delivery (account exists; API key to be created as part of this work)
+- **Email:** Resend — transactional email for magic link delivery. Configured via the `RESEND_API_KEY` environment variable (§11.11)
 - **Session management:** D1 sessions table + HttpOnly cookie — a UUID session token is stored in D1; the browser receives it as a `Set-Cookie: session=<token>; HttpOnly; Secure; SameSite=Strict` header on verification
 
 ---
@@ -389,9 +388,9 @@ No passwords. Users authenticate with their email address only.
 
 **Session expiry:** Sessions last 30 days. A new session is created on each successful verification.
 
-**Email content:** Simple, branded. Subject: "Your Scorecard Plus sign-in link". Body: a single CTA button — "Sign in to Scorecard Plus" — with a plain-text fallback URL below. Signed off with Outbuild branding.
+**Email content:** Simple, branded. Subject: "Sign in to Scorecard by Outbuild". A "Scorecard by Outbuild" wordmark, a "Sign in to your account" heading, a single "Sign in to Scorecard" CTA button, and the plain-text fallback URL below it. The plain-text alternative carries the same link. Footer: "Built by Outbuild." (Wording last revised 1 September 2026 — see CHANGELOG.md.)
 
-**From address:** To be confirmed — either `hello@outbuild.co` or a Resend-verified sending domain. This is determined when the Resend API key is created as part of this work.
+**From address:** Set via the `RESEND_FROM_EMAIL` environment variable (§11.11). The exact address and its inbox sender-name display format are tracked in BACKLOG.md (#2b, #12).
 
 ---
 
@@ -406,13 +405,13 @@ No passwords. Users authenticate with their email address only.
 
 ---
 
-### 11.6 Scorecard Plus branding
+### 11.6 Branding of the logged-in layer
 
-- The logged-in product is called **Scorecard Plus**
-- The "Plus" suffix appears in the app header when the user is authenticated — once, in the top-level logo/wordmark area
-- Visual treatment: logo similar to the existing watermark/wordmark, with "Plus" appended in the terracotta accent colour — same weight and baseline as the rest of the logo
-- Logged-out users see the existing branding unchanged — no "Plus" anywhere
-- The "Plus" branding must not be garish or promotional — it is a quiet identifier, not a marketing badge
+As built, the logged-in layer carries **no separate brand in the UI**. The app is "Scorecard by Outbuild" for everyone — there is no "Plus" suffix, wordmark treatment, or accent-coloured badge in the header. The original spec here called for a "Scorecard Plus" wordmark; it was not shipped, and the app settled on a single "Scorecard by Outbuild" identity throughout.
+
+"Scorecard Plus" survives only as an internal shorthand for the logged-in feature set (this section, §11.1). Reconciling that name across the PRD is tracked in BACKLOG.md (#59).
+
+The signed-in state is shown functionally, not through branding: a "Past Rounds" button on Home, and the "Want to save your scores? Sign in" nudge is hidden. A clearer signed-in vs signed-out indicator is a backlog item (BACKLOG #4).
 
 ---
 
@@ -441,7 +440,7 @@ No passwords. Users authenticate with their email address only.
 
 When a user is authenticated, the game save behaviour changes:
 
-- On game completion, the game is saved to D1 (via `POST /api/games`) in addition to (or instead of) localStorage — this is to be determined during implementation, but the preferred approach is DB only for logged-in users to keep the two histories cleanly separate
+- On game completion, the completed round is written to D1 via `POST /api/games`. It is also retained in localStorage (a synced round is not deleted locally, so a failed POST can be retried on the next Summary visit), but the logged-in history view reads only from D1 — the two histories stay cleanly separate (§11.9)
 - The game record includes: user_id, played_at, holes_played, player_data (JSON), course_id, hole_pars (JSON, copied from the course — see §5.1), notes, client_round_id (see §11.3). (The schema also has a nullable `game_name` column, unused since game-naming was removed from the UI.)
 - The existing finish-game flow (summary screen, share) is unchanged — only the save destination changes
 
@@ -454,7 +453,7 @@ When a user is authenticated, the game save behaviour changes:
 - Logged-in users see their DB-backed game history — not their localStorage history
 - Logged-out users see their localStorage history — no change
 - The two histories are kept strictly separate — no merging in v2.0
-- Logged-in history screen shows: game name (if set), course name, date, player names, holes played, and the result label (Winner / Tied / No winner), consistent with §4.5
+- Logged-in history screen shows: course name, date, player names, holes played, and the result label (Winner / Tied / No winner), consistent with §4.5. (Game naming was removed from the UI, so no game-name column is shown.)
 - Tapping a game shows the full scorecard (read-only, same layout as the existing summary screen)
 - Tapping a player name filters to games that player appeared in
 - Empty state if no games saved yet
@@ -469,25 +468,24 @@ The quick-play experience (logged-out mode) is not changed by v2.0. Everything i
 
 ### 11.11 Environment variables and secrets
 
-The following must be configured before Phase 4 build starts:
+The following are configured in Cloudflare Pages (production and preview):
 
 | Variable | Where | Notes |
 |---|---|---|
-| `RESEND_API_KEY` | Cloudflare Pages env (production + preview) | API key to be created in Resend dashboard |
-| `RESEND_FROM_EMAIL` | Cloudflare Pages env | Sending address — to be confirmed when Resend key is created |
+| `RESEND_API_KEY` | Cloudflare Pages env (production + preview) | API key held in the Resend dashboard |
+| `RESEND_FROM_EMAIL` | Cloudflare Pages env | Sending address (inbox sender-name display format tracked in BACKLOG #2b) |
 | `APP_URL` | Cloudflare Pages env | Base URL for constructing magic link URLs (e.g. `https://scorecard.outbuild.uk`) |
-| D1 binding: `DB` | wrangler.toml | Not an env var — a Cloudflare D1 binding. Database to be created via wrangler. |
+| D1 binding: `DB` | wrangler.toml | Not an env var — the `scorecard-plus` Cloudflare D1 database, bound in `wrangler.toml` |
 
-Cookie name and session/token expiry can be hardcoded in the API layer (not env vars).
+Cookie name and session/token expiry are hardcoded in the API layer (not env vars).
 
 ---
 
-### 11.12 Information page update (v2.0)
+### 11.12 Information page and privacy policy (v2.0)
 
-When Scorecard Plus is live, the information page (PRD 4.8) must be updated to reflect:
-- That logged-in users' data is stored in a Cloudflare D1 database, not only in local storage
-- That email addresses are processed by Resend for authentication purposes
-- The contact email should be updated to hello@outbuild.co once that address is configured via Resend (see BACKLOG.md)
+The data story lives on a dedicated **"Your data"** privacy page (`Privacy.jsx`), reached from a "Read our privacy policy" link on the information page (§4.8). It states that logged-in users' rounds and scores are stored in a Cloudflare D1 database, that Resend processes email addresses to deliver the sign-in link, that neither provider uses the data for its own purposes, retention (account data kept while in use; sessions expire after 30 days), and account deletion on request. The information page itself no longer carries an inline data disclaimer — it just links here (§4.8).
+
+The contact address is `scorecard@outbuild.uk` on the privacy page. Whether the information page also needs its own contact link, and the final address, are tracked in BACKLOG.md (#12).
 
 ---
 
