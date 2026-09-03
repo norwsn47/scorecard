@@ -3,7 +3,7 @@ import { track } from '../utils/analytics.js'
 import { formatDateOnly } from '../utils/format.js'
 import { deriveResult } from '../utils/game.js'
 import { tiedNames } from '../utils/result.js'
-import { deriveHolePars, playerAverage, playerTotal } from '../utils/scores.js'
+import { deriveHolePars, parTally, playerAverage, playerTotal } from '../utils/scores.js'
 import { shareScorecard } from '../utils/share.js'
 import { getActiveGame, getCompletedGames, markCompletedGameSynced } from '../utils/storage.js'
 import { useAuth } from '../hooks/useAuth.jsx'
@@ -49,6 +49,28 @@ export default function Summary({ navigate, params }) {
   // Per-hole par for the read-only table — small bracketed reference next to
   // each hole number, matching the live Scorecard grid (§5.1, item 37).
   const holePars = deriveHolePars(game.holePars, game.holesPlayed ?? game.holes ?? 36)
+
+  // End-of-round tally vs par (§5.2). Per player, over the holes they played.
+  // Only buckets at least one player hit are shown (union of non-zero); within
+  // that set a player with none shows 0. If nobody hit any of the four, the
+  // whole block is hidden. No semantic colour — consistent with par carrying
+  // no colour of its own (§5.1). Same component serves the post-finish view
+  // and the History detail view (viewingSaved).
+  const parBuckets = [
+    ['eagle',  'Eagle'],
+    ['birdie', 'Birdie'],
+    ['par',    'Par'],
+    ['bogey',  'Bogey'],
+  ]
+  const parTallies = Object.fromEntries(
+    (game.players ?? []).map(p => [
+      p,
+      parTally((game.scores?.[p] ?? []).slice(0, holePars.length), holePars),
+    ]),
+  )
+  const visibleParBuckets = parBuckets.filter(
+    ([key]) => (game.players ?? []).some(p => parTallies[p][key] > 0),
+  )
 
   const resultBase = 'font-ui text-xs tracking-[0.12em] uppercase text-muted text-center'
   const resultName = 'mx-1.5 font-display italic text-sm text-accent normal-case tracking-normal'
@@ -221,17 +243,20 @@ export default function Summary({ navigate, params }) {
         </div>
       )}
 
-      {/* Read-only scorecard */}
-      <div className="flex-1 overflow-y-auto overflow-x-auto mt-3">
+      {/* Read-only scorecard. The vs-par tally (§5.2) lives in the same table
+          as extra rows below the totals so its columns stay locked to the
+          player columns above, even when the grid scrolls sideways. */}
+      <div className="flex-1 overflow-y-auto overflow-x-auto mt-3 pb-6">
         <table className="w-full min-w-max border-collapse">
           <thead>
             <tr className="border-b border-border bg-bg-card">
-              <th className="py-2 px-3 text-left font-ui text-xs tracking-[0.12em] uppercase text-muted w-12">
+              <th scope="col" className="py-2 px-3 text-left font-ui text-xs tracking-[0.12em] uppercase text-muted w-16">
                 Hole
               </th>
               {(game.players ?? []).map(player => (
                 <th
                   key={player}
+                  scope="col"
                   className={[
                     'py-2 px-3 text-center font-ui text-xs tracking-[0.12em] uppercase max-w-[90px]',
                     isWinner(player) ? 'text-accent font-semibold' : 'text-muted',
@@ -267,11 +292,9 @@ export default function Summary({ navigate, params }) {
                 })}
               </tr>
             ))}
-          </tbody>
 
-          <tfoot className="sticky bottom-0 z-10">
             <tr className="bg-bg-card border-t-2 border-border">
-              <td className="py-3 px-3 font-ui text-xs tracking-[0.12em] uppercase text-muted">Total</td>
+              <th scope="row" className="py-3 px-3 text-left font-ui text-xs font-normal tracking-[0.12em] uppercase text-muted">Total</th>
               {(game.players ?? []).map(player => (
                 <td
                   key={player}
@@ -288,7 +311,39 @@ export default function Summary({ navigate, params }) {
                 </td>
               ))}
             </tr>
-          </tfoot>
+
+            {visibleParBuckets.length > 0 && (
+              <>
+                <tr>
+                  <th
+                    scope="colgroup"
+                    colSpan={1 + (game.players?.length ?? 0)}
+                    className="pt-5 pb-1 px-3 text-left font-ui text-xs font-normal tracking-[0.12em] uppercase text-muted"
+                  >
+                    Vs par
+                  </th>
+                </tr>
+                {visibleParBuckets.map(([key, label]) => (
+                  <tr key={key} className="border-b border-border last:border-b-0">
+                    <th scope="row" className="py-2 px-3 text-left font-ui text-xs font-normal text-muted whitespace-nowrap">
+                      {label}
+                    </th>
+                    {(game.players ?? []).map(player => (
+                      <td
+                        key={player}
+                        className={[
+                          'py-2 px-3 text-center font-ui text-sm tabular-nums',
+                          isWinner(player) ? 'text-accent font-medium' : 'text-text',
+                        ].join(' ')}
+                      >
+                        {parTallies[player][key]}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </>
+            )}
+          </tbody>
         </table>
       </div>
 
