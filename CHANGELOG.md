@@ -5,9 +5,13 @@
 > Git history is the full record; this file is for context and decision rationale that commit messages don't carry.
 > Update the date below whenever you add an entry.
 
-**Last updated:** 2 September 2026
+**Last updated:** 3 September 2026
 
 ---
+
+## 3 September 2026
+
+- **Fix — new game landed on the wrong hole (#47).** A live production regression: starting a new game, entering a past round, or creating a course then playing landed the focused scorecard cell on a stale hole (hole 3, or hole 7 after course creation) instead of hole 1. Cause: the active-cell position in localStorage (`gt_active_cell`) is a single global value cleared only when a round finishes, and `Scorecard` restored it unconditionally, so a cell left over from a previously abandoned game won over hole 1. Fix: `Setup.handleStart` now clears the active cell after saving a new working game (both the new-game/past-round and edit-round branches), and `Scorecard` only restores a persisted cell on a paramless mount (app reopen / Resume Game) — a game passed in via navigation params never inherits one. Resume-mid-game and restore-on-reopen (PRD §4.3) are unchanged. Follow-up logged to scope the active cell to a game id for robustness.
 
 ## 2 September 2026
 
