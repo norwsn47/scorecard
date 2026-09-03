@@ -20,7 +20,10 @@ function initialCellFor(g) {
 export default function Scorecard({ navigate, params }) {
   const [[initialGame, initialCell]]  = useState(() => {
     const g = params?.game ?? getActiveGame()
-    const saved = getActiveCell()
+    // Only restore a persisted cell on a paramless mount (app reopen / Resume
+    // Game). A game passed in params is freshly started or an edit copy — it
+    // must never inherit a stale active cell (#47).
+    const saved = params?.game ? null : getActiveCell()
     // When editing an existing round, land on hole 1 — the likely target is
     // an existing score to correct, not the next empty hole.
     const fallback = (params?.editContext || g?._edit)
