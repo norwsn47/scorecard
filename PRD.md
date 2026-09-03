@@ -82,15 +82,16 @@ Outbuild palette applied for outdoor sunlight legibility on a phone:
   - The **−** button is visually disabled when the active cell is empty
   - **Maximum score per hole: 14 strokes.** The **+** button is disabled once 14 is reached. Note: the official Bruntsfield Short Hole Golf Club stroke limit is 7 per hole (see 4.9); the app uses a higher practical cap of 14 to accommodate casual play without being as restrictive as the official rule.
   - The **→** button advances focus to the next player on the same hole, or the next hole's first player
-- Running totals shown above the control bar, always visible
+- Each scored cell shows its result against the hole's par as a small superscript (`+1` / `-1` / `E`), live as the score changes — see §5.3.1
+- Running totals shown above the control bar, always visible — each total also shows the player's round score-to-par in brackets, e.g. `41 (+5)` (§5.3.2)
 - Progress is **auto-saved to local storage continuously**
   - **On reopening the app with a game in progress:** the user is taken directly to the scorecard, bypassing the home screen. Focus is restored to the exact cell — the specific player and hole — that was active when the app was closed or the browser was shut.
   - If the user navigates back to the home screen during an active game, the Resume Game prompt appears there (see 4.1)
 
 ### 4.4 Finishing a game
 - User taps **Finish Game**
-- A **confirmation dialog** appears — user must confirm before the game ends (prevents accidental taps)
-- Final scores shown in a summary view (all players, all holes, totals), with a per-player vs-par tally beneath the totals (§5.2)
+- A **confirmation dialog** appears — user must confirm before the game ends (prevents accidental taps). Each player's line shows their total and round score-to-par, e.g. `41 (+5)` (§5.3.2)
+- Final scores shown in a summary view (all players, all holes, totals), with each total showing the round score-to-par (§5.3.2) and a per-player vs-par tally beneath the totals (§5.2)
 - **DNF (did not finish):** a player is DNF when they completed fewer holes than the furthest player in that round, and is excluded from the result. If every player stopped at the same hole, nobody is DNF. A solo round is never DNF once at least one hole is scored.
 - **The result:**
   - **Outright winner** — a single finisher has the lowest total
@@ -137,10 +138,11 @@ A **Share** button appears on the end-of-game summary screen (see 4.4). Tapping 
   - The term **"Tied"** and the " - " (spaced hyphen) separator are used here and on the Summary and History (item 36) — one vocabulary across every surface. The share image renders the tied, all-DNF and solo cases from the recomputed result
 - Full hole-by-hole scorecard table:
   - Columns = players; rows = holes; cells = stroke count for that hole
-  - Totals row at the bottom of each column
-  - Average strokes per hole shown in brackets next to the total — calculated over each player's completed holes only
+  - Each scored cell shows its vs-par delta as a small superscript (`+1` / `-1` / `E`) trailing the stroke count, matching the live grid and the read-only Summary (§5.3.1)
+  - Totals row at the bottom of each column. Each column's total shows the player's round score-to-par in brackets on the total's main line, e.g. `41 (+5)` (§5.3.2), with average strokes per hole (over completed holes only) on a sub-line beneath
   - DNF players are marked as DNF in their totals row
   - Per-player vs-par tally (eagles / birdies / pars / bogeys) below the totals (§5.2)
+  - The per-hole superscripts and the round-total-to-par figure follow the §5.3 semantic under / level / over colour set. The share image is a hand-drawn canvas (`src/utils/share.js`) with its own local colour constants — the §5.3 tokens (once the design-director defines them in DESIGN.md) must be mirrored there so the image matches the app
 - No maximum height — the image extends to fit all holes played
 
 **Sizing and layout:**
@@ -217,9 +219,9 @@ MANY THANKS FOR YOUR CO-OPERATION — ENJOY YOUR GAME
 
 ### 5.1 Par
 
-Par is a **per-hole** attribute of a course, used for display and derived stats only. It has no effect on totals, the winner, DNF or the draw rule (§5) — scoring stays raw-stroke throughout. It also enables the score-vs-par indicator (#38) and the end-of-round tally (§5.2).
+Par is a **per-hole** attribute of a course, used for display and derived stats only. It has no effect on totals, the winner, DNF or the draw rule (§5) — scoring stays raw-stroke throughout. It also enables the end-of-round tally (§5.2) and the live score-vs-par displays (§5.3 — the per-hole indicator #38 and the round total-to-par #52).
 
-**Where par is shown:** the hole number renders in **bold** with the hole's par immediately after it in brackets — same font size, not bold, and with no semantic colour (e.g. "3 (3)"). The bracketed par inherits the cell's text colour but never takes bold or its own accent. This treatment is identical on the live Scorecard grid and on the read-only Summary scorecard table (both the post-finish view and the History detail view). It replaces the raised `(N)` superscript that item 37 first shipped. The share image does not show par. There is no vs-par indicator yet — that is #38.
+**Where par is shown:** the hole number renders in **bold** with the hole's par immediately after it in brackets — same font size, not bold, and with no semantic colour (e.g. "3 (3)"). The bracketed par inherits the cell's text colour but never takes bold or its own accent. This treatment is identical on the live Scorecard grid and on the read-only Summary scorecard table (both the post-finish view and the History detail view). It replaces the raised `(N)` superscript that item 37 first shipped. The share image does not show the par label. The §5.3 semantic under / level / over colour applies to vs-par **deltas** only — this bracketed par label is not a delta and is unaffected by that decision; it stays uncoloured. The live per-hole vs-par indicator (#38) and the round total-to-par (#52) follow the shared display standard in §5.3.
 
 **Model:**
 - Every course carries a par value for each of its holes — a `hole_pars` array of integers, length = the course's hole count
@@ -254,7 +256,7 @@ Par is a **per-hole** attribute of a course, used for display and derived stats 
 - **Holes scored +2 or worse (double bogey and up) are counted in no bucket** — confirmed by the user. A player's four counts can therefore total fewer than the holes they played; that is intended (the tally is a "good holes" summary, not a full distribution).
 - Unscored holes (`scoreToPar` returns `null`) are likewise not counted.
 - One `delta ≤ −2` bucket rather than separate eagle / albatross tiers. On Bruntsfield (par 3 everywhere, minimum score 1) an "Eagle" can only be a hole-in-one and anything below −2 is impossible; the single bucket still behaves on higher-par user courses without introducing "albatross". No dedicated hole-in-one / "ace" bucket — on a par-3 course it exactly overlaps "Eagle".
-- **No semantic colour** (no red-for-over, green-for-under). Consistent with the current "par carries no colour of its own" decision (§5.1, DESIGN.md). If BACKLOG #52 establishes a documented score-vs-par colour standard, this tally adopts it then.
+- **Colour:** shipped monochrome (#39). The §5.3 display standard has since locked a **semantic under / level / over colour set** for every vs-par figure; this tally **adopts that set** once the design-director defines the tokens in DESIGN.md — a follow-up recolour tracked as BACKLOG #64. Until then it stays monochrome.
 
 **Which buckets are shown:** only buckets that **at least one player in the round hit** are shown; within that set, a player with none shows `0`. A round where nobody made an eagle collapses to birdie / par / bogey. If nobody hit any of the four (every hole double-bogey or worse, or unscored), the block is hidden entirely. Player rows/columns stay aligned.
 
@@ -264,13 +266,69 @@ Par is a **per-hole** attribute of a course, used for display and derived stats 
 - **Post-finish Summary** — primary surface, confirmed (2 Sep feedback: the user wants this "in the final scorecard outline").
 - **Read-only History detail view** — yes. Same screen and component (`Summary.jsx`, `viewingSaved`), same `hole_pars` snapshot — one consistent surface, no reason to differ.
 - **Share image** — yes, confirmed. One compact row per player beneath the totals; it extends the image height (§4.7).
-- **Live Scorecard (mid-round)** — out of scope here. Per-hole live vs-par feedback is BACKLOG #38, a separate item.
+- **Live Scorecard (mid-round)** — out of scope for this tally. Per-hole live vs-par feedback is #38, specified in §5.3.1.
 
 **Solo and DNF players:**
 - **Solo rounds** — shown. With no winner concept, the tally is the round's main takeaway.
 - **DNF players** — shown, over the holes they played (counts simply sum fewer holes; the player is already marked DNF elsewhere on the card).
 
 **Data:** no schema change, no migration, no API change. Everything needed — `players`, `scores`, and the `hole_pars` snapshot threaded by item 37 (§5.1, §11.3) — is already present on every read surface: live finishes, completed localStorage records, and `normalizeDbGame` output alike.
+
+### 5.3 Score vs par — display standard
+
+> **Status:** confirmed with the user 3 September 2026 — notation, placement and colour are all locked. This section is the spec. Colour is a **semantic under / level / over set** (see "Colour" below). The build (#38 per-hole indicator + #52 round total-to-par, together on branch `feat/score-vs-par-display`) is **blocked on a design-director pass over DESIGN.md** to define the exact colour tokens, their sunlight-contrast values, and the override rule for a figure sitting in an already-accent (winner) or already-inverted (active cell) context. Once that DESIGN.md pass lands, #38 and #52 build together.
+
+**Purpose.** One convention for how a score and its par render together, everywhere the two appear: the bracketed par on the hole number (§5.1), the end-of-round tally (§5.2), the live per-hole indicator (§5.3.1 / #38), and the round total-to-par (§5.3.2 / #52). All of these must read as one system.
+
+**Scope.** Display only. Every figure is derived from raw strokes and the round's `hole_pars` snapshot via `scoreToPar()` (§5.1). Par never affects totals, the winner, DNF or the draw rule (§5). No schema, API or migration change — `scoreToPar()` and the `hole_pars` snapshot are already threaded to every score surface (§5.1, §11.3).
+
+**Notation.**
+- Level par: `E` — never `+0` or `-0`.
+- Over par: `+N` — always a leading `+` (`+1`, `+5`).
+- Under par: `-N` — leading `-` (`-1`, `-3`).
+- A hole not yet scored: **nothing is shown** — no placeholder, no `E`. The indicator appears only once that hole has a stroke count.
+- Round total-to-par renders in brackets after the total: `41 (+5)`, `38 (E)`, `35 (-3)`. Before a player has scored any hole the bracket is omitted entirely (the total already shows as `–`).
+- **One shared formatter** (e.g. `formatToPar(delta)` in `src/utils/scores.js`) produces this string for every surface — no surface formats its own, so they cannot drift.
+
+**Colour.**
+Score-vs-par **deltas** carry a **semantic three-state colour**. This is the standard for every surface that renders a vs-par delta (§5.2, §5.3.1, §5.3.2):
+
+- **Under par** — a green
+- **Level par (`E`)** — neutral: the figure inherits its context's text colour
+- **Over par** — a warm terracotta / red
+
+The exact tokens, their sunlight-contrast values, and the override rule for when a delta sits in an already-accent context (a winner's column) or an already-inverted context (the active cell, white-on-accent) are **the design-director's to define in DESIGN.md before the frontend build**. The #38 / #52 build is blocked on that DESIGN.md pass.
+
+This is a deliberate, scoped exception to the app-wide rule that par "carries no colour of its own" (§5.1, DESIGN.md): the exception covers vs-par **deltas only**. The bracketed par *label* on the hole number (§5.1) is not a delta — it stays uncoloured, inheriting the cell's text colour and never taking an accent. §5.1 is unaffected by this decision.
+
+§5.2's end-of-round tally (#39) shipped monochrome and **adopts this same colour set** once the design-director has defined it — a follow-up recolour tracked as BACKLOG #64.
+
+**Placement and size.**
+- Follows §5.1's "modifier trails the primary number" ordering — the vs-par figure comes immediately after the score it qualifies, just as `(par)` comes after the hole number.
+- **Per-hole indicator (§5.3.1 / #38):** a superscript delta immediately trailing the score digit in the grid cell (`3` then a small raised `+1`), at the smallest legible size, non-bold. A superscript rather than the full-size inline bracket used for the hole-number par, because the player columns are far narrower than the hole column (up to six players share a row) and `3 (+1)` will not fit. This is the one deliberate divergence from §5.1's inline treatment and is justified by column width.
+- **Round total-to-par (§5.3.2 / #52):** full-size, in brackets, on the same line as the total number (`41 (+5)`). In the Summary totals row it sits on the total's main line; `Av.` and `DNF` stay as the existing sub-labels beneath.
+
+#### 5.3.1 Live per-hole vs-par indicator (#38)
+
+As a score is entered on the live Scorecard grid (§4.3), each **scored** cell shows its result against that hole's par using the §5.3 notation — a superscript `+1` / `-1` / `E` trailing the number, updating live as `+` / `−` change the score. An unscored cell shows only the em dash, no indicator.
+
+- **Surfaces:** the live Scorecard grid (primary), the read-only Summary / History scorecard table (§4.4, §11.9), and the **share image** (§4.7) — a finished card and a shared card both read the same way as a live one.
+- The active cell keeps its inverted colours (white on accent); the indicator follows the §5.3 semantic colour rule, including the design-director's override for accent / inverted contexts.
+- On the share image the superscript is drawn by the hand-rolled canvas renderer (`src/utils/share.js`), which carries its own local colour constants — the §5.3 semantic colour tokens (once the design-director defines them in DESIGN.md) must be mirrored there so the shared image matches the in-app grid.
+
+#### 5.3.2 Round total-to-par (#52)
+
+Beside each player's round total, in brackets, their score-to-par for the round: the sum of `scoreToPar(score, par)` over the holes that player has scored, formatted per §5.3 (`41 (+5)` / `38 (E)` / `35 (-3)`).
+
+- **Surfaces:**
+  - the live **Scorecard totals bar** (§4.3) — updates as scores change;
+  - the read-only **Summary** table and **History** detail view (§4.4, §11.9);
+  - the **"Finish Game?" confirmation dialog** (§4.4) — each player's line becomes `Name … 41 (+5)`;
+  - the **share image** (§4.7) — in brackets on the totals row, alongside the per-hole superscripts (§5.3.1). Same §5.3 colour set, mirrored into the canvas renderer's local constants (`src/utils/share.js`).
+- Computed over **scored holes only**, so a mid-round or DNF player's figure reflects what they have actually played. A player with no scored holes shows just the total dash, no bracket.
+- Likely wants a small aggregate helper (e.g. `roundToPar(playerScores, holePars)`) alongside `scoreToPar` / `parTally` in `src/utils/scores.js`.
+
+**Touchpoints:** §4.3 (live grid + totals bar), §4.4 (finish dialog + post-finish Summary), §4.7 (share image), §11.9 (History read-only detail). §5.1 and §5.2 reference this standard rather than restate it.
 
 ---
 
@@ -489,7 +547,7 @@ When a user is authenticated, the game save behaviour changes:
 - Logged-out users see their localStorage history — no change
 - The two histories are kept strictly separate — no merging in v2.0
 - Logged-in history screen shows: course name, date, player names, holes played, and the result label (Winner / Tied / No winner), consistent with §4.5. (Game naming was removed from the UI, so no game-name column is shown.)
-- Tapping a game shows the full scorecard (read-only, same layout as the existing summary screen), including the vs-par tally (§5.2)
+- Tapping a game shows the full scorecard (read-only, same layout as the existing summary screen), including the per-hole vs-par indicator (§5.3.1), the round total-to-par (§5.3.2) and the vs-par tally (§5.2)
 - Tapping a player name filters to games that player appeared in
 - Empty state if no games saved yet
 
