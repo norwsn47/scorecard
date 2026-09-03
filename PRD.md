@@ -2,7 +2,9 @@
 ## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
 **Version:** 2.0
-**Last updated:** 3 September 2026 (item 36 — finishers level on the lowest total now finish joint first, shown as "Tied"; §4.4, §4.5, §4.7, §5, §11.9. Item 37 — per-hole par added as a first-class display concept: new §5.1, updates to §6, §7, §8, §11.3, §11.7. Item 36 build follow-up — DNF rule stated precisely in §4.4; result-label copy standardised on " - " (spaced hyphen) and " & " across §4.4/§4.5/§4.7. Item 37 shipped — §5.1 notes par renders as a raised (N) in the live and read-only scorecards. Items 48/49/50/55 (3 September 2026) — par UI rework and user course length: par now renders as the hole number in bold followed by the hole's par in brackets, same font size, not bold, no semantic colour (e.g. "3 (3)"), identical on the live Scorecard grid and the read-only Summary table — replacing the raised (N) superscript from item 37; the share image still shows no par and there is no vs-par indicator yet (#38). The "set every hole to N" control is removed from course creation (all-3s default unchanged). The tap-to-cycle par grid becomes a two-column list of the course's holes, each row a −/+ stepper (default 3, band 2–7). Course creation gains a hole-count picker — 9 or 18 only, default 9, fixed at creation, no course-edit flow yet (#54); 36 is not offered for user-created courses. POST /api/courses gains a holes field (must be exactly 9 or 18, else 400; hole_pars length validated against it; response includes holes); no new migration — courses.holes and courses.hole_pars already exist. Quick-play Bruntsfield and the seeded default course for signed-in users both stay 36 holes — unchanged. §5.1, §6, §8, §11.3, §11.7)
+**Last updated:** 3 September 2026
+
+> The rationale and section-by-section history of past updates lives in `CHANGELOG.md`, not here. This line is just a date.
 
 ---
 
