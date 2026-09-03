@@ -256,7 +256,7 @@ Par is a **per-hole** attribute of a course, used for display and derived stats 
 - **Holes scored +2 or worse (double bogey and up) are counted in no bucket** — confirmed by the user. A player's four counts can therefore total fewer than the holes they played; that is intended (the tally is a "good holes" summary, not a full distribution).
 - Unscored holes (`scoreToPar` returns `null`) are likewise not counted.
 - One `delta ≤ −2` bucket rather than separate eagle / albatross tiers. On Bruntsfield (par 3 everywhere, minimum score 1) an "Eagle" can only be a hole-in-one and anything below −2 is impossible; the single bucket still behaves on higher-par user courses without introducing "albatross". No dedicated hole-in-one / "ace" bucket — on a par-3 course it exactly overlaps "Eagle".
-- **Colour:** shipped monochrome (#39). The §5.3 display standard has since locked a **semantic under / level / over colour set** for every vs-par figure; this tally **adopts that set** once the design-director defines the tokens in DESIGN.md — a follow-up recolour tracked as BACKLOG #64. Until then it stays monochrome.
+- **Colour:** the tally uses the §5.3 semantic colour set (#64, shipped alongside #38/#52): the Eagle and Birdie rows in `under-par`, the Par row neutral, the Bogey row in `over-par`; a zero count stays muted.
 
 **Which buckets are shown:** only buckets that **at least one player in the round hit** are shown; within that set, a player with none shows `0`. A round where nobody made an eagle collapses to birdie / par / bogey. If nobody hit any of the four (every hole double-bogey or worse, or unscored), the block is hidden entirely. Player rows/columns stay aligned.
 
@@ -301,12 +301,12 @@ The exact tokens, their sunlight-contrast values, and the override rule for when
 
 This is a deliberate, scoped exception to the app-wide rule that par "carries no colour of its own" (§5.1, DESIGN.md): the exception covers vs-par **deltas only**. The bracketed par *label* on the hole number (§5.1) is not a delta — it stays uncoloured, inheriting the cell's text colour and never taking an accent. §5.1 is unaffected by this decision.
 
-§5.2's end-of-round tally (#39) shipped monochrome and **adopts this same colour set** once the design-director has defined it — a follow-up recolour tracked as BACKLOG #64.
+§5.2's end-of-round tally (#39) now uses this same colour set (#64, shipped with #38/#52): Eagle/Birdie rows `under-par`, Par neutral, Bogey `over-par`, zero counts muted.
 
 **Placement and size.**
 - Follows §5.1's "modifier trails the primary number" ordering — the vs-par figure comes immediately after the score it qualifies, just as `(par)` comes after the hole number.
 - **Per-hole indicator (§5.3.1 / #38):** a superscript delta immediately trailing the score digit in the grid cell (`3` then a small raised `+1`), at the smallest legible size, non-bold. A superscript rather than the full-size inline bracket used for the hole-number par, because the player columns are far narrower than the hole column (up to six players share a row) and `3 (+1)` will not fit. This is the one deliberate divergence from §5.1's inline treatment and is justified by column width.
-- **Round total-to-par (§5.3.2 / #52):** full-size, in brackets, on the same line as the total number (`41 (+5)`). In the Summary totals row it sits on the total's main line; `Av.` and `DNF` stay as the existing sub-labels beneath.
+- **Round total-to-par (§5.3.2 / #52):** in brackets, on the same line as the total number (`41 (+5)`). Full size on the Summary totals row, the finish dialog and the share image; **on the live Scorecard totals bar it drops to `text-sm`** (documented DESIGN.md size exception) because at 390px with 5–6 players a full-size bracket wraps to a second line. `Av.` and `DNF` stay as the existing sub-labels beneath.
 
 #### 5.3.1 Live per-hole vs-par indicator (#38)
 
