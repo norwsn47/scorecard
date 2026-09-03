@@ -6,13 +6,13 @@
 > Nothing here is actioned without explicit instruction — tell the project-manager (or Claude directly) to pull an item into work.
 > Numbers are stable IDs for cross-reference — don't renumber existing items when deleting one, so gaps are expected.
 
-**Last updated:** 2 September 2026
+**Last updated:** 3 September 2026
 
-Shipped and removed: 1 Sep — batch A (20, 24, 26, 27, 30, 32), batch B (17, 18, 28), batch C (2 code part / see 2b, 29, 33); 2 Sep — 21 (ESLint), 36 (ties → draw), 37 (per-hole par). See `CHANGELOG.md`.
+Shipped and removed: 1 Sep — batch A (20, 24, 26, 27, 30, 32), batch B (17, 18, 28), batch C (2 code part / see 2b, 29, 33); 2 Sep — 21 (ESLint), 36 (ties → draw), 37 (per-hole par); 3 Sep — 47 (new game landed on wrong hole). See `CHANGELOG.md`.
 
 Items 36-44 added 1 September 2026 from a golf-feedback list. **36 (ties → draw) and 37 (per-hole par) shipped 2 September** — see `CHANGELOG.md`; both unblock 38 and 39. 40 and 42 still need a product-owner PRD decision before build.
 
-Items 47-55 added 2 September 2026 from a ties+par testing-feedback list, after 36/37 shipped. **47 is a live production regression — prioritise it (needs a debugger pass).** 48, 49 and 50 revise what #37 shipped (par display and the par editor). 52 and 55 change PRD-described behaviour and need a product-owner PRD update before build; 54 needs a build-vs-admin decision first. Item 10 of that list was folded into #39.
+Items 47-55 added 2 September 2026 from a ties+par testing-feedback list, after 36/37 shipped. **47 shipped 3 September.** 48, 49 and 50 revise what #37 shipped (par display and the par editor). 52 and 55 change PRD-described behaviour and need a product-owner PRD update before build; 54 needs a build-vs-admin decision first. Item 10 of that list was folded into #39.
 
 ---
 
@@ -118,8 +118,8 @@ The 24 Aug hotfix (live since 24 August 2026) stopped new duplicates but didn't 
 ### 19. Past-round "← Rounds" back button always targets History
 Superseded by #43 (proper back-a-step navigation across all pages). The narrow "always targets History" concern is fine on its own (History is the right destination for that view) — the real ask is the app-wide one in #43.
 
-### 47. BUG — new game / new course lands the active cell on the wrong hole
-**Live production regression, prioritise.** Starting a new game (all holes empty) jumps straight to entering a score on hole 3; after creating a course it jumped to hole 7. Expected: land on hole 1. Suspected cause: `Scorecard.jsx` reads `getActiveCell()` from localStorage and uses `saved ?? fallback` — a stale active-cell from a previous game/session is never cleared when a new game starts (`createGame` / `saveActiveGame` don't `clearActiveCell()`; only finishing a round does). Needs a debugger pass to confirm and fix — likely `clearActiveCell()` on new-game start, or reset the saved cell when the active game id changes.
+### 47b. Scope the active cell to a game id (follow-up from #47)
+#47 shipped a fix that clears `gt_active_cell` whenever a new working game is created and only restores it on a paramless Scorecard mount. The more robust design is to store the active cell as `{gameId, holeIndex, playerIndex}` and ignore it whenever `gameId` doesn't match the active game — removes the whole class of stale-cell bugs rather than patching the known entry points. Small refactor to `storage.js` + `Scorecard.jsx`; not urgent now that #47 is fixed.
 
 ### 51. History player filter isn't discoverable
 The History screen lets you filter by player (tap a name) but there's no visual affordance for it. Make it look like the existing course filter and sit directly below it. `History.jsx` — the filter row(s) above the round list.

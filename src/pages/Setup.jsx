@@ -3,7 +3,7 @@ import PageHeader from '../components/PageHeader.jsx'
 import { BRUNTSFIELD_COURSE_NAME, BRUNTSFIELD_HOLE_PARS } from '../constants.js'
 import { buildEditGame, canStartGame, createGame, findDuplicateIndices } from '../utils/game.js'
 import { deriveHolePars } from '../utils/scores.js'
-import { clearActiveGame, getActiveGame, getPlayers, saveActiveGame, savePlayers } from '../utils/storage.js'
+import { clearActiveCell, clearActiveGame, getActiveGame, getPlayers, saveActiveGame, savePlayers } from '../utils/storage.js'
 import { useAuth } from '../hooks/useAuth.jsx'
 
 const MAX_PLAYERS = 6
@@ -155,6 +155,9 @@ export default function Setup({ navigate, params }) {
       working.notes = notes.trim() || null
       working._edit = { id: editGame.id, fromDb: isDbEdit }
       saveActiveGame(working)
+      // A new working game exists — drop any active cell left over from a
+      // previous session so Scorecard doesn't restore a stale hole (#47).
+      clearActiveCell()
       navigate('scorecard', { game: working, editContext: working._edit })
       return
     }
@@ -173,6 +176,9 @@ export default function Setup({ navigate, params }) {
     const holePars = resolved.holePars ?? (user ? undefined : BRUNTSFIELD_HOLE_PARS)
     const game = createGame(trimmed, resolved.courseId, resolved.courseName, dateIso, holePars)
     saveActiveGame(game)
+    // A new game exists — drop any active cell left over from a previous
+    // session so Scorecard starts on hole 1 rather than a stale hole (#47).
+    clearActiveCell()
     navigate('scorecard', { game, bruntsfield: fromBruntsfield })
   }
 
