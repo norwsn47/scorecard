@@ -271,10 +271,8 @@ export default function Scorecard({ navigate, params }) {
                     'py-3 px-2 text-center font-ui text-xs whitespace-nowrap',
                     isActiveRow ? 'text-accent font-semibold' : 'text-chrome',
                   ].join(' ')}>
-                    {holeIndex + 1}
-                    <span className="align-super text-[10px] font-normal text-chrome ml-0.5">
-                      ({holePars[holeIndex]})
-                    </span>
+                    <span className="font-semibold">{holeIndex + 1}</span>
+                    <span className="font-normal ml-0.5">({holePars[holeIndex]})</span>
                   </td>
                   {players.map((player, playerIndex) => {
                     const score    = (game.scores?.[player] ?? [])[holeIndex] ?? null

@@ -8,11 +8,11 @@
 
 **Last updated:** 3 September 2026
 
-Shipped and removed: 1 Sep — batch A (20, 24, 26, 27, 30, 32), batch B (17, 18, 28), batch C (2 code part / see 2b, 29, 33); 2 Sep — 21 (ESLint), 36 (ties → draw), 37 (per-hole par); 3 Sep — 47 (new game landed on wrong hole). See `CHANGELOG.md`.
+Shipped and removed: 1 Sep — batch A (20, 24, 26, 27, 30, 32), batch B (17, 18, 28), batch C (2 code part / see 2b, 29, 33); 2 Sep — 21 (ESLint), 36 (ties → draw), 37 (per-hole par); 3 Sep — 47 (new game landed on wrong hole), 48/49/50/55 (par UI rework + 9/18 course length). See `CHANGELOG.md`.
 
 Items 36-44 added 1 September 2026 from a golf-feedback list. **36 (ties → draw) and 37 (per-hole par) shipped 2 September** — see `CHANGELOG.md`; both unblock 38 and 39. 40 and 42 still need a product-owner PRD decision before build.
 
-Items 47-55 added 2 September 2026 from a ties+par testing-feedback list, after 36/37 shipped. **47 shipped 3 September.** 48, 49 and 50 revise what #37 shipped (par display and the par editor). 52 and 55 change PRD-described behaviour and need a product-owner PRD update before build; 54 needs a build-vs-admin decision first. Item 10 of that list was folded into #39.
+Items 47-55 added 2 September 2026 from a ties+par testing-feedback list, after 36/37 shipped. **47, 48, 49, 50 and 55 shipped 3 September** — see `CHANGELOG.md`. 52 still changes PRD-described behaviour and needs a product-owner PRD update before build; 54 needs a build-vs-admin decision first. Item 10 of that list was folded into #39. Items 56-58 added 3 September 2026 from the #48–#55 code review.
 
 ---
 
@@ -74,23 +74,11 @@ A game-mode toggle at setup: **stroke play** (current — lowest total wins) or 
 ### 42. "Sign in with Google" (OAuth)
 Add Google as a sign-in option alongside the magic link (PRD §11.4 is currently magic-link-only). Needs: an OAuth client (Google Cloud console), the redirect/callback Pages Function, and a decision on account linking — a user who has signed in by magic link and then uses Google with the same email address should land on the same account, not a duplicate. PRD §11.4 change needed. Assistance requested.
 
-### 48. Rework how par renders on the scorecard (revises #37)
-#37 shipped par as a raised `(N)` superscript in `text-chrome` beside the hole number, in both the live `Scorecard.jsx` grid and the read-only `Summary.jsx` table. The user finds the superscript unclear. New target: **hole number in bold**, then the par next to it **same size, in brackets, not bold** (e.g. **3** (3)). Keep the two surfaces consistent. Small, contained — `Scorecard.jsx` hole cell + `Summary.jsx` scorecard `<td>`. Fold into #52's "design principle for score + par display" if that's done first.
-
-### 49. Drop "set every hole to N" from course creation (revises #37)
-The course-creation par control has a row of 2–7 buttons that set every hole at once. The user says it isn't useful — remove it; keep the all-3s default. `Setup.jsx`, the `PAR_CHOICES` button row. Do alongside #50 (they're the same control).
-
-### 50. Rework the par editor UI (revises #37)
-Replace the tap-to-cycle 6×6 grid in the course-creation form (`Setup.jsx`, `newCoursePars`) with a **two-column list of holes**, each row a `−  [par]  +` stepper (default 3, band 2–7). Clearer than cycling. Do with #49 (remove the "set every hole to N" row in the same pass).
-
 ### 52. Total vs par on every scorecard + a design principle for it
 Under each player's total, in brackets, show their **score-to-par for the round** (e.g. `41 (+5)` / `38 (E)` / `35 (-3)`) — sum of `scoreToPar(score, par)` over played holes. Surfaces: the live `Scorecard.jsx` totals bar, the read-only `Summary.jsx` table, **and the "Finish game?" confirmation dialog**. Overlaps #38 (per-hole indicator) — same `scoreToPar` helper and `hole_pars` data; decide whether to build together. **PRD update needed** — §5.1 currently scopes par display to "a raised (N) next to the hole number" only. Also: establish a documented **standard for how score + par render together** (colour for under/over/level, `(+N)` / `(E)` / `(-N)` notation, placement) so #38, #39, #48 and this all match — belongs with #44 (design-system).
 
 ### 54. Let existing users set par on courses they already created
-Courses created before migration `003` have `hole_pars = NULL` (read as all-3s). Real users need a way to set true pars. Two routes: (a) a **course-edit flow** (there is no edit-course UI today — new screen, `PATCH /api/courses/[id]` which doesn't exist), or (b) a **one-off admin backfill** (the user offered to force it as admin). Decide which before scoping. If (a), it likely wants the #50 stepper UI reused.
-
-### 55. Choose course length on creation — 9 or 18 holes (revises the 36-hole assumption)
-Course creation currently hardcodes 36 holes with no choice. The user wants a hole-count picker: **default 9**, options **9 and 18** (they wrote "three options" but listed two — confirm whether 36 stays for user courses). Quick-play Bruntsfield stays 36. Touches `courses.holes` (now load-bearing since it sets `hole_pars` length), the par editor (#50 must render the chosen count), `createGame` / the scorecard's 36-slot assumption, and `MAX_HOLES`. **PRD update needed** — §6/§11.7 describe a fixed 36. Non-trivial; sequence after #48–#50.
+Courses created before migration `003` have `hole_pars = NULL` (read as all-3s). Real users need a way to set true pars. Two routes: (a) a **course-edit flow** (there is no edit-course UI today — new screen, `PATCH /api/courses/[id]` which doesn't exist), or (b) a **one-off admin backfill** (the user offered to force it as admin). Decide which before scoping. If (a), it likely wants the #50 stepper UI reused — **that stepper now exists** (`Setup.jsx`, `stepPar` + the two-column per-hole par list, shipped 3 Sep with #50) and is ready to lift into a course-edit screen.
 
 ---
 
@@ -120,6 +108,9 @@ Superseded by #43 (proper back-a-step navigation across all pages). The narrow "
 
 ### 47b. Scope the active cell to a game id (follow-up from #47)
 #47 shipped a fix that clears `gt_active_cell` whenever a new working game is created and only restores it on a paramless Scorecard mount. The more robust design is to store the active cell as `{gameId, holeIndex, playerIndex}` and ignore it whenever `gameId` doesn't match the active game — removes the whole class of stale-cell bugs rather than patching the known entry points. Small refactor to `storage.js` + `Scorecard.jsx`; not urgent now that #47 is fixed.
+
+### 56. Length-changing course switch during a D1 past-round edit leaves a stale-size grid
+Surfaced in the #48–#55 code review. `buildEditGame` sizes the edit grid to the *round's saved* hole count, not the newly-selected course's. Switching a 36-hole round onto a 9-hole course mid-edit (D1 rounds only — local rounds can't change course) leaves a 36-row grid with holes 10–36 padded back to par 3. No crash, no data loss, but confusing. Needs a product decision: disallow a length-changing course switch during an edit, or accept it and document the behaviour. (PRD §11.7, §11.13.)
 
 ### 51. History player filter isn't discoverable
 The History screen lets you filter by player (tap a name) but there's no visual affordance for it. Make it look like the existing course filter and sit directly below it. `History.jsx` — the filter row(s) above the round list.
@@ -164,6 +155,12 @@ Measure and tune actual load performance — Core Web Vitals (LCP, CLS, INP), bu
 
 ### 46. `POST /api/games` doesn't validate `holes_played` type/range
 `onRequestPost` only truthy-checks `holes_played`; the PATCH handler validates integer 1..36. A malformed `holes_played` on a create still inserts. Surfaced during the #37 chunk-3 review. Align POST with PATCH.
+
+### 57. Hole-count picker uses `aria-pressed` rather than a radiogroup
+Surfaced in the #48–#55 code review. The 9 / 18 hole-count picker in course creation (`Setup.jsx`) is two buttons with `aria-pressed`. For a single-select control, `role="radio"` + `aria-checked` inside a `role="radiogroup"` would be more accurate. Low priority — consistent with the prior toggle pattern in the app; revisit alongside #44 (design-system) if a shared toggle primitive is introduced.
+
+### 58. No render/interaction test for the par stepper or the new par markup
+Surfaced in the #48–#55 code review. The par stepper's 2–7 clamp (`Setup.jsx`, `stepPar`) and the bold-number + bracketed-par markup on `Scorecard.jsx` / `Summary.jsx` have no render/interaction coverage — the suite still tests `src/utils/*` and `functions/api/*` only. Ties into #35 (add a React Testing Library render-test harness); fold in when that lands.
 
 ### 44. Design-system consolidation + page/header templates
 DESIGN.md has component patterns but no formal system. The user wants: a mobile header review (spacing and sizing rules — `PageHeader` `pt-10 pb-4`, `px-20` title clearance, the Summary bespoke header, etc.), documented design-system rules for the app, and page/header templates so new screens are built to a pattern rather than ad hoc. Design-director work; produces an expanded DESIGN.md (tokens → components → page templates → header rules) plus, ideally, a shared layout/header primitive the pages compose. Related: #27 (closed — PageHeader clearance), #34 (tap-target floor), the DESIGN.md "Inline link tap targets" and "Navigation" sections.

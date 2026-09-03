@@ -21,6 +21,11 @@ export function normalizeDbGame(row) {
     id:          row.id,
     completedAt: row.played_at,
     holesPlayed: row.holes_played,
+    // Hole count for the edit grid: the round's own course length when the
+    // GET join can supply it (`course_holes`), else the holes actually played
+    // — so editing a completed 9/18-hole round rebuilds at 9/18 rows, while a
+    // partial round on a 36-hole course can still be extended toward 36.
+    holes:       row.course_holes ?? row.holes_played,
     courseId:    row.course_id || null,
     courseName:  row.course_name || null,
     notes:       row.notes || null,

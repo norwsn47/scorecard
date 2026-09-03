@@ -31,6 +31,14 @@ describe('normalizeDbGame', () => {
     expect(normalizeDbGame(row).holePars).toEqual([3, 4, 3])
   })
 
+  it('uses course_holes for the edit-grid hole count when the join supplies it', () => {
+    expect(normalizeDbGame({ ...row, course_holes: 9 }).holes).toBe(9)
+  })
+
+  it('falls back to holes_played for the hole count when course_holes is absent', () => {
+    expect(normalizeDbGame(row).holes).toBe(3)
+  })
+
   it('reads a null hole_pars (pre-003 round) as par 3 per hole', () => {
     const g = normalizeDbGame({ ...row, hole_pars: null })
     expect(g.holePars).toEqual([3, 3, 3])

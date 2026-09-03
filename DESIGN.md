@@ -1,7 +1,7 @@
 # Design
 ## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
-Last updated: 1 September 2026
+Last updated: 3 September 2026
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
 ---
@@ -223,6 +223,12 @@ Match `inline-flex` instead of `inline-block` where the link already uses it (e.
 
 Precedent: the Setup course-rules link, and the inline links across Info, Login, Summary, `CourseMapModal`, and `RulesContent`.
 
+### Course-creation controls (Setup — "+ New course")
+
+**Hole-count toggle (9 / 18):** two equal buttons, `flex gap-2`, each `flex-1 h-11 rounded-md border font-ui text-sm`. Active = `border-accent text-accent`; inactive = `border-border text-text`; `active:bg-bg-card`. Labelled "9 holes" / "18 holes", default 9. `role="group"` on the wrapper, `aria-pressed` on each button. Caption below in the standard form-caption style (`font-ui text-xs text-muted mt-1.5 pl-1`): "Holes — can't be changed later". Same segmented-control language as the old "set every hole to" row it partly replaces.
+
+**Par stepper row (two-column list):** `grid grid-cols-2 gap-x-3 gap-y-1.5`, one cell per hole. Each cell: `flex items-center justify-between rounded-md border border-border bg-bg-card pl-3 pr-0.5`, holding a `Hole {n}` label (`font-ui text-sm text-text`) and a `−  {par}  +` stepper. Stepper buttons are `w-11 h-11` (44px), `rounded-md`, `font-ui text-lg`, `active:bg-border`; the par value between them is `font-ui text-sm w-4 text-center tabular-nums`. At the 2–7 band edge the relevant button is `disabled` + `opacity-40` and does nothing (no wraparound). Each row carries `role="group" aria-label="Hole {n}, par {par}"`; the buttons carry `aria-label="Decrease/Increase par for hole {n}"`. Heading above the grid: the standard micro-label (`font-ui text-xs tracking-[0.12em] uppercase text-muted`), "Par for each hole". No "set every hole to N" control, no tap-to-cycle grid.
+
 ### Bottom sheet / confirmation modal
 ```
 Backdrop:  fixed inset-0 z-50, background: var(--overlay-backdrop)
@@ -245,6 +251,7 @@ table-fixed border-collapse w-full
 | Active cell | `bg-accent text-white font-semibold` |
 | Hole # (active row) | `text-accent font-semibold` |
 | Hole # (inactive) | `text-chrome` |
+| Hole # + par | hole number `font-semibold`, then the hole's par in brackets `font-normal ml-0.5` at the same size — e.g. **3** (3). Par carries no colour of its own; it inherits the cell colour (chrome / muted / accent). Same treatment on the live grid and the read-only Summary table. Replaces the earlier raised `(N)` superscript. |
 | Empty score | `—` (em dash) |
 
 ### Accent divider rule

@@ -1,7 +1,10 @@
 import { getSessionUser } from '../../_lib/session.js'
 import { defaultHoleParsJson, validateHolePars } from '../../_lib/hole-pars.js'
 
-const COURSE_HOLES = 36
+// User-created courses are 9 or 18 holes only (§11.7). 36 is reserved for
+// quick-play Bruntsfield and the seeded default course, which are not created
+// through this endpoint.
+const ALLOWED_HOLE_COUNTS = [9, 18]
 
 export async function onRequestGet(context) {
   const { DB } = context.env
@@ -33,11 +36,18 @@ export async function onRequestPost(context) {
   if (!name) return Response.json({ error: 'Course name is required' }, { status: 400 })
   if (name.length > 60) return Response.json({ error: 'Course name must be 60 characters or fewer' }, { status: 400 })
 
-  // Par: a new course always stores an explicit length-36 array. Absent from
-  // the request → all 3s (§11.7). Only pre-003 rows ever have NULL here.
-  let holeParsJson = defaultHoleParsJson(COURSE_HOLES)
+  // Hole count: must be exactly 9 or 18 (§11.7). A strict identity check also
+  // rejects strings ("9"), floats (9.5), null and a missing field.
+  const holes = body.holes
+  if (!ALLOWED_HOLE_COUNTS.includes(holes)) {
+    return Response.json({ error: 'Course must have exactly 9 or 18 holes' }, { status: 400 })
+  }
+
+  // Par: a new course always stores an explicit array matching its hole count.
+  // Absent from the request → all 3s (§11.7). Only pre-003 rows ever have NULL.
+  let holeParsJson = defaultHoleParsJson(holes)
   if (body.hole_pars != null) {
-    const v = validateHolePars(body.hole_pars, COURSE_HOLES)
+    const v = validateHolePars(body.hole_pars, holes)
     if (!v.ok) return Response.json({ error: v.error }, { status: 400 })
     holeParsJson = v.json
   }
@@ -45,10 +55,10 @@ export async function onRequestPost(context) {
   const id = crypto.randomUUID()
   await DB.prepare(
     'INSERT INTO courses (id, user_id, name, holes, hole_pars, is_default, created_at) VALUES (?, ?, ?, ?, ?, 0, ?)'
-  ).bind(id, user.id, name, COURSE_HOLES, holeParsJson, new Date().toISOString()).run()
+  ).bind(id, user.id, name, holes, holeParsJson, new Date().toISOString()).run()
 
   return Response.json(
-    { course: { id, name, holes: COURSE_HOLES, hole_pars: holeParsJson, is_default: 0 } },
+    { course: { id, name, holes, hole_pars: holeParsJson, is_default: 0 } },
     { status: 201 }
   )
 }

@@ -248,8 +248,8 @@ export default function Summary({ navigate, params }) {
             {Array.from({ length: game.holesPlayed ?? game.holes }, (_, holeIndex) => (
               <tr key={holeIndex} className="border-b border-border">
                 <td className="py-2 px-3 font-ui text-xs text-muted whitespace-nowrap">
-                  {holeIndex + 1}
-                  <span className="align-super text-[10px] text-chrome ml-0.5">({holePars[holeIndex]})</span>
+                  <span className="font-semibold">{holeIndex + 1}</span>
+                  <span className="font-normal ml-0.5">({holePars[holeIndex]})</span>
                 </td>
                 {(game.players ?? []).map(player => {
                   const score = game.scores[player]?.[holeIndex]
