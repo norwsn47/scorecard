@@ -97,6 +97,32 @@ describe('createGame', () => {
     expect(game.holePars[0]).toBe(4)
     expect(game.holePars).toHaveLength(36)
   })
+
+  it('allocates a 9-hole game when holeCount is 9', () => {
+    const game = createGame(['Alice', 'Bob'], null, null, null, null, 9)
+    expect(game.holes).toBe(9)
+    expect(game.scores['Alice']).toHaveLength(9)
+    expect(game.scores['Bob']).toHaveLength(9)
+    expect(game.holePars).toHaveLength(9)
+    expect(game.holePars.every(p => p === 3)).toBe(true)
+  })
+
+  it('allocates an 18-hole game and normalises supplied pars to 18', () => {
+    const pars18 = Array(18).fill(3)
+    pars18[5] = 4
+    const game = createGame(['Alice'], null, null, null, pars18, 18)
+    expect(game.holes).toBe(18)
+    expect(game.scores['Alice']).toHaveLength(18)
+    expect(game.holePars).toHaveLength(18)
+    expect(game.holePars[5]).toBe(4)
+  })
+
+  it('falls back to 36 when holeCount is not a positive integer', () => {
+    expect(createGame(['Alice'], null, null, null, null, 0).holes).toBe(36)
+    expect(createGame(['Alice'], null, null, null, null, -9).holes).toBe(36)
+    expect(createGame(['Alice'], null, null, null, null, 9.5).holes).toBe(36)
+    expect(createGame(['Alice'], null, null, null, null, 'nine').holes).toBe(36)
+  })
 })
 
 // ── computeDisplayedHoles ─────────────────────────────────────────────────────
@@ -241,6 +267,17 @@ describe('calculateResult', () => {
     expect(dnf).toEqual([])
   })
 
+  it('gives a fully-scored 9-hole round a winner and nobody DNF (holes = 9)', () => {
+    const scores = {
+      Alice: [3, 4, 3, 5, 3, 4, 3, 4, 3],
+      Bob:   [4, 4, 4, 4, 4, 4, 4, 4, 4],
+    }
+    const r = calculateResult(['Alice', 'Bob'], scores, 9)
+    expect(r.winner).toBe('Alice')
+    expect(r.dnf).toEqual([])
+    expect(r.winningTotal).toBe(32)
+  })
+
   it('returns no winner when no holes have been scored', () => {
     const scores = { Alice: Array(36).fill(null), Bob: Array(36).fill(null) }
     const r = calculateResult(['Alice', 'Bob'], scores, 36)
@@ -275,6 +312,21 @@ describe('deriveResult', () => {
     const r = deriveResult(saved)
     expect(r.winners).toEqual(['Alice', 'Bob'])
     expect(r.isDraw).toBe(true)
+    expect(r.dnf).toEqual([])
+  })
+
+  it('gives a fully-scored 9-hole saved round a winner, nobody DNF', () => {
+    const saved = {
+      players: ['Alice', 'Bob'],
+      holesPlayed: 9,
+      holes: 9,
+      scores: {
+        Alice: [3, 3, 3, 3, 3, 3, 3, 3, 3],
+        Bob:   [4, 4, 4, 4, 4, 4, 4, 4, 4],
+      },
+    }
+    const r = deriveResult(saved)
+    expect(r.winner).toBe('Alice')
     expect(r.dnf).toEqual([])
   })
 
@@ -394,6 +446,45 @@ describe('buildEditGame', () => {
   it('pins the original id', () => {
     const game = buildEditGame(existing, ['Alice', 'Bob'])
     expect(game.id).toBe('row-abc')
+  })
+
+  it('rebuilds a 9-hole round at 9 slots, scores preserved positionally', () => {
+    const nineHole = {
+      ...existing,
+      holes: 9,
+      holesPlayed: 9,
+      scores: {
+        Alice: [5, 5, 5, 5, 5, 5, 5, 5, 5],
+        Bob:   [3, 3, 3, 3, 3, 3, 3, 3, 3],
+      },
+    }
+    const game = buildEditGame(nineHole, ['Alice', 'Bob'])
+    expect(game.holes).toBe(9)
+    expect(game.scores.Alice).toHaveLength(9)
+    expect(game.scores.Bob).toHaveLength(9)
+    expect(game.scores.Alice).toEqual([5, 5, 5, 5, 5, 5, 5, 5, 5])
+    expect(game.holePars).toHaveLength(9)
+  })
+
+  it('rebuilds a legacy round with no `holes` field at 36 slots', () => {
+    const game = buildEditGame(existing, ['Alice', 'Bob'])
+    expect(game.holes).toBe(36)
+    expect(game.scores.Alice).toHaveLength(36)
+  })
+
+  it('grows past the declared count rather than dropping strokes', () => {
+    const odd = {
+      ...existing,
+      holes: 9,
+      scores: {
+        Alice: [5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 4], // 12 scored on a "9-hole" round
+        Bob:   [3, 3, 3, 3, 3, 3, 3, 3, 3],
+      },
+    }
+    const game = buildEditGame(odd, ['Alice', 'Bob'])
+    expect(game.holes).toBe(12)
+    expect(game.scores.Alice).toHaveLength(12)
+    expect(game.scores.Alice[11]).toBe(4)
   })
 
   it("keeps the round's own holePars snapshot by default, padded to 36", () => {

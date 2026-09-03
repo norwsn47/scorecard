@@ -185,24 +185,31 @@ export function finishGame(game) {
 }
 
 /**
- * Builds a fresh active-game object. Always allocates MAX_HOLES slots;
- * the UI shows only as many rows as have been played.
+ * Builds a fresh active-game object.
+ *
+ * `holeCount` is the number of holes on the course being played — 36 for
+ * quick-play and the legacy Bruntsfield flow (the default), 9 or 18 for a
+ * user-created course. Each score row is allocated to exactly that length
+ * and `holes` carries the real count; the UI shows only as many rows as
+ * have been played. A non-positive-integer `holeCount` falls back to 36
+ * (defensive — the course picker constrains it to 9/18).
  */
-export function createGame(playerNames, courseId = null, courseName = null, pastDate = null, holePars = null) {
+export function createGame(playerNames, courseId = null, courseName = null, pastDate = null, holePars = null, holeCount = MAX_HOLES) {
+  const count = Number.isInteger(holeCount) && holeCount > 0 ? holeCount : MAX_HOLES
   const scores = {}
   playerNames.forEach(name => {
-    scores[name] = Array(MAX_HOLES).fill(null)
+    scores[name] = Array(count).fill(null)
   })
   return {
     id: Date.now().toString(),
     startedAt: new Date().toISOString(),
     players: playerNames,
-    holes: MAX_HOLES,
+    holes: count,
     scores,
     courseId,
     courseName,
-    // Always a length-36 array; null (quick-play with no course passed) → all 3s.
-    holePars: deriveHolePars(holePars, MAX_HOLES),
+    // Length always matches `holes`; null (quick-play, no course passed) → all 3s.
+    holePars: deriveHolePars(holePars, count),
     ...(pastDate ? { pastDate } : {}),
   }
 }
@@ -218,20 +225,41 @@ export function createGame(playerNames, courseId = null, courseName = null, past
  * name. Adding or removing players is not supported here — `editedNames` is
  * expected to be the same length as `existingGame.players`.
  *
- * Each row is copied into a fresh MAX_HOLES-slot array so the Scorecard grid
- * (which assumes 36 slots) and finishGame both behave exactly as they do for
- * a live round. The original `id` is pinned. `pastDate` is set to `dateIso`
- * so finishGame stamps the chosen date rather than "now". Winner, DNF,
- * holesPlayed and completedAt are all left for finishGame to recompute.
+ * Each row is copied into a fresh array sized to the round's own hole count
+ * (`existingGame.holes`, or 36 for a legacy round saved without it) so the
+ * Scorecard grid and finishGame behave exactly as they do for a live round —
+ * a completed 9-hole round edits as 9 rows, not 36 with a trailing empty one.
+ * If `scores` somehow hold data past that count (shouldn't happen) the array
+ * grows to cover it rather than dropping strokes. The original `id` is pinned.
+ * `pastDate` is set to `dateIso` so finishGame stamps the chosen date rather
+ * than "now". Winner, DNF, holesPlayed and completedAt are all left for
+ * finishGame to recompute.
  */
 export function buildEditGame(existingGame, editedNames, courseId = null, courseName = null, dateIso = null, holePars = null) {
   const oldNames = existingGame.players ?? []
+
+  // The round's real hole count. Legacy rounds saved without `holes` → 36.
+  const declared = existingGame.holes ?? MAX_HOLES
+  // Never lose real strokes: if any row has a score past `declared`, grow to
+  // cover the highest scored hole.
+  let highestScored = -1
+  oldNames.forEach(n => {
+    const row = existingGame.scores?.[n] ?? []
+    for (let i = row.length - 1; i >= 0; i--) {
+      if ((row[i] ?? null) !== null) {
+        if (i > highestScored) highestScored = i
+        break
+      }
+    }
+  })
+  const holeCount = Math.max(declared, highestScored + 1)
+
   const scores = {}
   editedNames.forEach((name, i) => {
-    const row = Array(MAX_HOLES).fill(null)
+    const row = Array(holeCount).fill(null)
     const oldRow = existingGame.scores?.[oldNames[i]] ?? []
     oldRow.forEach((s, idx) => {
-      if (idx < MAX_HOLES) row[idx] = s ?? null
+      if (idx < holeCount) row[idx] = s ?? null
     })
     scores[name] = row
   })
@@ -240,13 +268,13 @@ export function buildEditGame(existingGame, editedNames, courseId = null, course
     ...existingGame,
     id: existingGame.id,
     players: [...editedNames],
-    holes: MAX_HOLES,
+    holes: holeCount,
     scores,
     courseId: courseId ?? null,
     courseName: courseName ?? null,
     // `holePars` passed in when a D1 edit switches course; otherwise the
     // round keeps its own saved snapshot (§11.7).
-    holePars: deriveHolePars(holePars ?? existingGame.holePars, MAX_HOLES),
+    holePars: deriveHolePars(holePars ?? existingGame.holePars, holeCount),
     ...(dateIso ? { pastDate: dateIso } : {}),
   }
 }

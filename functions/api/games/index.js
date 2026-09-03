@@ -9,7 +9,7 @@ export async function onRequestGet(context) {
   // `hole_pars` is returned as the raw JSON TEXT (or null for a pre-003 round);
   // the client parses it, same as `player_data`.
   const { results } = await DB.prepare(
-    `SELECT g.id, g.course_id, c.name AS course_name,
+    `SELECT g.id, g.course_id, c.name AS course_name, c.holes AS course_holes,
             g.played_at, g.holes_played, g.player_data, g.hole_pars, g.notes, g.created_at
      FROM games g
      LEFT JOIN courses c ON g.course_id = c.id
