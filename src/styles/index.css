@@ -38,6 +38,8 @@
     --color-chrome:       #C0B8B0;   /* inactive UI chrome — muted icons, disabled borders */
     --color-control-warm: #9A9189;   /* warm grey fill — advance button */
     --color-accent-tint:  rgba(26,67,41,0.05); /* active row background */
+    --color-under-par:    #2C6B3C;   /* score-vs-par delta — under par; deltas only, never chrome (DESIGN.md "Score vs par") */
+    --color-over-par:     #9B3A24;   /* score-vs-par delta — over par; deltas only, never chrome (DESIGN.md "Score vs par") */
 
     /* Typography */
     --font-display: 'Cormorant Garamond', serif;
