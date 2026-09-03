@@ -2,7 +2,7 @@
 ## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
 **Version:** 2.0
-**Last updated:** 2 September 2026 (item 36 — finishers level on the lowest total now finish joint first, shown as "Tied"; §4.4, §4.5, §4.7, §5, §11.9. Item 37 — per-hole par added as a first-class display concept: new §5.1, updates to §6, §7, §8, §11.3, §11.7. Item 36 build follow-up — DNF rule stated precisely in §4.4; result-label copy standardised on " - " (spaced hyphen) and " & " across §4.4/§4.5/§4.7. Item 37 shipped — §5.1 notes par renders as a raised (N) in the live and read-only scorecards)
+**Last updated:** 3 September 2026 (item 36 — finishers level on the lowest total now finish joint first, shown as "Tied"; §4.4, §4.5, §4.7, §5, §11.9. Item 37 — per-hole par added as a first-class display concept: new §5.1, updates to §6, §7, §8, §11.3, §11.7. Item 36 build follow-up — DNF rule stated precisely in §4.4; result-label copy standardised on " - " (spaced hyphen) and " & " across §4.4/§4.5/§4.7. Item 37 shipped — §5.1 notes par renders as a raised (N) in the live and read-only scorecards. Items 48/49/50/55 (3 September 2026) — par UI rework and user course length: par now renders as the hole number in bold followed by the hole's par in brackets, same font size, not bold, no semantic colour (e.g. "3 (3)"), identical on the live Scorecard grid and the read-only Summary table — replacing the raised (N) superscript from item 37; the share image still shows no par and there is no vs-par indicator yet (#38). The "set every hole to N" control is removed from course creation (all-3s default unchanged). The tap-to-cycle par grid becomes a two-column list of the course's holes, each row a −/+ stepper (default 3, band 2–7). Course creation gains a hole-count picker — 9 or 18 only, default 9, fixed at creation, no course-edit flow yet (#54); 36 is not offered for user-created courses. POST /api/courses gains a holes field (must be exactly 9 or 18, else 400; hole_pars length validated against it; response includes holes); no new migration — courses.holes and courses.hole_pars already exist. Quick-play Bruntsfield and the seeded default course for signed-in users both stay 36 holes — unchanged. §5.1, §6, §8, §11.3, §11.7)
 
 ---
 
@@ -222,11 +222,11 @@ MANY THANKS FOR YOUR CO-OPERATION — ENJOY YOUR GAME
 
 Par is a **per-hole** attribute of a course, used for display and derived stats only. It has no effect on totals, the winner, DNF or the draw rule (§5) — scoring stays raw-stroke throughout. It also enables the score-vs-par indicator (#38) and the end-of-round tally (#39).
 
-**Where par is shown:** as a small raised `(N)` next to the hole number, in both the live scorecard grid and the read-only Summary scorecard table (the post-finish view and the History detail view). The share image does not show par. There is no vs-par indicator yet — that is #38.
+**Where par is shown:** the hole number renders in **bold** with the hole's par immediately after it in brackets — same font size, not bold, and with no semantic colour (e.g. "3 (3)"). The bracketed par inherits the cell's text colour but never takes bold or its own accent. This treatment is identical on the live Scorecard grid and on the read-only Summary scorecard table (both the post-finish view and the History detail view). It replaces the raised `(N)` superscript that item 37 first shipped. The share image does not show par. There is no vs-par indicator yet — that is #38.
 
 **Model:**
 - Every course carries a par value for each of its holes — a `hole_pars` array of integers, length = the course's hole count
-- On course creation the array defaults to **par 3 for every hole** (the Bruntsfield reality). The user can adjust individual holes and has a "set all to N" convenience control (§11.7)
+- On course creation the array defaults to **par 3 for every hole** (the Bruntsfield reality), with one entry per hole for the course's chosen length (9 or 18 — see §11.7). The user adjusts each hole individually with a −/+ stepper (band 2–7). There is no "set every hole to N" control
 - Quick-play (logged-out) assumes **par 3 for all 36 holes** with no UI. A `BRUNTSFIELD_HOLE_PARS` constant (a length-36 array of 3s) in `src/constants.js` is the single source of this value
 - A round stores **its own copy of par** at completion (`games.hole_pars`, and the same field on completed localStorage records) so later edits to the course's par — or deleting the course — never rewrite the vs-par maths of a saved round (§11.3)
 
@@ -243,7 +243,8 @@ Par is a **per-hole** attribute of a course, used for display and derived stats 
 ## 6. Course
 
 - Single course: **Bruntsfield Short Hole Golf Course**, Edinburgh
-- Up to **36 holes**
+- **Bruntsfield is 36 holes** — both in quick-play and as the seeded default course for signed-in users
+- Signed-in users can create their own courses at **9 or 18 holes** (default 9). 36 holes is not offered for user-created courses (§11.7)
 - UI includes a **"More courses coming soon"** placeholder where course selection will eventually live
 - Per-hole par is stored per course and per saved round (see §5.1); it is display only. No other hole-level metadata (no yardage, no difficulty rating)
 
@@ -274,7 +275,7 @@ The following were out of scope in v1.x and are now addressed in v2.0:
 - Leaderboards or social features (requires account foundation — now built in v2.0)
 - All-time personal leaderboard per user (lowest round, most wins, etc.)
 - Quick-play history import — allow users to migrate existing localStorage games to their new DB account after signing in
-- Multiple holes / course configuration beyond the default (e.g. 9-hole or 18-hole variants)
+- Multiple holes / course configuration beyond the default — **partially delivered:** signed-in users can now create courses at 9 or 18 holes (§11.7). Arbitrary hole counts and structured per-course hole data remain future (BACKLOG #11)
 - hello@outbuild.co as the contact email once configured via Resend
 
 ---
@@ -360,7 +361,7 @@ Four tables in Cloudflare D1:
 - `id` — UUID, primary key
 - `user_id` — UUID, foreign key → users.id (null for system-provided courses)
 - `name` — text, not null
-- `holes` — integer, default 36
+- `holes` — integer, default 36. The seeded Bruntsfield course is 36; user-created courses are 9 or 18 (§11.7). `hole_pars` length always tracks this value
 - `hole_pars` — TEXT, JSON array of integers, length = `holes` — the per-hole par for the course (§5.1). Set on creation, defaults to all 3s, editable per hole in the course-creation form (§11.7). Added in migration `003_add_hole_pars.sql`, 2 September 2026
 - `is_default` — boolean, default false
 - `created_at` — timestamp
@@ -420,8 +421,9 @@ No passwords. Users authenticate with their email address only.
 - Default selected: the user's default course (Bruntsfield Short Hole Golf Course on first use)
 - User can select from their existing courses or create a new one
 - Creating a course: a text input for the course name — any name the user types is valid
-- New courses default to 36 holes — no per-hole *count* configuration in v2.0
-- **Par:** the course-creation form includes a per-hole par control. Every hole defaults to par 3. The user can change any individual hole, and a "set all to [N]" action applies one value across every hole. Par is stored as `courses.hole_pars` (§5.1, §11.3). Editing a course's par later does not alter rounds already saved against it — each round keeps its own `games.hole_pars` snapshot
+- **Hole count:** creating a course picks its length — **9 or 18 holes, default 9**. 36 holes is not an option for user-created courses; quick-play Bruntsfield and the seeded default course stay 36 (§6, §11.3). Hole count is fixed at creation — there is no course-edit flow yet (BACKLOG #54). The par editor renders exactly the chosen number of holes
+- **Par:** the course-creation form includes a per-hole par editor — a two-column list of the course's holes, each row a −/+ stepper. Every hole defaults to par 3, adjustable within a 2–7 band. There is no "set every hole to N" control. Par is stored as `courses.hole_pars` (§5.1, §11.3). Editing a course's par later does not alter rounds already saved against it — each round keeps its own `games.hole_pars` snapshot
+- **API:** `POST /api/courses` takes a `holes` field alongside `name` and `hole_pars`. It rejects any value that is not exactly 9 or 18 with a 400, validates that `hole_pars` length matches `holes`, and returns `holes` in the response. No new migration — `courses.holes` and `courses.hole_pars` already exist; only the written value and the validation around it change
 - The selected course is stored on the game record when the game is saved to D1, along with a copy of its `hole_pars`
 - Course names appear in the game history list
 
