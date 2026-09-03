@@ -278,12 +278,13 @@ export default function Setup({ navigate, params }) {
                     created (no course-edit flow yet, #54). Changing it resets
                     the par list to that many par-3 holes. */}
                 <div className="mt-4">
-                  <div className="flex gap-2" role="group" aria-label="Number of holes on this course">
+                  <div className="flex gap-2" role="radiogroup" aria-label="Number of holes on this course">
                     {NEW_COURSE_HOLE_OPTIONS.map(n => (
                       <button
                         key={n}
                         type="button"
-                        aria-pressed={newCourseHoleCount === n}
+                        role="radio"
+                        aria-checked={newCourseHoleCount === n}
                         onClick={() => handleNewCourseHoleCount(n)}
                         className={[
                           'flex-1 h-11 rounded-md border font-ui text-sm active:bg-bg-card',
