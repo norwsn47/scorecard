@@ -249,7 +249,7 @@ export default function Summary({ navigate, params }) {
               <tr key={holeIndex} className="border-b border-border">
                 <td className="py-2 px-3 font-ui text-xs text-muted whitespace-nowrap">
                   <span className="font-semibold">{holeIndex + 1}</span>
-                  <span className="ml-0.5">({holePars[holeIndex]})</span>
+                  <span className="font-normal ml-0.5">({holePars[holeIndex]})</span>
                 </td>
                 {(game.players ?? []).map(player => {
                   const score = game.scores[player]?.[holeIndex]

@@ -323,7 +323,7 @@ export default function Setup({ navigate, params }) {
                               disabled={atMin}
                               aria-label={`Decrease par for hole ${i + 1}`}
                               className={[
-                                'w-10 h-10 flex items-center justify-center rounded-md font-ui text-lg text-text active:bg-border',
+                                'w-11 h-11 flex items-center justify-center rounded-md font-ui text-lg text-text active:bg-border',
                                 atMin ? 'opacity-40' : '',
                               ].join(' ')}
                             >
@@ -336,7 +336,7 @@ export default function Setup({ navigate, params }) {
                               disabled={atMax}
                               aria-label={`Increase par for hole ${i + 1}`}
                               className={[
-                                'w-10 h-10 flex items-center justify-center rounded-md font-ui text-lg text-text active:bg-border',
+                                'w-11 h-11 flex items-center justify-center rounded-md font-ui text-lg text-text active:bg-border',
                                 atMax ? 'opacity-40' : '',
                               ].join(' ')}
                             >
