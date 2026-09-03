@@ -23,8 +23,13 @@ export default function Scorecard({ navigate, params }) {
     const g = params?.game ?? getActiveGame()
     // Only restore a persisted cell on a paramless mount (app reopen / Resume
     // Game). A game passed in params is freshly started or an edit copy — it
-    // must never inherit a stale active cell (#47).
-    const saved = params?.game ? null : getActiveCell()
+    // must never inherit a stale active cell (#47). The persisted cell is also
+    // scoped to a game id, so a cell from a previous game is ignored even here
+    // (#47b).
+    const stored = params?.game ? null : getActiveCell()
+    const saved = stored && stored.gameId === g?.id
+      ? { holeIndex: stored.holeIndex, playerIndex: stored.playerIndex }
+      : null
     // When editing an existing round, land on hole 1 — the likely target is
     // an existing score to correct, not the next empty hole.
     const fallback = (params?.editContext || g?._edit)
@@ -104,7 +109,7 @@ export default function Scorecard({ navigate, params }) {
 
   function moveToCell(cell) {
     setActiveCell(cell)
-    saveActiveCell(cell)
+    saveActiveCell({ gameId: game.id, holeIndex: cell.holeIndex, playerIndex: cell.playerIndex })
   }
 
   function handleAdvance() {
