@@ -12,7 +12,7 @@ Shipped and removed: 1 Sep — batch A (20, 24, 26, 27, 30, 32), batch B (17, 18
 
 Items 36-44 added 1 September 2026 from a golf-feedback list. **36 (ties → draw) and 37 (per-hole par) shipped 2 September** — see `CHANGELOG.md`; both unblock 38 and 39. 40 and 42 still need a product-owner PRD decision before build.
 
-Items 47-55 added 2 September 2026 from a ties+par testing-feedback list, after 36/37 shipped. **47, 48, 49, 50 and 55 shipped 3 September** — see `CHANGELOG.md`. 52 still changes PRD-described behaviour and needs a product-owner PRD update before build; 54 needs a build-vs-admin decision first. Item 10 of that list was folded into #39. Items 56-58 added 3 September 2026 from the #48–#55 code review; #59 added 3 September 2026 from the agent/docs efficiency cleanup.
+Items 47-55 added 2 September 2026 from a ties+par testing-feedback list, after 36/37 shipped. **47, 48, 49, 50 and 55 shipped 3 September** — see `CHANGELOG.md`. 52 still changes PRD-described behaviour and needs a product-owner PRD update before build; 54 needs a build-vs-admin decision first. Item 10 of that list was folded into #39. Items 56-58 added 3 September 2026 from the #48–#55 code review. #60 added 3 September 2026 (split from the closed #59, the PRD as-built pass).
 
 ---
 
@@ -136,10 +136,13 @@ No integration/component test covers open-edit → change on the scorecard → s
 
 ### 31. Set up analytics
 The user wants **Google Analytics (GA4)** specifically (assistance requested). Scaffolding is already in place for a different tool: `src/utils/analytics.js` (a Plausible `window.plausible?.(...)` wrapper) and events instrumented — New Game Started, Game Completed (player count, holes), Scorecard Shared, Game Edited. Open:
-- **Decision / conflict to resolve first:** GA4 sets cookies and, under UK PECR + UK GDPR, generally needs a consent banner — which the app has deliberately avoided, and PRD §4.8 currently tells users "No tracking, no analytics, and no third-party services". Either (a) accept a consent banner + rewrite the Info/Privacy copy and PRD §4.8/§4.5, or (b) use GA in a cookieless/consent-exempt configuration, or (c) reconsider a cookieless tool (Plausible/Fathom) that needs no banner. Product-owner call.
+- **Decision / conflict to resolve first:** GA4 sets cookies and, under UK PECR + UK GDPR, generally needs a consent banner — which the app has deliberately avoided. The current "Your data" privacy page and `Info.jsx` both state there is no tracking or analytics (PRD §4.8 now just links to that page). Either (a) accept a consent banner + rewrite the privacy page / Info copy and the PRD, or (b) use GA in a cookieless/consent-exempt configuration, or (c) reconsider a cookieless tool (Plausible/Fathom) that needs no banner. Product-owner call.
 - Wire the chosen tool: swap `analytics.js` to the GA `gtag` API (or keep Plausible), add the script to `index.html`, create the account.
 - Confirm Cloudflare Pages built-in analytics are active for basic traffic data.
-- Update the Info page + Privacy page copy and PRD §4.8/§4.5 to state exactly what is collected and by whom.
+- Update the Info page + Privacy page copy and PRD §4.8 to state exactly what is collected and by whom.
+
+### 60. Product-owner pass over §4.8 and its overlap with the privacy page
+Split out from the old #59. §4.8 (Information page) and §11.12 / the "Your data" privacy page (`Privacy.jsx`) describe overlapping things — what the info page contains, what the privacy page contains, where the data explanation lives. The 3 Sep cleanup made both accurate individually but the split between them is implicit. A proper product-owner pass would make §4.8 and §11.12 explicitly complementary. Low priority — both are accurate as they stand.
 
 ### 34. `text-xs` inline links land ~36-38px, below the ~40px floor
 From the batch-B tap-target pass (#28). Three inline-in-paragraph `text-xs` links — `Login.jsx` "How we handle your data", `Info.jsx` "Read our privacy policy", `Summary.jsx` "Share scorecard" — use `py-2.5 -my-2.5` (~36-38px) because more padding would overlap adjacent lines. Better than the bare ~16px but under the documented floor. Revisit if a cleaner pattern turns up (e.g. giving them their own line).
@@ -161,13 +164,6 @@ Surfaced in the #48–#55 code review. The 9 / 18 hole-count picker in course cr
 
 ### 58. No render/interaction test for the par stepper or the new par markup
 Surfaced in the #48–#55 code review. The par stepper's 2–7 clamp (`Setup.jsx`, `stepPar`) and the bold-number + bracketed-par markup on `Scorecard.jsx` / `Summary.jsx` have no render/interaction coverage — the suite still tests `src/utils/*` and `functions/api/*` only. Ties into #35 (add a React Testing Library render-test harness); fold in when that lands.
-
-### 59. Reconcile "Scorecard Plus" naming and §4.8 across the PRD
-Surfaced during the 3 Sep agent/docs cleanup. Two loose ends the cleanup flagged but didn't fully resolve:
-- **"Scorecard Plus" naming.** §11.6 was rewritten to note the "Plus" wordmark was never shipped and the app is "Scorecard by Outbuild" throughout, but "Scorecard Plus" still appears as a section title and shorthand across §11. Decide whether to keep it as an internal term or rename it everywhere, then make §11 consistent.
-- **§4.8 vs the shipped Info page.** §4.8's "Contents" list was updated to match `Info.jsx` as-built, but a proper product-owner pass over §4.8 (and its relationship to the "Your data" privacy page, §11.12) would be worthwhile — the two describe overlapping things and the split between them is currently implicit.
-- **Section 4 game-naming staleness.** §4.2, §4.3 and §4.4 still describe a "game name" field as a live feature (setup field, scorecard header, History list, share image). Game naming was removed from the UI; the `game_name` column is retained but unused (§11.3, §11.8). Section 4 needs the same as-built pass §11 just had.
-Product-owner work, low priority — the PRD is accurate enough to use.
 
 ### 44. Design-system consolidation + page/header templates
 DESIGN.md has component patterns but no formal system. The user wants: a mobile header review (spacing and sizing rules — `PageHeader` `pt-10 pb-4`, `px-20` title clearance, the Summary bespoke header, etc.), documented design-system rules for the app, and page/header templates so new screens are built to a pattern rather than ad hoc. Design-director work; produces an expanded DESIGN.md (tokens → components → page templates → header rules) plus, ideally, a shared layout/header primitive the pages compose. Related: #27 (closed — PageHeader clearance), #34 (tap-target floor), the DESIGN.md "Inline link tap targets" and "Navigation" sections.
