@@ -105,8 +105,9 @@ describe('onRequestPost /api/games — holes_played validation', () => {
     { label: 'a non-integer', value: 18.5 },
     { label: 'above 36', value: 40 },
     { label: 'negative', value: -3 },
+    { label: 'zero', value: 0 },
   ]) {
-    it(`rejects holes_played that is ${bad.label}`, async () => {
+    it(`rejects holes_played that is ${bad.label} with the Invalid message`, async () => {
       const ctx = post({ ...validBody, holes_played: bad.value })
       const db = makeDB()
       ctx.env.DB = db
@@ -114,9 +115,21 @@ describe('onRequestPost /api/games — holes_played validation', () => {
       const res = await onRequestPost(ctx)
 
       expect(res.status).toBe(400)
+      expect((await res.json()).error).toBe('Invalid holes_played')
       expect(db.inserted).toHaveLength(0)
     })
   }
+
+  it('rejects a missing holes_played with the Invalid message', async () => {
+    const { holes_played, ...noHoles } = validBody // eslint-disable-line no-unused-vars
+    const ctx = post(noHoles)
+    ctx.env.DB = makeDB()
+
+    const res = await onRequestPost(ctx)
+
+    expect(res.status).toBe(400)
+    expect((await res.json()).error).toBe('Invalid holes_played')
+  })
 
   it('accepts holes_played at the bounds (1 and 36)', async () => {
     for (const value of [1, 36]) {
