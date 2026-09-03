@@ -297,7 +297,13 @@ export default function Summary({ navigate, params }) {
                 })}
               </tr>
             ))}
+          </tbody>
 
+          {/* Totals + the vs-par tally pinned to the bottom of the scroll
+              area (#63) — one <tfoot> so the tally columns stay locked to the
+              players above (#39). Rows carry bg-bg-card so content scrolling
+              behind them doesn't show through when pinned. */}
+          <tfoot className="sticky bottom-0 z-10">
             <tr className="bg-bg-card border-t-2 border-border">
               <th scope="row" className="py-3 px-3 text-left font-ui text-xs font-normal tracking-[0.12em] uppercase text-muted">Total</th>
               {(game.players ?? []).map(player => (
@@ -323,17 +329,17 @@ export default function Summary({ navigate, params }) {
 
             {visibleParBuckets.length > 0 && (
               <>
-                <tr>
+                <tr className="bg-bg-card">
                   <th
                     scope="colgroup"
                     colSpan={1 + (game.players?.length ?? 0)}
-                    className="pt-5 pb-1 px-3 text-left font-ui text-xs font-normal tracking-[0.12em] uppercase text-muted"
+                    className="pt-4 pb-1 px-3 text-left font-ui text-xs font-normal tracking-[0.12em] uppercase text-muted"
                   >
                     Vs par
                   </th>
                 </tr>
                 {visibleParBuckets.map(([key, label, colour]) => (
-                  <tr key={key} className="border-b border-border last:border-b-0">
+                  <tr key={key} className="bg-bg-card border-b border-border last:border-b-0">
                     <th scope="row" className={['py-2 px-3 text-left font-ui text-xs font-normal whitespace-nowrap', colour || 'text-muted'].join(' ')}>
                       {label}
                     </th>
@@ -355,7 +361,7 @@ export default function Summary({ navigate, params }) {
                 ))}
               </>
             )}
-          </tbody>
+          </tfoot>
         </table>
       </div>
 
