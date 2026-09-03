@@ -12,6 +12,8 @@ Shipped and removed: 1 Sep — batch A (20, 24, 26, 27, 30, 32), batch B (17, 18
 
 Items 36-44 added 1 September 2026 from a golf-feedback list. **36 (ties → draw) and 37 (per-hole par) shipped 2 September** — see `CHANGELOG.md`; both unblock 38 and 39. 40 and 42 still need a product-owner PRD decision before build.
 
+Items 47-55 added 2 September 2026 from a ties+par testing-feedback list, after 36/37 shipped. **47 is a live production regression — prioritise it (needs a debugger pass).** 48, 49 and 50 revise what #37 shipped (par display and the par editor). 52 and 55 change PRD-described behaviour and need a product-owner PRD update before build; 54 needs a build-vs-admin decision first. Item 10 of that list was folded into #39.
+
 ---
 
 ## Features not yet built
@@ -64,13 +66,31 @@ The architecture for properly supporting multiple courses, beyond the current v2
 With par now shipped (#37 — `hole_pars` on the game, `scoreToPar()` helper already in `src/utils/scores.js`), show each entered score's result vs par — a small superscript / bracketed `+1` / `-1` / `E` next to the number in the scorecard grid, live as it's entered. Also a candidate for the read-only Summary scorecard. **Unblocked.**
 
 ### 39. End-of-round tally: eagles / birdies / bogeys / double-bogeys
-On finishing a round, count and show per player how many holes they scored eagle (−2), birdie (−1), par (E), bogey (+1) and double-bogey-or-worse (+2+) — a small block on the finish/Summary screen and a candidate for the share image. Uses `scoreToPar()` + the round's `hole_pars` snapshot (#37, **unblocked**). Decide exact buckets and labels with the product-owner (the user's terms were "eagles, biggies, double biggies").
+On finishing a round, count and show per player how many holes they scored eagle (−2), birdie (−1), par (E), bogey (+1) and double-bogey-or-worse (+2+) — a small block on the finish/Summary screen and a candidate for the share image. Uses `scoreToPar()` + the round's `hole_pars` snapshot (#37, **unblocked**). Decide exact buckets and labels with the product-owner (the user's terms were "eagles, biggies, double biggies"). 2 Sep testing feedback: the user wants birdies/eagles/bogeys called out **in the final scorecard outline** specifically — treat that as the primary surface.
 
 ### 40. Optional match-play game mode (win each hole)
 A game-mode toggle at setup: **stroke play** (current — lowest total wins) or **match play** (win the most holes; each hole won by the lowest score, halved on a tie). Changes the winner calculation, the Summary, and the share image. Explicitly flagged by the user as a future edition. PRD §5 change needed.
 
 ### 42. "Sign in with Google" (OAuth)
 Add Google as a sign-in option alongside the magic link (PRD §11.4 is currently magic-link-only). Needs: an OAuth client (Google Cloud console), the redirect/callback Pages Function, and a decision on account linking — a user who has signed in by magic link and then uses Google with the same email address should land on the same account, not a duplicate. PRD §11.4 change needed. Assistance requested.
+
+### 48. Rework how par renders on the scorecard (revises #37)
+#37 shipped par as a raised `(N)` superscript in `text-chrome` beside the hole number, in both the live `Scorecard.jsx` grid and the read-only `Summary.jsx` table. The user finds the superscript unclear. New target: **hole number in bold**, then the par next to it **same size, in brackets, not bold** (e.g. **3** (3)). Keep the two surfaces consistent. Small, contained — `Scorecard.jsx` hole cell + `Summary.jsx` scorecard `<td>`. Fold into #52's "design principle for score + par display" if that's done first.
+
+### 49. Drop "set every hole to N" from course creation (revises #37)
+The course-creation par control has a row of 2–7 buttons that set every hole at once. The user says it isn't useful — remove it; keep the all-3s default. `Setup.jsx`, the `PAR_CHOICES` button row. Do alongside #50 (they're the same control).
+
+### 50. Rework the par editor UI (revises #37)
+Replace the tap-to-cycle 6×6 grid in the course-creation form (`Setup.jsx`, `newCoursePars`) with a **two-column list of holes**, each row a `−  [par]  +` stepper (default 3, band 2–7). Clearer than cycling. Do with #49 (remove the "set every hole to N" row in the same pass).
+
+### 52. Total vs par on every scorecard + a design principle for it
+Under each player's total, in brackets, show their **score-to-par for the round** (e.g. `41 (+5)` / `38 (E)` / `35 (-3)`) — sum of `scoreToPar(score, par)` over played holes. Surfaces: the live `Scorecard.jsx` totals bar, the read-only `Summary.jsx` table, **and the "Finish game?" confirmation dialog**. Overlaps #38 (per-hole indicator) — same `scoreToPar` helper and `hole_pars` data; decide whether to build together. **PRD update needed** — §5.1 currently scopes par display to "a raised (N) next to the hole number" only. Also: establish a documented **standard for how score + par render together** (colour for under/over/level, `(+N)` / `(E)` / `(-N)` notation, placement) so #38, #39, #48 and this all match — belongs with #44 (design-system).
+
+### 54. Let existing users set par on courses they already created
+Courses created before migration `003` have `hole_pars = NULL` (read as all-3s). Real users need a way to set true pars. Two routes: (a) a **course-edit flow** (there is no edit-course UI today — new screen, `PATCH /api/courses/[id]` which doesn't exist), or (b) a **one-off admin backfill** (the user offered to force it as admin). Decide which before scoping. If (a), it likely wants the #50 stepper UI reused.
+
+### 55. Choose course length on creation — 9 or 18 holes (revises the 36-hole assumption)
+Course creation currently hardcodes 36 holes with no choice. The user wants a hole-count picker: **default 9**, options **9 and 18** (they wrote "three options" but listed two — confirm whether 36 stays for user courses). Quick-play Bruntsfield stays 36. Touches `courses.holes` (now load-bearing since it sets `hole_pars` length), the par editor (#50 must render the chosen count), `createGame` / the scorecard's 36-slot assumption, and `MAX_HOLES`. **PRD update needed** — §6/§11.7 describe a fixed 36. Non-trivial; sequence after #48–#50.
 
 ---
 
@@ -97,6 +117,15 @@ The 24 Aug hotfix (live since 24 August 2026) stopped new duplicates but didn't 
 
 ### 19. Past-round "← Rounds" back button always targets History
 Superseded by #43 (proper back-a-step navigation across all pages). The narrow "always targets History" concern is fine on its own (History is the right destination for that view) — the real ask is the app-wide one in #43.
+
+### 47. BUG — new game / new course lands the active cell on the wrong hole
+**Live production regression, prioritise.** Starting a new game (all holes empty) jumps straight to entering a score on hole 3; after creating a course it jumped to hole 7. Expected: land on hole 1. Suspected cause: `Scorecard.jsx` reads `getActiveCell()` from localStorage and uses `saved ?? fallback` — a stale active-cell from a previous game/session is never cleared when a new game starts (`createGame` / `saveActiveGame` don't `clearActiveCell()`; only finishing a round does). Needs a debugger pass to confirm and fix — likely `clearActiveCell()` on new-game start, or reset the saved cell when the active game id changes.
+
+### 51. History player filter isn't discoverable
+The History screen lets you filter by player (tap a name) but there's no visual affordance for it. Make it look like the existing course filter and sit directly below it. `History.jsx` — the filter row(s) above the round list.
+
+### 53. Label the note on a viewed historic round
+On the past-round `Summary.jsx` view the saved note renders as bare static text with no indication it's a note. Add a simple label — "Notes:" (or a small heading) before the note body. `Summary.jsx`, the `viewingSaved` note block.
 
 ### 43. Proper "back a step" navigation on every page
 The router is a state machine with light URL sync (`App.jsx`). Back buttons currently navigate to a hard-coded parent (`navigate('home')` or a `from` param), so from a deep screen the user often jumps straight to Home instead of retracing one step. Give every non-Home screen a visible back affordance that goes **back one step** in the actual navigation history (a small nav stack, or lean on `window.history.back()` where the pushState history is reliable), with a sensible fallback when there's no prior entry. Absorbs #19. Check interaction with the popstate-clears-params behaviour and the edit-flow guards (#18).
