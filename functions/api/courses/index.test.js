@@ -55,14 +55,14 @@ describe('onRequestPost /api/courses — hole_pars', () => {
 
   it('returns 401 when unauthenticated', async () => {
     getSessionUser.mockResolvedValue(null)
-    const ctx = post({ name: 'Braid Hills' })
+    const ctx = post({ name: 'Braid Hills', holes: 9 })
     ctx.env.DB = makeDB()
 
     expect((await onRequestPost(ctx)).status).toBe(401)
   })
 
-  it('defaults hole_pars to a length-36 array of 3s when absent', async () => {
-    const ctx = post({ name: 'Braid Hills' })
+  it('defaults hole_pars to an array of 3s matching the hole count when absent', async () => {
+    const ctx = post({ name: 'Braid Hills', holes: 9 })
     const db = makeDB()
     ctx.env.DB = db
 
@@ -70,15 +70,15 @@ describe('onRequestPost /api/courses — hole_pars', () => {
     const json = await res.json()
 
     expect(res.status).toBe(201)
-    expect(db.inserted[0][HOLE_PARS_ARG]).toBe(JSON.stringify(Array(36).fill(3)))
-    expect(json.course.hole_pars).toBe(JSON.stringify(Array(36).fill(3)))
+    expect(db.inserted[0][HOLE_PARS_ARG]).toBe(JSON.stringify(Array(9).fill(3)))
+    expect(json.course.hole_pars).toBe(JSON.stringify(Array(9).fill(3)))
   })
 
   it('stores a valid custom hole_pars', async () => {
-    const pars = Array(36).fill(3)
+    const pars = Array(18).fill(3)
     pars[0] = 4
-    pars[35] = 5
-    const ctx = post({ name: 'Braid Hills', hole_pars: pars })
+    pars[17] = 5
+    const ctx = post({ name: 'Braid Hills', holes: 18, hole_pars: pars })
     const db = makeDB()
     ctx.env.DB = db
 
@@ -88,8 +88,8 @@ describe('onRequestPost /api/courses — hole_pars', () => {
     expect(db.inserted[0][HOLE_PARS_ARG]).toBe(JSON.stringify(pars))
   })
 
-  it('rejects a hole_pars that is not 36 entries', async () => {
-    const ctx = post({ name: 'Braid Hills', hole_pars: Array(18).fill(3) })
+  it('rejects a hole_pars whose length does not match the hole count', async () => {
+    const ctx = post({ name: 'Braid Hills', holes: 18, hole_pars: Array(9).fill(3) })
     const db = makeDB()
     ctx.env.DB = db
 
@@ -100,9 +100,9 @@ describe('onRequestPost /api/courses — hole_pars', () => {
   })
 
   it('rejects a hole_pars with an out-of-range value', async () => {
-    const bad = Array(36).fill(3)
-    bad[10] = 1
-    const ctx = post({ name: 'Braid Hills', hole_pars: bad })
+    const bad = Array(9).fill(3)
+    bad[3] = 1
+    const ctx = post({ name: 'Braid Hills', holes: 9, hole_pars: bad })
     const db = makeDB()
     ctx.env.DB = db
 
@@ -113,9 +113,9 @@ describe('onRequestPost /api/courses — hole_pars', () => {
   })
 
   it('rejects a hole_pars with a non-integer value', async () => {
-    const bad = Array(36).fill(3)
-    bad[10] = 3.5
-    const ctx = post({ name: 'Braid Hills', hole_pars: bad })
+    const bad = Array(9).fill(3)
+    bad[3] = 3.5
+    const ctx = post({ name: 'Braid Hills', holes: 9, hole_pars: bad })
     const db = makeDB()
     ctx.env.DB = db
 
@@ -125,10 +125,90 @@ describe('onRequestPost /api/courses — hole_pars', () => {
   })
 
   it('still rejects a missing course name', async () => {
-    const ctx = post({ hole_pars: Array(36).fill(3) })
+    const ctx = post({ holes: 9, hole_pars: Array(9).fill(3) })
     ctx.env.DB = makeDB()
 
     expect((await onRequestPost(ctx)).status).toBe(400)
+  })
+})
+
+describe('onRequestPost /api/courses — holes', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+  })
+
+  // INSERT column order: id, user_id, name, holes, hole_pars, is_default, created_at
+  const HOLES_ARG = 3
+
+  it('accepts holes: 9 and persists it', async () => {
+    const ctx = post({ name: 'Braid Hills', holes: 9 })
+    const db = makeDB()
+    ctx.env.DB = db
+
+    const res = await onRequestPost(ctx)
+    const json = await res.json()
+
+    expect(res.status).toBe(201)
+    expect(db.inserted[0][HOLES_ARG]).toBe(9)
+    expect(json.course.holes).toBe(9)
+  })
+
+  it('accepts holes: 18 and persists it', async () => {
+    const ctx = post({ name: 'Braid Hills', holes: 18 })
+    const db = makeDB()
+    ctx.env.DB = db
+
+    const res = await onRequestPost(ctx)
+    const json = await res.json()
+
+    expect(res.status).toBe(201)
+    expect(db.inserted[0][HOLES_ARG]).toBe(18)
+    expect(json.course.holes).toBe(18)
+  })
+
+  it('rejects holes: 36', async () => {
+    const ctx = post({ name: 'Braid Hills', holes: 36 })
+    const db = makeDB()
+    ctx.env.DB = db
+
+    const res = await onRequestPost(ctx)
+
+    expect(res.status).toBe(400)
+    expect(db.inserted).toHaveLength(0)
+  })
+
+  it('rejects a missing holes field', async () => {
+    const ctx = post({ name: 'Braid Hills' })
+    const db = makeDB()
+    ctx.env.DB = db
+
+    const res = await onRequestPost(ctx)
+
+    expect(res.status).toBe(400)
+    expect(db.inserted).toHaveLength(0)
+  })
+
+  it('rejects holes as a string ("9")', async () => {
+    const ctx = post({ name: 'Braid Hills', holes: '9' })
+    const db = makeDB()
+    ctx.env.DB = db
+
+    const res = await onRequestPost(ctx)
+
+    expect(res.status).toBe(400)
+    expect(db.inserted).toHaveLength(0)
+  })
+
+  it('rejects a non-integer holes value (9.5)', async () => {
+    const ctx = post({ name: 'Braid Hills', holes: 9.5 })
+    const db = makeDB()
+    ctx.env.DB = db
+
+    const res = await onRequestPost(ctx)
+
+    expect(res.status).toBe(400)
+    expect(db.inserted).toHaveLength(0)
   })
 })
 
