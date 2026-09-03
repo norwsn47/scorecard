@@ -251,6 +251,7 @@ table-fixed border-collapse w-full
 | Active cell | `bg-accent text-white font-semibold` |
 | Hole # (active row) | `text-accent font-semibold` |
 | Hole # (inactive) | `text-chrome` |
+| Hole # + par | hole number `font-semibold`, then the hole's par in brackets `font-normal ml-0.5` at the same size — e.g. **3** (3). Par carries no colour of its own; it inherits the cell colour (chrome / muted / accent). Same treatment on the live grid and the read-only Summary table. Replaces the earlier raised `(N)` superscript. |
 | Empty score | `—` (em dash) |
 
 ### Accent divider rule
