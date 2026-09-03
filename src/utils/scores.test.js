@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { deriveHolePars, parTally, playerAverage, playerTotal, scoreToPar } from './scores.js'
+import { deriveHolePars, formatToPar, parTally, playerAverage, playerTotal, roundToPar, scoreToPar } from './scores.js'
 
 describe('playerTotal', () => {
   it('sums the scored holes, ignoring nulls', () => {
@@ -35,6 +35,57 @@ describe('scoreToPar', () => {
 
   it('treats a score of 0 as a real score, not unscored', () => {
     expect(scoreToPar(0, 3)).toBe(-3)
+  })
+})
+
+describe('formatToPar', () => {
+  it('is an empty string for a null / undefined / NaN delta', () => {
+    expect(formatToPar(null)).toBe('')
+    expect(formatToPar(undefined)).toBe('')
+    expect(formatToPar(NaN)).toBe('')
+  })
+
+  it('is E for level par — never +0 or -0', () => {
+    expect(formatToPar(0)).toBe('E')
+  })
+
+  it('prefixes a leading + for over par', () => {
+    expect(formatToPar(1)).toBe('+1')
+    expect(formatToPar(5)).toBe('+5')
+  })
+
+  it('keeps the existing minus for under par', () => {
+    expect(formatToPar(-1)).toBe('-1')
+    expect(formatToPar(-3)).toBe('-3')
+  })
+})
+
+describe('roundToPar', () => {
+  it('sums scoreToPar over a mixed round', () => {
+    // deltas on par 3: -2, -1, 0, +1, +2  → +0
+    expect(roundToPar([1, 2, 3, 4, 5], [3, 3, 3, 3, 3])).toBe(0)
+    // deltas: +1, +2, -1 → +2
+    expect(roundToPar([4, 5, 2], [3, 3, 3])).toBe(2)
+  })
+
+  it('is 0 for an all-pars round', () => {
+    expect(roundToPar([3, 3, 3, 3], [3, 3, 3, 3])).toBe(0)
+  })
+
+  it('is null when the player has scored nothing', () => {
+    expect(roundToPar([null, null], [3, 3])).toBeNull()
+    expect(roundToPar([], [])).toBeNull()
+    expect(roundToPar(undefined, undefined)).toBeNull()
+  })
+
+  it('counts only scored holes for a DNF / partial round', () => {
+    // scored: 2 (-1), 4 (+1); trailing nulls skipped → 0
+    expect(roundToPar([2, 4, null, null], [3, 3, 3, 3])).toBe(0)
+  })
+
+  it('skips holes with no matching par entry', () => {
+    // holes 0-1 scored against par 3 (+1, +1); holes 2-3 have no par → skipped
+    expect(roundToPar([4, 4, 4, 4], [3, 3])).toBe(2)
   })
 })
 

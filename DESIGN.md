@@ -12,6 +12,8 @@ Mobile-only scorecard app. Cream/warm ivory background with a single forest gree
 
 **Design philosophy (Home screen):** "A simple digital replica of the paper scorecard used for hundreds of years, designed to keep your focus on the game, not the screen." The Home screen breaks digital symmetry intentionally — left-aligned title, subtitle, and value propositions create a structured printed-document feel, not a centred app layout.
 
+**Physical context:** this app is a digital replica of the paper scorecard carried round Bruntsfield for over a century — printed-document type, sharp-cornered CTAs, heritage serif, a familiar hole-by-player grid. Borrowing that language is a deliberate, context-rooted decision (per `OUTBUILD-PRINCIPLES.md` "Products rooted in a physical context"), not decoration. The one place the app steps outside pure pencil-and-paper monochrome is the **score-vs-par semantic colour** (see "Score vs par" below) — golfers read a card in green/level/red the moment they look up from the green, and the app follows that reading.
+
 **Mobile only: true** — on desktop the app is displayed as a centred phone frame with a handwritten Caveat note beside it.
 
 ---
@@ -26,12 +28,27 @@ All tokens are defined as CSS custom properties in `src/styles/index.css` and al
 | `bg-card` | `--color-bg-card` | `#F5EFE3` | Surface — slightly warmer cream for cards, inputs |
 | `text` | `--color-text` | `#1A1A18` | Primary text — near-black charcoal |
 | `muted` | `--color-text-muted` | `#6B6560` | Muted text — warm grey |
-| `accent` | `--color-accent` | `#1A4329` | Brand colour — deep historic Scottish green; all interactive highlights |
+| `accent` | `--color-accent` | `#1A4329` | Brand colour — deep historic Scottish green; all interactive highlights, active cell, winner |
 | `accent-hover` | `--color-accent-hover` | `#142f1e` | Accent on press |
 | `border` | `--color-border` | `#D9D0C4` | All borders — warm light |
 | `chrome` | `--color-chrome` | `#C0B8B0` | Inactive chrome — disabled icons, borders |
 | `control-warm` | `--color-control-warm` | `#9A9189` | Warm grey fill — advance button background |
+| `under-par` | `--color-under-par` | `#2C6B3C` | Score-vs-par **delta** when under par (`-1`, `-2` …). Deltas only — never chrome, never interactive |
+| `over-par` | `--color-over-par` | `#9B3A24` | Score-vs-par **delta** when over par (`+1`, `+5` …). Deltas only — never chrome, never interactive |
 | *(desktop only)* | — | `#E8E2D6` | Background behind phone frame on desktop |
+
+`tailwind.config.js` needs matching aliases for the two new tokens: `'under-par': 'var(--color-under-par)'`, `'over-par': 'var(--color-over-par)'` (added by the frontend-developer as part of the #38 / #52 build — this file only defines the tokens).
+
+### The two score-vs-par colours are a scoped exception
+
+The app is otherwise **one brand colour doing all the work** (Outbuild principle 3). `under-par` and `over-par` are the single, deliberate exception, and they are tightly fenced:
+
+- They colour **vs-par deltas only** — the per-hole superscript (`+1` / `-1` / `E`), the round total-to-par (`41 (+5)`), and the §5.2 eagle/birdie/par/bogey tally (#64). Nothing else.
+- They are **never** used for buttons, borders, icons, links, backgrounds, focus rings, or any interactive or chrome role. A golfer must never have to wonder whether a green thing is tappable.
+- **Level par (`E`) gets no colour of its own** — it inherits whatever text colour its context already uses (`text`, `muted`, `accent` in a winner column, or white in the active cell).
+- The bracketed par **label** on the hole number (§5.1, e.g. "3 (3)") is *not* a delta — it stays uncoloured and is unaffected by this exception.
+
+This keeps within the Outbuild allowance of "no more than two accents beyond the brand colour, used in precisely defined contexts."
 
 ### Overlays and inline transparent values
 
@@ -41,6 +58,21 @@ All tokens are defined as CSS custom properties in `src/styles/index.css` and al
 | `--overlay-backdrop` | `rgba(26,26,24,0.4)` | Bottom sheet backdrop |
 | Active row tint | `rgba(26,67,41,0.05)` | Scorecard active row background |
 | Focus ring | `rgba(26,67,41,0.4)` | Input focus ring |
+
+### Sunlight contrast — the score-vs-par colours
+
+The app is used outdoors on a phone in bright light, so both delta colours were chosen to clear **WCAG AA for small text (4.5:1)** against every surface a delta can sit on, with headroom for glare. Ratios:
+
+| Colour | on `bg` `#F7F4EE` | on `bg-card` `#F5EFE3` | on `accent` fill `#1A4329` |
+|---|---|---|---|
+| `under-par` `#2C6B3C` | **5.8 : 1** ✓ | **5.6 : 1** ✓ | 1.7 : 1 ✗ |
+| `over-par` `#9B3A24` | **6.3 : 1** ✓ | **6.1 : 1** ✓ | 1.6 : 1 ✗ |
+| white `#FFFFFF` (active-cell text) | — | — | **11.2 : 1** ✓ |
+| `accent` `#1A4329` (winner column text) | 10.2 : 1 ✓ | 9.8 : 1 ✓ | — |
+
+Both delta colours **fail** on the solid `accent` fill — this is expected and is exactly why the override rule below forces them off inside a filled cell. On every non-filled surface (cream ground or card, including behind a winner's accent-green *text*) they pass comfortably.
+
+`under-par` `#2C6B3C` is a lighter, greener mid-forest — deliberately ~12 lightness points up from the brand `accent` `#1A4329` so a `-1` reads as its own "good score" mark, not as winner/active chrome. `over-par` `#9B3A24` is a deep burnt-terracotta / rust — warm, of the Outbuild family (the brand's original accent direction), and distinct from any error state (the app has no red error state; errors use the green banner).
 
 ---
 
@@ -77,6 +109,7 @@ Two registers. The display font is used once, deliberately, for a specific edito
 | Input text | `font-ui text-base text-text` |
 | Total score | `font-ui text-base font-semibold text-text` |
 | Score cell | `font-ui text-sm` |
+| Score-vs-par delta (superscript) | `font-ui text-[0.6em] align-super font-normal` — smallest legible, never bold; see "Score vs par" |
 | Error / banner | `font-ui text-xs tracking-wide` |
 
 ### Caveat — desktop note only
@@ -251,8 +284,37 @@ table-fixed border-collapse w-full
 | Active cell | `bg-accent text-white font-semibold` |
 | Hole # (active row) | `text-accent font-semibold` |
 | Hole # (inactive) | `text-chrome` |
-| Hole # + par | hole number `font-semibold`, then the hole's par in brackets `font-normal ml-0.5` at the same size — e.g. **3** (3). Par carries no colour of its own; it inherits the cell colour (chrome / muted / accent). Same treatment on the live grid and the read-only Summary table. Replaces the earlier raised `(N)` superscript. |
+| Hole # + par | hole number `font-semibold`, then the hole's par in brackets `font-normal ml-0.5` at the same size — e.g. **3** (3). The bracketed par **label** carries no colour of its own; it inherits the cell colour (chrome / muted / accent). Same treatment on the live grid and the read-only Summary table. Replaces the earlier raised `(N)` superscript. *Deltas-only exception:* the par carries no colour rule holds for this par **label** — but score-vs-par **deltas** (the `+1` / `-1` / `E` superscript and the round total-to-par) do take a semantic colour. See "Score vs par" below. |
 | Empty score | `—` (em dash) |
+
+### Score vs par
+
+The one place the scorecard leaves pencil-and-paper monochrome. Applies to score-vs-par **deltas** only (PRD §5.3): the live per-hole superscript (#38), the read-only Summary / History superscript, the round total-to-par `41 (+5)` (#52), and the end-of-round eagle/birdie/par/bogey tally (§5.2, #64). It does **not** apply to the bracketed par *label* on the hole number (§5.1) — that stays uncoloured.
+
+**Notation** (owned by PRD §5.3 / the shared `formatToPar` helper, repeated here for the visual spec):
+- Under par: `-N` (`-1`, `-2`) — rendered in `under-par` `#2C6B3C`.
+- Level par: `E` — never `+0` / `-0`. **No colour of its own** — inherits the surrounding text colour.
+- Over par: `+N` (`+1`, `+5`) — always a leading `+` — rendered in `over-par` `#9B3A24`.
+- Hole not yet scored: nothing shown. No placeholder, no `E`.
+
+**Per-hole indicator (grid + Summary + share).** A superscript trailing the score digit — `font-ui text-[0.6em] align-super font-normal`, never bold, `ml-[1px]`. Smallest legible size; the digit stays the workhorse and the delta annotates it (micro register). Superscript rather than the inline `(par)` bracket used on the hole number, because up to six player columns share a row and `3 (+1)` will not fit — this is the one deliberate divergence from §5.1's inline treatment, justified by column width.
+
+**Round total-to-par (totals bar, Summary totals row, finish dialog, share).** In brackets, on the total's own line: `41 (+5)`. Not superscript. `Av.` / `DNF` stay as the sub-labels beneath. The bracket's digits and sign take the semantic colour; the surrounding total stays `text` / `accent` as today. Before a player has scored, the bracket is omitted entirely.
+- Full size (matches the total) on the surfaces with room: the Summary totals row, the finish dialog, the share image.
+- **Surface exception — the live Scorecard totals bar:** the bracket drops to `text-sm font-normal` (and the cell gets `leading-tight`). At 390px with 5–6 players the column is ~47px and a full-size `41 (+5)` wraps to two lines; the smaller bracket keeps it to one. This is the one documented size exception.
+
+**End-of-round tally (§5.2, #64).** The eagle/birdie/par/bogey block below the totals row (Summary + share). Each bucket takes its §5.3 colour: **Eagle** and **Birdie** rows in `under-par`, **Par** row neutral (inherits), **Bogey** row in `over-par`. The bucket label and any non-zero count carry the colour; a **zero** count stays `muted` so an empty bucket doesn't shout. Winner status does not change these (same reasoning as the override rule).
+
+**Override rule (one sentence).** A vs-par delta keeps its semantic colour on every surface where the background is the cream ground or the card — *including* inside a winner's accent-green column, where the delta stays `under-par` / `over-par` and only a level `E` inherits the column's green — and drops the semantic colour *only* inside a filled cell (the live active cell, white-on-`accent`), where the delta takes that cell's inverted white text and the leading `+` / `-` sign carries the direction.
+
+Rationale: the semantic colours fail contrast on the solid `accent` fill (1.6–1.7:1) so they cannot be used there; everywhere else — winner columns included — the delta sits on cream/card and passes AA (5.6–6.3:1), and a winner making bogeys is information worth keeping visible. Winner status therefore never changes a delta's colour; only a solid fill behind it does.
+
+**Canvas mirror (`src/utils/share.js`).** The share image is hand-drawn and cannot read CSS tokens, so the two hexes are duplicated into its local `C` map:
+```
+underPar: '#2C6B3C',
+overPar:  '#9B3A24',
+```
+The share image has no active cell, so the "filled cell" branch of the override never applies there. It does have winner columns (drawn in `C.accent`): per the rule above, deltas in those columns still render in `C.underPar` / `C.overPar`, and a level `E` inherits `C.accent`. In practice the canvas picks the delta's `fillStyle` purely from the sign of the delta (negative → `C.underPar`, positive → `C.overPar`, zero → inherit the cell's current fill), independent of winner status.
 
 ### Accent divider rule
 ```
@@ -360,7 +422,8 @@ Inline SVGs throughout — no icon library dependency.
 ## Consistency check — Outbuild principles
 
 ### Aligned ✓
-- Single brand colour (forest green) handles all decorative and interactive roles
+- Brand colour (forest green) handles all decorative and interactive roles
+- Score-vs-par (`under-par`, `over-par`) is the single deliberate exception to the one-colour rule — two accents, fenced to vs-par **deltas only**, never touching chrome or interaction, within the Outbuild "no more than two accents in precisely defined contexts" allowance. It is a context-rooted decision: golfers read a card in green/level/red
 - Two typographic registers (editorial Cormorant Garamond + micro Inter) are clearly distinct
 - Flatness maintained — shadows only on floating elements (modals, primary CTA)
 - Two radius families: `rounded-md` for controls, `rounded-full` for circular controls

@@ -1,5 +1,5 @@
 import { deriveResult } from './game.js'
-import { deriveHolePars, parTally, playerAverage, playerTotal } from './scores.js'
+import { deriveHolePars, formatToPar, parTally, playerAverage, playerTotal, roundToPar, scoreToPar } from './scores.js'
 
 const C = {
   bg:     '#F7F4EE',
@@ -8,6 +8,45 @@ const C = {
   muted:  '#6B6560',
   accent: '#1A4329',
   border: '#D9D0C4',
+  // Score-vs-par delta colours — mirrored from DESIGN.md "Score vs par"
+  // (`--color-under-par` / `--color-over-par`). The canvas can't read CSS
+  // tokens, so the two hexes are duplicated here and must stay in sync.
+  underPar: '#2C6B3C',
+  overPar:  '#9B3A24',
+}
+
+// Colour for a vs-par delta on the canvas. Per the DESIGN.md override rule the
+// canvas has no filled active cell, so the choice is purely by sign:
+// negative → under-par, positive → over-par, level (E) → inherit the cell's
+// current fill (`baseColor`) — including a winner column drawn in C.accent.
+function deltaColour(delta, baseColor) {
+  if (delta == null || Number.isNaN(delta) || delta === 0) return baseColor
+  return delta < 0 ? C.underPar : C.overPar
+}
+
+// Draws `main` (in `baseColor`/`mainFont`) immediately followed by `trail`
+// (in `trailColor`/`trailFont`), as a unit centred on `cx`. `raise` lifts the
+// trailing text into a superscript. Restores textAlign to 'center'.
+function drawWithTrail(ctx, cx, baseline, main, trail, opts) {
+  const { baseColor, trailColor, mainFont, trailFont, raise = 0, gap = 1 } = opts
+  ctx.font = mainFont
+  const mw = ctx.measureText(main).width
+  let tw = 0
+  if (trail) {
+    ctx.font = trailFont
+    tw = gap + ctx.measureText(trail).width
+  }
+  const startX = cx - (mw + tw) / 2
+  ctx.textAlign = 'left'
+  ctx.font = mainFont
+  ctx.fillStyle = baseColor
+  ctx.fillText(main, startX, baseline)
+  if (trail) {
+    ctx.font = trailFont
+    ctx.fillStyle = trailColor
+    ctx.fillText(trail, startX + mw + gap, baseline - raise)
+  }
+  ctx.textAlign = 'center'
 }
 
 // "Tied" is the shared term across the Summary, History and this image
@@ -45,7 +84,14 @@ async function buildCanvas(game) {
   // drawn; if nobody hit any, the section is omitted and adds no height.
   const holePars   = deriveHolePars(game.holePars, holes)
   const tallies    = players.map(p => parTally((game.scores?.[p] ?? []).slice(0, holes), holePars))
-  const tallyKeys  = [['eagle', 'E'], ['birdie', 'B'], ['par', 'P'], ['bogey', 'Bo']]
+  // short label + §5.3 semantic colour per bucket (#64): under par green,
+  // par neutral (inherit the row's base colour), bogey terracotta.
+  const tallyKeys  = [
+    ['eagle', 'E', C.underPar],
+    ['birdie', 'B', C.underPar],
+    ['par', 'P', null],
+    ['bogey', 'Bo', C.overPar],
+  ]
   const visKeys    = tallyKeys.filter(([k]) => tallies.some(t => t[k] > 0))
   const hasTally   = visKeys.length > 0
 
@@ -171,10 +217,22 @@ async function buildCanvas(game) {
     players.forEach((p, i) => {
       const score = game.scores?.[p]?.[h] ?? null
       const cx    = PAD + HOLE_COL + i * playerColW + playerColW / 2
-      ctx.textAlign = 'center'
-      ctx.fillStyle = isWin(p) ? C.accent : C.text
-      ctx.font      = '13px Inter, system-ui, sans-serif'
-      ctx.fillText(score != null ? String(score) : '-', cx, rowY + ROW_H / 2 + 5)
+      const base  = isWin(p) ? C.accent : C.text
+      if (score == null) {
+        ctx.textAlign = 'center'
+        ctx.fillStyle = base
+        ctx.font      = '13px Inter, system-ui, sans-serif'
+        ctx.fillText('-', cx, rowY + ROW_H / 2 + 5)
+        return
+      }
+      const delta = scoreToPar(score, holePars[h])
+      drawWithTrail(ctx, cx, rowY + ROW_H / 2 + 5, String(score), formatToPar(delta), {
+        baseColor:  base,
+        trailColor: deltaColour(delta, base),
+        mainFont:   '13px Inter, system-ui, sans-serif',
+        trailFont:  '9px Inter, system-ui, sans-serif',
+        raise:      5,
+      })
     })
   }
   y += holes * ROW_H
@@ -199,10 +257,24 @@ async function buildCanvas(game) {
     const avg   = playerAverage(game.scores, p)
     const dnf   = isDnf(p)
 
-    ctx.textAlign = 'center'
-    ctx.fillStyle = isWin(p) ? C.accent : C.text
-    ctx.font      = 'bold 15px Inter, system-ui, sans-serif'
-    ctx.fillText(dnf ? 'DNF' : String(total || '-'), cx, y + 22)
+    const base = isWin(p) ? C.accent : C.text
+    if (dnf) {
+      ctx.textAlign = 'center'
+      ctx.fillStyle = base
+      ctx.font      = 'bold 15px Inter, system-ui, sans-serif'
+      ctx.fillText('DNF', cx, y + 22)
+    } else {
+      const rtp   = roundToPar((game.scores?.[p] ?? []).slice(0, holes), holePars)
+      const bracket = rtp == null ? '' : `(${formatToPar(rtp)})`
+      drawWithTrail(ctx, cx, y + 22, String(total || '-'), bracket, {
+        baseColor:  base,
+        trailColor: deltaColour(rtp, base),
+        mainFont:   'bold 15px Inter, system-ui, sans-serif',
+        trailFont:  '11px Inter, system-ui, sans-serif',
+        raise:      0,
+        gap:        3,
+      })
+    }
 
     if (!dnf && avg !== null) {
       ctx.fillStyle = C.muted
@@ -238,10 +310,16 @@ async function buildCanvas(game) {
       if (nm !== p) nm += '…'
       ctx.fillText(nm, PAD + 4, rowBaseline)
 
-      ctx.fillStyle = win ? C.accent : C.muted
-      ctx.font      = '11px Inter, system-ui, sans-serif'
-      const tokens  = visKeys.map(([k, short]) => `${short}:${tallies[i][k]}`).join('   ')
-      ctx.fillText(tokens, PAD + 4 + 104, rowBaseline)
+      ctx.font   = '11px Inter, system-ui, sans-serif'
+      const base = win ? C.accent : C.muted
+      let tx     = PAD + 4 + 104
+      const SEP  = ctx.measureText('   ').width
+      visKeys.forEach(([k, short, colour]) => {
+        ctx.fillStyle = colour ?? base
+        const token = `${short}:${tallies[i][k]}`
+        ctx.fillText(token, tx, rowBaseline)
+        tx += ctx.measureText(token).width + SEP
+      })
 
       ty += TALLY_ROW_H
     })

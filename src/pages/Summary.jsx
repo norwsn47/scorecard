@@ -3,7 +3,8 @@ import { track } from '../utils/analytics.js'
 import { formatDateOnly } from '../utils/format.js'
 import { deriveResult } from '../utils/game.js'
 import { tiedNames } from '../utils/result.js'
-import { deriveHolePars, parTally, playerAverage, playerTotal } from '../utils/scores.js'
+import { deriveHolePars, parTally, playerAverage, playerTotal, roundToPar, scoreToPar } from '../utils/scores.js'
+import ParDelta from '../components/ParDelta.jsx'
 import { shareScorecard } from '../utils/share.js'
 import { getActiveGame, getCompletedGames, markCompletedGameSynced } from '../utils/storage.js'
 import { useAuth } from '../hooks/useAuth.jsx'
@@ -53,14 +54,15 @@ export default function Summary({ navigate, params }) {
   // End-of-round tally vs par (§5.2). Per player, over the holes they played.
   // Only buckets at least one player hit are shown (union of non-zero); within
   // that set a player with none shows 0. If nobody hit any of the four, the
-  // whole block is hidden. No semantic colour — consistent with par carrying
-  // no colour of its own (§5.1). Same component serves the post-finish view
-  // and the History detail view (viewingSaved).
+  // whole block is hidden. Each bucket carries the §5.3 semantic colour
+  // (#64): under par (eagle, birdie) green, par neutral, bogey terracotta —
+  // a zero count stays muted so it doesn't shout. Same component serves the
+  // post-finish view and the History detail view (viewingSaved).
   const parBuckets = [
-    ['eagle',  'Eagle'],
-    ['birdie', 'Birdie'],
-    ['par',    'Par'],
-    ['bogey',  'Bogey'],
+    ['eagle',  'Eagle',  'text-under-par'],
+    ['birdie', 'Birdie', 'text-under-par'],
+    ['par',    'Par',    ''],
+    ['bogey',  'Bogey',  'text-over-par'],
   ]
   const parTallies = Object.fromEntries(
     (game.players ?? []).map(p => [
@@ -287,6 +289,9 @@ export default function Summary({ navigate, params }) {
                       ].join(' ')}
                     >
                       {score ?? '-'}
+                      {score != null && (
+                        <ParDelta delta={scoreToPar(score, holePars[holeIndex])} />
+                      )}
                     </td>
                   )
                 })}
@@ -304,6 +309,10 @@ export default function Summary({ navigate, params }) {
                   ].join(' ')}
                 >
                   {playerTotal(game.scores, player) || '-'}
+                  <ParDelta
+                    delta={roundToPar((game.scores?.[player] ?? []).slice(0, holePars.length), holePars)}
+                    variant="bracket"
+                  />
                   {playerAverage(game.scores, player) !== null && (
                     <span className="block font-ui text-xs font-normal text-muted">Av. {playerAverage(game.scores, player)}</span>
                   )}
@@ -323,22 +332,25 @@ export default function Summary({ navigate, params }) {
                     Vs par
                   </th>
                 </tr>
-                {visibleParBuckets.map(([key, label]) => (
+                {visibleParBuckets.map(([key, label, colour]) => (
                   <tr key={key} className="border-b border-border last:border-b-0">
-                    <th scope="row" className="py-2 px-3 text-left font-ui text-xs font-normal text-muted whitespace-nowrap">
+                    <th scope="row" className={['py-2 px-3 text-left font-ui text-xs font-normal whitespace-nowrap', colour || 'text-muted'].join(' ')}>
                       {label}
                     </th>
-                    {(game.players ?? []).map(player => (
-                      <td
-                        key={player}
-                        className={[
-                          'py-2 px-3 text-center font-ui text-sm tabular-nums',
-                          isWinner(player) ? 'text-accent font-medium' : 'text-text',
-                        ].join(' ')}
-                      >
-                        {parTallies[player][key]}
-                      </td>
-                    ))}
+                    {(game.players ?? []).map(player => {
+                      const count = parTallies[player][key]
+                      return (
+                        <td
+                          key={player}
+                          className={[
+                            'py-2 px-3 text-center font-ui text-sm tabular-nums',
+                            count > 0 ? (colour || 'text-text') : 'text-muted',
+                          ].join(' ')}
+                        >
+                          {count}
+                        </td>
+                      )
+                    })}
                   </tr>
                 ))}
               </>

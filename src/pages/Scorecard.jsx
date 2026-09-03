@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import CourseMapModal from '../components/CourseMapModal.jsx'
 import PageHeader from '../components/PageHeader.jsx'
+import ParDelta from '../components/ParDelta.jsx'
 import { track } from '../utils/analytics.js'
 import { computeDisplayedHoles, finishGame } from '../utils/game.js'
-import { deriveHolePars, playerTotal } from '../utils/scores.js'
+import { deriveHolePars, playerTotal, roundToPar, scoreToPar } from '../utils/scores.js'
 import { clearActiveCell, clearActiveGame, getActiveCell, getActiveGame, saveActiveCell, saveActiveGame, saveCompletedGame, updateCompletedGame } from '../utils/storage.js'
 
 function initialCellFor(g) {
@@ -287,6 +288,9 @@ export default function Scorecard({ navigate, params }) {
                         ].join(' ')}
                       >
                         {score ?? '–'}
+                        {score != null && (
+                          <ParDelta delta={scoreToPar(score, holePars[holeIndex])} inverted={isActive} />
+                        )}
                       </td>
                     )
                   })}
@@ -303,8 +307,13 @@ export default function Scorecard({ navigate, params }) {
           Total
         </div>
         {players.map(player => (
-          <div key={player} className="flex-1 py-3 px-1 text-center font-ui text-base font-semibold text-text">
+          <div key={player} className="flex-1 py-3 px-1 text-center font-ui text-base font-semibold text-text leading-tight">
             {playerTotal(game.scores, player) || '–'}
+            <ParDelta
+              delta={roundToPar((game.scores?.[player] ?? []).slice(0, holePars.length), holePars)}
+              variant="bracket"
+              className="text-sm font-normal"
+            />
           </div>
         ))}
       </div>
@@ -369,7 +378,10 @@ export default function Scorecard({ navigate, params }) {
               {players.map(player => (
                 <div key={player} className="flex justify-between font-ui text-sm text-text">
                   <span>{player}</span>
-                  <span className="font-semibold">{playerTotal(game.scores, player) || '–'}</span>
+                  <span className="font-semibold">
+                    {playerTotal(game.scores, player) || '–'}
+                    <ParDelta delta={roundToPar((game.scores?.[player] ?? []).slice(0, holePars.length), holePars)} variant="bracket" />
+                  </span>
                 </div>
               ))}
             </div>

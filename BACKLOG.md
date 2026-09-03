@@ -8,11 +8,11 @@
 
 **Last updated:** 3 September 2026
 
-Shipped and removed: 1 Sep — batch A (20, 24, 26, 27, 30, 32), batch B (17, 18, 28), batch C (2 code part / see 2b, 29, 33); 2 Sep — 21 (ESLint), 36 (ties → draw), 37 (per-hole par); 3 Sep — 47 (new game landed on wrong hole), 48/49/50/55 (par UI rework + 9/18 course length), 46/51/53 + the easy part of 45 (small-items batch), 39 (end-of-round vs-par tally, PRD §5.2). See `CHANGELOG.md`.
+Shipped and removed: 1 Sep — batch A (20, 24, 26, 27, 30, 32), batch B (17, 18, 28), batch C (2 code part / see 2b, 29, 33); 2 Sep — 21 (ESLint), 36 (ties → draw), 37 (per-hole par); 3 Sep — 47 (new game landed on wrong hole), 48/49/50/55 (par UI rework + 9/18 course length), 46/51/53 + the easy part of 45 (small-items batch), 39 (end-of-round vs-par tally, PRD §5.2), 38/52/64 (score-vs-par display standard + semantic colour, PRD §5.3). See `CHANGELOG.md`.
 
 Items 36-44 added 1 September 2026 from a golf-feedback list. **36 (ties → draw) and 37 (per-hole par) shipped 2 September** — see `CHANGELOG.md`; both unblock 38 and 39. 40 still needs a product-owner PRD decision before build; 42 (Google sign-in) moved to Blocked on 3 September — it needs an external Google Cloud OAuth client set up first.
 
-Items 47-55 added 2 September 2026 from a ties+par testing-feedback list, after 36/37 shipped. **47, 48, 49, 50 and 55 shipped 3 September** — see `CHANGELOG.md`. 52 still changes PRD-described behaviour and needs a product-owner PRD update before build; 54 needs a build-vs-admin decision first. Item 10 of that list was folded into #39, which shipped 3 September (PRD §5.2). Items 56-58 added 3 September 2026 from the #48–#55 code review. #60 added 3 September 2026 (split from the closed #59, the PRD as-built pass). #61-62 added 3 September 2026 from the #46/#51/#53 review; #45 rescoped to the Vite major upgrade only. #63 added 3 September 2026 from the #39 build.
+Items 47-55 added 2 September 2026 from a ties+par testing-feedback list, after 36/37 shipped. **47, 48, 49, 50, 52 and 55 shipped 3 September** — see `CHANGELOG.md`. 54 needs a build-vs-admin decision first. Item 10 of that list was folded into #39, which shipped 3 September (PRD §5.2). Items 56-58 added 3 September 2026 from the #48–#55 code review. #60 added 3 September 2026 (split from the closed #59, the PRD as-built pass). #61-62 added 3 September 2026 from the #46/#51/#53 review; #45 rescoped to the Vite major upgrade only. #63 added 3 September 2026 from the #39 build. **#38, #52 and #64 shipped 3 September together** — the score-vs-par display standard (PRD §5.3), the semantic under/level/over colour tokens (DESIGN.md), and the tally recolour.
 
 ---
 
@@ -62,14 +62,10 @@ A proper sign-up flow capturing name and home course together, with editable per
 ### 11. Multi-course architecture
 The architecture for properly supporting multiple courses, beyond the current v2.0 model where a signed-in user's "course" is a name string with a default hole count (PRD §11.7). Would cover structured per-course data (holes, par), how quick-play coexists with it, and whether system-provided courses become browsable. Planning item, not a single chunk — revisit once real usage shows users creating multiple distinct courses.
 
-### 38. Score-against-par indicator while entering scores
-With par now shipped (#37 — `hole_pars` on the game, `scoreToPar()` helper already in `src/utils/scores.js`), show each entered score's result vs par — a small superscript / bracketed `+1` / `-1` / `E` next to the number in the scorecard grid, live as it's entered. Also a candidate for the read-only Summary scorecard. **Unblocked.**
 
 ### 40. Optional match-play game mode (win each hole)
 A game-mode toggle at setup: **stroke play** (current — lowest total wins) or **match play** (win the most holes; each hole won by the lowest score, halved on a tie). Changes the winner calculation, the Summary, and the share image. Explicitly flagged by the user as a future edition. PRD §5 change needed.
 
-### 52. Total vs par on every scorecard + a design principle for it
-Under each player's total, in brackets, show their **score-to-par for the round** (e.g. `41 (+5)` / `38 (E)` / `35 (-3)`) — sum of `scoreToPar(score, par)` over played holes. Surfaces: the live `Scorecard.jsx` totals bar, the read-only `Summary.jsx` table, **and the "Finish game?" confirmation dialog**. Overlaps #38 (per-hole indicator) — same `scoreToPar` helper and `hole_pars` data; decide whether to build together. **PRD update needed** — §5.1 currently scopes par display to "a raised (N) next to the hole number" only. Also: establish a documented **standard for how score + par render together** (colour for under/over/level, `(+N)` / `(E)` / `(-N)` notation, placement) so #38, #39, #48 and this all match — belongs with #44 (design-system).
 
 ### 54. Let existing users set par on courses they already created
 Courses created before migration `003` have `hole_pars = NULL` (read as all-3s). Real users need a way to set true pars. Two routes: (a) a **course-edit flow** (there is no edit-course UI today — new screen, `PATCH /api/courses/[id]` which doesn't exist), or (b) a **one-off admin backfill** (the user offered to force it as admin). Decide which before scoping. If (a), it likely wants the #50 stepper UI reused — **that stepper now exists** (`Setup.jsx`, `stepPar` + the two-column per-hole par list, shipped 3 Sep with #50) and is ready to lift into a course-edit screen.
@@ -157,6 +153,7 @@ Minor. A `holes_played` of `0` is caught by the earlier `!holes_played` truthy c
 
 ### 63. Summary totals row no longer sticky while scrolling
 From the #39 build. The read-only scorecard's "Total" row was a `sticky bottom-0` `<tfoot>` that stayed pinned while scrolling a long hole list. #39 folded the totals + the vs-par tally into one `<tbody>` (so the tally columns stay locked to the players when the grid scrolls sideways), which meant dropping the sticky behaviour. Noticeable mainly on a 36-hole Bruntsfield round on a short screen. Restore it if it's missed — needs a way to keep totals pinned above a tally block that renders below it, or move the tally above the totals.
+
 
 ### 57. Hole-count picker uses `aria-pressed` rather than a radiogroup
 Surfaced in the #48–#55 code review. The 9 / 18 hole-count picker in course creation (`Setup.jsx`) is two buttons with `aria-pressed`. For a single-select control, `role="radio"` + `aria-checked` inside a `role="radiogroup"` would be more accurate. Low priority — consistent with the prior toggle pattern in the app; revisit alongside #44 (design-system) if a shared toggle primitive is introduced.

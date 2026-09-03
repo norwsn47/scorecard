@@ -26,6 +26,51 @@ export function scoreToPar(score, par) {
 }
 
 /**
+ * Shared score-vs-par formatter (§5.3). Turns a signed delta into the one
+ * notation every surface uses — the per-hole superscript (#38), the round
+ * total-to-par (#52), and later the §5.2 tally (#64):
+ *   null / undefined  → ''      (hole not scored — nothing is shown)
+ *   0                 → 'E'     (level par — never '+0' / '-0')
+ *   > 0               → '+N'    (always a leading '+')
+ *   < 0               → '-N'    (the minus is already there)
+ * No surface formats its own string, so they cannot drift.
+ *
+ * @param {number|null|undefined} delta a scoreToPar() result
+ * @returns {string}
+ */
+export function formatToPar(delta) {
+  if (delta == null || Number.isNaN(delta)) return ''
+  if (delta === 0) return 'E'
+  return delta > 0 ? `+${delta}` : `${delta}`
+}
+
+/**
+ * Round total-to-par (§5.3.2 / #52): the sum of scoreToPar(score, par) over the
+ * holes this player has actually scored. Unscored holes (null / NaN) are
+ * skipped, so a mid-round or DNF player's figure reflects only what they have
+ * played. Returns null when the player has scored nothing — callers omit the
+ * bracket entirely in that case. Display only: never touches totals, the
+ * winner, DNF or the draw rule.
+ *
+ * @param {Array<number|null>} playerScores per-hole scores for one player
+ * @param {Array<number>} holePars the round's par array, same indexing
+ * @returns {number|null}
+ */
+export function roundToPar(playerScores, holePars) {
+  const scores = Array.isArray(playerScores) ? playerScores : []
+  const pars = Array.isArray(holePars) ? holePars : []
+  let total = 0
+  let scored = 0
+  for (let i = 0; i < scores.length; i++) {
+    const delta = scoreToPar(scores[i], pars[i])
+    if (delta == null || Number.isNaN(delta)) continue
+    total += delta
+    scored++
+  }
+  return scored === 0 ? null : total
+}
+
+/**
  * End-of-round tally (§5.2). Counts how one player's holes landed against par,
  * into four buckets keyed on `delta = scoreToPar(score, par)`:
  *   eagle  → delta <= -2   (eagle or better; a hole-in-one on a par 3)
