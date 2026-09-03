@@ -1,7 +1,7 @@
 ---
 name: design-director
 description: Owns the project's visual direction in DESIGN.md. `DESIGN.md` already exists — invoke this agent for token-level changes (colour, spacing scale, type scale) or a broader visual-direction revision, not for single-component tweaks (those go to the frontend-developer). Feed it reference screenshots and the change you want; it explains what a token change affects before making it.
-tools: Read, Write, Glob, WebFetch
+tools: Read, Write, Glob, Grep, WebFetch
 model: sonnet
 ---
 Last updated: 3 September 2026
