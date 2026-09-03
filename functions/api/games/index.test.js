@@ -94,6 +94,39 @@ describe('onRequestPost /api/games — course ownership', () => {
   })
 })
 
+describe('onRequestPost /api/games — holes_played validation', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+  })
+
+  for (const bad of [
+    { label: 'a string', value: '18' },
+    { label: 'a non-integer', value: 18.5 },
+    { label: 'above 36', value: 40 },
+    { label: 'negative', value: -3 },
+  ]) {
+    it(`rejects holes_played that is ${bad.label}`, async () => {
+      const ctx = post({ ...validBody, holes_played: bad.value })
+      const db = makeDB()
+      ctx.env.DB = db
+
+      const res = await onRequestPost(ctx)
+
+      expect(res.status).toBe(400)
+      expect(db.inserted).toHaveLength(0)
+    })
+  }
+
+  it('accepts holes_played at the bounds (1 and 36)', async () => {
+    for (const value of [1, 36]) {
+      const ctx = post({ ...validBody, holes_played: value })
+      ctx.env.DB = makeDB()
+      expect((await onRequestPost(ctx)).status).toBe(201)
+    }
+  })
+})
+
 describe('onRequestPost /api/games — hole_pars', () => {
   // INSERT column order: id, user_id, course_id, played_at, holes_played,
   // player_data, hole_pars, notes, client_round_id, created_at

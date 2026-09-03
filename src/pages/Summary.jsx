@@ -300,9 +300,12 @@ export default function Summary({ navigate, params }) {
              Edit button, which routes back through Setup. Any saved note is
              shown as quiet static text; nothing to edit, nothing to submit. */
           game.notes ? (
-            <p className="font-ui text-sm text-muted leading-relaxed whitespace-pre-wrap">
-              {game.notes}
-            </p>
+            <div>
+              <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted mb-1.5">Notes</p>
+              <p className="font-ui text-sm text-muted leading-relaxed whitespace-pre-wrap">
+                {game.notes}
+              </p>
+            </div>
           ) : null
         ) : (
           <>

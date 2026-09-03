@@ -39,6 +39,13 @@ export async function onRequestPost(context) {
     return Response.json({ error: 'Missing required fields' }, { status: 400 })
   }
 
+  // Match the PATCH handler: holes_played must be an integer 1..36. Without
+  // this a string or out-of-range value inserts, and it is also the length
+  // hole_pars is validated against just below.
+  if (!Number.isInteger(holes_played) || holes_played < 1 || holes_played > 36) {
+    return Response.json({ error: 'Invalid holes_played' }, { status: 400 })
+  }
+
   // Par snapshot for the round (§5.1). Absent → NULL, read as par 3 per hole.
   let holeParsJson = null
   if (hole_pars != null) {

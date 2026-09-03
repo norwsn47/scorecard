@@ -29,6 +29,9 @@ export default function History({ navigate }) {
     ? [...new Set(games.map(g => g.courseName).filter(Boolean))]
     : []
 
+  const players = [...new Set(games.flatMap(g => g.players ?? []))]
+    .sort((a, b) => a.localeCompare(b))
+
   const displayed = games
     .filter(g => !courseFilter || g.courseName === courseFilter)
     .filter(g => !filter || g.players?.includes(filter))
@@ -111,17 +114,35 @@ export default function History({ navigate }) {
         </div>
       )}
 
-      {/* Active player filter chip */}
-      {filter && (
-        <div className="px-5 pt-3 flex items-center gap-2 shrink-0">
-          <span className="font-ui text-xs text-muted">Showing games for</span>
+      {/* Player filter chips — mirrors the course row above; shown whenever
+          two or more distinct players appear across the saved rounds. */}
+      {!loading && players.length > 1 && (
+        <div className="px-5 pt-3 pb-1 shrink-0 flex gap-2 overflow-x-auto no-scrollbar">
           <button
             onClick={() => setFilter(null)}
-            className="flex items-center gap-1 py-1 px-3 rounded-full bg-accent text-bg font-ui text-xs font-medium"
+            className={[
+              'shrink-0 py-1 px-3 rounded-full border font-ui text-xs font-medium',
+              !filter
+                ? 'bg-accent border-accent text-bg'
+                : 'border-border text-muted',
+            ].join(' ')}
           >
-            {filter}
-            <span className="ml-1 opacity-70">✕</span>
+            All players
           </button>
+          {players.map(name => (
+            <button
+              key={name}
+              onClick={() => toggleFilter(name)}
+              className={[
+                'shrink-0 py-1 px-3 rounded-full border font-ui text-xs font-medium',
+                filter === name
+                  ? 'bg-accent border-accent text-bg'
+                  : 'border-border text-muted',
+              ].join(' ')}
+            >
+              {name}
+            </button>
+          ))}
         </div>
       )}
 

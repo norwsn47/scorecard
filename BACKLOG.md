@@ -8,11 +8,11 @@
 
 **Last updated:** 3 September 2026
 
-Shipped and removed: 1 Sep — batch A (20, 24, 26, 27, 30, 32), batch B (17, 18, 28), batch C (2 code part / see 2b, 29, 33); 2 Sep — 21 (ESLint), 36 (ties → draw), 37 (per-hole par); 3 Sep — 47 (new game landed on wrong hole), 48/49/50/55 (par UI rework + 9/18 course length). See `CHANGELOG.md`.
+Shipped and removed: 1 Sep — batch A (20, 24, 26, 27, 30, 32), batch B (17, 18, 28), batch C (2 code part / see 2b, 29, 33); 2 Sep — 21 (ESLint), 36 (ties → draw), 37 (per-hole par); 3 Sep — 47 (new game landed on wrong hole), 48/49/50/55 (par UI rework + 9/18 course length), 46/51/53 + the easy part of 45 (small-items batch). See `CHANGELOG.md`.
 
 Items 36-44 added 1 September 2026 from a golf-feedback list. **36 (ties → draw) and 37 (per-hole par) shipped 2 September** — see `CHANGELOG.md`; both unblock 38 and 39. 40 still needs a product-owner PRD decision before build; 42 (Google sign-in) moved to Blocked on 3 September — it needs an external Google Cloud OAuth client set up first.
 
-Items 47-55 added 2 September 2026 from a ties+par testing-feedback list, after 36/37 shipped. **47, 48, 49, 50 and 55 shipped 3 September** — see `CHANGELOG.md`. 52 still changes PRD-described behaviour and needs a product-owner PRD update before build; 54 needs a build-vs-admin decision first. Item 10 of that list was folded into #39. Items 56-58 added 3 September 2026 from the #48–#55 code review. #60 added 3 September 2026 (split from the closed #59, the PRD as-built pass).
+Items 47-55 added 2 September 2026 from a ties+par testing-feedback list, after 36/37 shipped. **47, 48, 49, 50 and 55 shipped 3 September** — see `CHANGELOG.md`. 52 still changes PRD-described behaviour and needs a product-owner PRD update before build; 54 needs a build-vs-admin decision first. Item 10 of that list was folded into #39. Items 56-58 added 3 September 2026 from the #48–#55 code review. #60 added 3 September 2026 (split from the closed #59, the PRD as-built pass). #61-62 added 3 September 2026 from the #46/#51/#53 review; #45 rescoped to the Vite major upgrade only.
 
 ---
 
@@ -112,11 +112,7 @@ Superseded by #43 (proper back-a-step navigation across all pages). The narrow "
 ### 56. Length-changing course switch during a D1 past-round edit leaves a stale-size grid
 Surfaced in the #48–#55 code review. `buildEditGame` sizes the edit grid to the *round's saved* hole count, not the newly-selected course's. Switching a 36-hole round onto a 9-hole course mid-edit (D1 rounds only — local rounds can't change course) leaves a 36-row grid with holes 10–36 padded back to par 3. No crash, no data loss, but confusing. Needs a product decision: disallow a length-changing course switch during an edit, or accept it and document the behaviour. (PRD §11.7, §11.13.)
 
-### 51. History player filter isn't discoverable
-The History screen lets you filter by player (tap a name) but there's no visual affordance for it. Make it look like the existing course filter and sit directly below it. `History.jsx` — the filter row(s) above the round list.
 
-### 53. Label the note on a viewed historic round
-On the past-round `Summary.jsx` view the saved note renders as bare static text with no indication it's a note. Add a simple label — "Notes:" (or a small heading) before the note body. `Summary.jsx`, the `viewingSaved` note block.
 
 ### 43. Proper "back a step" navigation on every page
 The router is a state machine with light URL sync (`App.jsx`). Back buttons currently navigate to a hard-coded parent (`navigate('home')` or a `from` param), so from a deep screen the user often jumps straight to Home instead of retracing one step. Give every non-Home screen a visible back affordance that goes **back one step** in the actual navigation history (a small nav stack, or lean on `window.history.back()` where the pushState history is reliable), with a sensible fallback when there's no prior entry. Absorbs #19. Check interaction with the popstate-clears-params behaviour and the edit-flow guards (#18).
@@ -153,11 +149,14 @@ The suite covers `src/utils/*` and `functions/api/*` only. The batch-B fixes (#1
 ### 41. Page load performance pass
 Measure and tune actual load performance — Core Web Vitals (LCP, CLS, INP), bundle size (currently ~248 kB / ~76 kB gzip), font loading (three families via Google Fonts with `display=swap`), image weight (`course_map_v2.png` is ~455 kB), and Cloudflare Pages caching headers. Establish a baseline, fix the obvious wins, re-measure. Assistance requested. (The `performance-auditor` agent covers this.)
 
-### 45. Dependency audit — update the build/dev toolchain
-`npm audit` (first run 2 Sep, surfaced during #21) reports 5 vulnerabilities in the **pre-existing** toolchain, not from ESLint: `browserslist`, `nanoid`, `postcss` (all fixable with a non-breaking `npm audit fix`); `esbuild` ≤0.24.2 → the dev server can be probed by any website (moderate, dev-only), fixable only by a Vite major bump. Do a deliberate `npm audit fix` for the three easy ones, then evaluate the Vite/esbuild upgrade separately (breaking). Not urgent — none affect the production bundle's runtime.
+### 45. Vite major upgrade (esbuild + vite advisories)
+The three easy toolchain vulns (`browserslist`, `nanoid`, `postcss`) were cleared by a non-breaking `npm audit fix` on 3 September. Still open: `esbuild` ≤0.24.2 (moderate — dev server can be probed by any website) **and**, newly disclosed since, a **high** `vite` advisory (path traversal in optimised-deps `.map` handling, plus two Windows-only issues). Both are fixed only by a Vite major bump (`vite@8`, breaking — `npm audit fix --force` installs it). Dev-only, nothing in the production bundle's runtime is affected, but with the new high advisory this is no longer "not urgent". Needs a deliberate upgrade + regression pass (build, dev server, tests, `wrangler pages dev`).
 
-### 46. `POST /api/games` doesn't validate `holes_played` type/range
-`onRequestPost` only truthy-checks `holes_played`; the PATCH handler validates integer 1..36. A malformed `holes_played` on a create still inserts. Surfaced during the #37 chunk-3 review. Align POST with PATCH.
+### 61. Filter-chip touch targets below 44px on History
+Surfaced in the #45/#46/#51/#53 review. Both the course-filter chip row and the new player-filter chip row in `History.jsx` use `py-1 px-3 text-xs` (~24px tall), under the 44px minimum. Fix the two rows together for consistency. Ties into #34 / #44 (a shared chip/toggle primitive).
+
+### 62. `holes_played: 0` on `POST /api/games` returns the wrong error message
+Minor. A `holes_played` of `0` is caught by the earlier `!holes_played` truthy check and returns `"Missing required fields"` rather than `"Invalid holes_played"` (the message the PATCH handler and the new integer check use for every other bad value). Both reject `0`; only the message differs. Tidy when next in that file.
 
 ### 57. Hole-count picker uses `aria-pressed` rather than a radiogroup
 Surfaced in the #48–#55 code review. The 9 / 18 hole-count picker in course creation (`Setup.jsx`) is two buttons with `aria-pressed`. For a single-select control, `role="radio"` + `aria-checked` inside a `role="radiogroup"` would be more accurate. Low priority — consistent with the prior toggle pattern in the app; revisit alongside #44 (design-system) if a shared toggle primitive is introduced.
