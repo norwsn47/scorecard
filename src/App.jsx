@@ -91,10 +91,10 @@ function AppContent() {
     function handlePopState(e) {
       const to = e.state?.page ?? pageFromPath()
       setPage(to in PAGES ? to : 'home')
-      // Restore the lightweight context this entry was pushed with (#43) — so
-      // stepping back to a Setup / Rules / History screen keeps its context
-      // (bruntsfield, from, editRound, ...). The mutable `game` is never in
-      // here (see navigate) — screens re-read it live from storage.
+      // Restore the stable page context this entry was pushed with (#43) — so
+      // stepping back to Bruntsfield / Rules / a History-opened Summary keeps
+      // its context. The `game` and edit-flow flags are never in here (see
+      // navigate); screens recover those from storage / the game's own marker.
       setParams(e.state?.params ?? {})
     }
     window.addEventListener('popstate', handlePopState)
@@ -105,12 +105,17 @@ function AppContent() {
     setPage(to)
     setParams(nextParams)
     const depth = (window.history.state?.depth ?? 0) + 1
-    // Persist only lightweight context in history state, never the mutable
-    // `game` object: a snapshot frozen at navigate() time would be stale after
-    // a back/forward bounce and could clobber storage. When the `game` param
-    // is absent (e.g. after popstate) screens fall back to getActiveGame() /
-    // getCompletedGames().
-    const { game: _game, ...context } = nextParams
+    // Only stable page context survives a browser back/forward bounce. The
+    // mutable `game` is never persisted (a frozen snapshot would go stale and
+    // clobber storage); nor are the edit-flow flags (editRound / editContext /
+    // pastRound) — a bounce into a half-restored edit would strand the working
+    // copy, so Setup's abandoned-edit guard must see a param-less screen and
+    // Scorecard/Summary recover edit state from the game's own `_edit` marker
+    // / the synced flag in storage.
+    const context = {}
+    for (const k of ['bruntsfield', 'from', 'fromHistory']) {
+      if (k in nextParams) context[k] = nextParams[k]
+    }
     window.history.pushState({ page: to, depth, params: context }, '', pathForPage(to))
   }
 

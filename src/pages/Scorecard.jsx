@@ -50,10 +50,10 @@ export default function Scorecard({ navigate, params }) {
 
   // Edit context: set when this Scorecard is editing an existing completed
   // round rather than playing a new one. Read from the router param AND from
-  // a marker stamped on the game object — App.jsx drops the `game` param on a
-  // browser back/forward bounce (popstate), and `game` is where `_edit` lives,
-  // so a marker on the object is the reliable read after a bounce. This is the
-  // same failure class as the 24 Aug duplicate-save hotfix.
+  // a marker stamped on the game object — App.jsx drops `game` / `editContext`
+  // from history state on a browser back/forward bounce (popstate), so after a
+  // bounce the `_edit` marker on the game object (recovered from storage) is
+  // the reliable read. Same failure class as the 24 Aug duplicate-save hotfix.
   const editContext = params?.editContext ?? initialGame?._edit ?? null
   const isEdit      = !!editContext
 
