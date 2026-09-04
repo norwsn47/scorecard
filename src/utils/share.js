@@ -1,5 +1,5 @@
 import { deriveResult } from './game.js'
-import { deriveHolePars, formatToPar, parTally, playerAverage, playerTotal, roundToPar, scoreToPar } from './scores.js'
+import { deriveHolePars, formatToPar, playerAverage, playerTotal, roundToPar, scoreToPar } from './scores.js'
 
 const C = {
   bg:     '#F7F4EE',
@@ -79,21 +79,8 @@ async function buildCanvas(game) {
   const HOLE_COL    = 38
   const playerColW  = (W - PAD * 2 - HOLE_COL) / players.length
 
-  // Vs-par tally (§5.2) — one compact row per player beneath the totals.
-  // Same union logic as the Summary: only buckets at least one player hit are
-  // drawn; if nobody hit any, the section is omitted and adds no height.
+  // Per-hole par for the vs-par superscripts and the round total-to-par (§5.3).
   const holePars   = deriveHolePars(game.holePars, holes)
-  const tallies    = players.map(p => parTally((game.scores?.[p] ?? []).slice(0, holes), holePars))
-  // short label + §5.3 semantic colour per bucket (#64): under par green,
-  // par neutral (inherit the row's base colour), bogey terracotta.
-  const tallyKeys  = [
-    ['eagle', 'E', C.underPar],
-    ['birdie', 'B', C.underPar],
-    ['par', 'P', null],
-    ['bogey', 'Bo', C.overPar],
-  ]
-  const visKeys    = tallyKeys.filter(([k]) => tallies.some(t => t[k] > 0))
-  const hasTally   = visKeys.length > 0
 
   // Section heights
   const TOP_PAD   = 20
@@ -106,13 +93,10 @@ async function buildCanvas(game) {
   const COL_H     = 30   // column headers
   const ROW_H     = 32
   const TOTAL_H   = 54   // totals + avg
-  const TALLY_HEAD_H = 22 // "VS PAR" label
-  const TALLY_ROW_H  = 20 // one row per player
-  const TALLY_H   = hasTally ? TALLY_HEAD_H + players.length * TALLY_ROW_H + 10 : 0
   const BOT_PAD   = 20
 
   // Solo rounds carry no result — the winner callout box is omitted entirely.
-  const H = TOP_PAD + TITLE_H + BRAND_H + GAP1 + (isSolo ? 0 : WIN_H + GAP2) + DIV_H + COL_H + holes * ROW_H + DIV_H + TOTAL_H + TALLY_H + BOT_PAD
+  const H = TOP_PAD + TITLE_H + BRAND_H + GAP1 + (isSolo ? 0 : WIN_H + GAP2) + DIV_H + COL_H + holes * ROW_H + DIV_H + TOTAL_H + BOT_PAD
 
   const canvas  = document.createElement('canvas')
   canvas.width  = W * SCALE
@@ -283,48 +267,6 @@ async function buildCanvas(game) {
     }
   })
   y += TOTAL_H
-
-  // Vs-par tally — one compact row per player beneath the totals
-  if (hasTally) {
-    ctx.fillStyle = C.card
-    ctx.fillRect(PAD, y, W - PAD * 2, TALLY_H)
-
-    ctx.fillStyle = C.border
-    ctx.fillRect(PAD, y, W - PAD * 2, 1)
-
-    ctx.fillStyle = C.muted
-    ctx.font      = '10px Inter, system-ui, sans-serif'
-    ctx.textAlign = 'left'
-    ctx.fillText('VS PAR', PAD + 4, y + 14)
-
-    let ty = y + TALLY_HEAD_H
-    players.forEach((p, i) => {
-      const rowBaseline = ty + 14
-      const win = isWin(p)
-
-      ctx.textAlign = 'left'
-      ctx.fillStyle = win ? C.accent : C.text
-      ctx.font      = 'bold 11px Inter, system-ui, sans-serif'
-      let nm = p
-      while (ctx.measureText(nm).width > 90 && nm.length > 1) nm = nm.slice(0, -1)
-      if (nm !== p) nm += '…'
-      ctx.fillText(nm, PAD + 4, rowBaseline)
-
-      ctx.font   = '11px Inter, system-ui, sans-serif'
-      const base = win ? C.accent : C.muted
-      let tx     = PAD + 4 + 104
-      const SEP  = ctx.measureText('   ').width
-      visKeys.forEach(([k, short, colour]) => {
-        ctx.fillStyle = colour ?? base
-        const token = `${short}:${tallies[i][k]}`
-        ctx.fillText(token, tx, rowBaseline)
-        tx += ctx.measureText(token).width + SEP
-      })
-
-      ty += TALLY_ROW_H
-    })
-    y += TALLY_H
-  }
 
   return canvas
 }

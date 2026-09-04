@@ -71,37 +71,6 @@ export function roundToPar(playerScores, holePars) {
 }
 
 /**
- * End-of-round tally (§5.2). Counts how one player's holes landed against par,
- * into four buckets keyed on `delta = scoreToPar(score, par)`:
- *   eagle  → delta <= -2   (eagle or better; a hole-in-one on a par 3)
- *   birdie → delta === -1
- *   par    → delta === 0
- *   bogey  → delta === +1
- * Holes at +2 or worse (double bogey and up) and unscored holes fall in NO
- * bucket — the four counts can total fewer than the holes played, by design
- * (this is a "good holes" summary, not a full distribution). Display only:
- * never touches totals, the winner, DNF or the draw rule.
- *
- * @param {Array<number|null>} playerScores per-hole scores for one player
- * @param {Array<number>} holePars the round's par array, same indexing
- * @returns {{ eagle: number, birdie: number, par: number, bogey: number }}
- */
-export function parTally(playerScores, holePars) {
-  const tally = { eagle: 0, birdie: 0, par: 0, bogey: 0 }
-  const scores = Array.isArray(playerScores) ? playerScores : []
-  const pars = Array.isArray(holePars) ? holePars : []
-  for (let i = 0; i < scores.length; i++) {
-    const delta = scoreToPar(scores[i], pars[i])
-    if (delta == null || Number.isNaN(delta)) continue
-    if (delta <= -2) tally.eagle++
-    else if (delta === -1) tally.birdie++
-    else if (delta === 0) tally.par++
-    else if (delta === 1) tally.bogey++
-  }
-  return tally
-}
-
-/**
  * Normalises a `hole_pars` value into a plain array of exactly `holeCount`
  * integers. Accepts a JSON string, an array, or null/undefined. Anything
  * missing, short or invalid becomes par 3 — correct for Bruntsfield and for

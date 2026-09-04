@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { deriveHolePars, formatToPar, parTally, playerAverage, playerTotal, roundToPar, scoreToPar } from './scores.js'
+import { deriveHolePars, formatToPar, playerAverage, playerTotal, roundToPar, scoreToPar } from './scores.js'
 
 describe('playerTotal', () => {
   it('sums the scored holes, ignoring nulls', () => {
@@ -86,36 +86,6 @@ describe('roundToPar', () => {
   it('skips holes with no matching par entry', () => {
     // holes 0-1 scored against par 3 (+1, +1); holes 2-3 have no par → skipped
     expect(roundToPar([4, 4, 4, 4], [3, 3])).toBe(2)
-  })
-})
-
-describe('parTally', () => {
-  const par3 = [3, 3, 3, 3, 3]
-
-  it('buckets a mixed round, excluding double bogey and worse', () => {
-    // deltas: -2, -1, 0, +1, +2  → the +2 lands in no bucket
-    expect(parTally([1, 2, 3, 4, 5], par3)).toEqual({ eagle: 1, birdie: 1, par: 1, bogey: 1 })
-  })
-
-  it('counts every hole for an all-pars round', () => {
-    expect(parTally([3, 3, 3], [3, 3, 3])).toEqual({ eagle: 0, birdie: 0, par: 3, bogey: 0 })
-  })
-
-  it('does not count a triple bogey', () => {
-    expect(parTally([6], [3])).toEqual({ eagle: 0, birdie: 0, par: 0, bogey: 0 })
-  })
-
-  it('ignores unscored trailing holes', () => {
-    expect(parTally([3, 2, null, null], [3, 3, 3, 3])).toEqual({ eagle: 0, birdie: 1, par: 1, bogey: 0 })
-  })
-
-  it('treats delta -3 on a par 5 as an eagle', () => {
-    expect(parTally([2], [5])).toEqual({ eagle: 1, birdie: 0, par: 0, bogey: 0 })
-  })
-
-  it('returns all zeros for empty or missing inputs', () => {
-    expect(parTally([], [])).toEqual({ eagle: 0, birdie: 0, par: 0, bogey: 0 })
-    expect(parTally(undefined, undefined)).toEqual({ eagle: 0, birdie: 0, par: 0, bogey: 0 })
   })
 })
 
