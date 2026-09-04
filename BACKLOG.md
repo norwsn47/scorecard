@@ -134,8 +134,12 @@ Split out from the old #59. §4.8 (Information page) and §11.12 / the "Your dat
 ### 34. `text-xs` inline links land ~36-38px, below the ~40px floor
 From the batch-B tap-target pass (#28). Three inline-in-paragraph `text-xs` links — `Login.jsx` "How we handle your data", `Info.jsx` "Read our privacy policy", `Summary.jsx` "Share scorecard" — use `py-2.5 -my-2.5` (~36-38px) because more padding would overlap adjacent lines. Better than the bare ~16px but under the documented floor. Revisit if a cleaner pattern turns up (e.g. giving them their own line).
 
-### 35. No render/flow tests for the SPA navigation behaviours
-The suite covers `src/utils/*` and `functions/api/*` only. The batch-B fixes (#17 direct `/scorecard` bounce, #18 stranded-edit cleanup) and the edit flow (existing #22) have no automated coverage. One follow-up item to add a component/render test harness (React Testing Library) and cover these.
+### 35. Render/flow test coverage — harness landed, more flows to cover
+The React Testing Library harness is in (`vitest.setup.js`, `setupFiles` in `vite.config.js`, `@testing-library/react` + `jest-dom` + `user-event`), with `ParDelta` (§5.3 notation + colour override) and the `History` player filter (#51/#61) covered. Still no render coverage for:
+- **The edit-past-round flow (#22)** — open-edit → change on the scorecard → save back, asserting one record in / out (no duplicate row) on both the D1 and localStorage paths.
+- **SPA navigation** — #17 (direct `/scorecard` bounce), #18 (stranded-edit cleanup).
+- **`Setup` course creation** — the 9/18 radiogroup (#57) and the par stepper clamp (#58). The `<select value=… >` "+ New course" option is a command not a real selection, which `userEvent.selectOptions` / `fireEvent.change` don't drive cleanly in jsdom — needs either a small refactor of that control or a workaround before it's testable.
+Fold #58 in here (par stepper / markup — `ParDelta` markup is now covered; the stepper isn't).
 
 ### 41. Page load performance pass
 Measure and tune actual load performance — Core Web Vitals (LCP, CLS, INP), bundle size (currently ~248 kB / ~76 kB gzip), font loading (three families via Google Fonts with `display=swap`), image weight (`course_map_v2.png` is ~455 kB), and Cloudflare Pages caching headers. Establish a baseline, fix the obvious wins, re-measure. Assistance requested. (The `performance-auditor` agent covers this.)
@@ -148,8 +152,8 @@ The three easy toolchain vulns (`browserslist`, `nanoid`, `postcss`) were cleare
 
 
 
-### 58. No render/interaction test for the par stepper or the new par markup
-Surfaced in the #48–#55 code review. The par stepper's 2–7 clamp (`Setup.jsx`, `stepPar`) and the bold-number + bracketed-par markup on `Scorecard.jsx` / `Summary.jsx` have no render/interaction coverage — the suite still tests `src/utils/*` and `functions/api/*` only. Ties into #35 (add a React Testing Library render-test harness); fold in when that lands.
+### 58. Par stepper render test — folded into #35
+The `ParDelta` markup is now covered (`src/components/ParDelta.test.jsx`). The `Setup.jsx` `stepPar` 2–7 clamp still isn't — tracked under #35 (blocked on the "+ New course" select being hard to drive in jsdom).
 
 ### 44. Design-system consolidation + page/header templates
 DESIGN.md has component patterns but no formal system. The user wants: a mobile header review (spacing and sizing rules — `PageHeader` `pt-10 pb-4`, `px-20` title clearance, the Summary bespoke header, etc.), documented design-system rules for the app, and page/header templates so new screens are built to a pattern rather than ad hoc. Design-director work; produces an expanded DESIGN.md (tokens → components → page templates → header rules) plus, ideally, a shared layout/header primitive the pages compose. Related: #27 (closed — PageHeader clearance), #34 (tap-target floor), the DESIGN.md "Inline link tap targets" and "Navigation" sections.
