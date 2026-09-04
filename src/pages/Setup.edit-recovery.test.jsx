@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, waitFor } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import Setup from './Setup.jsx'
 import { AuthProvider } from '../hooks/useAuth.jsx'
 import { getActiveGame, saveActiveGame } from '../utils/storage.js'
@@ -44,7 +44,8 @@ describe('Setup — abandoned-edit recovery on a bounce', () => {
       </AuthProvider>,
     )
 
-    await new Promise(r => setTimeout(r, 20))
+    // Wait for a positive render signal, then assert the guard stayed quiet.
+    await screen.findByText('New Game')
     expect(navigate).not.toHaveBeenCalled()
     expect(getActiveGame()?.id).toBe('g2')
   })

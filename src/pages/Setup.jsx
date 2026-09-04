@@ -212,6 +212,9 @@ export default function Setup({ navigate, goBack, params }) {
       <PageHeader
         title={editRound ? 'Edit Round' : pastRound ? 'Add Past Round' : 'New Game'}
         onBack={() =>
+          // Edit back stays an explicit navigate (not goBack): it must carry
+          // `editGame` to the Summary so a non-latest D1 round is shown, and
+          // `game` is never in history state.
           editRound
             ? navigate('summary', { game: editGame })
             : pastRound

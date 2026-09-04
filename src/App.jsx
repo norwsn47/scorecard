@@ -113,7 +113,7 @@ function AppContent() {
     // Scorecard/Summary recover edit state from the game's own `_edit` marker
     // / the synced flag in storage.
     const context = {}
-    for (const k of ['bruntsfield', 'from', 'fromHistory']) {
+    for (const k of ['bruntsfield', 'fromHistory']) {
       if (k in nextParams) context[k] = nextParams[k]
     }
     window.history.pushState({ page: to, depth, params: context }, '', pathForPage(to))
