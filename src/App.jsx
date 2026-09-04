@@ -91,8 +91,10 @@ function AppContent() {
     function handlePopState(e) {
       const to = e.state?.page ?? pageFromPath()
       setPage(to in PAGES ? to : 'home')
-      // Restore the params that entry was pushed with (#43) — so stepping back
-      // to a Setup / Summary screen doesn't lose the game / context it needs.
+      // Restore the lightweight context this entry was pushed with (#43) — so
+      // stepping back to a Setup / Rules / History screen keeps its context
+      // (bruntsfield, from, editRound, ...). The mutable `game` is never in
+      // here (see navigate) — screens re-read it live from storage.
       setParams(e.state?.params ?? {})
     }
     window.addEventListener('popstate', handlePopState)
@@ -103,7 +105,13 @@ function AppContent() {
     setPage(to)
     setParams(nextParams)
     const depth = (window.history.state?.depth ?? 0) + 1
-    window.history.pushState({ page: to, depth, params: nextParams }, '', pathForPage(to))
+    // Persist only lightweight context in history state, never the mutable
+    // `game` object: a snapshot frozen at navigate() time would be stale after
+    // a back/forward bounce and could clobber storage. When the `game` param
+    // is absent (e.g. after popstate) screens fall back to getActiveGame() /
+    // getCompletedGames().
+    const { game: _game, ...context } = nextParams
+    window.history.pushState({ page: to, depth, params: context }, '', pathForPage(to))
   }
 
   // Back one step in the actual in-app history (#43). window.history.back()
