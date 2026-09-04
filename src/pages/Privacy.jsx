@@ -14,13 +14,13 @@ const ExternalLink = ({ href, children }) => (
   </a>
 )
 
-export default function Privacy({ navigate, params }) {
+export default function Privacy({ goBack, params }) {
   const from = params?.from ?? 'home'
 
   return (
     <div className="h-full bg-bg flex flex-col">
 
-      <PageHeader title="Your data" onBack={() => navigate(from)} />
+      <PageHeader title="Your data" onBack={() => goBack(from)} />
 
       <main className="flex-1 overflow-y-auto px-5 pt-6 pb-14 space-y-8 max-w-sm mx-auto w-full">
 

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '../hooks/useAuth.jsx'
 
-export default function Login({ navigate }) {
+export default function Login({ navigate, goBack }) {
   const { authError, setAuthError } = useAuth()
   const [email, setEmail]           = useState('')
   const [sending, setSending]       = useState(false)
@@ -38,7 +38,7 @@ export default function Login({ navigate }) {
     return (
       <div className="h-full bg-bg flex flex-col">
         <button
-          onClick={() => navigate('home')}
+          onClick={() => goBack('home')}
           className="p-4 font-ui text-sm tracking-[0.08em] uppercase text-muted active:text-accent text-left"
         >
           ← Back
@@ -66,7 +66,7 @@ export default function Login({ navigate }) {
   return (
     <div className="h-full bg-bg flex flex-col">
       <button
-        onClick={() => navigate('home')}
+        onClick={() => goBack('home')}
         className="p-4 font-ui text-sm tracking-[0.08em] uppercase text-muted active:text-accent text-left"
       >
         ← Back

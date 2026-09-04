@@ -82,8 +82,9 @@ function AppContent() {
 
   useEffect(() => {
     setStorageOk(isStorageAvailable())
-    // Stamp the initial history entry so the first back press has state
-    window.history.replaceState({ page }, '', window.location.pathname)
+    // Stamp the initial history entry so the first back press has state.
+    // depth 0 = the entry the app was loaded on; each navigate() adds one.
+    window.history.replaceState({ page, depth: 0 }, '', window.location.pathname)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -99,7 +100,20 @@ function AppContent() {
   function navigate(to, nextParams = {}) {
     setPage(to)
     setParams(nextParams)
-    window.history.pushState({ page: to }, '', pathForPage(to))
+    const depth = (window.history.state?.depth ?? 0) + 1
+    window.history.pushState({ page: to, depth }, '', pathForPage(to))
+  }
+
+  // Back one step in the actual in-app history (#43). Falls back to a sensible
+  // page when the app was loaded straight onto this screen (nothing to go back
+  // to). popstate then restores the previous page; params are cleared, so a
+  // caller relying on params should pass a fallback that reconstructs them.
+  function goBack(fallback = 'home') {
+    if ((window.history.state?.depth ?? 0) > 0) {
+      window.history.back()
+    } else {
+      navigate(fallback)
+    }
   }
 
   // Blank screen while auth check is in flight — prevents flash of wrong state
@@ -115,7 +129,7 @@ function AppContent() {
           </div>
         )}
         <ErrorBoundary key={page}>
-          <Page navigate={navigate} params={params} />
+          <Page navigate={navigate} goBack={goBack} params={params} />
         </ErrorBoundary>
       </div>
 

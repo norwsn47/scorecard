@@ -11,7 +11,7 @@ const NEW_COURSE_HOLE_OPTIONS = [9, 18]
 const PAR_MIN = 2
 const PAR_MAX = 7
 
-export default function Setup({ navigate, params }) {
+export default function Setup({ navigate, goBack, params }) {
   const pastRound                          = params?.pastRound ?? false
   const editRound                          = params?.editRound ?? false
   const editGame                           = editRound ? (params?.game ?? null) : null
@@ -214,8 +214,8 @@ export default function Setup({ navigate, params }) {
           editRound
             ? navigate('summary', { game: editGame })
             : pastRound
-              ? navigate('history')
-              : navigate(fromBruntsfield ? 'bruntsfield' : 'home')
+              ? goBack('history')
+              : goBack(fromBruntsfield ? 'bruntsfield' : 'home')
         }
       />
 
