@@ -18,7 +18,7 @@ function seedLocalGames(games) {
 function renderHistory() {
   render(
     <AuthProvider>
-      <History navigate={vi.fn()} />
+      <History navigate={vi.fn()} goBack={vi.fn()} />
     </AuthProvider>,
   )
 }

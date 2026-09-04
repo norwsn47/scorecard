@@ -1,7 +1,7 @@
 import PageHeader from '../components/PageHeader.jsx'
 import { useAuth } from '../hooks/useAuth.jsx'
 
-export default function Info({ navigate, params }) {
+export default function Info({ navigate, goBack, params }) {
   const { user, logout } = useAuth()
   const fromBruntsfield  = params?.bruntsfield ?? false
   return (
@@ -9,7 +9,7 @@ export default function Info({ navigate, params }) {
 
       <PageHeader
         title="Information"
-        onBack={() => navigate(fromBruntsfield ? 'bruntsfield' : 'home')}
+        onBack={() => goBack(fromBruntsfield ? 'bruntsfield' : 'home')}
       />
 
       <main className="flex-1 overflow-y-auto px-5 pt-6 pb-14 space-y-8 max-w-sm mx-auto w-full">

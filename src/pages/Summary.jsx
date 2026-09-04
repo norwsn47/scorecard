@@ -16,14 +16,13 @@ export default function Summary({ navigate, params }) {
   // navigate('summary', { game })), and also when History links into a past
   // round (History -> navigate('summary', { game }), where `game` is a
   // DB-backed record flagged `_fromDb: true` — see normalizeDbGame in
-  // History.jsx). Browser back/forward navigation clears params (see
-  // App.jsx's popstate handler), so this screen can also be reached with no
-  // params — e.g. the user finishes a round, taps Done, then presses back.
-  // In that case we fall back to the most recently completed local game so
-  // the screen still renders something sensible, but that fallback game may
-  // already have been saved to the server on the first "Done" tap — see the
-  // `game.synced` / `game._fromDb` checks in handleGoHome, which stop this
-  // screen from silently re-submitting a duplicate round in either case.
+  // History.jsx). App.jsx drops the `game` param on a browser back/forward
+  // bounce (its history-state snapshot could be stale), so this screen can be
+  // reached with no `game` — e.g. the user finishes a round, taps Done, then
+  // presses back. In that case we fall back to the most recently completed
+  // local game (which the "Done" save marked `synced`), so the
+  // `game.synced` / `game._fromDb` checks below still stop a duplicate
+  // re-submit. Context flags like `fromHistory` do survive the bounce.
   // The result (winner / Tied / No winner, DNF) is always re-derived from the
   // per-hole scores on read — the stored winner/dnf on a saved round are
   // legacy and not authoritative (PRD §4.4). deriveResult is idempotent, so
@@ -64,10 +63,10 @@ export default function Summary({ navigate, params }) {
   // Two modes share this screen. `viewingSaved` is the "opened from History"
   // mode: a round that already lives somewhere permanent, here to be read
   // (and maybe edited), not finished. `params.fromHistory` is set by the
-  // History list; `_fromDb` / `synced` cover the case where browser
-  // back/forward has cleared params on a round that was already saved. When
-  // false we're on the immediate post-finish flow, where "Done" still owns
-  // the save and the layout stays exactly as it was.
+  // History list and survives a back/forward bounce; `_fromDb` / `synced` are
+  // the backstop when the `game` param was dropped on the bounce and we're
+  // rendering the storage fallback. When false we're on the immediate
+  // post-finish flow, where "Done" still owns the save.
   const viewingSaved = params?.fromHistory || alreadySaved
 
   // The Edit button is offered on a round that's actually stored somewhere we

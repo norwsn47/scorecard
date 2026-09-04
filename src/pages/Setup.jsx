@@ -11,7 +11,7 @@ const NEW_COURSE_HOLE_OPTIONS = [9, 18]
 const PAR_MIN = 2
 const PAR_MAX = 7
 
-export default function Setup({ navigate, params }) {
+export default function Setup({ navigate, goBack, params }) {
   const pastRound                          = params?.pastRound ?? false
   const editRound                          = params?.editRound ?? false
   const editGame                           = editRound ? (params?.game ?? null) : null
@@ -44,11 +44,12 @@ export default function Setup({ navigate, params }) {
   const courseReady = !showCourse || !creatingCourse || newCourseName.trim().length > 0
   const ready       = canStartGame(names, names.length) && courseReady
 
-  // Browser Back out of an in-progress edit lands here with params cleared
-  // (App.jsx wipes params on popstate), so this screen would render as a
-  // mislabelled "New Game" while the edit working copy sits stranded in the
-  // active-game slot. Detect that, discard the abandoned edit, and send the
-  // user to their rounds list where the original round is untouched.
+  // Browser Back out of an in-progress edit lands here with the edit-flow
+  // params gone (App.jsx never persists editRound / game in history state), so
+  // this screen would otherwise render as a mislabelled "New Game" while the
+  // edit working copy sits stranded in the active-game slot. Detect that,
+  // discard the abandoned edit, and send the user to their rounds list where
+  // the original round is untouched.
   useEffect(() => {
     if (editRound || pastRound) return
     if (getActiveGame()?._edit) {
@@ -211,11 +212,14 @@ export default function Setup({ navigate, params }) {
       <PageHeader
         title={editRound ? 'Edit Round' : pastRound ? 'Add Past Round' : 'New Game'}
         onBack={() =>
+          // Edit back stays an explicit navigate (not goBack): it must carry
+          // `editGame` to the Summary so a non-latest D1 round is shown, and
+          // `game` is never in history state.
           editRound
             ? navigate('summary', { game: editGame })
             : pastRound
-              ? navigate('history')
-              : navigate(fromBruntsfield ? 'bruntsfield' : 'home')
+              ? goBack('history')
+              : goBack(fromBruntsfield ? 'bruntsfield' : 'home')
         }
       />
 

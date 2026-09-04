@@ -8,7 +8,7 @@
 
 **Last updated:** 4 September 2026
 
-Shipped and removed: 1 Sep — batch A (20, 24, 26, 27, 30, 32), batch B (17, 18, 28), batch C (2 code part / see 2b, 29, 33); 2 Sep — 21 (ESLint), 36 (ties → draw), 37 (per-hole par); 3 Sep — 47 (new game landed on wrong hole), 48/49/50/55 (par UI rework + 9/18 course length), 46/51/53 + the easy part of 45 (small-items batch), 38/52 (score-vs-par display standard + semantic colour, PRD §5.3), 47b/57/61/62/63 (cleanup batch). **39 and 64 (end-of-round tally + its recolour) were built and removed the same day.** See `CHANGELOG.md`.
+Shipped and removed: 1 Sep — batch A (20, 24, 26, 27, 30, 32), batch B (17, 18, 28), batch C (2 code part / see 2b, 29, 33); 2 Sep — 21 (ESLint), 36 (ties → draw), 37 (per-hole par); 3 Sep — 47 (new game landed on wrong hole), 48/49/50/55 (par UI rework + 9/18 course length), 46/51/53 + the easy part of 45 (small-items batch), 38/52 (score-vs-par display standard + semantic colour, PRD §5.3), 47b/57/61/62/63 (cleanup batch); 4 Sep — 35 harness + 22 (edit-flow test), 43 (back-a-step nav, absorbs 19). **39 and 64 (end-of-round tally + its recolour) were built and removed the same day.** See `CHANGELOG.md`.
 
 Items 36-44 added 1 September 2026 from a golf-feedback list. **36 (ties → draw) and 37 (per-hole par) shipped 2 September** — see `CHANGELOG.md`; both unblock 38 and 39. 40 still needs a product-owner PRD decision before build; 42 (Google sign-in) moved to Blocked on 3 September — it needs an external Google Cloud OAuth client set up first.
 
@@ -96,8 +96,10 @@ Used/expired magic tokens are never deleted, so email addresses from abandoned s
 ### 16. Pre-existing duplicate game rows in production D1
 The 24 Aug hotfix (live since 24 August 2026) stopped new duplicates but didn't touch rows already duplicated before it shipped. Identify and remove them via the Cloudflare D1 console — group by `user_id, played_at, holes_played` looking for counts > 1 (all predate `client_round_id` so all have it `NULL`). Check for other affected users too. Close this once the cleanup has been run.
 
-### 19. Past-round "← Rounds" back button always targets History
-Superseded by #43 (proper back-a-step navigation across all pages). The narrow "always targets History" concern is fine on its own (History is the right destination for that view) — the real ask is the app-wide one in #43.
+### 43b. Back-nav polish (follow-ups from the #43 build)
+Small items left after #43 shipped:
+- `pastRound` isn't persisted in history state, so a browser back/forward bounce onto the "Add Past Round" Setup screen re-renders it titled "New Game" with no date field (cosmetic; the past round is already saved by then; no worse than the pre-#43 behaviour). Add `pastRound` to the `navigate` allowlist in `App.jsx` if that path is worth polishing.
+- `Setup.edit-recovery.test.jsx` covers the abandoned-edit guard; SPA nav proper (#17/#18) and a browser back/forward test are still uncovered (tracked under #35).
 
 
 ### 56. Length-changing course switch during a D1 past-round edit leaves a stale-size grid
@@ -105,8 +107,6 @@ Surfaced in the #48–#55 code review. `buildEditGame` sizes the edit grid to th
 
 
 
-### 43. Proper "back a step" navigation on every page
-The router is a state machine with light URL sync (`App.jsx`). Back buttons currently navigate to a hard-coded parent (`navigate('home')` or a `from` param), so from a deep screen the user often jumps straight to Home instead of retracing one step. Give every non-Home screen a visible back affordance that goes **back one step** in the actual navigation history (a small nav stack, or lean on `window.history.back()` where the pushState history is reliable), with a sensible fallback when there's no prior entry. Absorbs #19. Check interaction with the popstate-clears-params behaviour and the edit-flow guards (#18).
 
 ---
 

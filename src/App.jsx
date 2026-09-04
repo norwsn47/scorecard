@@ -82,15 +82,20 @@ function AppContent() {
 
   useEffect(() => {
     setStorageOk(isStorageAvailable())
-    // Stamp the initial history entry so the first back press has state
-    window.history.replaceState({ page }, '', window.location.pathname)
+    // Stamp the initial history entry so the first back press has state.
+    // depth 0 = the entry the app was loaded on; each navigate() adds one.
+    window.history.replaceState({ page, depth: 0, params: {} }, '', window.location.pathname)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     function handlePopState(e) {
       const to = e.state?.page ?? pageFromPath()
       setPage(to in PAGES ? to : 'home')
-      setParams({})
+      // Restore the stable page context this entry was pushed with (#43) — so
+      // stepping back to Bruntsfield / Rules / a History-opened Summary keeps
+      // its context. The `game` and edit-flow flags are never in here (see
+      // navigate); screens recover those from storage / the game's own marker.
+      setParams(e.state?.params ?? {})
     }
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
@@ -99,7 +104,31 @@ function AppContent() {
   function navigate(to, nextParams = {}) {
     setPage(to)
     setParams(nextParams)
-    window.history.pushState({ page: to }, '', pathForPage(to))
+    const depth = (window.history.state?.depth ?? 0) + 1
+    // Only stable page context survives a browser back/forward bounce. The
+    // mutable `game` is never persisted (a frozen snapshot would go stale and
+    // clobber storage); nor are the edit-flow flags (editRound / editContext /
+    // pastRound) — a bounce into a half-restored edit would strand the working
+    // copy, so Setup's abandoned-edit guard must see a param-less screen and
+    // Scorecard/Summary recover edit state from the game's own `_edit` marker
+    // / the synced flag in storage.
+    const context = {}
+    for (const k of ['bruntsfield', 'fromHistory']) {
+      if (k in nextParams) context[k] = nextParams[k]
+    }
+    window.history.pushState({ page: to, depth, params: context }, '', pathForPage(to))
+  }
+
+  // Back one step in the actual in-app history (#43). window.history.back()
+  // triggers popstate, which restores the previous page and its params. The
+  // fallback only applies when the app was loaded straight onto this screen
+  // (depth 0 — nothing in-app to go back to).
+  function goBack(fallback = 'home') {
+    if ((window.history.state?.depth ?? 0) > 0) {
+      window.history.back()
+    } else {
+      navigate(fallback)
+    }
   }
 
   // Blank screen while auth check is in flight — prevents flash of wrong state
@@ -115,7 +144,7 @@ function AppContent() {
           </div>
         )}
         <ErrorBoundary key={page}>
-          <Page navigate={navigate} params={params} />
+          <Page navigate={navigate} goBack={goBack} params={params} />
         </ErrorBoundary>
       </div>
 

@@ -7,7 +7,7 @@ import { normalizeDbGame, normalizeLocalGame } from '../utils/history.js'
 import { historyResultLabel } from '../utils/result.js'
 import { useAuth } from '../hooks/useAuth.jsx'
 
-export default function History({ navigate }) {
+export default function History({ navigate, goBack }) {
   const { user } = useAuth()
 
   const [games, setGames]             = useState(() => user ? [] : getCompletedGames().map(normalizeLocalGame))
@@ -58,7 +58,7 @@ export default function History({ navigate }) {
 
       <PageHeader
         title="History"
-        onBack={() => navigate('home')}
+        onBack={() => goBack()}
         right={user ? (
           <button
             onClick={() => navigate('setup', { pastRound: true })}
