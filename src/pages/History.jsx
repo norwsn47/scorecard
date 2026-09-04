@@ -76,7 +76,7 @@ export default function History({ navigate }) {
         </div>
       )}
       {user && !loading && courses.length > 1 && (
-        <div className="px-5 pt-3 pb-1 shrink-0 flex gap-2 overflow-x-auto no-scrollbar">
+        <div role="group" aria-label="Filter by course" className="px-5 pt-3 pb-1 shrink-0 flex gap-2 overflow-x-auto no-scrollbar">
           <button
             onClick={() => setCourseFilter(null)}
             className={[
@@ -117,7 +117,7 @@ export default function History({ navigate }) {
       {/* Player filter chips — mirrors the course row above; shown whenever
           two or more distinct players appear across the saved rounds. */}
       {!loading && players.length > 1 && (
-        <div className="px-5 pt-3 pb-1 shrink-0 flex gap-2 overflow-x-auto no-scrollbar">
+        <div role="group" aria-label="Filter by player" className="px-5 pt-3 pb-1 shrink-0 flex gap-2 overflow-x-auto no-scrollbar">
           <button
             onClick={() => setFilter(null)}
             className={[
