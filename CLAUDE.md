@@ -1,5 +1,5 @@
 # CLAUDE.md
-Last updated: 3 September 2026
+Last updated: 4 September 2026
 > Ground rules for this project. Read this at the start of every session.
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
@@ -65,7 +65,7 @@ Situational (did their main job pre-launch, still available):
 Project documents in the root, kept current:
 `CLAUDE.md` · `PRD.md` · `DESIGN.md` · `BACKLOG.md` · `CHANGELOG.md`
 
-**Date rule:** Whenever a project document is edited, update its `Last updated:` line to today's date before saving.
+**Date rule:** Whenever a project document or an agent file in `.claude/agents/` is edited, update its `Last updated:` line to today's date before saving. Agent files carry the `Last updated:` line but rely on this rule rather than restating it.
 
 ---
 
@@ -105,7 +105,7 @@ Do not invent a visual style. Do not default to generic patterns. Follow the pri
 - **Do not install packages without asking first.** This is a personal machine now, but installs should still be deliberate and intentional, not incidental.
 - When proposing a new dependency, explain: what it does, why it's needed, and what alternatives were considered.
 - Keep the dependency set lean. No installing things speculatively.
-- This applies to CLI tools too (Homebrew, gh, wrangler, Node/npm itself, etc.) — check with `which <tool>` before assuming availability either way, and ask before installing anything missing. Prefer minimal, reversible installs (e.g. a user-local install over a system-wide/sudo one) where practical.
+- This applies to CLI tools too (Homebrew, gh, wrangler, Node/npm). The full rule is in "Project-specific rules > CLI tools" below — that block is canonical; agent files reference it rather than restating it.
 
 ---
 
@@ -142,6 +142,8 @@ Runs before a change is committed. Scales with change size (see "Change size").
 - `CHANGELOG.md` entry added; `BACKLOG.md` updated (done items removed, follow-ups logged)
 
 The human localhost review is never skipped, regardless of how small the change looks.
+
+**PRD deviations:** if any agent's build differs from what `PRD.md` specifies — even a small, reasonable-looking call — it flags that explicitly in its handoff. It does not decide how to resolve it. The product-owner decides whether the PRD updates to match or the code changes. (Agent files reference this rather than restating it.)
 
 ---
 
@@ -185,8 +187,8 @@ These apply to all output - from the main session and from every agent in `.clau
 
 Version control: git + GitHub (full remote workflow). See the "Version control" section above.
 
-CLI tools (Homebrew, gh, wrangler, Node/npm):
+CLI tools (Homebrew, gh, wrangler, Node/npm) — **canonical rule; every agent that touches the shell references this block:**
 - This is a personal machine (confirmed 24 August 2026, no longer a managed work laptop) — these tools may already be installed, or may be installed on request, subject to the same Dependencies rule as anything else: ask first, explain what it does and why.
 - Always check with `which <tool>` before assuming a tool is available or unavailable — do not assume either way.
-- If a tool is missing and a task needs it, ask before installing it rather than defaulting straight to manual dashboard instructions.
-- If the user declines an install, or it isn't practical, fall back to clear, specific manual instructions via the Cloudflare dashboard, GitHub UI, or Resend dashboard as appropriate.
+- If a tool is missing and a task needs it, ask before installing it rather than defaulting straight to manual dashboard instructions. Prefer minimal, reversible installs (a user-local install over system-wide/sudo) where practical.
+- If the user declines an install, or it isn't practical, fall back to clear, specific numbered manual instructions via the Cloudflare dashboard, GitHub UI, or Resend dashboard as appropriate — exact navigation path, exact values, what the user should see when it works.

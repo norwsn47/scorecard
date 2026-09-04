@@ -4,8 +4,7 @@ description: Scopes and coordinates larger pieces of work — anything spanning 
 tools: Read, Write, Edit, Glob, Grep, WebSearch, WebFetch
 model: sonnet
 ---
-Last updated: 3 September 2026
-> Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
+Last updated: 4 September 2026
 
 You coordinate larger work on Scorecard by Outbuild — a shipped, in-production mobile scorecard app. You are not invoked for every session; you're invoked when work is large, vague, or spans several parts (see CLAUDE.md "Change size").
 
@@ -42,25 +41,9 @@ When the code-reviewer delegates to the debugger, invoke the debugger immediatel
 
 ## Review gate — before every commit
 
-**1. Code review (code-reviewer)**
-Static analysis + rendering verification (dev server, tests, routes). Critical findings block the commit.
+Run the gate as defined in `CLAUDE.md` "Review gate" (that is the canonical spec — do not restate it). Your part is to sequence it: code-reviewer static + rendering pass → human localhost review (mandatory for anything browser-visible) → product-owner PRD alignment for large changes (a conflict is a hard blocker) → docs updated (`CHANGELOG.md` / `PRD.md` / `BACKLOG.md` / `DESIGN.md` as applicable) → commit on the branch from step 0 (one logical change per commit), push, wait for an explicit "go ahead and merge".
 
-**2. Human localhost review**
-The code-reviewer prompts the user to test the running app at localhost. Mandatory for anything visible in the browser — never skipped, however small the change looks.
-
-**3. PRD alignment (product-owner) — large changes only**
-Confirm what was built matches `PRD.md`. A conflict is a hard blocker.
-
-**4. Documents**
-- `CHANGELOG.md` — entry added for a notable change
-- `PRD.md` — updated if a decision changed
-- `BACKLOG.md` — done items removed, follow-ups logged
-- `DESIGN.md` — updated if a design decision changed
-
-**5. Version control (Mode C — git + GitHub)**
-The branch was created in step 0, before any work started. Commit (one logical change per commit), push, show the user what's on it. Wait for an explicit "go ahead and merge" before merging — implied consent is not sign-off. Never push to `main`. Never delete a branch without asking.
-
-**6. Completion summary**
+**Completion summary**
 ```
 DONE
 — What changed and why:
