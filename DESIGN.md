@@ -1,7 +1,7 @@
 # Design
 ## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
-Last updated: 3 September 2026
+Last updated: 4 September 2026
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
 ---
@@ -43,7 +43,7 @@ All tokens are defined as CSS custom properties in `src/styles/index.css` and al
 
 The app is otherwise **one brand colour doing all the work** (Outbuild principle 3). `under-par` and `over-par` are the single, deliberate exception, and they are tightly fenced:
 
-- They colour **vs-par deltas only** — the per-hole superscript (`+1` / `-1` / `E`), the round total-to-par (`41 (+5)`), and the §5.2 eagle/birdie/par/bogey tally (#64). Nothing else.
+- They colour **vs-par deltas only** — the per-hole superscript (`+1` / `-1` / `E`) and the round total-to-par (`41 (+5)`). Nothing else.
 - They are **never** used for buttons, borders, icons, links, backgrounds, focus rings, or any interactive or chrome role. A golfer must never have to wonder whether a green thing is tappable.
 - **Level par (`E`) gets no colour of its own** — it inherits whatever text colour its context already uses (`text`, `muted`, `accent` in a winner column, or white in the active cell).
 - The bracketed par **label** on the hole number (§5.1, e.g. "3 (3)") is *not* a delta — it stays uncoloured and is unaffected by this exception.
@@ -289,7 +289,7 @@ table-fixed border-collapse w-full
 
 ### Score vs par
 
-The one place the scorecard leaves pencil-and-paper monochrome. Applies to score-vs-par **deltas** only (PRD §5.3): the live per-hole superscript (#38), the read-only Summary / History superscript, the round total-to-par `41 (+5)` (#52), and the end-of-round eagle/birdie/par/bogey tally (§5.2, #64). It does **not** apply to the bracketed par *label* on the hole number (§5.1) — that stays uncoloured.
+The one place the scorecard leaves pencil-and-paper monochrome. Applies to score-vs-par **deltas** only (PRD §5.3): the live per-hole superscript (#38), the read-only Summary / History superscript, and the round total-to-par `41 (+5)` (#52). It does **not** apply to the bracketed par *label* on the hole number (§5.1) — that stays uncoloured.
 
 **Notation** (owned by PRD §5.3 / the shared `formatToPar` helper, repeated here for the visual spec):
 - Under par: `-N` (`-1`, `-2`) — rendered in `under-par` `#2C6B3C`.
@@ -302,8 +302,6 @@ The one place the scorecard leaves pencil-and-paper monochrome. Applies to score
 **Round total-to-par (totals bar, Summary totals row, finish dialog, share).** In brackets, on the total's own line: `41 (+5)`. Not superscript. `Av.` / `DNF` stay as the sub-labels beneath. The bracket's digits and sign take the semantic colour; the surrounding total stays `text` / `accent` as today. Before a player has scored, the bracket is omitted entirely.
 - Full size (matches the total) on the surfaces with room: the Summary totals row, the finish dialog, the share image.
 - **Surface exception — the live Scorecard totals bar:** the bracket drops to `text-sm font-normal` (and the cell gets `leading-tight`). At 390px with 5–6 players the column is ~47px and a full-size `41 (+5)` wraps to two lines; the smaller bracket keeps it to one. This is the one documented size exception.
-
-**End-of-round tally (§5.2, #64).** The eagle/birdie/par/bogey block below the totals row (Summary + share). Each bucket takes its §5.3 colour: **Eagle** and **Birdie** rows in `under-par`, **Par** row neutral (inherits), **Bogey** row in `over-par`. The bucket label and any non-zero count carry the colour; a **zero** count stays `muted` so an empty bucket doesn't shout. Winner status does not change these (same reasoning as the override rule).
 
 **Override rule (one sentence).** A vs-par delta keeps its semantic colour on every surface where the background is the cream ground or the card — *including* inside a winner's accent-green column, where the delta stays `under-par` / `over-par` and only a level `E` inherits the column's green — and drops the semantic colour *only* inside a filled cell (the live active cell, white-on-`accent`), where the delta takes that cell's inverted white text and the leading `+` / `-` sign carries the direction.
 
