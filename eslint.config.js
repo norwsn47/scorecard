@@ -45,9 +45,9 @@ export default [
     },
   },
 
-  // Tests - vitest globals
+  // Tests + the vitest setup file - vitest globals, browser + node
   {
-    files: ['**/*.test.{js,jsx}'],
+    files: ['**/*.test.{js,jsx}', 'vitest.setup.js'],
     languageOptions: {
       globals: { ...globals.browser, ...globals.node, vi: 'readonly', describe: 'readonly', it: 'readonly', expect: 'readonly', beforeEach: 'readonly', afterEach: 'readonly', beforeAll: 'readonly', afterAll: 'readonly' },
     },
