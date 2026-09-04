@@ -3,7 +3,7 @@ import { track } from '../utils/analytics.js'
 import { formatDateOnly } from '../utils/format.js'
 import { deriveResult } from '../utils/game.js'
 import { tiedNames } from '../utils/result.js'
-import { deriveHolePars, parTally, playerAverage, playerTotal, roundToPar, scoreToPar } from '../utils/scores.js'
+import { deriveHolePars, playerAverage, playerTotal, roundToPar, scoreToPar } from '../utils/scores.js'
 import ParDelta from '../components/ParDelta.jsx'
 import { shareScorecard } from '../utils/share.js'
 import { getActiveGame, getCompletedGames, markCompletedGameSynced } from '../utils/storage.js'
@@ -50,29 +50,6 @@ export default function Summary({ navigate, params }) {
   // Per-hole par for the read-only table — small bracketed reference next to
   // each hole number, matching the live Scorecard grid (§5.1, item 37).
   const holePars = deriveHolePars(game.holePars, game.holesPlayed ?? game.holes ?? 36)
-
-  // End-of-round tally vs par (§5.2). Per player, over the holes they played.
-  // Only buckets at least one player hit are shown (union of non-zero); within
-  // that set a player with none shows 0. If nobody hit any of the four, the
-  // whole block is hidden. Each bucket carries the §5.3 semantic colour
-  // (#64): under par (eagle, birdie) green, par neutral, bogey terracotta —
-  // a zero count stays muted so it doesn't shout. Same component serves the
-  // post-finish view and the History detail view (viewingSaved).
-  const parBuckets = [
-    ['eagle',  'Eagle',  'text-under-par'],
-    ['birdie', 'Birdie', 'text-under-par'],
-    ['par',    'Par',    ''],
-    ['bogey',  'Bogey',  'text-over-par'],
-  ]
-  const parTallies = Object.fromEntries(
-    (game.players ?? []).map(p => [
-      p,
-      parTally((game.scores?.[p] ?? []).slice(0, holePars.length), holePars),
-    ]),
-  )
-  const visibleParBuckets = parBuckets.filter(
-    ([key]) => (game.players ?? []).some(p => parTallies[p][key] > 0),
-  )
 
   const resultBase = 'font-ui text-xs tracking-[0.12em] uppercase text-muted text-center'
   const resultName = 'mx-1.5 font-display italic text-sm text-accent normal-case tracking-normal'
@@ -156,35 +133,50 @@ export default function Summary({ navigate, params }) {
     navigate('home')
   }
 
+  async function handleShare() {
+    setSharing(true)
+    try {
+      await shareScorecard(game)
+      track('Scorecard Shared')
+    } catch {
+      // share failed silently
+    } finally {
+      setSharing(false)
+    }
+  }
+
   return (
     <div className="h-full bg-bg flex flex-col">
 
-      {/* Header — post-finish flow keeps the centred editorial header;
-          a round opened from History gets navigation chrome instead: a
-          back affordance to the list on the left, and Edit on the right,
-          both at text scale so the scorecard below keeps its room. */}
-      {viewingSaved ? (
-        <header className="relative flex items-center justify-between px-5 pt-10 pb-4 border-b border-border shrink-0">
-          <div className="relative shrink-0 z-10">
+      {/* Header — navigation chrome at text scale so the scorecard below keeps
+          its room. Post-finish: "Done" top-right (saves + goes home). A round
+          opened from History: "← Rounds" left, "Edit" right. */}
+      <header className="relative flex items-center justify-between px-5 pt-10 pb-4 border-b border-border shrink-0">
+        <div className="relative shrink-0 z-10">
+          {viewingSaved ? (
             <button
               onClick={() => navigate('history')}
               className="py-3 min-h-[44px] flex items-center text-muted font-ui text-sm tracking-[0.08em] uppercase"
             >
               ← Rounds
             </button>
-          </div>
+          ) : (
+            <span className="block w-14" aria-hidden="true" />
+          )}
+        </div>
 
-          <div className="absolute inset-x-0 text-center px-20 pointer-events-none">
-            {game.courseName && (
-              <h1 className="font-display italic text-2xl text-text truncate">{game.courseName}</h1>
-            )}
-            <p className="font-ui text-xs tracking-[0.15em] uppercase text-muted truncate">
-              {formatDateOnly(game.completedAt)}
-            </p>
-          </div>
+        <div className="absolute inset-x-0 text-center px-20 pointer-events-none">
+          {game.courseName && (
+            <h1 className="font-display italic text-2xl text-text truncate">{game.courseName}</h1>
+          )}
+          <p className="font-ui text-xs tracking-[0.15em] uppercase text-muted truncate">
+            {formatDateOnly(game.completedAt)}
+          </p>
+        </div>
 
-          <div className="relative shrink-0 z-10 flex justify-end">
-            {canEdit && (
+        <div className="relative shrink-0 z-10 flex justify-end">
+          {viewingSaved ? (
+            canEdit && (
               <button
                 onClick={handleEditRound}
                 disabled={saving}
@@ -192,19 +184,18 @@ export default function Summary({ navigate, params }) {
               >
                 Edit
               </button>
-            )}
-          </div>
-        </header>
-      ) : (
-        <header className="px-5 pt-10 pb-4 border-b border-border text-center">
-          {game.courseName && (
-            <h1 className="font-display italic text-2xl text-text mb-1">{game.courseName}</h1>
+            )
+          ) : (
+            <button
+              onClick={handleGoHome}
+              disabled={saving}
+              className="py-3 min-h-[44px] flex items-center text-accent font-ui text-sm tracking-[0.08em] uppercase font-semibold disabled:opacity-40"
+            >
+              {saving ? 'Saving…' : 'Done'}
+            </button>
           )}
-          <p className="font-ui text-xs tracking-[0.15em] uppercase text-muted">
-            {formatDateOnly(game.completedAt)}
-          </p>
-        </header>
-      )}
+        </div>
+      </header>
 
       {viewingSaved && editBlocked && (
         <p className="font-ui text-xs text-accent tracking-wide mt-2 px-5 text-center leading-relaxed shrink-0">
@@ -248,7 +239,7 @@ export default function Summary({ navigate, params }) {
       {/* Read-only scorecard. The vs-par tally (§5.2) lives in the same table
           as extra rows below the totals so its columns stay locked to the
           player columns above, even when the grid scrolls sideways. */}
-      <div className="flex-1 overflow-y-auto overflow-x-auto mt-3 pb-6">
+      <div className="flex-1 overflow-y-auto overflow-x-auto mt-3 pb-2">
         <table className="w-full min-w-max border-collapse">
           <thead>
             <tr className="border-b border-border bg-bg-card">
@@ -297,7 +288,12 @@ export default function Summary({ navigate, params }) {
                 })}
               </tr>
             ))}
+          </tbody>
 
+          {/* Totals row pinned to the bottom of the scroll area (#63) so it
+              stays in view on a long round. bg-bg-card so scrolled hole rows
+              don't show through when pinned. */}
+          <tfoot className="sticky bottom-0 z-10">
             <tr className="bg-bg-card border-t-2 border-border">
               <th scope="row" className="py-3 px-3 text-left font-ui text-xs font-normal tracking-[0.12em] uppercase text-muted">Total</th>
               {(game.players ?? []).map(player => (
@@ -320,47 +316,12 @@ export default function Summary({ navigate, params }) {
                 </td>
               ))}
             </tr>
-
-            {visibleParBuckets.length > 0 && (
-              <>
-                <tr>
-                  <th
-                    scope="colgroup"
-                    colSpan={1 + (game.players?.length ?? 0)}
-                    className="pt-5 pb-1 px-3 text-left font-ui text-xs font-normal tracking-[0.12em] uppercase text-muted"
-                  >
-                    Vs par
-                  </th>
-                </tr>
-                {visibleParBuckets.map(([key, label, colour]) => (
-                  <tr key={key} className="border-b border-border last:border-b-0">
-                    <th scope="row" className={['py-2 px-3 text-left font-ui text-xs font-normal whitespace-nowrap', colour || 'text-muted'].join(' ')}>
-                      {label}
-                    </th>
-                    {(game.players ?? []).map(player => {
-                      const count = parTallies[player][key]
-                      return (
-                        <td
-                          key={player}
-                          className={[
-                            'py-2 px-3 text-center font-ui text-sm tabular-nums',
-                            count > 0 ? (colour || 'text-text') : 'text-muted',
-                          ].join(' ')}
-                        >
-                          {count}
-                        </td>
-                      )
-                    })}
-                  </tr>
-                ))}
-              </>
-            )}
-          </tbody>
+          </tfoot>
         </table>
       </div>
 
       {/* Actions */}
-      <div className="px-5 py-8 space-y-3 max-w-sm mx-auto w-full">
+      <div className="px-5 pt-4 pb-6 space-y-3 max-w-sm mx-auto w-full">
 
         {viewingSaved ? (
           /* A past round is read-only here — editing happens via the header
@@ -400,58 +361,45 @@ export default function Summary({ navigate, params }) {
                 </p>
               </div>
             )}
-
-            <button
-              onClick={handleGoHome}
-              disabled={saving}
-              className="w-full py-4 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn disabled:opacity-60"
-            >
-              {saving ? 'Saving…' : 'Done'}
-            </button>
-
-            {canEdit && (
-              <div>
-                <button
-                  onClick={handleEditRound}
-                  disabled={saving}
-                  className="w-full py-4 rounded-sm border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card disabled:opacity-40"
-                >
-                  Edit round
-                </button>
-                {editBlocked && (
-                  <p className="font-ui text-xs text-accent tracking-wide mt-2 text-center leading-relaxed">
-                    Finish your current round before editing a past one.
-                  </p>
-                )}
-              </div>
-            )}
           </>
         )}
 
-        <div className="text-center -mt-2">
-          <button
-            onClick={async () => {
-              setSharing(true)
-              try {
-                await shareScorecard(game)
-                track('Scorecard Shared')
-              } catch {
-                // share failed silently
-              } finally {
-                setSharing(false)
-              }
-            }}
-            disabled={sharing}
-            className="inline-block py-2.5 -my-2.5 font-ui text-xs text-muted underline underline-offset-2 active:opacity-70 disabled:opacity-40"
-          >
-            {sharing ? 'Generating…' : 'Share scorecard'}
-          </button>
+        {/* Edit round • Share scorecard — inline text links. "Done" for a
+            post-finish round lives in the header (top-right). Edit is dropped
+            in the read-only History view (it lives in the header there). */}
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-2 font-ui text-xs text-muted">
+            {!viewingSaved && canEdit && (
+              <>
+                <button
+                  onClick={handleEditRound}
+                  disabled={saving}
+                  className="py-2.5 -my-2.5 underline underline-offset-2 active:opacity-70 disabled:opacity-40"
+                >
+                  Edit round
+                </button>
+                <span aria-hidden="true">•</span>
+              </>
+            )}
+            <button
+              onClick={handleShare}
+              disabled={sharing}
+              className="py-2.5 -my-2.5 underline underline-offset-2 active:opacity-70 disabled:opacity-40"
+            >
+              {sharing ? 'Generating…' : 'Share scorecard'}
+            </button>
+          </div>
+          {!viewingSaved && canEdit && editBlocked && (
+            <p className="font-ui text-xs text-accent tracking-wide mt-3 leading-relaxed">
+              Finish your current round before editing a past one.
+            </p>
+          )}
         </div>
 
         {!user && (
           <div className="text-center space-y-1 pt-2">
             <p className="font-ui text-xs text-muted leading-relaxed">
-              Results saved on this device only — may be lost in private browsing or if you clear your browser data.
+              Saved in this browser only.
             </p>
             <div>
               <button

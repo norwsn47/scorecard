@@ -74,6 +74,10 @@ export function clearActiveGame() {
 }
 
 // ── Active cell ────────────────────────────────────────────────────────────
+// Stored shape: { gameId, holeIndex, playerIndex }. The gameId scopes the cell
+// to one game (#47b) — Scorecard ignores a persisted cell whose gameId doesn't
+// match the game it's mounting, so a cell left over from a previous game can
+// never place the focus on a stale hole.
 
 export function getActiveCell() {
   const result = safeRead(KEYS.ACTIVE_CELL, null)

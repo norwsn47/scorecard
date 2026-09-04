@@ -35,13 +35,14 @@ export async function onRequestPost(context) {
 
   const { course_id, played_at, holes_played, player_data, notes, client_round_id, hole_pars } = body
 
-  if (!played_at || !holes_played || !player_data) {
+  if (!played_at || !player_data) {
     return Response.json({ error: 'Missing required fields' }, { status: 400 })
   }
 
-  // Match the PATCH handler: holes_played must be an integer 1..36. Without
-  // this a string or out-of-range value inserts, and it is also the length
-  // hole_pars is validated against just below.
+  // Match the PATCH handler: holes_played must be an integer 1..36. This one
+  // check also covers a missing / zero value (0, null, undefined all fail it),
+  // so the caller gets 'Invalid holes_played' rather than a misleading
+  // 'Missing required fields'. It is the length hole_pars is validated against.
   if (!Number.isInteger(holes_played) || holes_played < 1 || holes_played > 36) {
     return Response.json({ error: 'Invalid holes_played' }, { status: 400 })
   }

@@ -80,7 +80,7 @@ export default function History({ navigate }) {
           <button
             onClick={() => setCourseFilter(null)}
             className={[
-              'shrink-0 py-1 px-3 rounded-full border font-ui text-xs font-medium',
+              'shrink-0 min-h-[44px] inline-flex items-center px-3 rounded-full border font-ui text-xs font-medium',
               !courseFilter
                 ? 'bg-accent border-accent text-bg'
                 : 'border-border text-muted',
@@ -93,7 +93,7 @@ export default function History({ navigate }) {
               key={course}
               onClick={() => setCourseFilter(prev => prev === course ? null : course)}
               className={[
-                'shrink-0 py-1 px-3 rounded-full border font-ui text-xs font-medium',
+                'shrink-0 min-h-[44px] inline-flex items-center px-3 rounded-full border font-ui text-xs font-medium',
                 courseFilter === course
                   ? 'bg-accent border-accent text-bg'
                   : 'border-border text-muted',
@@ -121,7 +121,7 @@ export default function History({ navigate }) {
           <button
             onClick={() => setFilter(null)}
             className={[
-              'shrink-0 py-1 px-3 rounded-full border font-ui text-xs font-medium',
+              'shrink-0 min-h-[44px] inline-flex items-center px-3 rounded-full border font-ui text-xs font-medium',
               !filter
                 ? 'bg-accent border-accent text-bg'
                 : 'border-border text-muted',
@@ -134,7 +134,7 @@ export default function History({ navigate }) {
               key={name}
               onClick={() => toggleFilter(name)}
               className={[
-                'shrink-0 py-1 px-3 rounded-full border font-ui text-xs font-medium',
+                'shrink-0 min-h-[44px] inline-flex items-center px-3 rounded-full border font-ui text-xs font-medium',
                 filter === name
                   ? 'bg-accent border-accent text-bg'
                   : 'border-border text-muted',

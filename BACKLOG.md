@@ -6,13 +6,13 @@
 > Nothing here is actioned without explicit instruction — tell the project-manager (or Claude directly) to pull an item into work.
 > Numbers are stable IDs for cross-reference — don't renumber existing items when deleting one, so gaps are expected.
 
-**Last updated:** 3 September 2026
+**Last updated:** 4 September 2026
 
-Shipped and removed: 1 Sep — batch A (20, 24, 26, 27, 30, 32), batch B (17, 18, 28), batch C (2 code part / see 2b, 29, 33); 2 Sep — 21 (ESLint), 36 (ties → draw), 37 (per-hole par); 3 Sep — 47 (new game landed on wrong hole), 48/49/50/55 (par UI rework + 9/18 course length), 46/51/53 + the easy part of 45 (small-items batch), 39 (end-of-round vs-par tally, PRD §5.2), 38/52/64 (score-vs-par display standard + semantic colour, PRD §5.3). See `CHANGELOG.md`.
+Shipped and removed: 1 Sep — batch A (20, 24, 26, 27, 30, 32), batch B (17, 18, 28), batch C (2 code part / see 2b, 29, 33); 2 Sep — 21 (ESLint), 36 (ties → draw), 37 (per-hole par); 3 Sep — 47 (new game landed on wrong hole), 48/49/50/55 (par UI rework + 9/18 course length), 46/51/53 + the easy part of 45 (small-items batch), 38/52 (score-vs-par display standard + semantic colour, PRD §5.3), 47b/57/61/62/63 (cleanup batch). **39 and 64 (end-of-round tally + its recolour) were built and removed the same day.** See `CHANGELOG.md`.
 
 Items 36-44 added 1 September 2026 from a golf-feedback list. **36 (ties → draw) and 37 (per-hole par) shipped 2 September** — see `CHANGELOG.md`; both unblock 38 and 39. 40 still needs a product-owner PRD decision before build; 42 (Google sign-in) moved to Blocked on 3 September — it needs an external Google Cloud OAuth client set up first.
 
-Items 47-55 added 2 September 2026 from a ties+par testing-feedback list, after 36/37 shipped. **47, 48, 49, 50, 52 and 55 shipped 3 September** — see `CHANGELOG.md`. 54 needs a build-vs-admin decision first. Item 10 of that list was folded into #39, which shipped 3 September (PRD §5.2). Items 56-58 added 3 September 2026 from the #48–#55 code review. #60 added 3 September 2026 (split from the closed #59, the PRD as-built pass). #61-62 added 3 September 2026 from the #46/#51/#53 review; #45 rescoped to the Vite major upgrade only. #63 added 3 September 2026 from the #39 build. **#38, #52 and #64 shipped 3 September together** — the score-vs-par display standard (PRD §5.3), the semantic under/level/over colour tokens (DESIGN.md), and the tally recolour.
+Items 47-55 added 2 September 2026 from a ties+par testing-feedback list, after 36/37 shipped. **47, 48, 49, 50, 52 and 55 shipped 3 September** — see `CHANGELOG.md`. 54 needs a build-vs-admin decision first. Item 10 of that list fed into #39 (built then removed 3 September). Items 56-58 added 3 September 2026 from the #48–#55 code review. #60 added 3 September 2026 (split from the closed #59, the PRD as-built pass). #61-62 added 3 September 2026 from the #46/#51/#53 review; #45 rescoped to the Vite major upgrade only. **#38 and #52 shipped 3 September** — the score-vs-par display standard (PRD §5.3) and the semantic under/level/over colour tokens (DESIGN.md). #39 and #64 (end-of-round tally + its recolour) were built the same day, then removed on the user's call — nothing of them remains. #47b/#57/#61/#62/#63 shipped 3 September (cleanup batch).
 
 ---
 
@@ -99,8 +99,6 @@ The 24 Aug hotfix (live since 24 August 2026) stopped new duplicates but didn't 
 ### 19. Past-round "← Rounds" back button always targets History
 Superseded by #43 (proper back-a-step navigation across all pages). The narrow "always targets History" concern is fine on its own (History is the right destination for that view) — the real ask is the app-wide one in #43.
 
-### 47b. Scope the active cell to a game id (follow-up from #47)
-#47 shipped a fix that clears `gt_active_cell` whenever a new working game is created and only restores it on a paramless Scorecard mount. The more robust design is to store the active cell as `{gameId, holeIndex, playerIndex}` and ignore it whenever `gameId` doesn't match the active game — removes the whole class of stale-cell bugs rather than patching the known entry points. Small refactor to `storage.js` + `Scorecard.jsx`; not urgent now that #47 is fixed.
 
 ### 56. Length-changing course switch during a D1 past-round edit leaves a stale-size grid
 Surfaced in the #48–#55 code review. `buildEditGame` sizes the edit grid to the *round's saved* hole count, not the newly-selected course's. Switching a 36-hole round onto a 9-hole course mid-edit (D1 rounds only — local rounds can't change course) leaves a 36-row grid with holes 10–36 padded back to par 3. No crash, no data loss, but confusing. Needs a product decision: disallow a length-changing course switch during an edit, or accept it and document the behaviour. (PRD §11.7, §11.13.)
@@ -145,18 +143,10 @@ Measure and tune actual load performance — Core Web Vitals (LCP, CLS, INP), bu
 ### 45. Vite major upgrade (esbuild + vite advisories)
 The three easy toolchain vulns (`browserslist`, `nanoid`, `postcss`) were cleared by a non-breaking `npm audit fix` on 3 September. Still open: `esbuild` ≤0.24.2 (moderate — dev server can be probed by any website) **and**, newly disclosed since, a **high** `vite` advisory (path traversal in optimised-deps `.map` handling, plus two Windows-only issues). Both are fixed only by a Vite major bump (`vite@8`, breaking — `npm audit fix --force` installs it). Dev-only, nothing in the production bundle's runtime is affected, but with the new high advisory this is no longer "not urgent". Needs a deliberate upgrade + regression pass (build, dev server, tests, `wrangler pages dev`).
 
-### 61. Filter-chip touch targets below 44px on History
-Surfaced in the #45/#46/#51/#53 review. Both the course-filter chip row and the new player-filter chip row in `History.jsx` use `py-1 px-3 text-xs` (~24px tall), under the 44px minimum. Fix the two rows together for consistency. Ties into #34 / #44 (a shared chip/toggle primitive).
-
-### 62. `holes_played: 0` on `POST /api/games` returns the wrong error message
-Minor. A `holes_played` of `0` is caught by the earlier `!holes_played` truthy check and returns `"Missing required fields"` rather than `"Invalid holes_played"` (the message the PATCH handler and the new integer check use for every other bad value). Both reject `0`; only the message differs. Tidy when next in that file.
-
-### 63. Summary totals row no longer sticky while scrolling
-From the #39 build. The read-only scorecard's "Total" row was a `sticky bottom-0` `<tfoot>` that stayed pinned while scrolling a long hole list. #39 folded the totals + the vs-par tally into one `<tbody>` (so the tally columns stay locked to the players when the grid scrolls sideways), which meant dropping the sticky behaviour. Noticeable mainly on a 36-hole Bruntsfield round on a short screen. Restore it if it's missed — needs a way to keep totals pinned above a tally block that renders below it, or move the tally above the totals.
 
 
-### 57. Hole-count picker uses `aria-pressed` rather than a radiogroup
-Surfaced in the #48–#55 code review. The 9 / 18 hole-count picker in course creation (`Setup.jsx`) is two buttons with `aria-pressed`. For a single-select control, `role="radio"` + `aria-checked` inside a `role="radiogroup"` would be more accurate. Low priority — consistent with the prior toggle pattern in the app; revisit alongside #44 (design-system) if a shared toggle primitive is introduced.
+
+
 
 ### 58. No render/interaction test for the par stepper or the new par markup
 Surfaced in the #48–#55 code review. The par stepper's 2–7 clamp (`Setup.jsx`, `stepPar`) and the bold-number + bracketed-par markup on `Scorecard.jsx` / `Summary.jsx` have no render/interaction coverage — the suite still tests `src/utils/*` and `functions/api/*` only. Ties into #35 (add a React Testing Library render-test harness); fold in when that lands.
