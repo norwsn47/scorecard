@@ -434,11 +434,4 @@ Inline SVGs throughout — no icon library dependency.
 
 ### Divergences — flag for fix
 
-**1. Advance button fill**
-The advance button fill is the `control-warm` token (`--color-control-warm: #9A9189`), a warm grey created specifically for it — not `muted`, which is a darker text-role value. The implementation currently applies `bg-muted`; correcting it is tracked in `BACKLOG.md` (#65). This section describes the intended state.
-
-**2. Active row tint is an arbitrary hardcoded value**
-`bg-[rgba(26,67,41,0.05)]` hardcodes the accent RGB. Recommend adding `--color-accent-tint` to CSS vars and `'accent-tint': 'var(--color-accent-tint)'` to Tailwind config so it's a named token.
-
-**3. Focus ring hardcodes the accent RGB**
-`focus:ring-[rgba(26,67,41,0.4)]` — same pattern as above. Could be extracted to a consistent named value.
+**Intended state:** the advance-button fill is the `control-warm` token, the active-row tint is `accent-tint` (`--color-accent-tint`), and every focus ring is `ring-accent/40`. The first two are fully implemented. The one real remaining divergence: `src/pages/Login.jsx:111` still hardcodes `focus:ring-[rgba(26,67,41,0.4)]` instead of the token, and `Home.jsx:105` uses an inline `rgba(26,67,41,0.1)` for a decorative circle. Tracked in `BACKLOG.md` (#65). This section otherwise describes the intended, shipped state.

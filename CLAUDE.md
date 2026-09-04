@@ -143,7 +143,8 @@ Runs before a change is committed. Scales with change size (see "Change size").
 
 The human localhost review is never skipped, regardless of how small the change looks.
 
-**PRD deviations:** if any agent's build differs from what `PRD.md` specifies — even a small, reasonable-looking call — it flags that explicitly in its handoff. It does not decide how to resolve it. The product-owner decides whether the PRD updates to match or the code changes. (Agent files reference this rather than restating it.)
+### PRD deviations
+If any agent's build differs from what `PRD.md` specifies — even a small, reasonable-looking call — it flags that explicitly in its handoff. It does not decide how to resolve it. The product-owner decides whether the PRD updates to match or the code changes. (Agent files reference this rather than restating it.)
 
 ---
 
@@ -185,9 +186,12 @@ These apply to all output - from the main session and from every agent in `.clau
 
 ## Project-specific rules
 
-Version control: git + GitHub (full remote workflow). See the "Version control" section above.
+### Version control
+git + GitHub (full remote workflow). See the "Version control" section above.
 
-CLI tools (Homebrew, gh, wrangler, Node/npm) — **canonical rule; every agent that touches the shell references this block:**
+### CLI tools
+
+(Homebrew, gh, wrangler, Node/npm.) Canonical rule — every agent that touches the shell references this block:
 - This is a personal machine (confirmed 24 August 2026, no longer a managed work laptop) — these tools may already be installed, or may be installed on request, subject to the same Dependencies rule as anything else: ask first, explain what it does and why.
 - Always check with `which <tool>` before assuming a tool is available or unavailable — do not assume either way.
 - If a tool is missing and a task needs it, ask before installing it rather than defaulting straight to manual dashboard instructions. Prefer minimal, reversible installs (a user-local install over system-wide/sudo) where practical.

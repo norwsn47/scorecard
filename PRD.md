@@ -24,7 +24,7 @@ A web app by Outbuild that lets anyone create and track a golf scorecard for Bru
 Outbuild palette applied for outdoor sunlight legibility on a phone:
 - **Background:** Cream / ivory (warm, not clinical white)
 - **Primary text:** Deep charcoal / near-black
-- **Accent:** Deep historic Scottish green — the single brand colour; does all decorative and interactive work (exact token in DESIGN.md). Terracotta survives only as the score-over-par delta colour (§5.3) — one of two tightly-scoped semantic exceptions, never an interactive or chrome role
+- **Accent:** Deep historic Scottish green — the single brand colour; does all decorative and interactive work (exact token in DESIGN.md). The only exceptions are the two score-vs-par **delta** colours (§5.3): a green for under par and a terracotta for over par, fenced to delta figures only and never used for chrome or interaction
 - **Typography:** Cormorant Garamond italic for editorial moments (app name, headings); Inter for all UI labels and data
 - **Overall feel:** Warm, grounded, purposeful — designed for use outdoors, one hand, in sunlight
 
@@ -234,7 +234,7 @@ Par is a **per-hole** attribute of a course, used for display and derived stats 
 
 **Existing data:** `003` adds `hole_pars` as nullable with no backfill. Any course or round created before this migration has `hole_pars = null`; every reader treats a missing or null array as **par 3 for every hole** (correct for Bruntsfield, the only real-world course to date). No migration of saved rounds.
 
-**Wiring note:** `courses.holes` predated this work in the schema but was stored and never read. Per-hole par is wired all the way through — the active game object, the completed localStorage record, the D1 `games` row, and `normalizeDbGame` output all carry `hole_pars` — not just added as a column.
+**Wiring note:** an earlier schema addition (`courses.holes`) sat unused for a while — a column with nothing reading it. Per-hole par was wired through properly instead of repeating that: `hole_pars` reaches the active game object, the completed localStorage record, the D1 `games` row, and `normalizeDbGame` output. (`courses.holes` itself is read now too — it drives user-course length, §11.7.)
 
 ### 5.2 End-of-round tally — removed
 
