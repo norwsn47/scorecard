@@ -112,9 +112,6 @@ The router is a state machine with light URL sync (`App.jsx`). Back buttons curr
 
 ## Housekeeping & tech debt
 
-### 22. No flow test for the edit-past-round path
-No integration/component test covers open-edit → change on the scorecard → save back. The duplicate-save regression class isn't protected by an automated flow test. Add one asserting a single record in/out (no new row) for both the D1 and localStorage paths.
-
 ### 23. `onRequestPatch` / `onRequestPost` input validation is minimal
 `played_at` accepts any non-empty string (no date-format check); `player_data` is only checked for being a non-empty array (element shape not validated). Both client-controlled and consistent with each other, but both would benefit from stricter schema validation.
 
@@ -135,11 +132,10 @@ Split out from the old #59. §4.8 (Information page) and §11.12 / the "Your dat
 From the batch-B tap-target pass (#28). Three inline-in-paragraph `text-xs` links — `Login.jsx` "How we handle your data", `Info.jsx` "Read our privacy policy", `Summary.jsx` "Share scorecard" — use `py-2.5 -my-2.5` (~36-38px) because more padding would overlap adjacent lines. Better than the bare ~16px but under the documented floor. Revisit if a cleaner pattern turns up (e.g. giving them their own line).
 
 ### 35. Render/flow test coverage — harness landed, more flows to cover
-The React Testing Library harness is in (`vitest.setup.js`, `setupFiles` in `vite.config.js`, `@testing-library/react` + `jest-dom` + `user-event`), with `ParDelta` (§5.3 notation + colour override) and the `History` player filter (#51/#61) covered. Still no render coverage for:
-- **The edit-past-round flow (#22)** — open-edit → change on the scorecard → save back, asserting one record in / out (no duplicate row) on both the D1 and localStorage paths.
+The React Testing Library harness is in (`vitest.setup.js`, `setupFiles` in `vite.config.js`, `@testing-library/react` + `jest-dom` + `user-event`). Covered so far: `ParDelta` (§5.3 notation + colour override), the `History` player filter (#51/#61), and **the edit-past-round flow (#22)** — `Scorecard.edit.test.jsx` drives change → save on both paths and asserts one record in/out (localStorage) / PATCH-not-POST (D1). Still no render coverage for:
 - **SPA navigation** — #17 (direct `/scorecard` bounce), #18 (stranded-edit cleanup).
 - **`Setup` course creation** — the 9/18 radiogroup (#57) and the par stepper clamp (#58). The `<select value=… >` "+ New course" option is a command not a real selection, which `userEvent.selectOptions` / `fireEvent.change` don't drive cleanly in jsdom — needs either a small refactor of that control or a workaround before it's testable.
-Fold #58 in here (par stepper / markup — `ParDelta` markup is now covered; the stepper isn't).
+Fold #58 in here (par stepper — `ParDelta` markup is now covered; the stepper isn't).
 
 ### 41. Page load performance pass
 Measure and tune actual load performance — Core Web Vitals (LCP, CLS, INP), bundle size (currently ~248 kB / ~76 kB gzip), font loading (three families via Google Fonts with `display=swap`), image weight (`course_map_v2.png` is ~455 kB), and Cloudflare Pages caching headers. Establish a baseline, fix the obvious wins, re-measure. Assistance requested. (The `performance-auditor` agent covers this.)

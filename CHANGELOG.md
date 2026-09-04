@@ -11,7 +11,7 @@
 
 ## 4 September 2026
 
-- **Render-test harness (#35, partial).** Added React Testing Library (`@testing-library/react` + `jest-dom` + `user-event`), a `vitest.setup.js`, and `setupFiles` in `vite.config.js`. First component tests: `ParDelta` (the §5.3 vs-par notation + the semantic-colour override rule) and the `History` player filter (#51/#61 — chip appears only with 2+ players, filters the list, "All players" clears it). The course-filter and player-filter chip rows also gained `role="group"` labels. Still uncovered: the edit-past-round flow (#22), SPA nav (#17/#18), and the `Setup` course-creation controls (#57/#58) — logged under #35.
+- **Render-test harness + first flow tests (#35 / #22).** Added React Testing Library (`@testing-library/react` + `jest-dom` + `user-event`), a `vitest.setup.js`, and `setupFiles` in `vite.config.js`. Component tests: `ParDelta` (the §5.3 vs-par notation + the semantic-colour override rule); the `History` player filter (#51/#61 — chip appears only with 2+ players, filters the list, "All players" clears it); and **the edit-past-round flow (#22)** — `Scorecard.edit.test.jsx` drives a score change → save and asserts the saved round is overwritten in place (one row, localStorage) and PATCHed by id rather than re-POSTed (D1), protecting the 24 Aug duplicate-save regression class. The course-filter and player-filter chip rows also gained `role="group"` labels. Still uncovered under #35: SPA nav (#17/#18) and the `Setup` course-creation controls (#57/#58).
 
 ## 3 September 2026
 
