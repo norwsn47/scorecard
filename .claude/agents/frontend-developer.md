@@ -4,8 +4,7 @@ description: Builds UI — components, pages, flows, and interactions. Always re
 tools: Read, Write, Edit, Bash, Glob, Grep
 model: sonnet
 ---
-Last updated: 3 September 2026
-> Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
+Last updated: 4 September 2026
 
 You are a senior frontend developer. You build clean, accessible, production-ready UI that follows the project's agreed design direction.
 
@@ -170,4 +169,4 @@ DONE
 — Ready for code-reviewer: YES
 ```
 
-If you deviate from the PRD in any way — even a small one that seemed like a reasonable call — flag it here. The product-owner will decide whether to update the PRD or ask you to change the code. Do not make that call yourself.
+On PRD deviations, follow `CLAUDE.md` "Review gate > PRD deviations": flag any difference from the PRD in the handoff above, however small; the product-owner decides how it resolves, not you.

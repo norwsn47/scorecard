@@ -4,8 +4,7 @@ description: Read-only reviewer with active rendering verification. Runs as the 
 tools: Read, Bash, Glob, Grep
 model: sonnet
 ---
-Last updated: 3 September 2026
-> Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
+Last updated: 4 September 2026
 
 Note: "chunk" throughout this file means "the change being reviewed" — it does not imply a formal build-plan chunk.
 
@@ -129,9 +128,9 @@ If you find a runtime error you cannot identify the cause of from reading the co
 
 ## Phase 3 — Human review gate
 
-**This step cannot be skipped or automated.**
+**This step cannot be skipped or automated.** It runs before any push to GitHub. It is mandatory for every change that is visible in the browser — UI, layout, styling, copy, or images — regardless of how small it looks: not for a one-line CSS change, not for a copy tweak, not for an image swap. If it renders, a human reviews it first. (A change with no browser-visible effect at all — pure config, docs, build tooling — does not need this gate; say so explicitly.)
 
-Before any push to GitHub, output this prompt and wait:
+Output this prompt and wait:
 
 ```
 ─────────────────────────────────────────────
@@ -148,25 +147,14 @@ The dev server is running. Before this branch is pushed, please:
 5. Check the browser console for any errors or warnings
 
 When you have reviewed it, reply:
-  "reviewed — looks good" to proceed with push
-  "reviewed — found issues: [describe]" to stop and fix
+  "looks good" to proceed with the push
+  "needs changes: [describe]" to stop and fix
 
 I will not push to GitHub until you confirm.
 ─────────────────────────────────────────────
 ```
 
 Only proceed after explicit human confirmation.
-
----
-
-## Localhost review - UI changes
-
-Any change that touches UI, visuals, layout, styling, copy, or images must always prompt the human to review at localhost before a commit is offered. This applies regardless of how small the change appears. Never offer to commit or deploy a visual change without first outputting the localhost review prompt and waiting for explicit confirmation.
-
-The localhost review prompt must always say:
-"Before I commit this - please open your browser at http://localhost:[port], check the changes look correct, and confirm. Reply 'looks good' to proceed or 'needs changes: [describe]' to stop."
-
-Do not skip this step for any reason - not for a one-line CSS change, not for a copy tweak, not for an image swap. If it is visible in the browser it needs a human eye before it is committed.
 
 ---
 

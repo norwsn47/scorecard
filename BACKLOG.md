@@ -8,11 +8,9 @@
 
 **Last updated:** 4 September 2026
 
-Shipped and removed: 1 Sep — batch A (20, 24, 26, 27, 30, 32), batch B (17, 18, 28), batch C (2 code part / see 2b, 29, 33); 2 Sep — 21 (ESLint), 36 (ties → draw), 37 (per-hole par); 3 Sep — 47 (new game landed on wrong hole), 48/49/50/55 (par UI rework + 9/18 course length), 46/51/53 + the easy part of 45 (small-items batch), 38/52 (score-vs-par display standard + semantic colour, PRD §5.3), 47b/57/61/62/63 (cleanup batch); 4 Sep — 35 harness + 22 (edit-flow test), 43 (back-a-step nav, absorbs 19). **39 and 64 (end-of-round tally + its recolour) were built and removed the same day.** See `CHANGELOG.md`.
-
-Items 36-44 added 1 September 2026 from a golf-feedback list. **36 (ties → draw) and 37 (per-hole par) shipped 2 September** — see `CHANGELOG.md`; both unblock 38 and 39. 40 still needs a product-owner PRD decision before build; 42 (Google sign-in) moved to Blocked on 3 September — it needs an external Google Cloud OAuth client set up first.
-
-Items 47-55 added 2 September 2026 from a ties+par testing-feedback list, after 36/37 shipped. **47, 48, 49, 50, 52 and 55 shipped 3 September** — see `CHANGELOG.md`. 54 needs a build-vs-admin decision first. Item 10 of that list fed into #39 (built then removed 3 September). Items 56-58 added 3 September 2026 from the #48–#55 code review. #60 added 3 September 2026 (split from the closed #59, the PRD as-built pass). #61-62 added 3 September 2026 from the #46/#51/#53 review; #45 rescoped to the Vite major upgrade only. **#38 and #52 shipped 3 September** — the score-vs-par display standard (PRD §5.3) and the semantic under/level/over colour tokens (DESIGN.md). #39 and #64 (end-of-round tally + its recolour) were built the same day, then removed on the user's call — nothing of them remains. #47b/#57/#61/#62/#63 shipped 3 September (cleanup batch).
+> The history of shipped and removed items lives in `CHANGELOG.md`. This file is open items only.
+>
+> Still-relevant status notes: #40 needs a product-owner PRD decision before build. #42 (Google sign-in) is Blocked on an external Google Cloud OAuth client. #54 needs a build-vs-admin decision. #39/#64 (end-of-round tally) were built and removed the same day — nothing remains; PRD §5.2 is a "removed" stub.
 
 ---
 
@@ -150,6 +148,9 @@ The three easy toolchain vulns (`browserslist`, `nanoid`, `postcss`) were cleare
 
 ### 58. Par stepper render test — folded into #35
 The `ParDelta` markup is now covered (`src/components/ParDelta.test.jsx`). The `Setup.jsx` `stepPar` 2–7 clamp still isn't — tracked under #35 (blocked on the "+ New course" select being hard to drive in jsdom).
+
+### 65. One hardcoded focus-ring value left in `Login.jsx`
+`src/pages/Login.jsx:111` uses `focus:ring-[rgba(26,67,41,0.4)]` — the accent RGB inline. Every other input in the app uses the `focus:ring-accent/40` token form. Swap it for consistency. Trivial. Also `Home.jsx:105` has an inline `style={{ background: 'rgba(26,67,41,0.1)' }}` for a decorative circle — lower priority, could take an `accent`-derived token. Surfaced 4 September 2026 when the stale DESIGN.md "Divergences" section was reconciled (the other two divergences it listed were already fixed). Ties into #44.
 
 ### 44. Design-system consolidation + page/header templates
 DESIGN.md has component patterns but no formal system. The user wants: a mobile header review (spacing and sizing rules — `PageHeader` `pt-10 pb-4`, `px-20` title clearance, the Summary bespoke header, etc.), documented design-system rules for the app, and page/header templates so new screens are built to a pattern rather than ad hoc. Design-director work; produces an expanded DESIGN.md (tokens → components → page templates → header rules) plus, ideally, a shared layout/header primitive the pages compose. Related: #27 (closed — PageHeader clearance), #34 (tap-target floor), the DESIGN.md "Inline link tap targets" and "Navigation" sections.

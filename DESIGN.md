@@ -37,7 +37,7 @@ All tokens are defined as CSS custom properties in `src/styles/index.css` and al
 | `over-par` | `--color-over-par` | `#9B3A24` | Score-vs-par **delta** when over par (`+1`, `+5` …). Deltas only — never chrome, never interactive |
 | *(desktop only)* | — | `#E8E2D6` | Background behind phone frame on desktop |
 
-`tailwind.config.js` needs matching aliases for the two new tokens: `'under-par': 'var(--color-under-par)'`, `'over-par': 'var(--color-over-par)'` (added by the frontend-developer as part of the #38 / #52 build — this file only defines the tokens).
+`tailwind.config.js` carries matching aliases for these two tokens: `'under-par': 'var(--color-under-par)'`, `'over-par': 'var(--color-over-par)'`.
 
 ### The two score-vs-par colours are a scoped exception
 
@@ -289,7 +289,7 @@ table-fixed border-collapse w-full
 
 ### Score vs par
 
-The one place the scorecard leaves pencil-and-paper monochrome. Applies to score-vs-par **deltas** only (PRD §5.3): the live per-hole superscript (#38), the read-only Summary / History superscript, and the round total-to-par `41 (+5)` (#52). It does **not** apply to the bracketed par *label* on the hole number (§5.1) — that stays uncoloured.
+The one place the scorecard leaves pencil-and-paper monochrome. Applies to score-vs-par **deltas** only (PRD §5.3): the live per-hole superscript, the read-only Summary / History superscript, and the round total-to-par `41 (+5)`. It does **not** apply to the bracketed par *label* on the hole number (§5.1) — that stays uncoloured.
 
 **Notation** (owned by PRD §5.3 / the shared `formatToPar` helper, repeated here for the visual spec):
 - Under par: `-N` (`-1`, `-2`) — rendered in `under-par` `#2C6B3C`.
@@ -434,13 +434,4 @@ Inline SVGs throughout — no icon library dependency.
 
 ### Divergences — flag for fix
 
-**1. Advance button uses `bg-muted` instead of `bg-control-warm` — Active bug**
-The CSS token `--color-control-warm: #9A9189` was created specifically for the advance button fill.
-`Scorecard.jsx` applies `bg-muted` (maps to `--color-text-muted: #6B6560` — a darker, text-role value) instead.
-The `control-warm` token is currently unused. Fix: change `bg-muted border-2 border-muted` to `bg-control-warm border-2 border-control-warm` in the advance button.
-
-**2. Active row tint is an arbitrary hardcoded value**
-`bg-[rgba(26,67,41,0.05)]` hardcodes the accent RGB. Recommend adding `--color-accent-tint` to CSS vars and `'accent-tint': 'var(--color-accent-tint)'` to Tailwind config so it's a named token.
-
-**3. Focus ring hardcodes the accent RGB**
-`focus:ring-[rgba(26,67,41,0.4)]` — same pattern as above. Could be extracted to a consistent named value.
+**Intended state:** the advance-button fill is the `control-warm` token, the active-row tint is `accent-tint` (`--color-accent-tint`), and every focus ring is `ring-accent/40`. The first two are fully implemented. The one real remaining divergence: `src/pages/Login.jsx:111` still hardcodes `focus:ring-[rgba(26,67,41,0.4)]` instead of the token, and `Home.jsx:105` uses an inline `rgba(26,67,41,0.1)` for a decorative circle. Tracked in `BACKLOG.md` (#65). This section otherwise describes the intended, shipped state.
