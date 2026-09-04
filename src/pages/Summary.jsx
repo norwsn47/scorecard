@@ -9,7 +9,7 @@ import { shareScorecard } from '../utils/share.js'
 import { getActiveGame, getCompletedGames, markCompletedGameSynced } from '../utils/storage.js'
 import { useAuth } from '../hooks/useAuth.jsx'
 
-export default function Summary({ navigate, goBack, params }) {
+export default function Summary({ navigate, params }) {
   const { user }          = useAuth()
 
   // params.game is set on the normal finish-round flow (Scorecard ->
@@ -155,7 +155,7 @@ export default function Summary({ navigate, goBack, params }) {
         <div className="relative shrink-0 z-10">
           {viewingSaved ? (
             <button
-              onClick={() => goBack('history')}
+              onClick={() => navigate('history')}
               className="py-3 min-h-[44px] flex items-center text-muted font-ui text-sm tracking-[0.08em] uppercase"
             >
               ← Rounds

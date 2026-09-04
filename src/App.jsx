@@ -84,14 +84,16 @@ function AppContent() {
     setStorageOk(isStorageAvailable())
     // Stamp the initial history entry so the first back press has state.
     // depth 0 = the entry the app was loaded on; each navigate() adds one.
-    window.history.replaceState({ page, depth: 0 }, '', window.location.pathname)
+    window.history.replaceState({ page, depth: 0, params: {} }, '', window.location.pathname)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     function handlePopState(e) {
       const to = e.state?.page ?? pageFromPath()
       setPage(to in PAGES ? to : 'home')
-      setParams({})
+      // Restore the params that entry was pushed with (#43) — so stepping back
+      // to a Setup / Summary screen doesn't lose the game / context it needs.
+      setParams(e.state?.params ?? {})
     }
     window.addEventListener('popstate', handlePopState)
     return () => window.removeEventListener('popstate', handlePopState)
@@ -101,13 +103,13 @@ function AppContent() {
     setPage(to)
     setParams(nextParams)
     const depth = (window.history.state?.depth ?? 0) + 1
-    window.history.pushState({ page: to, depth }, '', pathForPage(to))
+    window.history.pushState({ page: to, depth, params: nextParams }, '', pathForPage(to))
   }
 
-  // Back one step in the actual in-app history (#43). Falls back to a sensible
-  // page when the app was loaded straight onto this screen (nothing to go back
-  // to). popstate then restores the previous page; params are cleared, so a
-  // caller relying on params should pass a fallback that reconstructs them.
+  // Back one step in the actual in-app history (#43). window.history.back()
+  // triggers popstate, which restores the previous page and its params. The
+  // fallback only applies when the app was loaded straight onto this screen
+  // (depth 0 — nothing in-app to go back to).
   function goBack(fallback = 'home') {
     if ((window.history.state?.depth ?? 0) > 0) {
       window.history.back()
