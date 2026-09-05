@@ -1,7 +1,7 @@
 # Design
 ## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
-Last updated: 4 September 2026
+Last updated: 5 September 2026
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
 ---
@@ -284,7 +284,7 @@ table-fixed border-collapse w-full
 | Active cell | `bg-accent text-white font-semibold` |
 | Hole # (active row) | `text-accent font-semibold` |
 | Hole # (inactive) | `text-chrome` |
-| Hole # + par | hole number `font-semibold`, then the hole's par in brackets `font-normal ml-0.5` at the same size — e.g. **3** (3). The bracketed par **label** carries no colour of its own; it inherits the cell colour (chrome / muted / accent). Same treatment on the live grid and the read-only Summary table. Replaces the earlier raised `(N)` superscript. *Deltas-only exception:* the par carries no colour rule holds for this par **label** — but score-vs-par **deltas** (the `+1` / `-1` / `E` superscript and the round total-to-par) do take a semantic colour. See "Score vs par" below. |
+| Hole # + par | hole number `font-semibold`, then the hole's par in brackets `font-normal ml-0.5` at the same size — e.g. **3** (3). The bracketed par **label** carries no colour of its own; it inherits the cell colour (chrome / muted / accent). Same treatment on the live grid and the read-only Summary table, and mirrored (bold hole number + normal-weight bracket, same muted colour) on the hand-drawn share canvas (`src/utils/share.js`) since 5 September 2026. Replaces the earlier raised `(N)` superscript. *Deltas-only exception:* the par carries no colour rule holds for this par **label** — but score-vs-par **deltas** (the `+1` / `-1` / `E` superscript and the round total-to-par) do take a semantic colour. See "Score vs par" below. |
 | Empty score | `—` (em dash) |
 
 ### Score vs par
@@ -404,7 +404,11 @@ home → /bruntsfield-short-course
 scorecard / course page → course map (modal, via CourseMapModal)
 ```
 
-`navigate(to, params)` passed as a prop to every page. Back buttons call `navigate('home')` or the appropriate parent. `popstate` clears `params` — pages that need context across a browser back/forward stamp it on the active game (see the edit-round flow).
+`navigate(to, params)` and `goBack(fallback)` are both passed as props to every page. `navigate` pushes a new history entry (a genuinely new state — starting a game, opening a round from a list). `goBack` steps back one entry through the real browser history (`window.history.back()`) when there's an in-app step to return to, and falls back to `navigate(fallback)` only on a direct deep-link load (nothing to step back to). Screens use whichever is correct for the action, not always `goBack` — e.g. finishing an edit and landing on a fresh Summary is a `navigate`, because it's a new state, not a step backward.
+
+**History state and the params allowlist.** `popstate` restores a page's `params` from a small allowlist stamped in `history.state` at push time — `bruntsfield`, `fromHistory`, and `gameId` (a round's own id, added when a `game` param is passed to `navigate`, regardless of destination page). The mutable `game` object itself, and edit-flow flags (`editRound` / `editContext` / `pastRound`), are deliberately never persisted — a frozen snapshot would go stale, and a bounce into a half-restored edit could strand a working copy. Screens that need that state after a bounce recover it themselves: from the game's own `_edit` marker recovered from storage (Scorecard), or by re-resolving the round from storage using the persisted `gameId` (Summary — see `Summary.jsx`, #43b). This is a known, accepted limitation for a bounce onto a signed-in D1-only round with no local copy to look up (tracked in BACKLOG #43b).
+
+**Back button labels.** Every back affordance names its real destination or action rather than a generic "← Back" — `PageHeader`'s `backLabel` prop takes the exact string to render (arrow included when relevant). A button that steps back through history is labelled with the destination screen (`"← Home"`, `"← Rounds"`, `"← History"`), context-aware where the destination varies (Info, Privacy, Rules, Setup each pick their label from where they were opened). A button that performs an action other than stepping back — the live Scorecard's "Pause", an explicit `navigate('home')` (not `goBack()`) that leaves the round intact in storage so it reappears as "Resume Game" on Home — drops the arrow and says what it actually does. Home and the Bruntsfield course page carry no in-app back button at all: Home is the app root, and Bruntsfield relies on the phone browser's own back navigation (user-confirmed).
 
 ---
 
