@@ -300,16 +300,17 @@ export default function Summary({ navigate, goBack, params }) {
           </tbody>
 
           {/* Totals row pinned to the bottom of the scroll area (#63) so it
-              stays in view on a long round. bg-bg-card so scrolled hole rows
-              don't show through when pinned. */}
+              stays in view on a long round. bg-bg-card is set on each cell
+              (not the row) because a <tr> background doesn't reliably paint
+              over scrolled content behind it in some mobile browsers (#66). */}
           <tfoot className="sticky bottom-0 z-10">
-            <tr className="bg-bg-card border-t-2 border-border">
-              <th scope="row" className="py-3 px-3 text-left font-ui text-xs font-normal tracking-[0.12em] uppercase text-muted">Total</th>
+            <tr className="border-t-2 border-border">
+              <th scope="row" className="py-3 px-3 text-left font-ui text-xs font-normal tracking-[0.12em] uppercase text-muted bg-bg-card">Total</th>
               {(game.players ?? []).map(player => (
                 <td
                   key={player}
                   className={[
-                    'py-3 px-3 text-center font-ui text-base font-semibold',
+                    'py-3 px-3 text-center font-ui text-base font-semibold bg-bg-card',
                     isWinner(player) ? 'text-accent' : 'text-text',
                   ].join(' ')}
                 >
