@@ -58,6 +58,7 @@ export default function History({ navigate, goBack }) {
 
       <PageHeader
         title="History"
+        backLabel="← Home"
         onBack={() => goBack()}
         right={user ? (
           <button

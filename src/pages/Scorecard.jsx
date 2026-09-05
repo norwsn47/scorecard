@@ -221,6 +221,14 @@ export default function Scorecard({ navigate, params }) {
       <PageHeader
         title={isEdit ? 'Edit Round' : 'Scorecard'}
         subtitle={null}
+        // Neither branch steps back through real history — both are explicit
+        // navigates with cleanup, so the label says what actually happens
+        // rather than pretending to be back navigation (#43b). Edit mode's
+        // target (History) is correct, so it gets an honest destination
+        // label; the live/new-game mode doesn't clear the active game, so the
+        // round survives in storage and reappears as "Resume Game" on Home —
+        // "Pause" describes that accurately, "Quit"/"← Back" would not.
+        backLabel={isEdit ? '← History' : 'Pause'}
         onBack={() => {
           if (isEdit) {
             clearActiveGame()

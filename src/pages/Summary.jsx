@@ -9,25 +9,35 @@ import { shareScorecard } from '../utils/share.js'
 import { getActiveGame, getCompletedGames, markCompletedGameSynced } from '../utils/storage.js'
 import { useAuth } from '../hooks/useAuth.jsx'
 
-export default function Summary({ navigate, params }) {
+export default function Summary({ navigate, goBack, params }) {
   const { user }          = useAuth()
 
   // params.game is set on the normal finish-round flow (Scorecard ->
   // navigate('summary', { game })), and also when History links into a past
   // round (History -> navigate('summary', { game }), where `game` is a
   // DB-backed record flagged `_fromDb: true` — see normalizeDbGame in
-  // History.jsx). App.jsx drops the `game` param on a browser back/forward
-  // bounce (its history-state snapshot could be stale), so this screen can be
-  // reached with no `game` — e.g. the user finishes a round, taps Done, then
-  // presses back. In that case we fall back to the most recently completed
-  // local game (which the "Done" save marked `synced`), so the
-  // `game.synced` / `game._fromDb` checks below still stop a duplicate
-  // re-submit. Context flags like `fromHistory` do survive the bounce.
+  // History.jsx). App.jsx drops the mutable `game` param on a browser
+  // back/forward bounce (its history-state snapshot could go stale), so this
+  // screen can be reached with no `game` — e.g. the user finishes a round,
+  // taps Done, then presses back, or cancels an in-progress edit and pops
+  // back here (Setup's edit-cancel goBack, #43b). App.jsx does persist the
+  // round's own id (`params.gameId`, never the full object) across that
+  // bounce, so we first try to re-resolve the exact round from localStorage
+  // by id before falling back to the most recently completed local game.
+  // That fallback still only covers local/quick-play rounds and rounds not
+  // yet synced to D1 — a bounce back onto a signed-in D1-only round (opened
+  // from History, never saved locally) can't be re-resolved this way and
+  // falls through to the same "most recent local game" guess as before
+  // (known gap, tracked in BACKLOG #43b). Context flags like `fromHistory`
+  // do survive the bounce.
   // The result (winner / Tied / No winner, DNF) is always re-derived from the
   // per-hole scores on read — the stored winner/dnf on a saved round are
   // legacy and not authoritative (PRD §4.4). deriveResult is idempotent, so
   // this is a no-op for a round that finishGame or History already stamped.
-  const rawGame = params?.game ?? getCompletedGames()[0] ?? null
+  const rawGame = params?.game
+    ?? (params?.gameId ? getCompletedGames().find(g => g.id === params.gameId) : null)
+    ?? getCompletedGames()[0]
+    ?? null
   const game = rawGame ? { ...rawGame, ...deriveResult(rawGame) } : null
 
   const [sharing, setSharing]       = useState(false)
@@ -154,7 +164,7 @@ export default function Summary({ navigate, params }) {
         <div className="relative shrink-0 z-10">
           {viewingSaved ? (
             <button
-              onClick={() => navigate('history')}
+              onClick={() => goBack('history')}
               className="py-3 min-h-[44px] flex items-center text-muted font-ui text-sm tracking-[0.08em] uppercase"
             >
               ← Rounds

@@ -41,7 +41,7 @@ export default function Login({ navigate, goBack }) {
           onClick={() => goBack('home')}
           className="p-4 font-ui text-sm tracking-[0.08em] uppercase text-muted active:text-accent text-left"
         >
-          ← Back
+          ← Home
         </button>
         <div className="flex-1 flex flex-col items-center justify-center px-8 text-center gap-6 pb-16">
           <div className="w-12 h-12 rounded-full bg-bg-card border border-border flex items-center justify-center">
@@ -69,7 +69,7 @@ export default function Login({ navigate, goBack }) {
         onClick={() => goBack('home')}
         className="p-4 font-ui text-sm tracking-[0.08em] uppercase text-muted active:text-accent text-left"
       >
-        ← Back
+        ← Home
       </button>
 
       <div className="flex-1 flex flex-col px-6 pt-3 pb-8">
