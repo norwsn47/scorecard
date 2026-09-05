@@ -6,7 +6,7 @@
 > Nothing here is actioned without explicit instruction — tell the project-manager (or Claude directly) to pull an item into work.
 > Numbers are stable IDs for cross-reference — don't renumber existing items when deleting one, so gaps are expected.
 
-**Last updated:** 4 September 2026
+**Last updated:** 5 September 2026
 
 > The history of shipped and removed items lives in `CHANGELOG.md`. This file is open items only.
 >
@@ -98,7 +98,19 @@ The 24 Aug hotfix (live since 24 August 2026) stopped new duplicates but didn't 
 Small items left after #43 shipped:
 - `pastRound` isn't persisted in history state, so a browser back/forward bounce onto the "Add Past Round" Setup screen re-renders it titled "New Game" with no date field (cosmetic; the past round is already saved by then; no worse than the pre-#43 behaviour). Add `pastRound` to the `navigate` allowlist in `App.jsx` if that path is worth polishing.
 - `Setup.edit-recovery.test.jsx` covers the abandoned-edit guard; SPA nav proper (#17/#18) and a browser back/forward test are still uncovered (tracked under #35).
+- **Broken loop, viewing a past round from History (user-reported 5 Sep 2026):** Summary's "← Rounds" button and Setup's edit-cancel branch both use an explicit `navigate()` push instead of `goBack()` (because `App.jsx` doesn't persist the `game`/`editGame` object in history state). That push leaves a stale, param-less Summary entry underneath in the browser history stack, so History's own back button bounces back into that broken entry instead of going to Home. Full scenario-by-scenario review of every screen's back button (label, current action, target, and which ones don't need a button at all given phone browsers already provide back nav) completed 5 September 2026 — decisions on scope needed from the user before building: which screens keep an explicit back button, what each should be labelled (target screen name vs generic "Back"), and how much state (e.g. a lightweight round id) should be persisted in history so `goBack()` can replace the explicit-push screens.
 
+
+### 66. Scorecard: hole rows visible scrolling behind the pinned totals footer
+User-reported 5 September 2026. On Summary (both straight after finishing a round and when reopened from History), the `<tfoot className="sticky bottom-0 z-10">` added for #63 sets `bg-bg-card` on the `<tr>` rather than on the individual `td`/`th` cells — row backgrounds don't reliably paint over cell content in some mobile browsers, so scrolled hole rows are visible through the pinned band just below it. Likely fix: move the background onto the cells themselves.
+
+### 67. History player filter: sort by rounds played, not alphabetically
+User-reported 5 September 2026. `History.jsx` currently sorts the player filter chips alphabetically (`localeCompare`). Change to sort by number of rounds each player appears in, most-played player furthest left, alphabetical as a tiebreak.
+
+### 68. Share scorecard: add game date to the share text; PNG needs per-hole par
+User-reported 5 September 2026. Two related gaps in `src/utils/share.js`:
+- The `navigator.share()` call passes only `files` and a bare title (`"Scorecard - [courseName]"`) — no `text` field. Add the round date to the shared message, format "[course] [date]".
+- The shared PNG scorecard doesn't show each hole's par, unlike the live grid and Summary view. **Needs a product-owner call before building:** PRD §4.7 and §5.1 both currently state the share image deliberately omits the par label — adding it reverses that, so the PRD needs to change first (or the request needs to be reconsidered) rather than just building against the existing PRD.
 
 ### 56. Length-changing course switch during a D1 past-round edit leaves a stale-size grid
 Surfaced in the #48–#55 code review. `buildEditGame` sizes the edit grid to the *round's saved* hole count, not the newly-selected course's. Switching a 36-hole round onto a 9-hole course mid-edit (D1 rounds only — local rounds can't change course) leaves a 36-row grid with holes 10–36 padded back to par 3. No crash, no data loss, but confusing. Needs a product decision: disallow a length-changing course switch during an edit, or accept it and document the behaviour. (PRD §11.7, §11.13.)
@@ -154,3 +166,4 @@ The `ParDelta` markup is now covered (`src/components/ParDelta.test.jsx`). The `
 
 ### 44. Design-system consolidation + page/header templates
 DESIGN.md has component patterns but no formal system. The user wants: a mobile header review (spacing and sizing rules — `PageHeader` `pt-10 pb-4`, `px-20` title clearance, the Summary bespoke header, etc.), documented design-system rules for the app, and page/header templates so new screens are built to a pattern rather than ad hoc. Design-director work; produces an expanded DESIGN.md (tokens → components → page templates → header rules) plus, ideally, a shared layout/header primitive the pages compose. Related: #27 (closed — PageHeader clearance), #34 (tap-target floor), the DESIGN.md "Inline link tap targets" and "Navigation" sections.
+**Added 5 September 2026:** user also flagged general button polish alongside the header review — buttons across the app "don't feel polished enough." Fold a buttons-as-a-system pass (states, sizing, spacing rules) into this same design-director review rather than treating it separately.
