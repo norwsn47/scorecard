@@ -216,7 +216,7 @@ export default function Setup({ navigate, goBack, params }) {
             ? '← Summary'
             : pastRound
               ? '← History'
-              : `← ${fromBruntsfield ? 'Bruntsfield' : 'Home'}`
+              : `← ${fromBruntsfield ? 'Course' : 'Home'}`
         }
         onBack={() =>
           // Cancelling an edit now steps back through real history instead of
