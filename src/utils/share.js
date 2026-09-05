@@ -76,7 +76,10 @@ async function buildCanvas(game) {
   const SCALE       = 2
   const W           = 390
   const PAD         = 20
-  const HOLE_COL    = 38
+  // Widened from 38 to fit the hole-number-plus-par label added for the
+  // per-hole par bracket (e.g. "36 (3)") without crowding the first player
+  // column — see the hole-row loop below.
+  const HOLE_COL    = 44
   const playerColW  = (W - PAD * 2 - HOLE_COL) / players.length
 
   // Per-hole par for the vs-par superscripts and the round total-to-par (§5.3).
@@ -193,10 +196,18 @@ async function buildCanvas(game) {
       ctx.fillStyle = C.card
       ctx.fillRect(PAD, rowY, W - PAD * 2, ROW_H)
     }
-    ctx.fillStyle = C.muted
-    ctx.font      = '10px Inter, system-ui, sans-serif'
+    // Hole number + par in brackets, matching the live grid and Summary
+    // treatment (§5.1): the number bold, the par trailing in brackets at the
+    // same size, not bold, no colour of its own — e.g. "3 (3)".
     ctx.textAlign = 'left'
-    ctx.fillText(String(h + 1), PAD + 4, rowY + ROW_H / 2 + 4)
+    ctx.fillStyle = C.muted
+    const holeLabel = String(h + 1)
+    const parLabel  = ` (${holePars[h]})`
+    ctx.font = 'bold 10px Inter, system-ui, sans-serif'
+    ctx.fillText(holeLabel, PAD + 4, rowY + ROW_H / 2 + 4)
+    const holeLabelW = ctx.measureText(holeLabel).width
+    ctx.font = '10px Inter, system-ui, sans-serif'
+    ctx.fillText(parLabel, PAD + 4 + holeLabelW, rowY + ROW_H / 2 + 4)
 
     players.forEach((p, i) => {
       const score = game.scores?.[p]?.[h] ?? null

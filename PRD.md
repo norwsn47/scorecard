@@ -2,7 +2,7 @@
 ## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
 **Version:** 2.0
-**Last updated:** 4 September 2026
+**Last updated:** 5 September 2026
 
 > The rationale and section-by-section history of past updates lives in `CHANGELOG.md`, not here. This line is just a date.
 
@@ -138,6 +138,7 @@ A **Share** button appears on the end-of-game summary screen (see 4.4). Tapping 
   - The term **"Tied"** and the " - " (spaced hyphen) separator are used here and on the Summary and History — one vocabulary across every surface. The share image renders the tied, all-DNF and solo cases from the recomputed result
 - Full hole-by-hole scorecard table:
   - Columns = players; rows = holes; cells = stroke count for that hole
+  - Each hole row shows the hole number in bold with its par immediately after in brackets (e.g. "3 (3)"), matching the live grid and the read-only Summary (§5.1)
   - Each scored cell shows its vs-par delta as a small superscript (`+1` / `-1` / `E`) trailing the stroke count, matching the live grid and the read-only Summary (§5.3.1)
   - Totals row at the bottom of each column. Each column's total shows the player's round score-to-par in brackets on the total's main line, e.g. `41 (+5)` (§5.3.2), with average strokes per hole (over completed holes only) on a sub-line beneath
   - DNF players are marked as DNF in their totals row
@@ -220,7 +221,7 @@ MANY THANKS FOR YOUR CO-OPERATION — ENJOY YOUR GAME
 
 Par is a **per-hole** attribute of a course, used for display and derived stats only. It has no effect on totals, the winner, DNF or the draw rule (§5) — scoring stays raw-stroke throughout. It also enables the live score-vs-par displays (§5.3 — the per-hole indicator and the round total-to-par).
 
-**Where par is shown:** the hole number renders in **bold** with the hole's par immediately after it in brackets — same font size, not bold, and with no semantic colour (e.g. "3 (3)"). The bracketed par inherits the cell's text colour but never takes bold or its own accent. This treatment is identical on the live Scorecard grid and on the read-only Summary scorecard table (both the post-finish view and the History detail view). It replaces the raised `(N)` superscript that the first per-hole-par implementation shipped. The share image does not show the par label. The §5.3 semantic under / level / over colour applies to vs-par **deltas** only — this bracketed par label is not a delta and is unaffected by that decision; it stays uncoloured. The live per-hole vs-par indicator and the round total-to-par follow the shared display standard in §5.3.
+**Where par is shown:** the hole number renders in **bold** with the hole's par immediately after it in brackets — same font size, not bold, and with no semantic colour (e.g. "3 (3)"). The bracketed par inherits the cell's text colour but never takes bold or its own accent. This treatment is identical on the live Scorecard grid, the read-only Summary scorecard table (both the post-finish view and the History detail view), and the **share image** (§4.7) — a finished card and a shared card both read the same way as a live one. It replaces the raised `(N)` superscript that the first per-hole-par implementation shipped. The §5.3 semantic under / level / over colour applies to vs-par **deltas** only — this bracketed par label is not a delta and is unaffected by that decision; it stays uncoloured. The live per-hole vs-par indicator and the round total-to-par follow the shared display standard in §5.3.
 
 **Model:**
 - Every course carries a par value for each of its holes — a `hole_pars` array of integers, length = the course's hole count
