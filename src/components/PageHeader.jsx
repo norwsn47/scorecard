@@ -1,13 +1,19 @@
-export default function PageHeader({ title, subtitle, onBack, right = null }) {
+// `backLabel` is the exact text rendered in the back button, arrow prefix
+// included when the action steps back through history (e.g. "← Home",
+// "← Rounds"), omitted when it doesn't (e.g. "Quit" on the live Scorecard,
+// which ends the round rather than navigating back). Callers own the full
+// string so the label can always name the real destination or action —
+// see DESIGN.md "Navigation".
+export default function PageHeader({ title, subtitle, onBack, backLabel = '← Back', right = null }) {
   return (
     <header className="relative flex items-center justify-between px-5 pt-10 pb-4 border-b border-border shrink-0">
-      <div className="relative shrink-0 z-10">
+      <div className="relative shrink-0 z-10 min-w-0 max-w-[72px]">
         {onBack && (
           <button
             onClick={onBack}
-            className="py-3 min-h-[44px] flex items-center text-muted font-ui text-sm tracking-[0.08em] uppercase"
+            className="w-full py-3 min-h-[44px] flex items-center text-muted font-ui text-sm tracking-[0.08em] uppercase truncate"
           >
-            ← Back
+            {backLabel}
           </button>
         )}
       </div>

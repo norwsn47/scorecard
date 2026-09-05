@@ -14,13 +14,22 @@ const ExternalLink = ({ href, children }) => (
   </a>
 )
 
+// Maps the screen this page was opened from to the destination name shown in
+// the back label — "← Info" / "← Login" — so the label always names the
+// screen goBack() will actually land on, rather than a generic "← Back".
+const FROM_LABEL = { info: 'Info', login: 'Login' }
+
 export default function Privacy({ goBack, params }) {
   const from = params?.from ?? 'home'
 
   return (
     <div className="h-full bg-bg flex flex-col">
 
-      <PageHeader title="Your data" onBack={() => goBack(from)} />
+      <PageHeader
+        title="Your data"
+        backLabel={`← ${FROM_LABEL[from] ?? 'Home'}`}
+        onBack={() => goBack(from)}
+      />
 
       <main className="flex-1 overflow-y-auto px-5 pt-6 pb-14 space-y-8 max-w-sm mx-auto w-full">
 

@@ -9,6 +9,7 @@ export default function Info({ navigate, goBack, params }) {
 
       <PageHeader
         title="Information"
+        backLabel={fromBruntsfield ? '← Bruntsfield' : '← Home'}
         onBack={() => goBack(fromBruntsfield ? 'bruntsfield' : 'home')}
       />
 

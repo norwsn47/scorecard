@@ -211,12 +211,21 @@ export default function Setup({ navigate, goBack, params }) {
 
       <PageHeader
         title={editRound ? 'Edit Round' : pastRound ? 'Add Past Round' : 'New Game'}
-        onBack={() =>
-          // Edit back stays an explicit navigate (not goBack): it must carry
-          // `editGame` to the Summary so a non-latest D1 round is shown, and
-          // `game` is never in history state.
+        backLabel={
           editRound
-            ? navigate('summary', { game: editGame })
+            ? '← Summary'
+            : pastRound
+              ? '← History'
+              : `← ${fromBruntsfield ? 'Bruntsfield' : 'Home'}`
+        }
+        onBack={() =>
+          // Cancelling an edit now steps back through real history instead of
+          // pushing a fresh Summary entry (#43b fix) — pushing left a stale,
+          // param-less Summary underneath that later broke History's own back
+          // button. Summary re-resolves the exact round from the `gameId`
+          // App.jsx now persists across the bounce (see Summary.jsx).
+          editRound
+            ? goBack('summary')
             : pastRound
               ? goBack('history')
               : goBack(fromBruntsfield ? 'bruntsfield' : 'home')

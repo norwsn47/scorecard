@@ -116,6 +116,11 @@ function AppContent() {
     for (const k of ['bruntsfield', 'fromHistory']) {
       if (k in nextParams) context[k] = nextParams[k]
     }
+    // A game's own id (never the mutable object itself) survives a bounce so a
+    // screen that reappears via popstate with no `game` param can re-resolve
+    // the right round from storage instead of guessing (#43b fix). Harmless on
+    // pages that don't read it.
+    if (nextParams.game?.id != null) context.gameId = nextParams.game.id
     window.history.pushState({ page: to, depth, params: context }, '', pathForPage(to))
   }
 

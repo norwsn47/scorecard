@@ -6,7 +6,7 @@
 > Nothing here is actioned without explicit instruction — tell the project-manager (or Claude directly) to pull an item into work.
 > Numbers are stable IDs for cross-reference — don't renumber existing items when deleting one, so gaps are expected.
 
-**Last updated:** 4 September 2026
+**Last updated:** 5 September 2026
 
 > The history of shipped and removed items lives in `CHANGELOG.md`. This file is open items only.
 >
@@ -94,11 +94,25 @@ Used/expired magic tokens are never deleted, so email addresses from abandoned s
 ### 16. Pre-existing duplicate game rows in production D1
 The 24 Aug hotfix (live since 24 August 2026) stopped new duplicates but didn't touch rows already duplicated before it shipped. Identify and remove them via the Cloudflare D1 console — group by `user_id, played_at, holes_played` looking for counts > 1 (all predate `client_round_id` so all have it `NULL`). Check for other affected users too. Close this once the cleanup has been run.
 
-### 43b. Back-nav polish (follow-ups from the #43 build)
-Small items left after #43 shipped:
-- `pastRound` isn't persisted in history state, so a browser back/forward bounce onto the "Add Past Round" Setup screen re-renders it titled "New Game" with no date field (cosmetic; the past round is already saved by then; no worse than the pre-#43 behaviour). Add `pastRound` to the `navigate` allowlist in `App.jsx` if that path is worth polishing.
-- `Setup.edit-recovery.test.jsx` covers the abandoned-edit guard; SPA nav proper (#17/#18) and a browser back/forward test are still uncovered (tracked under #35).
+### 43b. Back-nav polish (follow-ups from the #43 build) — mostly built 5 September 2026
+The broken loop and the label rationalisation from the 5 Sep scenario review are built. Summary's "← Rounds" and Setup's edit-cancel branch now call `goBack()` instead of pushing a fresh `navigate()`; `App.jsx` persists a round's own `id` (never the mutable object) in history state as `gameId`, and Summary re-resolves the round from storage by that id when a popstate bounce drops the `game` param. Every back button now names its real destination or action instead of a generic "← Back" (History "← Home"; Info/Privacy/Rules context-aware; Setup three ways — "← Summary" / "← History" / "← Home" or "← Bruntsfield"; Login "← Home" on both its screens; Scorecard edit mode "← History"; Scorecard live mode "Pause", no arrow, since it leaves the round intact in storage rather than stepping back or ending it). Home and the Bruntsfield course page keep no in-app back button (root screen; phone browser back nav respectively). A code-review pass (5 Sep) caught two label bugs before this shipped: Login's initial form still said "← Back" (only its "check your email" screen had been updated) — fixed; and the live Scorecard's back action was initially labelled "Quit" though the code never clears the active game — relabelled "Pause" to match actual behaviour rather than changing the behaviour itself. See DESIGN.md "Navigation".
 
+Still open:
+- **D1-round gap:** the `gameId` re-resolution only covers local/quick-play rounds (looked up in `localStorage`). A browser back/forward bounce, or Setup's edit-cancel, landing back on a signed-in D1-only round opened from History (never saved locally) still falls back to the most recently completed *local* game, same as before this build — there's no `GET /api/games/:id` to re-fetch a single D1 round by id. Low priority (narrow path: sign in, open a past round from History, tap Edit, cancel before starting the scorecard, or a raw browser bounce) — would need a new API endpoint if it's worth closing.
+- `pastRound` isn't persisted in history state, so a browser back/forward bounce onto the "Add Past Round" Setup screen re-renders it titled "New Game" with no date field (cosmetic; the past round is already saved by then; no worse than pre-#43 behaviour). Add `pastRound` to the `navigate` allowlist in `App.jsx` if that path is worth polishing.
+- `Setup.edit-recovery.test.jsx` covers the abandoned-edit guard; SPA nav proper (#17/#18) and a browser back/forward test are still uncovered (tracked under #35). No render test yet for the `goBack()` fix itself, and no Login render test exists at all (which is how the "← Back" leftover slipped past everything except manual code review).
+- **Scorecard "Pause" — no confirmation dialog.** Flagged during the 5 Sep build, not decided: tapping it leaves the app with no confirmation, unlike Finish Game. Scores are autosaved so no data is lost either way, but it's still an accidental-tap risk. Worth a product-owner/user call on whether it needs a guard.
+- **`PageHeader` back-label truncation is tight for "Bruntsfield".** The code-review-flagged overlap (see above) was confirmed real by an actual Playwright screenshot of Info/Rules opened from the Bruntsfield page — "← Bruntsfield" visibly overlapped the centred title. Fixed by constraining the back-button slot to 72px with `truncate`, which reads as "← BRUNT" — functional (no overlap, still clearly a back action) but not polished. #44's header-space review is the right place to design a proper fix (e.g. a shorter destination word, or reflowing the header so the back slot isn't fixed-width). Also worth checking then whether the `right`-side slot (Setup/Scorecard's "Save"/"Finish" etc.) has the same latent risk — not hit by anything currently in use, but not proven safe either.
+
+
+### 66. Scorecard: hole rows visible scrolling behind the pinned totals footer
+User-reported 5 September 2026. On Summary (both straight after finishing a round and when reopened from History), the `<tfoot className="sticky bottom-0 z-10">` added for #63 sets `bg-bg-card` on the `<tr>` rather than on the individual `td`/`th` cells — row backgrounds don't reliably paint over cell content in some mobile browsers, so scrolled hole rows are visible through the pinned band just below it. Likely fix: move the background onto the cells themselves.
+
+### 67. History player filter: sort by rounds played, not alphabetically
+User-reported 5 September 2026. `History.jsx` currently sorts the player filter chips alphabetically (`localeCompare`). Change to sort by number of rounds each player appears in, most-played player furthest left, alphabetical as a tiebreak.
+
+### 68. Share scorecard: add game date to the share text
+User-reported 5 September 2026. The `navigator.share()` call in `src/utils/share.js` passes only `files` and a bare title (`"Scorecard - [courseName]"`) — no `text` field. Add the round date to the shared message, format "[course] [date]". Not yet approved for build — raised in the same conversation as the share-PNG par fix (built and shipped 5 Sep 2026, this item originally covered both) but explicitly left open pending a decision.
 
 ### 56. Length-changing course switch during a D1 past-round edit leaves a stale-size grid
 Surfaced in the #48–#55 code review. `buildEditGame` sizes the edit grid to the *round's saved* hole count, not the newly-selected course's. Switching a 36-hole round onto a 9-hole course mid-edit (D1 rounds only — local rounds can't change course) leaves a 36-row grid with holes 10–36 padded back to par 3. No crash, no data loss, but confusing. Needs a product decision: disallow a length-changing course switch during an edit, or accept it and document the behaviour. (PRD §11.7, §11.13.)
@@ -154,3 +168,4 @@ The `ParDelta` markup is now covered (`src/components/ParDelta.test.jsx`). The `
 
 ### 44. Design-system consolidation + page/header templates
 DESIGN.md has component patterns but no formal system. The user wants: a mobile header review (spacing and sizing rules — `PageHeader` `pt-10 pb-4`, `px-20` title clearance, the Summary bespoke header, etc.), documented design-system rules for the app, and page/header templates so new screens are built to a pattern rather than ad hoc. Design-director work; produces an expanded DESIGN.md (tokens → components → page templates → header rules) plus, ideally, a shared layout/header primitive the pages compose. Related: #27 (closed — PageHeader clearance), #34 (tap-target floor), the DESIGN.md "Inline link tap targets" and "Navigation" sections.
+**Added 5 September 2026:** user also flagged general button polish alongside the header review — buttons across the app "don't feel polished enough." Fold a buttons-as-a-system pass (states, sizing, spacing rules) into this same design-director review rather than treating it separately.
