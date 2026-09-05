@@ -58,7 +58,7 @@ export default function Info({ navigate, goBack, params }) {
               <div>
                 <button
                   onClick={() => navigate('rules', { from: 'info' })}
-                  className="inline-flex items-center gap-1 py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2 active:opacity-70"
+                  className="inline-flex items-center gap-1 py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                 >
                   View full course rules
                   <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5 relative top-px">
@@ -103,7 +103,7 @@ export default function Info({ navigate, goBack, params }) {
             <div>
               <button
                 onClick={async () => { await logout(); navigate('home') }}
-                className="inline-block py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2 active:opacity-70"
+                className="inline-block py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 Sign out
               </button>
@@ -118,7 +118,7 @@ export default function Info({ navigate, goBack, params }) {
             <div>
               <button
                 onClick={() => navigate('login')}
-                className="inline-block py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2 active:opacity-70"
+                className="inline-block py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 Sign in or create account
               </button>
@@ -130,7 +130,7 @@ export default function Info({ navigate, goBack, params }) {
           Your data is handled under UK GDPR.{' '}
           <button
             onClick={() => navigate('privacy', { from: 'info' })}
-            className="inline-block py-2.5 -my-2.5 text-accent underline underline-offset-2 active:opacity-70"
+            className="inline-block py-2.5 -my-2.5 text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             Read our privacy policy
           </button>

@@ -277,7 +277,7 @@ export default function Setup({ navigate, goBack, params }) {
                     />
                     <button
                       onClick={() => { setCreatingCourse(false); setNewCourseName(''); setCourseError(null); setNewCourseHoleCount(9); setNewCoursePars(Array(9).fill(3)) }}
-                      className="px-4 py-3 rounded-sm border border-border text-muted font-ui text-sm active:bg-bg-card"
+                      className="px-4 py-3 rounded-sm border border-border text-muted font-ui text-sm active:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                     >
                       Cancel
                     </button>
@@ -300,7 +300,7 @@ export default function Setup({ navigate, goBack, params }) {
                         aria-checked={newCourseHoleCount === n}
                         onClick={() => handleNewCourseHoleCount(n)}
                         className={[
-                          'flex-1 h-11 rounded-md border font-ui text-sm active:bg-bg-card',
+                          'flex-1 h-11 rounded-md border font-ui text-sm active:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
                           newCourseHoleCount === n
                             ? 'border-accent text-accent'
                             : 'border-border text-text',
@@ -337,7 +337,7 @@ export default function Setup({ navigate, goBack, params }) {
                               disabled={atMin}
                               aria-label={`Decrease par for hole ${i + 1}`}
                               className={[
-                                'w-11 h-11 flex items-center justify-center rounded-md font-ui text-lg text-text active:bg-border',
+                                'w-11 h-11 flex items-center justify-center rounded-md font-ui text-lg text-text active:bg-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
                                 atMin ? 'opacity-40' : '',
                               ].join(' ')}
                             >
@@ -350,7 +350,7 @@ export default function Setup({ navigate, goBack, params }) {
                               disabled={atMax}
                               aria-label={`Increase par for hole ${i + 1}`}
                               className={[
-                                'w-11 h-11 flex items-center justify-center rounded-md font-ui text-lg text-text active:bg-border',
+                                'w-11 h-11 flex items-center justify-center rounded-md font-ui text-lg text-text active:bg-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
                                 atMax ? 'opacity-40' : '',
                               ].join(' ')}
                             >
@@ -413,7 +413,7 @@ export default function Setup({ navigate, goBack, params }) {
                   <button
                     onClick={() => handleRemovePlayer(i)}
                     aria-label={`Remove player ${i + 1}`}
-                    className="absolute right-1 top-1/2 -translate-y-1/2 p-2 text-muted active:text-text"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 p-2 text-muted active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -438,7 +438,7 @@ export default function Setup({ navigate, goBack, params }) {
         {!editRound && names.length < MAX_PLAYERS && (
           <button
             onClick={handleAddPlayer}
-            className="w-full py-3 px-4 rounded-md border border-dashed border-border bg-bg-card text-muted font-ui text-sm active:bg-border"
+            className="w-full py-3 px-4 rounded-md border border-dashed border-border bg-bg-card text-muted font-ui text-sm active:bg-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             + Add player
           </button>
@@ -464,7 +464,7 @@ export default function Setup({ navigate, goBack, params }) {
               New here?{' '}
               <button
                 onClick={() => navigate('rules', { from: 'setup', bruntsfield: fromBruntsfield })}
-                className="inline-block py-3 -my-3 text-accent underline underline-offset-2 active:opacity-70"
+                className="inline-block py-3 -my-3 text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 Read the course rules before you start
               </button>
@@ -477,7 +477,7 @@ export default function Setup({ navigate, goBack, params }) {
             onClick={handleStart}
             disabled={!ready}
             className={[
-              'w-full py-4 rounded-sm font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn transition-opacity',
+              'w-full py-4 rounded-sm font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
               ready
                 ? 'bg-accent text-bg active:bg-accent-hover'
                 : 'bg-accent text-bg opacity-40 cursor-not-allowed',

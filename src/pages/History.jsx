@@ -68,7 +68,7 @@ export default function History({ navigate, goBack }) {
         right={user ? (
           <button
             onClick={() => navigate('setup', { pastRound: true })}
-            className="font-ui text-xs tracking-[0.08em] uppercase text-accent py-2 px-3 rounded-sm border border-accent active:bg-accent/10"
+            className="font-ui text-xs tracking-[0.1em] uppercase font-semibold text-accent py-2 px-4 rounded-sm border border-accent active:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             + Add round
           </button>
@@ -86,7 +86,7 @@ export default function History({ navigate, goBack }) {
           <button
             onClick={() => setCourseFilter(null)}
             className={[
-              'shrink-0 inline-flex items-center py-1.5 px-3 rounded-full border font-ui text-xs font-medium',
+              'shrink-0 inline-flex items-center py-1.5 px-3 rounded-full border font-ui text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
               !courseFilter
                 ? 'bg-accent border-accent text-bg'
                 : 'border-border text-muted',
@@ -99,7 +99,7 @@ export default function History({ navigate, goBack }) {
               key={course}
               onClick={() => setCourseFilter(prev => prev === course ? null : course)}
               className={[
-                'shrink-0 inline-flex items-center py-1.5 px-3 rounded-full border font-ui text-xs font-medium',
+                'shrink-0 inline-flex items-center py-1.5 px-3 rounded-full border font-ui text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
                 courseFilter === course
                   ? 'bg-accent border-accent text-bg'
                   : 'border-border text-muted',
@@ -127,7 +127,7 @@ export default function History({ navigate, goBack }) {
           <button
             onClick={() => setFilter(null)}
             className={[
-              'shrink-0 inline-flex items-center py-1.5 px-3 rounded-full border font-ui text-xs font-medium',
+              'shrink-0 inline-flex items-center py-1.5 px-3 rounded-full border font-ui text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
               !filter
                 ? 'bg-accent border-accent text-bg'
                 : 'border-border text-muted',
@@ -140,7 +140,7 @@ export default function History({ navigate, goBack }) {
               key={name}
               onClick={() => toggleFilter(name)}
               className={[
-                'shrink-0 inline-flex items-center py-1.5 px-3 rounded-full border font-ui text-xs font-medium',
+                'shrink-0 inline-flex items-center py-1.5 px-3 rounded-full border font-ui text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
                 filter === name
                   ? 'bg-accent border-accent text-bg'
                   : 'border-border text-muted',
@@ -171,7 +171,7 @@ export default function History({ navigate, goBack }) {
                 </p>
                 <button
                   onClick={() => setFilter(null)}
-                  className="mt-4 font-ui text-sm text-accent underline"
+                  className="mt-4 font-ui text-sm text-accent underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                 >
                   Show all rounds
                 </button>
@@ -184,7 +184,7 @@ export default function History({ navigate, goBack }) {
                 </p>
                 <button
                   onClick={() => navigate('setup')}
-                  className="py-3 px-6 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn"
+                  className="py-3 px-6 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                 >
                   New Game
                 </button>
@@ -203,7 +203,7 @@ export default function History({ navigate, goBack }) {
           >
             <button
               onClick={() => navigate('summary', { game, fromHistory: true })}
-              className="w-full text-left px-4 pt-4 pb-4 pr-10 active:opacity-70"
+              className="w-full text-left px-4 pt-4 pb-4 pr-10 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               {/* Course name */}
               {game.courseName && (
@@ -265,7 +265,7 @@ export default function History({ navigate, goBack }) {
             <button
               onClick={e => { e.stopPropagation(); setConfirmDeleteId(game.id) }}
               aria-label="Delete game"
-              className="absolute top-2 right-2 w-9 h-9 flex items-center justify-center text-muted active:text-text"
+              className="absolute top-2 right-2 w-9 h-9 flex items-center justify-center text-muted active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -287,13 +287,13 @@ export default function History({ navigate, goBack }) {
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirmDeleteId(null)}
-                className="flex-1 py-3 rounded-sm border border-border font-ui text-sm tracking-[0.08em] uppercase text-text active:bg-bg-card"
+                className="flex-1 py-3 rounded-sm border border-border font-ui text-sm tracking-[0.08em] uppercase text-text active:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 Cancel
               </button>
               <button
                 onClick={() => executeDelete(confirmDeleteId)}
-                className="flex-1 py-3 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.08em] uppercase font-semibold active:opacity-80"
+                className="flex-1 py-3 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.08em] uppercase font-semibold active:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 Delete
               </button>

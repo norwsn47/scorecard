@@ -241,7 +241,7 @@ export default function Scorecard({ navigate, params }) {
         right={
           <button
             onClick={() => setShowConfirm(true)}
-            className="py-2 px-4 rounded-sm border border-accent text-accent font-ui text-xs tracking-[0.1em] uppercase font-semibold"
+            className="py-2 px-4 rounded-sm border border-accent text-accent font-ui text-xs tracking-[0.1em] uppercase font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             {isEdit ? 'Save' : 'Finish'}
           </button>
@@ -338,7 +338,7 @@ export default function Scorecard({ navigate, params }) {
             <button
               onClick={() => setShowMap(true)}
               aria-label="View course map"
-              className="w-16 h-16 rounded-full border-2 border-chrome text-chrome flex items-center justify-center active:opacity-70"
+              className="w-16 h-16 rounded-full border-2 border-chrome text-chrome flex items-center justify-center active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.159.69.159 1.006 0z" />
@@ -349,14 +349,14 @@ export default function Scorecard({ navigate, params }) {
             onClick={handleDecrement}
             disabled={activeScore === null}
             aria-label="Decrease score"
-            className="w-16 h-16 rounded-full border-2 border-chrome font-ui text-2xl text-chrome flex items-center justify-center disabled:opacity-25"
+            className="w-16 h-16 rounded-full border-2 border-chrome font-ui text-2xl text-chrome flex items-center justify-center disabled:opacity-25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             −
           </button>
           <button
             onClick={handleIncrement}
             aria-label="Increase score"
-            className="w-16 h-16 rounded-full bg-accent border-2 border-accent text-bg font-ui text-2xl flex items-center justify-center active:opacity-80"
+            className="w-16 h-16 rounded-full bg-accent border-2 border-accent text-bg font-ui text-2xl flex items-center justify-center active:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             +
           </button>
@@ -364,7 +364,7 @@ export default function Scorecard({ navigate, params }) {
             onClick={handleAdvance}
             disabled={activeCell.holeIndex === displayedHoles - 1 && activeCell.playerIndex === players.length - 1}
             aria-label="Advance to next player"
-            className="w-16 h-16 rounded-full bg-control-warm border-2 border-control-warm text-bg flex items-center justify-center disabled:opacity-25 active:opacity-80"
+            className="w-16 h-16 rounded-full bg-control-warm border-2 border-control-warm text-bg flex items-center justify-center disabled:opacity-25 active:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-6 h-6">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6" />
@@ -402,14 +402,14 @@ export default function Scorecard({ navigate, params }) {
               <button
                 onClick={() => setShowConfirm(false)}
                 disabled={finishing}
-                className="flex-1 py-3 rounded-sm border border-border font-ui text-sm tracking-[0.08em] uppercase text-text disabled:opacity-40"
+                className="flex-1 py-3 rounded-sm border border-border font-ui text-sm tracking-[0.08em] uppercase text-text disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmFinish}
                 disabled={finishing}
-                className="flex-1 py-3 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.08em] uppercase font-semibold disabled:opacity-60"
+                className="flex-1 py-3 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.08em] uppercase font-semibold disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 {isEdit ? (finishing ? 'Saving…' : 'Save changes') : 'Confirm'}
               </button>

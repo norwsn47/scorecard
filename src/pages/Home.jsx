@@ -32,7 +32,7 @@ export default function Home({ navigate }) {
           <button
             onClick={() => navigate('info')}
             aria-label="Information"
-            className="text-muted active:text-accent p-2 flex-shrink-0 mt-1.5"
+            className="text-muted active:text-accent p-2 flex-shrink-0 mt-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
               <circle cx="12" cy="12" r="9" />
@@ -61,7 +61,7 @@ export default function Home({ navigate }) {
 
         <button
           onClick={() => { track('New Game Started'); navigate('setup') }}
-          className="w-full py-4 px-6 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn active:bg-accent-hover"
+          className="w-full py-4 px-6 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn active:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
         >
           New Game
         </button>
@@ -69,7 +69,7 @@ export default function Home({ navigate }) {
         {activeGame && (
           <button
             onClick={() => navigate('scorecard')}
-            className="w-full py-3 px-4 rounded-sm border border-accent text-accent font-ui text-sm tracking-[0.08em] uppercase font-medium flex items-center justify-between"
+            className="w-full py-3 px-4 rounded-sm border border-accent text-accent font-ui text-sm tracking-[0.08em] uppercase font-medium flex items-center justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             <span>Resume Game</span>
             <span className="text-xs text-muted normal-case tracking-normal font-normal truncate max-w-[160px]">
@@ -83,7 +83,7 @@ export default function Home({ navigate }) {
           <div className="text-center -mt-1">
             <button
               onClick={() => navigate('summary', { game: lastGame })}
-              className="font-ui text-xs text-muted active:text-text"
+              className="font-ui text-xs text-muted active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               Last round:{' '}
               <span className="underline underline-offset-2">
@@ -98,7 +98,7 @@ export default function Home({ navigate }) {
           <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted px-1">Course specific scorecards</p>
           <button
             onClick={() => navigate('bruntsfield')}
-            className="w-full px-4 py-3 rounded-md bg-bg-card border border-border text-left flex items-center gap-3 active:opacity-70"
+            className="w-full px-4 py-3 rounded-md bg-bg-card border border-border text-left flex items-center gap-3 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             <div
               className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
@@ -122,7 +122,7 @@ export default function Home({ navigate }) {
         {user && (
           <button
             onClick={() => navigate('history')}
-            className="w-full py-4 px-6 rounded-sm border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card"
+            className="w-full py-4 px-6 rounded-sm border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             Past Rounds
           </button>
@@ -133,7 +133,7 @@ export default function Home({ navigate }) {
           <div className="pt-0 text-center space-y-1">
             <button
               onClick={() => navigate('login')}
-              className="font-ui text-xs text-accent active:opacity-70"
+              className="font-ui text-xs text-accent active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               Want to save your scores? <span className="underline underline-offset-2">Sign in</span>
             </button>

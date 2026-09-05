@@ -165,7 +165,7 @@ export default function Summary({ navigate, goBack, params }) {
           {viewingSaved ? (
             <button
               onClick={() => goBack('history')}
-              className="py-3 min-h-[44px] flex items-center text-muted font-ui text-sm tracking-[0.08em] uppercase"
+              className="py-3 min-h-[44px] flex items-center text-muted font-ui text-sm tracking-[0.08em] uppercase focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               ← Rounds
             </button>
@@ -189,7 +189,7 @@ export default function Summary({ navigate, goBack, params }) {
               <button
                 onClick={handleEditRound}
                 disabled={saving}
-                className="py-3 min-h-[44px] flex items-center text-accent font-ui text-sm tracking-[0.08em] uppercase disabled:opacity-40"
+                className="py-3 min-h-[44px] flex items-center text-accent font-ui text-sm tracking-[0.08em] uppercase disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 Edit
               </button>
@@ -198,7 +198,7 @@ export default function Summary({ navigate, goBack, params }) {
             <button
               onClick={handleGoHome}
               disabled={saving}
-              className="py-3 min-h-[44px] flex items-center text-accent font-ui text-sm tracking-[0.08em] uppercase font-semibold disabled:opacity-40"
+              className="py-3 min-h-[44px] flex items-center text-accent font-ui text-sm tracking-[0.08em] uppercase font-semibold disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               {saving ? 'Saving…' : 'Done'}
             </button>
@@ -384,7 +384,7 @@ export default function Summary({ navigate, goBack, params }) {
                 <button
                   onClick={handleEditRound}
                   disabled={saving}
-                  className="py-2.5 -my-2.5 underline underline-offset-2 active:opacity-70 disabled:opacity-40"
+                  className="py-2.5 -my-2.5 underline underline-offset-2 active:opacity-70 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                 >
                   Edit round
                 </button>
@@ -394,7 +394,7 @@ export default function Summary({ navigate, goBack, params }) {
             <button
               onClick={handleShare}
               disabled={sharing}
-              className="py-2.5 -my-2.5 underline underline-offset-2 active:opacity-70 disabled:opacity-40"
+              className="py-2.5 -my-2.5 underline underline-offset-2 active:opacity-70 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               {sharing ? 'Generating…' : 'Share scorecard'}
             </button>
@@ -414,7 +414,7 @@ export default function Summary({ navigate, goBack, params }) {
             <div>
               <button
                 onClick={() => navigate('login')}
-                className="inline-block py-3.5 -my-3.5 font-ui text-xs text-accent active:opacity-70"
+                className="inline-block py-3.5 -my-3.5 font-ui text-xs text-accent active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 To save your rounds, <span className="underline underline-offset-2">create an account</span>
               </button>

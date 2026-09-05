@@ -15,7 +15,7 @@ export default function PageHeader({ title, subtitle, onBack, backLabel = '← B
         {onBack && (
           <button
             onClick={onBack}
-            className="py-3 min-h-[44px] flex items-center whitespace-nowrap text-muted font-ui text-sm tracking-[0.08em] uppercase"
+            className="py-3 min-h-[44px] flex items-center whitespace-nowrap text-muted font-ui text-sm tracking-[0.08em] uppercase focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             {backLabel}
           </button>
