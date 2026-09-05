@@ -105,15 +105,6 @@ Still open:
 - **`PageHeader` back-label truncation is tight for "Bruntsfield".** The code-review-flagged overlap (see above) was confirmed real by an actual Playwright screenshot of Info/Rules opened from the Bruntsfield page — "← Bruntsfield" visibly overlapped the centred title. Fixed by constraining the back-button slot to 72px with `truncate`, which reads as "← BRUNT" — functional (no overlap, still clearly a back action) but not polished. #44's header-space review is the right place to design a proper fix (e.g. a shorter destination word, or reflowing the header so the back slot isn't fixed-width). Also worth checking then whether the `right`-side slot (Setup/Scorecard's "Save"/"Finish" etc.) has the same latent risk — not hit by anything currently in use, but not proven safe either.
 
 
-### 66. Scorecard: hole rows visible scrolling behind the pinned totals footer
-User-reported 5 September 2026. On Summary (both straight after finishing a round and when reopened from History), the `<tfoot className="sticky bottom-0 z-10">` added for #63 sets `bg-bg-card` on the `<tr>` rather than on the individual `td`/`th` cells — row backgrounds don't reliably paint over cell content in some mobile browsers, so scrolled hole rows are visible through the pinned band just below it. Likely fix: move the background onto the cells themselves.
-
-### 67. History player filter: sort by rounds played, not alphabetically
-User-reported 5 September 2026. `History.jsx` currently sorts the player filter chips alphabetically (`localeCompare`). Change to sort by number of rounds each player appears in, most-played player furthest left, alphabetical as a tiebreak.
-
-### 68. Share scorecard: add game date to the share text
-User-reported 5 September 2026. The `navigator.share()` call in `src/utils/share.js` passes only `files` and a bare title (`"Scorecard - [courseName]"`) — no `text` field. Add the round date to the shared message, format "[course] [date]". Not yet approved for build — raised in the same conversation as the share-PNG par fix (built and shipped 5 Sep 2026, this item originally covered both) but explicitly left open pending a decision.
-
 ### 56. Length-changing course switch during a D1 past-round edit leaves a stale-size grid
 Surfaced in the #48–#55 code review. `buildEditGame` sizes the edit grid to the *round's saved* hole count, not the newly-selected course's. Switching a 36-hole round onto a 9-hole course mid-edit (D1 rounds only — local rounds can't change course) leaves a 36-row grid with holes 10–36 padded back to par 3. No crash, no data loss, but confusing. Needs a product decision: disallow a length-changing course switch during an edit, or accept it and document the behaviour. (PRD §11.7, §11.13.)
 
@@ -163,8 +154,8 @@ The three easy toolchain vulns (`browserslist`, `nanoid`, `postcss`) were cleare
 ### 58. Par stepper render test — folded into #35
 The `ParDelta` markup is now covered (`src/components/ParDelta.test.jsx`). The `Setup.jsx` `stepPar` 2–7 clamp still isn't — tracked under #35 (blocked on the "+ New course" select being hard to drive in jsdom).
 
-### 65. One hardcoded focus-ring value left in `Login.jsx`
-`src/pages/Login.jsx:111` uses `focus:ring-[rgba(26,67,41,0.4)]` — the accent RGB inline. Every other input in the app uses the `focus:ring-accent/40` token form. Swap it for consistency. Trivial. Also `Home.jsx:105` has an inline `style={{ background: 'rgba(26,67,41,0.1)' }}` for a decorative circle — lower priority, could take an `accent`-derived token. Surfaced 4 September 2026 when the stale DESIGN.md "Divergences" section was reconciled (the other two divergences it listed were already fixed). Ties into #44.
+### 65. Inline decorative-circle colour on `Home.jsx` isn't a token
+`Home.jsx:105` has an inline `style={{ background: 'rgba(26,67,41,0.1)' }}` for a decorative circle — could take an `accent`-derived token. Low priority. Surfaced 4 September 2026 when the stale DESIGN.md "Divergences" section was reconciled; the sibling issue on this line (`Login.jsx`'s hardcoded focus-ring RGB) shipped 5 September 2026. Ties into #44.
 
 ### 44. Design-system consolidation + page/header templates
 DESIGN.md has component patterns but no formal system. The user wants: a mobile header review (spacing and sizing rules — `PageHeader` `pt-10 pb-4`, `px-20` title clearance, the Summary bespoke header, etc.), documented design-system rules for the app, and page/header templates so new screens are built to a pattern rather than ad hoc. Design-director work; produces an expanded DESIGN.md (tokens → components → page templates → header rules) plus, ideally, a shared layout/header primitive the pages compose. Related: #27 (closed — PageHeader clearance), #34 (tap-target floor), the DESIGN.md "Inline link tap targets" and "Navigation" sections.
