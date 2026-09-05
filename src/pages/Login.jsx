@@ -108,7 +108,7 @@ export default function Login({ navigate, goBack }) {
               required
               autoFocus
               autoComplete="email"
-              className="w-full px-4 py-3 rounded-md bg-bg-card border border-border font-ui text-base text-text placeholder:text-chrome focus:outline-none focus:ring-2 focus:ring-[rgba(26,67,41,0.4)]"
+              className="w-full px-4 py-3 rounded-md bg-bg-card border border-border font-ui text-base text-text placeholder:text-chrome focus:outline-none focus:ring-2 focus:ring-accent/40"
             />
           </div>
           <button

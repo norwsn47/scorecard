@@ -1,5 +1,6 @@
 import { deriveResult } from './game.js'
 import { deriveHolePars, formatToPar, playerAverage, playerTotal, roundToPar, scoreToPar } from './scores.js'
+import { formatDateOnly } from './format.js'
 
 const C = {
   bg:     '#F7F4EE',
@@ -294,7 +295,14 @@ export async function shareScorecard(game) {
 
       if (navigator.canShare?.({ files: [file] })) {
         try {
-          await navigator.share({ files: [file], title: `Scorecard - ${game.courseName || 'Golf Scorecard'}` })
+          const courseName = game.courseName || 'Golf Scorecard'
+          await navigator.share({
+            files: [file],
+            title: `Scorecard - ${courseName}`,
+            // The share sheet (WhatsApp etc.) shows this alongside the image —
+            // course + date so the recipient knows which round it is (#68).
+            text: `${courseName} - ${formatDateOnly(game.completedAt)}`,
+          })
           resolve('shared')
         } catch (e) {
           if (e.name === 'AbortError') resolve('cancelled')

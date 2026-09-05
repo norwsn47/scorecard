@@ -29,8 +29,13 @@ export default function History({ navigate, goBack }) {
     ? [...new Set(games.map(g => g.courseName).filter(Boolean))]
     : []
 
+  const playerRoundCounts = games.reduce((counts, g) => {
+    for (const p of g.players ?? []) counts[p] = (counts[p] ?? 0) + 1
+    return counts
+  }, {})
+
   const players = [...new Set(games.flatMap(g => g.players ?? []))]
-    .sort((a, b) => a.localeCompare(b))
+    .sort((a, b) => playerRoundCounts[b] - playerRoundCounts[a] || a.localeCompare(b))
 
   const displayed = games
     .filter(g => !courseFilter || g.courseName === courseFilter)
