@@ -4,6 +4,7 @@ import { formatDateOnly } from '../utils/format.js'
 import { deriveResult } from '../utils/game.js'
 import { tiedNames } from '../utils/result.js'
 import { deriveHolePars, playerAverage, playerTotal, roundToPar, scoreToPar } from '../utils/scores.js'
+import PageHeader from '../components/PageHeader.jsx'
 import ParDelta from '../components/ParDelta.jsx'
 import { shareScorecard } from '../utils/share.js'
 import { getActiveGame, getCompletedGames, markCompletedGameSynced } from '../utils/storage.js'
@@ -157,34 +158,18 @@ export default function Summary({ navigate, goBack, params }) {
   return (
     <div className="h-full bg-bg flex flex-col">
 
-      {/* Header — navigation chrome at text scale so the scorecard below keeps
-          its room. Post-finish: "Done" top-right (saves + goes home). A round
-          opened from History: "← Rounds" left, "Edit" right. */}
-      <header className="relative flex items-center justify-between px-5 pt-10 pb-4 border-b border-border shrink-0">
-        <div className="relative shrink-0 z-10">
-          {viewingSaved ? (
-            <button
-              onClick={() => goBack('history')}
-              className="py-3 min-h-[44px] flex items-center text-muted font-ui text-sm tracking-[0.08em] uppercase focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-            >
-              ← Rounds
-            </button>
-          ) : (
-            <span className="block w-14" aria-hidden="true" />
-          )}
-        </div>
-
-        <div className="absolute inset-x-0 text-center px-20 pointer-events-none">
-          {game.courseName && (
-            <h1 className="font-display italic text-2xl text-text truncate">{game.courseName}</h1>
-          )}
-          <p className="font-ui text-xs tracking-[0.15em] uppercase text-muted truncate">
-            {formatDateOnly(game.completedAt)}
-          </p>
-        </div>
-
-        <div className="relative shrink-0 z-10 flex justify-end">
-          {viewingSaved ? (
+      {/* Post-finish: "Done" top-right (saves + goes home). A round opened
+          from History: "← Rounds" left, "Edit" right. Composes the shared
+          PageHeader rather than hand-rolling its own copy (#69) — this used
+          to duplicate PageHeader's markup exactly, including a px-20 title
+          clearance that drifted out of sync with #44's px-24 fix. */}
+      <PageHeader
+        title={game.courseName || undefined}
+        subtitle={formatDateOnly(game.completedAt)}
+        onBack={viewingSaved ? () => goBack('history') : undefined}
+        backLabel="← Rounds"
+        right={
+          viewingSaved ? (
             canEdit && (
               <button
                 onClick={handleEditRound}
@@ -202,9 +187,9 @@ export default function Summary({ navigate, goBack, params }) {
             >
               {saving ? 'Saving…' : 'Done'}
             </button>
-          )}
-        </div>
-      </header>
+          )
+        }
+      />
 
       {viewingSaved && editBlocked && (
         <p className="font-ui text-xs text-accent tracking-wide mt-2 px-5 text-center leading-relaxed shrink-0">
