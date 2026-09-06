@@ -7,8 +7,16 @@ import { normalizeDbGame, normalizeLocalGame } from '../utils/history.js'
 import { historyResultLabel } from '../utils/result.js'
 import { useAuth } from '../hooks/useAuth.jsx'
 
-export default function History({ navigate, goBack }) {
+export default function History({ navigate, goBack, params }) {
   const { user } = useAuth()
+  // History is reachable from Home OR the Bruntsfield course page (both via
+  // "Past Rounds", signed-in only). The back button used to hardcode
+  // "<- Home" and call goBack() unconditionally — since goBack() steps
+  // through *real* browser history, opening History from Bruntsfield then
+  // tapping "<- Home" actually landed back on Bruntsfield, not Home (#72).
+  // Context-aware like Info/Rules/Setup, so the label always matches goBack's
+  // real target.
+  const fromBruntsfield = params?.bruntsfield ?? false
 
   const [games, setGames]             = useState(() => user ? [] : getCompletedGames().map(normalizeLocalGame))
   const [loading, setLoading]         = useState(!!user)
@@ -63,8 +71,8 @@ export default function History({ navigate, goBack }) {
 
       <PageHeader
         title="History"
-        backLabel="← Home"
-        onBack={() => goBack()}
+        backLabel={fromBruntsfield ? '← Course' : '← Home'}
+        onBack={() => goBack(fromBruntsfield ? 'bruntsfield' : 'home')}
         right={user ? (
           <button
             onClick={() => navigate('setup', { pastRound: true })}

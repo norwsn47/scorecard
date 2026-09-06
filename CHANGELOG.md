@@ -5,9 +5,13 @@
 > Git history is the full record; this file is for context and decision rationale that commit messages don't carry.
 > Update the date below whenever you add an entry.
 
-**Last updated:** 5 September 2026
+**Last updated:** 6 September 2026
 
 ---
+
+## 6 September 2026 (History back button, #72)
+
+- **History's back button opened from the Bruntsfield page landed on the wrong screen.** User-reported: "Home button on History page not working." Root cause: `History.jsx` hardcoded `backLabel="← Home"` and called `goBack()` unconditionally, regardless of where History was actually opened from — History is reachable from both Home's and the Bruntsfield page's "Past Rounds" button (both signed-in only), but only the Home path was context-aware. Since `goBack()` steps through *real* browser history, opening History from Bruntsfield and tapping "← Home" actually landed back on Bruntsfield, not Home — the label lied about the destination. This is the same bug class #43b/#69 fixed for `Info.jsx`/`Rules.jsx`/`Setup.jsx`; `History.jsx` was simply missed. Fixed by mirroring the exact same pattern: `BruntsfiledCoursePage.jsx`'s "Past Rounds" button now passes `{ bruntsfield: true }`, and `History.jsx` uses that to show "← Course" (not "← Home") and `goBack('bruntsfield')` when opened from there. Also fixed the same narrow gap in `Setup.jsx`'s abandoned-edit-recovery redirect, caught by code review — it called `navigate('history')` without forwarding `bruntsfield` context, which would have reintroduced the same mislabel on that (rarer) path. Added a render test (`Setup.edit-recovery.test.jsx`) covering the context being forwarded correctly.
 
 ## 5 September 2026 (compose PageHeader, #69)
 
