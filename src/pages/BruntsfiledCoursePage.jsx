@@ -97,7 +97,7 @@ export default function BruntsfiledCoursePage({ navigate }) {
 
         {user && (
           <button
-            onClick={() => navigate('history')}
+            onClick={() => navigate('history', { bruntsfield: true })}
             className="w-full py-4 px-6 rounded-sm border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             Past Rounds

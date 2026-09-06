@@ -54,7 +54,10 @@ export default function Setup({ navigate, goBack, params }) {
     if (editRound || pastRound) return
     if (getActiveGame()?._edit) {
       clearActiveGame()
-      navigate('history')
+      // Forward bruntsfield context so History's back button (#72) doesn't
+      // mislabel itself "<- Home" when this recovery redirect was reached via
+      // Bruntsfield's "New Game" (BruntsfiledCoursePage.jsx).
+      navigate('history', { bruntsfield: fromBruntsfield })
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
