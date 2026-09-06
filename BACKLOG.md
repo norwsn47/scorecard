@@ -6,7 +6,7 @@
 > Nothing here is actioned without explicit instruction — tell the project-manager (or Claude directly) to pull an item into work.
 > Numbers are stable IDs for cross-reference — don't renumber existing items when deleting one, so gaps are expected.
 
-**Last updated:** 5 September 2026
+**Last updated:** 6 September 2026
 
 > The history of shipped and removed items lives in `CHANGELOG.md`. This file is open items only.
 >
@@ -68,6 +68,15 @@ A game-mode toggle at setup: **stroke play** (current — lowest total wins) or 
 ### 54. Let existing users set par on courses they already created
 Courses created before migration `003` have `hole_pars = NULL` (read as all-3s). Real users need a way to set true pars. Two routes: (a) a **course-edit flow** (there is no edit-course UI today — new screen, `PATCH /api/courses/[id]` which doesn't exist), or (b) a **one-off admin backfill** (the user offered to force it as admin). Decide which before scoping. If (a), it likely wants the #50 stepper UI reused — **that stepper now exists** (`Setup.jsx`, `stepPar` + the two-column per-hole par list, shipped 3 Sep with #50) and is ready to lift into a course-edit screen.
 
+### 70. Summary totals — drop the "Av." line, show total-over-par instead
+The player totals row in `Summary.jsx` shows an "Av. X" line under each player's total (`playerAverage`, `src/utils/scores.js`) — flagged as not interesting. Replace it with the round's total-over/under-par, in brackets, in that line's position. Note: the totals row already shows a `ParDelta` bracket (e.g. "(+7)") right next to the total via `roundToPar` (`Summary.jsx:303-306`) — needs deciding whether this is a straight removal (drop "Av.", the bracket's already there) or a reposition/duplicate onto the line where "Av." currently sits. Also check whether History's own per-player line (`History.jsx:246`, "(Av. X)") should change to match — the two views show different things today (average vs. over-par), not the same format, so "like in the history tab" needs confirming against what's actually there when this is built.
+
+### 71. Edit a saved round's course total/pars, and delete a course
+Two related asks: (a) edit a saved history round's total and/or the pars of the course it was played on, and (b) delete a course entirely (not just a round — round deletion already exists in `History.jsx`). (a) overlaps with #54 (courses created before migration `003` need a way to set real pars) — that item already covers the par-editing route (course-edit screen + `PATCH /api/courses/[id]`, neither of which exist yet). New here: editing a round's *total* directly (distinct from editing its individual hole scores, which the existing past-round edit flow covers), and a `DELETE /api/courses/[id]` to remove a course a signed-in user created. Needs decisions: what happens to existing rounds recorded on a deleted course, and whether "edit total" bypasses or recalculates from hole scores.
+
+### 73. Default "Quick Play" course for a generic New Game
+Starting a new game that isn't tied to Bruntsfield (e.g. from the plain Home "New Game") currently gets no course name at all — `Setup.jsx` sets `courseName` to `null` when not `fromBruntsfield` — even though it already follows the same rules as Bruntsfield quick-play (unlimited holes up to 36, revealed one at a time, assumed par 3 — `Setup.jsx:198`). Give it a real course name, "Quick Play", instead of `null`, so it shows properly in History/Summary. No behaviour change needed, just the naming/labelling.
+
 ---
 
 ## Blocked / waiting on something external
@@ -107,7 +116,8 @@ Still open:
 ### 56. Length-changing course switch during a D1 past-round edit leaves a stale-size grid
 Surfaced in the #48–#55 code review. `buildEditGame` sizes the edit grid to the *round's saved* hole count, not the newly-selected course's. Switching a 36-hole round onto a 9-hole course mid-edit (D1 rounds only — local rounds can't change course) leaves a 36-row grid with holes 10–36 padded back to par 3. No crash, no data loss, but confusing. Needs a product decision: disallow a length-changing course switch during an edit, or accept it and document the behaviour. (PRD §11.7, §11.13.)
 
-
+### 72. Home button on History page not working
+Reported not working as of 6 September 2026. `History.jsx` passes `backLabel="← Home"` with `onBack={() => goBack()}` (via `PageHeader`) — the same `goBack()` mechanism built/fixed under #43b. Needs the debugger agent to reproduce and root-cause; may be a regression from that work or an edge case its "still open" notes didn't cover.
 
 
 ---
