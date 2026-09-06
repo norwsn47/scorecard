@@ -9,6 +9,11 @@
 
 ---
 
+## 5 September 2026 (compose PageHeader, #69)
+
+- **Summary migrated onto the shared `PageHeader`; Login's two back buttons de-duplicated locally.** Follow-up from #44: three back-button implementations outside `PageHeader` had drifted into hand-rolled copies — this is exactly how a stale "← Back" label survived #43b's review. Summary's bespoke header was structurally almost identical to `PageHeader` already, so it now calls `<PageHeader>` directly with no API changes needed — its conditional title (course name, blank when absent), subtitle (date), back button ("← Rounds" when viewing a saved round), and right slot (Edit / Done) all map onto existing props. Bonus fix: this closes a drift where Summary's old header still used `px-20` title clearance, never updated when `PageHeader` moved to `px-24` during #44. `PageHeader`'s `title` prop is now properly optional (skips the `<h1>` entirely rather than rendering an empty one) so Summary doesn't reserve a blank line when a round has no course name.
+  Login was deliberately **not** migrated onto `PageHeader` — a user call, not an oversight. Login uses a borderless, editorial "back-link floating above a big heading" layout (the same pattern as `Home.jsx`), not `PageHeader`'s boxed header-bar; forcing it into that shape would have visibly changed the screen for a bug that was really about wording, not structure. Instead, Login's two identical back-button copies (the form, and the "check your email" screen) are now one local `BackToHome` component used twice, so they can no longer drift apart.
+
 ## 5 September 2026 (design system, #44)
 
 - **Design-system consolidation — header fix, button-size system, accent-token bug (#44).** Three-part pass, branch `refactor/design-system-headers`.

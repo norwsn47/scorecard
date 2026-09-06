@@ -8,6 +8,9 @@
 // the fix is a shorter accurate word ("Course"), not clipped text — so
 // `title`'s px-24 clearance is sized to comfortably fit the longest label
 // in the app today ("← History" / "← Summary") in full.
+// `title` is optional (falsy skips the <h1> entirely, not just leaves it
+// empty) so a caller like Summary — whose title is a course name that can
+// be missing — doesn't reserve a blank line above its subtitle (#69).
 export default function PageHeader({ title, subtitle, onBack, backLabel = '← Back', right = null }) {
   return (
     <header className="relative flex items-center justify-between px-5 pt-10 pb-4 border-b border-border shrink-0">
@@ -23,7 +26,9 @@ export default function PageHeader({ title, subtitle, onBack, backLabel = '← B
       </div>
 
       <div className="absolute inset-x-0 text-center px-24 pointer-events-none">
-        <h1 className="font-display italic text-2xl text-text truncate">{title}</h1>
+        {title ? (
+          <h1 className="font-display italic text-2xl text-text truncate">{title}</h1>
+        ) : null}
         {subtitle && (
           <p className="font-ui text-xs tracking-[0.08em] uppercase text-muted mt-0.5 truncate">{subtitle}</p>
         )}
