@@ -33,7 +33,7 @@ export default function BruntsfiledCoursePage({ navigate }) {
           <button
             onClick={() => navigate('info', { bruntsfield: true })}
             aria-label="Information"
-            className="text-muted active:text-accent p-2 flex-shrink-0 mt-[11px]"
+            className="text-muted active:text-accent p-2 flex-shrink-0 mt-[11px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
               <circle cx="12" cy="12" r="9" />
@@ -65,7 +65,7 @@ export default function BruntsfiledCoursePage({ navigate }) {
         {activeGame && (
           <button
             onClick={() => navigate('scorecard')}
-            className="w-full py-3 px-4 rounded-sm border border-accent text-accent font-ui text-sm tracking-[0.08em] uppercase font-medium flex items-center justify-between"
+            className="w-full py-3 px-4 rounded-sm border border-accent text-accent font-ui text-sm tracking-[0.08em] uppercase font-medium flex items-center justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             <span>Resume Game</span>
             <span className="text-xs text-muted normal-case tracking-normal font-normal truncate max-w-[160px]">
@@ -76,21 +76,21 @@ export default function BruntsfiledCoursePage({ navigate }) {
 
         <button
           onClick={() => { track('New Game Started'); navigate('setup', { bruntsfield: true }) }}
-          className="w-full py-4 px-6 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn active:bg-accent-hover"
+          className="w-full py-4 px-6 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn active:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
         >
           New Game
         </button>
 
         <button
           onClick={() => setShowMap(true)}
-          className="w-full py-4 px-6 rounded-sm border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card"
+          className="w-full py-4 px-6 rounded-sm border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
         >
           View Course Map
         </button>
 
         <button
           onClick={() => navigate('rules', { from: 'bruntsfield' })}
-          className="w-full py-4 px-6 rounded-sm border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card"
+          className="w-full py-4 px-6 rounded-sm border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
         >
           Course Rules
         </button>
@@ -98,7 +98,7 @@ export default function BruntsfiledCoursePage({ navigate }) {
         {user && (
           <button
             onClick={() => navigate('history')}
-            className="w-full py-4 px-6 rounded-sm border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card"
+            className="w-full py-4 px-6 rounded-sm border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             Past Rounds
           </button>
@@ -108,7 +108,7 @@ export default function BruntsfiledCoursePage({ navigate }) {
           <div className="text-center -mt-1">
             <button
               onClick={() => navigate('summary', { game: lastGame })}
-              className="font-ui text-xs text-muted active:text-text"
+              className="font-ui text-xs text-muted active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               Last round:{' '}
               <span className="underline underline-offset-2">
@@ -122,7 +122,7 @@ export default function BruntsfiledCoursePage({ navigate }) {
           <div className="pt-0 text-center">
             <button
               onClick={() => navigate('login')}
-              className="font-ui text-xs text-accent active:opacity-70"
+              className="font-ui text-xs text-accent active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               Want to save your scores? <span className="underline underline-offset-2">Sign in</span>
             </button>

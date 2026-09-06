@@ -5,7 +5,7 @@ import RulesContent from '../components/RulesContent.jsx'
 // back label, so it always names the real screen goBack() lands on rather
 // than a generic "← Back". 'setup' shows as "New Game" — the only Setup flow
 // that links to Rules is the brand-new-game one (see Setup.jsx).
-const FROM_LABEL = { info: 'Info', bruntsfield: 'Bruntsfield', setup: 'New Game' }
+const FROM_LABEL = { info: 'Info', bruntsfield: 'Course', setup: 'New Game' }
 
 export default function Rules({ goBack, params }) {
   const from = params?.from ?? 'home'

@@ -28,7 +28,7 @@ class ErrorBoundary extends Component {
           <p className="font-ui text-sm text-muted">Try refreshing the page. Your scores are saved.</p>
           <button
             onClick={() => { this.setState({ error: null }); window.location.reload() }}
-            className="py-3 px-6 rounded-md bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn"
+            className="py-3 px-6 rounded-md bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             Reload
           </button>

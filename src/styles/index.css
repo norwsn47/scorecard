@@ -32,7 +32,15 @@
     --color-bg-card:   #F5EFE3;
     --color-text:      #1A1A18;
     --color-text-muted:#6B6560;
-    --color-accent:    #1A4329;
+    /* RGB channels (not a hex value) so Tailwind can compute opacity-modifier
+       utilities like bg-accent/10 or ring-accent/40 — see tailwind.config.js's
+       accent mapping. A hex string here silently drops every such utility at
+       build time with no error (found 5 Sep 2026 during #44 — this was the
+       root cause of every focus ring in the app rendering the browser's
+       default blue instead of the brand green). Every other colour below
+       stays a plain hex because nothing in the app applies an opacity
+       modifier to them — convert on the same pattern if that ever changes. */
+    --color-accent:    26 67 41;
     --color-accent-hover: #142f1e;
     --color-border:    #D9D0C4;
     --color-chrome:       #C0B8B0;   /* inactive UI chrome — muted icons, disabled borders */

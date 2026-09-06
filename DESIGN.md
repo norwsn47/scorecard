@@ -57,7 +57,7 @@ This keeps within the Outbuild allowance of "no more than two accents beyond the
 | `--overlay-modal` | `rgba(26,26,24,0.55)` | Full modal backdrop |
 | `--overlay-backdrop` | `rgba(26,26,24,0.4)` | Bottom sheet backdrop |
 | Active row tint | `rgba(26,67,41,0.05)` | Scorecard active row background |
-| Focus ring | `rgba(26,67,41,0.4)` | Input focus ring |
+| Focus ring | `rgba(26,67,41,0.4)` | Input focus ring (always-on, since focus on an input follows a deliberate tap into it); also the token for the new button `focus-visible` ring — see "Button size system" |
 
 ### Sunlight contrast — the score-vs-par colours
 
@@ -124,7 +124,7 @@ Base unit: 4px (Tailwind default).
 | Context | Value |
 |---|---|
 | Page horizontal padding | `px-5` (20px) or `px-6` (24px) |
-| Page header vertical | `pt-12 pb-6` |
+| Page header vertical | `pt-10 pb-4` |
 | Primary button vertical | `py-4` (16px) |
 | Secondary / input vertical | `py-3` (12px) |
 | Items in a list | `space-y-3` (12px gap) |
@@ -133,6 +133,8 @@ Base unit: 4px (Tailwind default).
 | Control bar | `px-5 py-4` |
 | Table cell (vertical) | `py-3` |
 | Table cell (horizontal) | `px-2` (hole col), `px-1` (player cols) |
+
+`pt-10 pb-4` corrects a doc/reality mismatch found in this pass — the table previously read `pt-12 pb-6`, but `PageHeader.jsx` has shipped `pt-10 pb-4` throughout; the code is taken as the source of truth here.
 
 ---
 
@@ -143,13 +145,13 @@ Base unit: 4px (Tailwind default).
 | `4px` | `rounded-sm` | Primary and secondary CTA buttons — sharp, printed-document feel |
 | `8px` | `rounded-md` | All other interactive controls: inputs, cards, list rows |
 | `12px` | `rounded-lg` | (Available — larger panels) |
-| `50%` | `rounded-full` | Circular control bar buttons (64×64) |
+| `50%` | `rounded-full` | Circular control bar buttons (64×64); also filter chips — see "Filter chips" |
 | `16px top` | `rounded-t-2xl` | Bottom sheet / confirmation modal |
 | `44px` | *(CSS only)* | Phone frame on desktop |
 
 Primary button exception: uses `rounded-sm` (4px) for a sharp, printed-document feel. Secondary/outlined buttons also use `rounded-sm`. All other interactive controls retain `rounded-md` (8px).
 
-Rule: **Exception: primary and secondary CTA buttons use `rounded-sm` (4px) — sharp corners signal a printed document.** All other interactive elements in the page flow use `rounded-md`. Floating elements (modals, sheets) use `rounded-t-2xl`. Circular controls use `rounded-full`.
+Rule: **Exception: primary and secondary CTA buttons use `rounded-sm` (4px) — sharp corners signal a printed document.** All other interactive elements in the page flow use `rounded-md`. Floating elements (modals, sheets) use `rounded-t-2xl`. Circular controls, and filter chips, use `rounded-full`.
 
 ---
 
@@ -182,26 +184,76 @@ All other screens retain their existing centred or page-header layout.
 
 ## Component patterns
 
-### Primary button
+### Button size system
+
+Every button in the app belongs to one of three sizes. The tier says how much weight the decision carries and how much room it has to sit in — it is independent of colour treatment (filled / outline), which is decided per pattern below. This system was reverse-engineered from three variants already shipping without a name; naming them now so the next new button picks a tier deliberately instead of copying whichever existing button looks closest.
+
+| Tier | Says | Padding / type | Where it's used |
+|---|---|---|---|
+| **Full CTA** | "This is the one thing to do on this screen" | `py-4 px-6`, `text-sm tracking-[0.1em] uppercase font-semibold` (filled) / `font-medium` (outline) | Home primary/secondary, Bruntsfield course page, Login submit, Setup "Start Game" |
+| **Dialog button** | "Choose one of two things, right now" | `py-3 px-4` full-width standalone, or `flex-1 py-3` paired in a row; `text-sm tracking-[0.08em] uppercase font-medium` (outline) / `font-semibold` (filled) | Resume Game, course-map link (standalone); Scorecard finish-confirm, History delete-confirm (paired) |
+| **Header action** | "A secondary action that shouldn't outweigh the page title" | `py-2 px-4`, `text-xs tracking-[0.1em] uppercase font-semibold` | Scorecard header Finish/Save, History "+ Add round" |
+
+**Disabled state — every tier, no exceptions: `opacity-40`.** Circular control-bar buttons (Increment/Decrement/Advance) are a different affordance and keep their own already-documented `opacity-25` — see "Control bar buttons" below for why.
+
+**Focus-visible ring — new in this pass.** Every button gets:
+```
+focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40
+```
+using the same token as the input focus ring. `:focus-visible` only fires for keyboard/switch/assistive-tech navigation — never for a touch tap, never for a mouse click — so on this touch-only, one-handed, outdoor product it is invisible during every normal interaction (per `OUTBUILD-PRINCIPLES.md`, "human first, device second"). It replaces the browser's default (usually blue, off-brand) focus outline for the rare keyboard/assistive-tech user at zero visual cost to everyone else. **Decision: add it**, everywhere a button exists — Full CTA, Dialog button, Header action, filter chips, the segmented toggle, and the circular control-bar buttons. This is a systemic addition, not itemised per file below.
+
+### Primary button (Full CTA — filled)
 ```
 bg-accent text-bg rounded-sm py-4 px-6
 font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn
 active:bg-accent-hover
+focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40
 disabled: opacity-40 cursor-not-allowed
 ```
 
-### Secondary / outline button
+### Secondary / outline button (Full CTA — outline)
 ```
 border border-border text-text rounded-sm py-4 px-6
 font-ui text-sm tracking-[0.1em] uppercase font-medium
 active:bg-bg-card
+focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40
 ```
 
-### Accent outline button (Resume Game, Finish header button)
+### Accent outline button (Dialog tier, standalone) — Resume Game, course map link
 ```
 border border-accent text-accent rounded-sm py-3 px-4
 font-ui text-sm tracking-[0.08em] uppercase font-medium
+focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40
 ```
+The Dialog tier's single-button form — a full-width accent-outline action rather than a paired confirm/cancel. Same padding and type scale as the paired dialog buttons below, just standalone rather than `flex-1` in a row.
+
+**Doc bug fixed in this pass:** this entry used to also name "Finish header button" as an example, with this same spec. It doesn't match — the shipped Scorecard Finish/Save button is `py-2 px-4`, `text-xs`, `font-semibold`, `tracking-[0.1em]` (the Header action tier, below), not this one. The doc had apparently never matched the shipped code. Resume Game and the course-map link are the only confirmed members of this pattern.
+
+### Dialog buttons — paired (Dialog tier)
+```
+Cancel / neutral: flex-1 py-3 rounded-sm border border-border text-text
+                  font-ui text-sm tracking-[0.08em] uppercase
+                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40
+                  disabled: opacity-40
+
+Confirm / filled: flex-1 py-3 rounded-sm bg-accent text-bg
+                  font-ui text-sm tracking-[0.08em] uppercase font-semibold
+                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40
+                  disabled: opacity-40
+```
+Used in Scorecard's finish-confirm sheet and History's delete-confirm sheet.
+
+**Disabled opacity standardised to `opacity-40` in this pass.** Scorecard's confirm button shipped with `disabled:opacity-60` and no documented reason — **`src/pages/Scorecard.jsx` line 412 needs a code change** to bring it in line with every other disabled button in the app.
+
+### Header action button (Header action tier) — Finish/Save, + Add round
+```
+py-2 px-4 rounded-sm border border-accent text-accent
+font-ui text-xs tracking-[0.1em] uppercase font-semibold
+focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40
+```
+Sits inside a `PageHeader` right slot (or an equivalent compact context) — small enough not to outweigh the page title, still comfortably legible at `text-xs` because it carries a short, familiar word ("Finish", "Save", "+ Add round"). Touch target is ~34px including border, below the 44px ideal; accepted for the same reason "Inline link tap targets" (below) accepts ~36-40px for `text-xs` inline elements — this is a deliberately quiet secondary action inside a fixed-height chrome bar, not the screen's one primary action.
+
+**Needs a code change to match this spec:** `src/pages/History.jsx` line 71 ("+ Add round") currently ships as `py-2 px-3`, `tracking-[0.08em]`, no `font-semibold`, plus an extra `active:bg-accent/10` state not present on Scorecard's Finish/Save button. Three of those four are drift within the same tier. Align it to the spec above; the `active:bg-accent/10` press state can stay — it's a reasonable addition, just not yet documented, so it becomes this tier's standard active state going forward.
 
 ### Add-player button (dashed ghost)
 ```
@@ -219,6 +271,8 @@ active:bg-border
 | Increment (+) | `rounded-full bg-accent border-2 border-accent text-bg text-2xl` |
 | Advance (→) | `rounded-full bg-control-warm border-2 border-control-warm text-bg` — disabled: `opacity-25` |
 
+These are physical game controls, not text buttons, which is why they keep their own `opacity-25` disabled state rather than the button system's `opacity-40` above — a lighter fade reads as "not reachable right now" (e.g. can't decrement below hole 1) rather than "unavailable," which suits a control the player is about to need again a moment later.
+
 ### Text input
 ```
 w-full py-3 pl-4 rounded-md border font-ui text-base bg-bg-card text-text
@@ -233,11 +287,13 @@ with remove button: pr-10   without: pr-4
 ```
 relative flex items-center justify-between px-5 pt-10 pb-4 border-b border-border shrink-0
 ```
-- Title: `absolute inset-x-0 text-center px-20 font-display italic text-2xl text-text truncate pointer-events-none`
-- Back: `py-3 min-h-[44px] text-muted font-ui text-sm tracking-[0.08em] uppercase` — ← prefix, no button chrome
-- Right slot: optional (Finish button, Edit action) — same `py-3 min-h-[44px]` touch target
+- Title: `absolute inset-x-0 text-center px-24 font-display italic text-2xl text-text truncate pointer-events-none`
+- Back: `py-3 min-h-[44px] flex items-center whitespace-nowrap text-muted font-ui text-sm tracking-[0.08em] uppercase` — ← prefix, no button chrome, **never truncates**
+- Right slot: optional (a Header action button, an Edit link) — `whitespace-nowrap`, **never truncates**; its own touch target is set by whatever's passed in
 
-**Title-length budget:** the centred title sits behind a fixed `px-20` (80px) clearance on each side and `truncate`s rather than wrapping. At 390px that leaves ~230px for the title. "← Back" plus a one-word right action is the widest side content the header is designed for; a longer right-side label needs the clearance revisited (measure sibling widths at render).
+**Never truncate a header button — use a shorter accurate word instead.** Named as a standing rule in this pass, not a one-off fix. The back/right slots used to sit behind a fixed 72px width with `truncate`, which silently clipped "← Bruntsfield" down to the meaningless "← BRUNT". The fix was not a wider box — it was renaming the destination to a word that actually fits: **"Bruntsfield" became "Course"** everywhere in the app (it's the only course today; revisit if a second course ships). `PageHeader`'s back/right slots now carry no width cap and `whitespace-nowrap`, so a button can never clip — the corollary is that a caller must never hand it a label that's genuinely too long for the space. If a destination's real name won't fit, shorten the *word*. Do not widen the box or reintroduce `truncate` on a button label.
+
+**Title-length budget:** the centred title sits behind `px-24` (96px) clearance on each side and still `truncate`s — this is the one place in the header a defensive `truncate` remains, because a title is editorial content (a course name, a page name) that the app doesn't fully control, not a short button label the app writes itself. At 390px that leaves ~198px for the title. `px-24` was sized to comfortably fit the longest back-button label in the app today ("← History" / "← Summary") in full, alongside a one-word right action. A longer label than either of those needs the clearance measured again at render — but per the rule above, the better fix is almost always a shorter word, not more clearance.
 
 ### Inline link tap targets
 
@@ -260,7 +316,28 @@ Precedent: the Setup course-rules link, and the inline links across Info, Login,
 
 **Hole-count toggle (9 / 18):** two equal buttons, `flex gap-2`, each `flex-1 h-11 rounded-md border font-ui text-sm`. Active = `border-accent text-accent`; inactive = `border-border text-text`; `active:bg-bg-card`. Labelled "9 holes" / "18 holes", default 9. Single-select: `role="radiogroup"` on the wrapper, `role="radio"` + `aria-checked` on each button. Caption below in the standard form-caption style (`font-ui text-xs text-muted mt-1.5 pl-1`): "Holes — can't be changed later". Same segmented-control language as the old "set every hole to" row it partly replaces.
 
+This toggle's **outline** active state is a deliberate choice, not a leftover — see "Selection-state language: outline vs fill" below, which compares it directly with the filter chips' fill active state.
+
 **Par stepper row (two-column list):** `grid grid-cols-2 gap-x-3 gap-y-1.5`, one cell per hole. Each cell: `flex items-center justify-between rounded-md border border-border bg-bg-card pl-3 pr-0.5`, holding a `Hole {n}` label (`font-ui text-sm text-text`) and a `−  {par}  +` stepper. Stepper buttons are `w-11 h-11` (44px), `rounded-md`, `font-ui text-lg`, `active:bg-border`; the par value between them is `font-ui text-sm w-4 text-center tabular-nums`. At the 2–7 band edge the relevant button is `disabled` + `opacity-40` and does nothing (no wraparound). Each row carries `role="group" aria-label="Hole {n}, par {par}"`; the buttons carry `aria-label="Decrease/Increase par for hole {n}"`. Heading above the grid: the standard micro-label (`font-ui text-xs tracking-[0.12em] uppercase text-muted`), "Par for each hole". No "set every hole to N" control, no tap-to-cycle grid.
+
+### Filter chips (History)
+```
+rounded-full border py-1.5 px-3 font-ui text-xs font-medium
+active:   bg-accent border-accent text-bg
+inactive: border-border text-muted
+```
+Used for History's course-filter row (shown when 2+ distinct courses exist) and player-filter row (shown when 2+ distinct players exist), both `role="group"`, horizontally scrollable (`overflow-x-auto no-scrollbar`), with an "All" / "All players" chip first. Tapping a player's name inline in the round list toggles the same filter state — the chip and the inline name are two entry points into one selection and must always agree on which is "on."
+
+**Not documented until this pass**, despite shipping live with #51/#61. No visual change — this closes the doc gap.
+
+### Selection-state language: outline vs fill (a decision, not an accident)
+
+Two different "this is currently selected" idioms exist in the app side by side. This pass makes the split a named decision rather than something that happened by accident:
+
+- **Segmented control** (9/18 hole-count toggle): active = **outline** (`border-accent text-accent`), inactive = `border-border text-text`. This is a fixed, mutually-exclusive *setting* chosen once while building something (a course) — closer to a radio button than a switch. Quiet, because it's describing a configuration, not an in-the-moment action.
+- **Filter chip** (History course/player row): active = **fill** (`bg-accent border-accent text-bg`), inactive = `border-border text-muted`. This is a transient, removable *criterion* layered over a list you're currently looking at — closer to a toggle switch. Bold, because a filled chip means "this is live and shaping what's on screen right now," and that should be unmissable at a glance.
+
+The split tracks a distinction the app already makes on radius (`rounded-md` for anchored controls, `rounded-full` for chips — Outbuild design language §5): an anchored control you set once stays quiet with an outline; a chip actively narrowing your view earns the bolder fill. Keep the two languages apart — don't reach for fill on a future segmented control, or outline on a future filter chip, without a reason as specific as this one.
 
 ### Bottom sheet / confirmation modal
 ```
@@ -408,7 +485,9 @@ scorecard / course page → course map (modal, via CourseMapModal)
 
 **History state and the params allowlist.** `popstate` restores a page's `params` from a small allowlist stamped in `history.state` at push time — `bruntsfield`, `fromHistory`, and `gameId` (a round's own id, added when a `game` param is passed to `navigate`, regardless of destination page). The mutable `game` object itself, and edit-flow flags (`editRound` / `editContext` / `pastRound`), are deliberately never persisted — a frozen snapshot would go stale, and a bounce into a half-restored edit could strand a working copy. Screens that need that state after a bounce recover it themselves: from the game's own `_edit` marker recovered from storage (Scorecard), or by re-resolving the round from storage using the persisted `gameId` (Summary — see `Summary.jsx`, #43b). This is a known, accepted limitation for a bounce onto a signed-in D1-only round with no local copy to look up (tracked in BACKLOG #43b).
 
-**Back button labels.** Every back affordance names its real destination or action rather than a generic "← Back" — `PageHeader`'s `backLabel` prop takes the exact string to render (arrow included when relevant). A button that steps back through history is labelled with the destination screen (`"← Home"`, `"← Rounds"`, `"← History"`), context-aware where the destination varies (Info, Privacy, Rules, Setup each pick their label from where they were opened). A button that performs an action other than stepping back — the live Scorecard's "Pause", an explicit `navigate('home')` (not `goBack()`) that leaves the round intact in storage so it reappears as "Resume Game" on Home — drops the arrow and says what it actually does. Home and the Bruntsfield course page carry no in-app back button at all: Home is the app root, and Bruntsfield relies on the phone browser's own back navigation (user-confirmed).
+**Back button labels.** Every back affordance names its real destination or action rather than a generic "← Back" — `PageHeader`'s `backLabel` prop takes the exact string to render (arrow included when relevant). A button that steps back through history is labelled with the destination screen (`"← Home"`, `"← Rounds"`, `"← History"`), context-aware where the destination varies (Info, Privacy, Rules, Setup each pick their label from where they were opened). A button that performs an action other than stepping back — the live Scorecard's "Pause", an explicit `navigate('home')` (not `goBack()`) that leaves the round intact in storage so it reappears as "Resume Game" on Home — drops the arrow and says what it actually does. Home and the Bruntsfield course page carry no in-app back button at all: Home is the app root, and Bruntsfield relies on the phone browser's own back navigation (user-confirmed). **"Course" replaces "Bruntsfield"** as the destination word wherever a header button needs to name it — see "Never truncate a header button" under Page header, above, for why.
+
+**Known duplication — build note for next pass, not fixed here.** Three hand-rolled copies of "a back button that looks like `PageHeader`'s" exist outside the shared component: Login's two screens (`src/pages/Login.jsx` lines 40-45 and 68-73, `p-4` rather than `py-3 min-h-[44px]` — a real, if small, spacing mismatch against the shared component) and Summary's bespoke header (`src/pages/Summary.jsx` lines 157-207, which reimplements the whole `relative flex items-center justify-between` header shell rather than rendering `PageHeader`, presumably because Summary needs a conditional spacer/Edit-or-Done right slot `PageHeader` doesn't yet support). These should compose `PageHeader` — extending its API if needed — rather than restyle it, so a future header change (like the truncation fix in this pass) only has to happen once. This is a frontend-developer refactor concern, not a DESIGN.md content change; flagging it here so it isn't lost.
 
 ---
 
@@ -428,14 +507,21 @@ Inline SVGs throughout — no icon library dependency.
 - Score-vs-par (`under-par`, `over-par`) is the single deliberate exception to the one-colour rule — two accents, fenced to vs-par **deltas only**, never touching chrome or interaction, within the Outbuild "no more than two accents in precisely defined contexts" allowance. It is a context-rooted decision: golfers read a card in green/level/red
 - Two typographic registers (editorial Cormorant Garamond + micro Inter) are clearly distinct
 - Flatness maintained — shadows only on floating elements (modals, primary CTA)
-- Two radius families: `rounded-md` for controls, `rounded-full` for circular controls
+- Two radius families: `rounded-md` for controls, `rounded-full` for circular controls and filter chips
 - Phone-frame desktop wrapper correctly implemented per Outbuild mobile-only pattern
 - Caveat font used exclusively in desktop wrapper note — never inside the app
 - Outbuild attribution mark present on home screen, links to outbuild.uk
 - Warm, earthy palette — not clinical or tech-forward
 - One primary action per screen throughout
 - No icon library; no decorative illustration; no gradient backgrounds
+- Three-tier button-size system (Full CTA / Dialog button / Header action) now named and documented, closing a gap where three variants shipped without one
 
 ### Divergences — flag for fix
 
-**Intended state:** the advance-button fill is the `control-warm` token, the active-row tint is `accent-tint` (`--color-accent-tint`), and every focus ring is `ring-accent/40`. The first two are fully implemented. The one real remaining divergence: `src/pages/Login.jsx:111` still hardcodes `focus:ring-[rgba(26,67,41,0.4)]` instead of the token, and `Home.jsx:105` uses an inline `rgba(26,67,41,0.1)` for a decorative circle. Tracked in `BACKLOG.md` (#65). This section otherwise describes the intended, shipped state.
+**Intended state:** the advance-button fill is the `control-warm` token, the active-row tint is `accent-tint` (`--color-accent-tint`), and every focus ring is `ring-accent/40`. All three are now fully implemented — `src/pages/Login.jsx:111`'s hardcoded `focus:ring-[rgba(26,67,41,0.4)]` was swapped for the token on 5 September 2026. The one remaining divergence is `Home.jsx:105`'s inline `rgba(26,67,41,0.1)` for a decorative circle, tracked in `BACKLOG.md` (#65). This section otherwise describes the intended, shipped state.
+
+**New divergences found in this pass (#44, button-size system) — for frontend-developer to pick up next, not yet in BACKLOG as separate items:**
+- `src/pages/Scorecard.jsx:412` — dialog confirm button ships `disabled:opacity-60`; should be `opacity-40` per the standardised Dialog button spec.
+- `src/pages/Login.jsx:117` — submit button ships `disabled:opacity-50`; found independently while verifying this pass (not in the original audit), same fix, `opacity-40`.
+- `src/pages/History.jsx:71` — "+ Add round" ships as `py-2 px-3`, `tracking-[0.08em]`, no `font-semibold`; should match the Header action tier spec (`py-2 px-4`, `tracking-[0.1em]`, `font-semibold`) it's grouped with.
+- Focus-visible ring is a net-new rule (see "Button size system") with no shipped buttons yet — every button in the app needs the `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40` class added.

@@ -11,7 +11,10 @@ export default {
         'bg-card':   'var(--color-bg-card)',
         text:        'var(--color-text)',
         muted:       'var(--color-text-muted)',
-        accent:      'var(--color-accent)',
+        // rgb(var(...) / <alpha-value>) form (not a plain var()) so opacity
+        // modifiers like bg-accent/10 or ring-accent/40 actually compile —
+        // requires --color-accent to hold RGB channels, not a hex string.
+        accent:      'rgb(var(--color-accent) / <alpha-value>)',
         'accent-hover':  'var(--color-accent-hover)',
         border:          'var(--color-border)',
         chrome:          'var(--color-chrome)',

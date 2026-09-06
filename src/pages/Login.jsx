@@ -39,7 +39,7 @@ export default function Login({ navigate, goBack }) {
       <div className="h-full bg-bg flex flex-col">
         <button
           onClick={() => goBack('home')}
-          className="p-4 font-ui text-sm tracking-[0.08em] uppercase text-muted active:text-accent text-left"
+          className="p-4 font-ui text-sm tracking-[0.08em] uppercase text-muted active:text-accent text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
         >
           ← Home
         </button>
@@ -67,7 +67,7 @@ export default function Login({ navigate, goBack }) {
     <div className="h-full bg-bg flex flex-col">
       <button
         onClick={() => goBack('home')}
-        className="p-4 font-ui text-sm tracking-[0.08em] uppercase text-muted active:text-accent text-left"
+        className="p-4 font-ui text-sm tracking-[0.08em] uppercase text-muted active:text-accent text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
       >
         ← Home
       </button>
@@ -114,7 +114,7 @@ export default function Login({ navigate, goBack }) {
           <button
             type="submit"
             disabled={sending}
-            className="w-full py-4 px-6 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn active:bg-accent-hover disabled:opacity-50"
+            className="w-full py-4 px-6 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn active:bg-accent-hover disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             {sending ? 'Sending…' : 'Send sign-in link'}
           </button>
@@ -127,7 +127,7 @@ export default function Login({ navigate, goBack }) {
           <button
             type="button"
             onClick={() => navigate('privacy', { from: 'login' })}
-            className="inline-block py-2.5 -my-2.5 text-accent underline underline-offset-2 active:opacity-70"
+            className="inline-block py-2.5 -my-2.5 text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             How we handle your data
           </button>
