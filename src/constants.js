@@ -7,6 +7,13 @@
 // Hole Golf Club") appears only in prose in the rules and info pages.
 export const BRUNTSFIELD_COURSE_NAME = 'Bruntsfield Short Hole Golf Course'
 
+// A generic New Game (not started from the Bruntsfield route) previously got
+// no course name at all (null), even though it follows the exact same
+// quick-play rules (unlimited holes up to 36, revealed one at a time, par 3
+// assumed) — this just gives that path a real name so it shows properly in
+// History/Summary instead of a blank course line (#73).
+export const QUICK_PLAY_COURSE_NAME = 'Quick Play'
+
 // Quick-play (logged-out) assumes par 3 for all 36 holes — the Bruntsfield
 // reality and the single source of that value (§5.1). Logged-in rounds carry
 // their course's own hole_pars instead.

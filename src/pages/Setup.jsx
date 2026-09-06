@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import PageHeader from '../components/PageHeader.jsx'
-import { BRUNTSFIELD_COURSE_NAME, BRUNTSFIELD_HOLE_COUNT, BRUNTSFIELD_HOLE_PARS } from '../constants.js'
+import { BRUNTSFIELD_COURSE_NAME, BRUNTSFIELD_HOLE_COUNT, BRUNTSFIELD_HOLE_PARS, QUICK_PLAY_COURSE_NAME } from '../constants.js'
 import { buildEditGame, canStartGame, createGame, findDuplicateIndices } from '../utils/game.js'
 import { deriveHolePars } from '../utils/scores.js'
 import { clearActiveCell, clearActiveGame, getActiveGame, getPlayers, saveActiveGame, savePlayers } from '../utils/storage.js'
@@ -191,7 +191,7 @@ export default function Setup({ navigate, goBack, params }) {
     const startId   = user ? (selectedCourseId ?? null) : null
     const startName = user
       ? (courses.find(c => c.id === startId)?.name ?? null)
-      : (fromBruntsfield ? BRUNTSFIELD_COURSE_NAME : null)
+      : (fromBruntsfield ? BRUNTSFIELD_COURSE_NAME : QUICK_PLAY_COURSE_NAME)
     const resolved = await resolveCourse(startId, startName)
     if (!resolved) return
 
