@@ -2,7 +2,7 @@
 ## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
 **Version:** 2.0
-**Last updated:** 5 September 2026
+**Last updated:** 6 September 2026
 
 > The rationale and section-by-section history of past updates lives in `CHANGELOG.md`, not here. This line is just a date.
 
@@ -140,7 +140,7 @@ A **Share** button appears on the end-of-game summary screen (see 4.4). Tapping 
   - Columns = players; rows = holes; cells = stroke count for that hole
   - Each hole row shows the hole number in bold with its par immediately after in brackets (e.g. "3 (3)"), matching the live grid and the read-only Summary (§5.1)
   - Each scored cell shows its vs-par delta as a small superscript (`+1` / `-1` / `E`) trailing the stroke count, matching the live grid and the read-only Summary (§5.3.1)
-  - Totals row at the bottom of each column. Each column's total shows the player's round score-to-par in brackets on the total's main line, e.g. `41 (+5)` (§5.3.2), with average strokes per hole (over completed holes only) on a sub-line beneath
+  - Totals row at the bottom of each column. Each column's total shows the player's round score-to-par in brackets on the total's main line, e.g. `41 (+5)` (§5.3.2)
   - DNF players are marked as DNF in their totals row
   - The per-hole superscripts and the round-total-to-par figure follow the §5.3 semantic under / level / over colour set. The share image is a hand-drawn canvas (`src/utils/share.js`) with its own local colour constants — the §5.3 tokens are mirrored there so the image matches the app
 - No maximum height — the image extends to fit all holes played
@@ -271,7 +271,7 @@ This is a deliberate, scoped exception to the app-wide rule that par "carries no
 **Placement and size.**
 - Follows §5.1's "modifier trails the primary number" ordering — the vs-par figure comes immediately after the score it qualifies, just as `(par)` comes after the hole number.
 - **Per-hole indicator (§5.3.1):** a superscript delta immediately trailing the score digit in the grid cell (`3` then a small raised `+1`), at the smallest legible size, non-bold. A superscript rather than the full-size inline bracket used for the hole-number par, because the player columns are far narrower than the hole column (up to six players share a row) and `3 (+1)` will not fit. This is the one deliberate divergence from §5.1's inline treatment and is justified by column width.
-- **Round total-to-par (§5.3.2):** in brackets, on the same line as the total number (`41 (+5)`). Full size on the Summary totals row, the finish dialog and the share image; **on the live Scorecard totals bar it drops to `text-sm`** (documented DESIGN.md size exception) because at 390px with 5–6 players a full-size bracket wraps to a second line. `Av.` and `DNF` stay as the existing sub-labels beneath.
+- **Round total-to-par (§5.3.2):** in brackets, on the same line as the total number (`41 (+5)`). Full size on the Summary totals row, the finish dialog and the share image; **on the live Scorecard totals bar it drops to `text-sm`** (documented DESIGN.md size exception) because at 390px with 5–6 players a full-size bracket wraps to a second line. `DNF` stays as the existing sub-label beneath where it applies. (Summary and History previously also showed an `Av. X` average-strokes sub-line here — dropped, as it duplicated the same total-to-par figure the bracket already shows.)
 
 #### 5.3.1 Live per-hole vs-par indicator
 

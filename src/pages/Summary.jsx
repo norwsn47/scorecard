@@ -3,7 +3,7 @@ import { track } from '../utils/analytics.js'
 import { formatDateOnly } from '../utils/format.js'
 import { deriveResult } from '../utils/game.js'
 import { tiedNames } from '../utils/result.js'
-import { deriveHolePars, playerAverage, playerTotal, roundToPar, scoreToPar } from '../utils/scores.js'
+import { deriveHolePars, playerTotal, roundToPar, scoreToPar } from '../utils/scores.js'
 import PageHeader from '../components/PageHeader.jsx'
 import ParDelta from '../components/ParDelta.jsx'
 import { shareScorecard } from '../utils/share.js'
@@ -304,9 +304,8 @@ export default function Summary({ navigate, goBack, params }) {
                     delta={roundToPar((game.scores?.[player] ?? []).slice(0, holePars.length), holePars)}
                     variant="bracket"
                   />
-                  {playerAverage(game.scores, player) !== null && (
-                    <span className="block font-ui text-xs font-normal text-muted">Av. {playerAverage(game.scores, player)}</span>
-                  )}
+                  {/* The "Av. X" sub-line was dropped (#70, flagged as not interesting) —
+                      the bracketed total-to-par above already carries that information. */}
                   {isDnf(player) && <span className="block font-ui text-xs font-normal text-muted">DNF</span>}
                 </td>
               ))}

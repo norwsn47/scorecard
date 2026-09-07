@@ -1,7 +1,7 @@
 # Design
 ## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
-Last updated: 5 September 2026
+Last updated: 6 September 2026
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
 ---
@@ -376,7 +376,7 @@ The one place the scorecard leaves pencil-and-paper monochrome. Applies to score
 
 **Per-hole indicator (grid + Summary + share).** A superscript trailing the score digit — `font-ui text-[0.6em] align-super font-normal`, never bold, `ml-[1px]`. Smallest legible size; the digit stays the workhorse and the delta annotates it (micro register). Superscript rather than the inline `(par)` bracket used on the hole number, because up to six player columns share a row and `3 (+1)` will not fit — this is the one deliberate divergence from §5.1's inline treatment, justified by column width.
 
-**Round total-to-par (totals bar, Summary totals row, finish dialog, share).** In brackets, on the total's own line: `41 (+5)`. Not superscript. `Av.` / `DNF` stay as the sub-labels beneath. The bracket's digits and sign take the semantic colour; the surrounding total stays `text` / `accent` as today. Before a player has scored, the bracket is omitted entirely.
+**Round total-to-par (totals bar, Summary totals row, finish dialog, share).** In brackets, on the total's own line: `41 (+5)`. Not superscript. `DNF` stays as the sub-label beneath where it applies. The bracket's digits and sign take the semantic colour; the surrounding total stays `text` / `accent` as today. Before a player has scored, the bracket is omitted entirely. Summary and History used to also show an `Av. X` (average strokes) sub-line here — dropped (#70, flagged as not interesting): the bracket already carries the same total-to-par information the average line duplicated.
 - Full size (matches the total) on the surfaces with room: the Summary totals row, the finish dialog, the share image.
 - **Surface exception — the live Scorecard totals bar:** the bracket drops to `text-sm font-normal` (and the cell gets `leading-tight`). At 390px with 5–6 players the column is ~47px and a full-size `41 (+5)` wraps to two lines; the smaller bracket keeps it to one. This is the one documented size exception.
 

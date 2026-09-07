@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import PageHeader from '../components/PageHeader.jsx'
+import ParDelta from '../components/ParDelta.jsx'
 import { formatShortDate } from '../utils/format.js'
-import { playerAverage, playerTotal } from '../utils/scores.js'
+import { playerTotal, roundToPar } from '../utils/scores.js'
 import { deleteCompletedGame, getCompletedGames } from '../utils/storage.js'
 import { normalizeDbGame, normalizeLocalGame } from '../utils/history.js'
 import { historyResultLabel } from '../utils/result.js'
@@ -231,10 +232,10 @@ export default function History({ navigate, goBack, params }) {
               {/* Players */}
               <div className="space-y-1">
                 {(game.players ?? []).map(name => {
-                  const isWinner = winners.includes(name)
-                  const avg      = playerAverage(game.scores, name)
-                  const isDnf    = game.dnf?.includes(name)
-                  const total    = playerTotal(game.scores, name)
+                  const isWinner  = winners.includes(name)
+                  const isDnf     = game.dnf?.includes(name)
+                  const total     = playerTotal(game.scores, name)
+                  const toPar     = roundToPar((game.scores?.[name] ?? []).slice(0, game.holePars.length), game.holePars)
                   return (
                     <div key={name} className="flex items-center justify-between">
                       <span
@@ -250,8 +251,11 @@ export default function History({ navigate, goBack, params }) {
                         {name}
                         {isDnf && <span className="text-muted font-normal"> (DNF)</span>}
                       </span>
+                      {/* Total-to-par, matching Summary's totals row (#70) — was
+                          "(Av. X)", the two screens now show the same stat. */}
                       <span className="font-ui text-xs text-muted">
-                        {total > 0 ? total : '-'}{avg !== null ? ` (Av. ${avg})` : ''}
+                        {total > 0 ? total : '-'}
+                        <ParDelta delta={toPar} variant="bracket" />
                       </span>
                     </div>
                   )
