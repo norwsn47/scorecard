@@ -4,12 +4,6 @@ export function playerTotal(scores, player) {
     .reduce((sum, s) => sum + s, 0)
 }
 
-export function playerAverage(scores, player) {
-  const scored = (scores?.[player] ?? []).filter(s => s !== null)
-  if (scored.length === 0) return null
-  return (scored.reduce((sum, s) => sum + s, 0) / scored.length).toFixed(1)
-}
-
 // ── Par (§5.1) ─────────────────────────────────────────────────────────────
 // Par is display / derived-stats only — it never affects totals, the winner,
 // DNF or the draw rule. A missing or malformed par is read as par 3.

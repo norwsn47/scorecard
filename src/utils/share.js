@@ -1,5 +1,5 @@
 import { deriveResult } from './game.js'
-import { deriveHolePars, formatToPar, playerAverage, playerTotal, roundToPar, scoreToPar } from './scores.js'
+import { deriveHolePars, formatToPar, playerTotal, roundToPar, scoreToPar } from './scores.js'
 import { formatDateOnly } from './format.js'
 
 const C = {
@@ -250,7 +250,6 @@ async function buildCanvas(game) {
   players.forEach((p, i) => {
     const cx    = PAD + HOLE_COL + i * playerColW + playerColW / 2
     const total = playerTotal(game.scores, p)
-    const avg   = playerAverage(game.scores, p)
     const dnf   = isDnf(p)
 
     const base = isWin(p) ? C.accent : C.text
@@ -260,6 +259,8 @@ async function buildCanvas(game) {
       ctx.font      = 'bold 15px Inter, system-ui, sans-serif'
       ctx.fillText('DNF', cx, y + 22)
     } else {
+      // No separate "Av. X" line below the bracket (#70) - it duplicated the
+      // total-to-par the bracket already shows, matching Summary and History.
       const rtp   = roundToPar((game.scores?.[p] ?? []).slice(0, holes), holePars)
       const bracket = rtp == null ? '' : `(${formatToPar(rtp)})`
       drawWithTrail(ctx, cx, y + 22, String(total || '-'), bracket, {
@@ -270,12 +271,6 @@ async function buildCanvas(game) {
         raise:      0,
         gap:        3,
       })
-    }
-
-    if (!dnf && avg !== null) {
-      ctx.fillStyle = C.muted
-      ctx.font      = '11px Inter, system-ui, sans-serif'
-      ctx.fillText(`Av. ${avg}`, cx, y + 40)
     }
   })
   y += TOTAL_H

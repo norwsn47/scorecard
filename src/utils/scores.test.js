@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { deriveHolePars, formatToPar, playerAverage, playerTotal, roundToPar, scoreToPar } from './scores.js'
+import { deriveHolePars, formatToPar, playerTotal, roundToPar, scoreToPar } from './scores.js'
 
 describe('playerTotal', () => {
   it('sums the scored holes, ignoring nulls', () => {
@@ -8,16 +8,6 @@ describe('playerTotal', () => {
 
   it('is 0 for an unknown or empty player', () => {
     expect(playerTotal({}, 'Ann')).toBe(0)
-  })
-})
-
-describe('playerAverage', () => {
-  it('averages the scored holes to one decimal place', () => {
-    expect(playerAverage({ Ann: [3, 4, null] }, 'Ann')).toBe('3.5')
-  })
-
-  it('is null when nothing is scored', () => {
-    expect(playerAverage({ Ann: [null, null] }, 'Ann')).toBeNull()
   })
 })
 
