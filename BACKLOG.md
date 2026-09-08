@@ -6,11 +6,11 @@
 > Nothing here is actioned without explicit instruction — tell the project-manager (or Claude directly) to pull an item into work.
 > Numbers are stable IDs for cross-reference — don't renumber existing items when deleting one, so gaps are expected.
 
-**Last updated:** 6 September 2026
+**Last updated:** 8 September 2026
 
 > The history of shipped and removed items lives in `CHANGELOG.md`. This file is open items only.
 >
-> Still-relevant status notes: #40 needs a product-owner PRD decision before build. #42 (Google sign-in) is Blocked on an external Google Cloud OAuth client. #54 needs a build-vs-admin decision. #39/#64 (end-of-round tally) were built and removed the same day — nothing remains; PRD §5.2 is a "removed" stub.
+> Still-relevant status notes: #40 needs a product-owner PRD decision before build. #42 (Google sign-in) is Blocked on an external Google Cloud OAuth client. #39/#64 (end-of-round tally) were built and removed the same day — nothing remains; PRD §5.2 is a "removed" stub.
 
 ---
 
@@ -63,13 +63,6 @@ The architecture for properly supporting multiple courses, beyond the current v2
 
 ### 40. Optional match-play game mode (win each hole)
 A game-mode toggle at setup: **stroke play** (current — lowest total wins) or **match play** (win the most holes; each hole won by the lowest score, halved on a tie). Changes the winner calculation, the Summary, and the share image. Explicitly flagged by the user as a future edition. PRD §5 change needed.
-
-
-### 54. Let existing users set par on courses they already created
-Courses created before migration `003` have `hole_pars = NULL` (read as all-3s). Real users need a way to set true pars. Two routes: (a) a **course-edit flow** (there is no edit-course UI today — new screen, `PATCH /api/courses/[id]` which doesn't exist), or (b) a **one-off admin backfill** (the user offered to force it as admin). Decide which before scoping. If (a), it likely wants the #50 stepper UI reused — **that stepper now exists** (`Setup.jsx`, `stepPar` + the two-column per-hole par list, shipped 3 Sep with #50) and is ready to lift into a course-edit screen.
-
-### 71. Edit a saved round's course total/pars, and delete a course
-Two related asks: (a) edit a saved history round's total and/or the pars of the course it was played on, and (b) delete a course entirely (not just a round — round deletion already exists in `History.jsx`). (a) overlaps with #54 (courses created before migration `003` need a way to set real pars) — that item already covers the par-editing route (course-edit screen + `PATCH /api/courses/[id]`, neither of which exist yet). New here: editing a round's *total* directly (distinct from editing its individual hole scores, which the existing past-round edit flow covers), and a `DELETE /api/courses/[id]` to remove a course a signed-in user created. Needs decisions: what happens to existing rounds recorded on a deleted course, and whether "edit total" bypasses or recalculates from hole scores.
 
 ---
 
@@ -156,4 +149,10 @@ The `ParDelta` markup is now covered (`src/components/ParDelta.test.jsx`). The `
 
 ### 65. Inline decorative-circle colour on `Home.jsx` isn't a token
 `Home.jsx:105` has an inline `style={{ background: 'rgba(26,67,41,0.1)' }}` for a decorative circle — could take an `accent`-derived token. Low priority. Surfaced 4 September 2026 when the stale DESIGN.md "Divergences" section was reconciled; the sibling issue on this line (`Login.jsx`'s hardcoded focus-ring RGB) shipped 5 September 2026.
+
+### 74. Stale comment in `functions/api/courses/[id].js`
+Surfaced by code-reviewer during the #71 build (8 Sep 2026). The PATCH/DELETE ownership-check comments describe protecting a `user_id = null` "system default course", but no current seed path creates one (`functions/api/auth/verify.js:34-44`). The ownership check itself is correct and safe either way — just tidy the comment to match reality, or confirm a null-owner seed course is still intended somewhere and restore it.
+
+### 75. `CourseEdit.jsx` doesn't distinguish a 401 from a genuine not-found
+Surfaced by code-reviewer during the #71 build (8 Sep 2026). `CourseEdit.jsx`'s course-fetch effect doesn't check `res.ok` before reading the courses-list JSON, so a session that's expired mid-flow degrades to the generic "We can't find that course" message rather than prompting to sign in again. Matches an existing pattern elsewhere in the app (not a new gap introduced by #71) — low priority.
 

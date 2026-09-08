@@ -1,4 +1,5 @@
 import { Component, useEffect, useState } from 'react'
+import CourseEdit            from './pages/CourseEdit.jsx'
 import History              from './pages/History.jsx'
 import Info                 from './pages/Info.jsx'
 import Login                from './pages/Login.jsx'
@@ -50,12 +51,14 @@ const PAGES = {
   summary:     Summary,
   history:     History,
   bruntsfield: BruntsfiledCoursePage,
+  courseEdit:  CourseEdit,
 }
 
 // Pages whose URL slug differs from their key
 const PAGE_PATHS = {
   home:        '/',
   bruntsfield: '/bruntsfield-short-course',
+  courseEdit:  '/course-edit',
 }
 
 function pathForPage(key) {
@@ -65,6 +68,7 @@ function pathForPage(key) {
 function pageFromPath() {
   const path = window.location.pathname
   if (path === '/bruntsfield-short-course') return 'bruntsfield'
+  if (path === '/course-edit') return 'courseEdit'
   const key = path.replace(/^\//, '') || 'home'
   return key in PAGES ? key : 'home'
 }
