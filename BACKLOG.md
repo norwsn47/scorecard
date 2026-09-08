@@ -103,12 +103,22 @@ Surfaced in the #48–#55 code review. `buildEditGame` sizes the edit grid to th
 ### 25. Crisper course map image
 `public/course_map_v2.png` lacks sharpness when zoomed on high-res screens. Replace with a higher-resolution source, or SVG/vector if the course can provide one. (Distinct from #1, which is about when the map appears and its loading state.)
 
-### 31. Set up analytics
-The user wants **Google Analytics (GA4)** specifically (assistance requested). Scaffolding is already in place for a different tool: `src/utils/analytics.js` (a Plausible `window.plausible?.(...)` wrapper) and events instrumented — New Game Started, Game Completed (player count, holes), Scorecard Shared, Game Edited. Open:
-- **Decision / conflict to resolve first:** GA4 sets cookies and, under UK PECR + UK GDPR, generally needs a consent banner — which the app has deliberately avoided. The current "Your data" privacy page and `Info.jsx` both state there is no tracking or analytics (PRD §4.8 now just links to that page). Either (a) accept a consent banner + rewrite the privacy page / Info copy and the PRD, or (b) use GA in a cookieless/consent-exempt configuration, or (c) reconsider a cookieless tool (Plausible/Fathom) that needs no banner. Product-owner call.
-- Wire the chosen tool: swap `analytics.js` to the GA `gtag` API (or keep Plausible), add the script to `index.html`, create the account.
-- Confirm Cloudflare Pages built-in analytics are active for basic traffic data.
-- Update the Info page + Privacy page copy and PRD §4.8 to state exactly what is collected and by whom.
+### 31. Set up analytics — user wants Google Analytics (GA4); blocked on a privacy decision, not on work
+**The user has asked for this directly (GA4 specifically, assistance requested).** It is not blocked on engineering effort — the build is ~2-3 hours — but on one decision that must be made first, because GA4 conflicts with a deliberate product stance.
+
+**The conflict:** GA4 sets cookies. Under UK PECR + UK GDPR that normally requires a consent banner, which the app has deliberately never had. The "Your data" privacy page and `Info.jsx` both currently state there is **no tracking or analytics at all** (PRD §4.8 links to that page). Adding GA4 as-is would make both pages false.
+
+**Pick one before any code (product-owner + user call):**
+- **(a)** GA4 with a consent banner — accept the banner, rewrite the privacy page / `Info.jsx` copy and PRD §4.8.
+- **(b)** GA4 in a cookieless / consent-exempt configuration — no banner, but reduced data; still needs the privacy copy updated to name GA as a processor.
+- **(c)** A cookieless tool (Plausible / Fathom) — no banner, minimal privacy-copy change. **The scaffolding already targets this route:** `src/utils/analytics.js` is a `track()` wrapper around `window.plausible?.(...)` (currently a silent no-op) and `index.html:32` has the Plausible `<script>` commented out, ready to enable.
+
+**Already done (whichever route is chosen):** events are instrumented app-wide — New Game Started, Game Completed (player count, holes), Scorecard Shared, Game Edited.
+
+**Build steps once the route is chosen:**
+- Wire the tool: for GA, swap `analytics.js` to the `gtag` API and add the script to `index.html`; for Plausible, just uncomment `index.html:32` and set `data-domain`. Create the account either way.
+- Update `Info.jsx` + `Privacy.jsx` copy and PRD §4.8 to state exactly what is collected and by whom (and add/justify a consent banner if route (a)).
+- Confirm Cloudflare Pages' built-in analytics are on for basic traffic data regardless.
 
 ### 60. Product-owner pass over §4.8 and its overlap with the privacy page
 Split out from the old #59. §4.8 (Information page) and §11.12 / the "Your data" privacy page (`Privacy.jsx`) describe overlapping things — what the info page contains, what the privacy page contains, where the data explanation lives. The 3 Sep cleanup made both accurate individually but the split between them is implicit. A proper product-owner pass would make §4.8 and §11.12 explicitly complementary. Low priority — both are accurate as they stand.
