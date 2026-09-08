@@ -2,7 +2,7 @@
 ## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
 **Version:** 2.0
-**Last updated:** 6 September 2026
+**Last updated:** 8 September 2026
 
 > The rationale and section-by-section history of past updates lives in `CHANGELOG.md`, not here. This line is just a date.
 
@@ -304,6 +304,7 @@ Beside each player's round total, in brackets, their score-to-par for the round:
 - Signed-in users can create their own courses at **9 or 18 holes** (default 9). 36 holes is not offered for user-created courses (§11.7)
 - UI includes a **"More courses coming soon"** placeholder where course selection will eventually live
 - Per-hole par is stored per course and per saved round (see §5.1); it is display only. No other hole-level metadata (no yardage, no difficulty rating)
+- A signed-in user can **edit** a course they created after the fact — its **name** and **per-hole pars**, but never its hole count, which is fixed for the life of the course. A signed-in user can also **delete** a course they created; deletion **cascades** and removes every round recorded on it too. Full detail in §11.7
 
 ---
 
@@ -421,11 +422,13 @@ Four tables in Cloudflare D1:
 - `user_id` — UUID, foreign key → users.id (null for system-provided courses)
 - `name` — text, not null
 - `holes` — integer, default 36. The seeded Bruntsfield course is 36; user-created courses are 9 or 18 (§11.7). `hole_pars` length always tracks this value
-- `hole_pars` — TEXT, JSON array of integers, length = `holes` — the per-hole par for the course (§5.1). Set on creation, defaults to all 3s, editable per hole in the course-creation form (§11.7). Added in migration `003_add_hole_pars.sql`, 2 September 2026
+- `hole_pars` — TEXT, JSON array of integers, length = `holes` — the per-hole par for the course (§5.1). Set on creation, defaults to all 3s, editable per hole in the course-creation form and, after creation, via the course-edit screen (§11.7). Added in migration `003_add_hole_pars.sql`, 2 September 2026
 - `is_default` — boolean, default false
 - `created_at` — timestamp
 
 **Seed data:** On new account creation, Bruntsfield Short Hole Golf Course is inserted into `courses` for that user as their default course (`is_default = true`, `holes = 36`, `hole_pars` = a length-36 array of 3s).
+
+**Course edit and delete:** `name` and `hole_pars` are editable in place after creation via `PATCH /api/courses/[id]`; `holes` is never editable post-creation (§11.7). `DELETE /api/courses/[id]` removes the course row and **cascades to delete every `games` row with that `course_id`** — course deletion is destructive to its round history by design, matching the existing single-round delete in `History.jsx` (§11.7). Both routes are gated by session and ownership; the seeded system default course (`user_id = null`) can be neither edited nor deleted by any user.
 
 **Why `hole_pars` is a JSON column, not a `course_holes` table:** par is always read and written as a whole array alongside its course or round — there is no query that needs a single hole's par in isolation, no per-hole row identity, and no other per-hole attributes planned for v2.0. A JSON TEXT column is consistent with `player_data` and keeps `003` a single additive migration with no joins. If structured per-course/per-hole data lands later (BACKLOG #11), a `course_holes` table can be introduced then.
 
@@ -473,21 +476,33 @@ The signed-in state is shown functionally, not through branding: a "Past Rounds"
 
 ---
 
-### 11.7 Course creation and selection
+### 11.7 Course creation, editing, selection and deletion
 
 **For logged-in users:**
 - When starting a new game, a course selector appears above the player setup
 - Default selected: the user's default course (Bruntsfield Short Hole Golf Course on first use)
 - User can select from their existing courses or create a new one
 - Creating a course: a text input for the course name — any name the user types is valid
-- **Hole count:** creating a course picks its length — **9 or 18 holes, default 9**. 36 holes is not an option for user-created courses; quick-play Bruntsfield and the seeded default course stay 36 (§6, §11.3). Hole count is fixed at creation — there is no course-edit flow yet (BACKLOG #54). The par editor renders exactly the chosen number of holes
-- **Par:** the course-creation form includes a per-hole par editor — a two-column list of the course's holes, each row a −/+ stepper. Every hole defaults to par 3, adjustable within a 2–7 band. There is no "set every hole to N" control. Par is stored as `courses.hole_pars` (§5.1, §11.3). Editing a course's par later does not alter rounds already saved against it — each round keeps its own `games.hole_pars` snapshot
-- **API:** `POST /api/courses` takes a `holes` field alongside `name` and `hole_pars`. It rejects any value that is not exactly 9 or 18 with a 400, validates that `hole_pars` length matches `holes`, and returns `holes` in the response. No new migration — `courses.holes` and `courses.hole_pars` already exist; only the written value and the validation around it change
+- **Hole count:** creating a course picks its length — **9 or 18 holes, default 9**. 36 holes is not an option for user-created courses; quick-play Bruntsfield and the seeded default course stay 36 (§6, §11.3). **Hole count is fixed for the life of the course** — it cannot be changed after creation, including via the course-edit flow below. The par editor renders exactly the chosen number of holes
+- **Par:** the course-creation form includes a per-hole par editor — a two-column list of the course's holes, each row a −/+ stepper. Every hole defaults to par 3, adjustable within a 2–7 band. There is no "set every hole to N" control. Par is stored as `courses.hole_pars` (§5.1, §11.3). Editing a course's par later (via the course-edit screen below) does not alter rounds already saved against it — each round keeps its own `games.hole_pars` snapshot
+- **API (create):** `POST /api/courses` takes a `holes` field alongside `name` and `hole_pars`. It rejects any value that is not exactly 9 or 18 with a 400, validates that `hole_pars` length matches `holes`, and returns `holes` in the response. No new migration — `courses.holes` and `courses.hole_pars` already exist; only the written value and the validation around it change
 - The selected course is stored on the game record when the game is saved to D1, along with a copy of its `hole_pars`
 - Course names appear in the game history list
 
+**Editing a course (name and par only):**
+- A signed-in user can edit an existing course's **name** and **per-hole pars** from a dedicated course-edit screen, reusing the same −/+ stepper pattern (2–7 band) as course creation
+- **Hole count stays fixed for the life of the course.** The edit screen never offers a control for it, and the API rejects any attempt to change it
+- **API:** `PATCH /api/courses/[id]` — accepts `name` and/or `hole_pars` in the request body. **Rejects a `holes` field in the body with a 400** (hole count is immutable post-creation). If `hole_pars` is supplied, validates its length matches the course's existing `holes` value. Gated by the session cookie and by ownership — the course must belong to the requesting user; the seeded system default course (`user_id = null`) cannot be edited by any user
+- Editing a course's par is **forward-looking only** — it changes the course's own definition for rounds played from that point on. It does **not** retroactively change the par shown on rounds already saved against that course, because each round stores its own `hole_pars` snapshot at play time (`games.hole_pars`, §11.3, §5.1). Correcting the par recorded on one specific already-played round is a separate, distinct capability handled by the past-round edit flow instead (§11.13) — the two are not the same feature and must not be confused for each other in the UI
+
+**Deleting a course:**
+- A signed-in user can delete a course they created via `DELETE /api/courses/[id]`, gated by the session cookie and by ownership. The seeded system default course (`user_id = null`) cannot be deleted by any user
+- **Deletion cascades:** every round (`games` row) recorded on that course is deleted along with it — matching the destructive nature of the single-round delete already in `History.jsx`
+- The frontend must show a clear warning before the delete happens, **stating how many rounds will also be deleted** — not a generic "delete this course?" prompt
+- **Deleting the default course, or a user's only remaining course, is explicitly allowed.** There is no blocking and no auto-promotion of another course to default. If a user deletes their way down to zero courses, the Setup course selector degrades to an explicit empty state (e.g. "No courses yet" plus the "+ New course" action) rather than an accidentally-blank dropdown. No "set default course" feature exists or is planned as part of this — a user who deletes their default is simply left to choose from whatever courses remain, or create a new one
+
 **For logged-out users:**
-- Quick-play remains hardcoded to Bruntsfield Short Hole Golf Course — no course selection UI
+- Quick-play remains hardcoded to Bruntsfield Short Hole Golf Course — no course selection, editing or deletion UI
 - No change to the logged-out experience
 
 **Backlog:** Allow quick-play games (localStorage) to be imported into the user's DB after sign-in — logged in BACKLOG.md as a future item, not in v2.0.
@@ -568,6 +583,7 @@ Quick-play edits are localStorage-only and device-specific, consistent with all 
 - **Per-hole scores** — for existing players, using the same scoring grid and controls as normal play (§4.3), including the 14-stroke cap.
 - **Notes** — a pre-filled free-text notes field on the edit screen (same 300-character client-side limit as §11.3), saved with the rest of the round. This is the only route to editing notes on an already-saved round.
 - **Course** — logged-in D1 rounds only, via the existing course selector (§11.7). For local/quick-play rounds the course is fixed and not editable in v1.
+- **This round's hole pars** — a **separate, distinct capability from editing the course itself (§11.7)** and from the "Course" field above. Applies to both round types (local/quick-play and logged-in D1). The user can correct the per-hole par values recorded on this one round (`games.hole_pars`, §11.3) — independent of, and without touching, the course's own par definition (`courses.hole_pars`). Editing a course's par (§11.7) is forward-looking only and never rewrites a round already saved against it; this field is how a user instead goes back and fixes the par on one specific already-played round. Uses the same −/+ stepper pattern (2–7 band) as the course par editor (§11.7), rendered for exactly the round's existing hole count — editing a round's par never changes `holes_played` and has no effect on totals, winner or DNF (par is display-only per §5). **On the edit screen this control must be presented as clearly separate from the course-name/course-selector control** — its own labelled section, not merged into or adjacent-looking to the course picker — so a user cannot confuse "I'm correcting this round's par" with "I'm changing which course this round is attached to".
 
 **What is NOT editable in v1 (deferred — see BACKLOG.md):**
 - Adding or removing players during an edit. v1 is renames and score changes only.
@@ -579,7 +595,7 @@ Quick-play edits are localStorage-only and device-specific, consistent with all 
 
 **Persistence and identity:**
 - The round keeps its original identity — same row, same `id`. Only `id`, `client_round_id`, and `created_at` are guaranteed unchanged by an edit. `played_at` (the round date) may change because it is user-editable (see above); this is still a correction to an existing round, not a new round.
-- Logged-in: a `PATCH` on `functions/api/games/[id].js` updates the existing row, gated by the session cookie and by ownership (the round must belong to the requesting user).
+- Logged-in: a `PATCH` on `functions/api/games/[id].js` updates the existing row, gated by the session cookie and by ownership (the round must belong to the requesting user). Editable fields include `played_at`, `player_data`, `hole_pars` (the round-level par correction above), `notes` and `course_id`.
 - Logged-out: an update path in `storage.js` overwrites the existing localStorage record in place, keyed on its existing id.
 
 **Sharing:** unchanged. After an edit is saved, the Summary view reflects the recalculated result and the existing Share button (§4.7) generates the share image from the updated data.
