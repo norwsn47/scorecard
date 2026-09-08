@@ -41,6 +41,19 @@ describe('CourseEdit (#54/#71)', () => {
     expect(await screen.findByText("We can't find that course")).toBeInTheDocument()
   })
 
+  it('shows a sign-in prompt, not a not-found state, when the session has expired (#75)', async () => {
+    global.fetch = vi.fn().mockResolvedValue({ status: 401, ok: false, json: async () => ({ error: 'Unauthorised' }) })
+    const navigate = vi.fn()
+
+    render(<CourseEdit navigate={navigate} params={{ courseId: 'c1' }} />)
+
+    expect(await screen.findByText('Your session has expired')).toBeInTheDocument()
+    expect(screen.queryByText("We can't find that course")).not.toBeInTheDocument()
+
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Sign in' }))
+    expect(navigate).toHaveBeenCalledWith('login')
+  })
+
   it('saves the edited name and par via PATCH, then returns to the calling Setup screen', async () => {
     const user = userEvent.setup()
     const fetchMock = vi.fn()

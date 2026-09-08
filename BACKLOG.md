@@ -17,9 +17,8 @@
 ## Features not yet built
 
 ### 1. Course map reliability
-Two parts, from the July 2026 feedback list. **A previous implementation attempt was flagged wrong by the user and reverted — needs a fresh approach before restarting.**
+From the July 2026 feedback list. The loading/error state on `CourseMapModal.jsx` shipped 8 September 2026 (instant "Loading map…" placeholder, fade-in on load, error message on failure, cached-image guard). Remaining part: **a previous implementation attempt was flagged wrong by the user and reverted — needs a fresh approach before restarting.**
 - The map button in `Scorecard.jsx` only renders when a game was started from the `/bruntsfield-short-course` route. A user who starts from the generic home "New Game", or a signed-in user who picks Bruntsfield from the course selector, never sees it. Show the button whenever the active game's course is Bruntsfield (by course name/id, not by navigation route). Note: this reverses a deliberate Wave 5 scoping decision.
-- `CourseMapModal.jsx` shows no loading state — add an instant placeholder/spinner, replaced on the image's `onLoad` (or an error state).
 
 ### 2b. Sign-in email — inbox sender name (manual, not code)
 The email copy/wordmark now read "Scorecard by Outbuild" (shipped 1 Sep). Remaining: the inbox *sender name* is set by the `RESEND_FROM_EMAIL` env var format — set it to a `Scorecard by Outbuild <address>` display-name format via the Cloudflare Pages dashboard (Settings → Environment variables). No code.
@@ -147,12 +146,6 @@ The three easy toolchain vulns (`browserslist`, `nanoid`, `postcss`) were cleare
 ### 58. Par stepper render test — folded into #35
 The `ParDelta` markup is now covered (`src/components/ParDelta.test.jsx`). The `Setup.jsx` `stepPar` 2–7 clamp still isn't — tracked under #35 (blocked on the "+ New course" select being hard to drive in jsdom).
 
-### 65. Inline decorative-circle colour on `Home.jsx` isn't a token
-`Home.jsx:105` has an inline `style={{ background: 'rgba(26,67,41,0.1)' }}` for a decorative circle — could take an `accent`-derived token. Low priority. Surfaced 4 September 2026 when the stale DESIGN.md "Divergences" section was reconciled; the sibling issue on this line (`Login.jsx`'s hardcoded focus-ring RGB) shipped 5 September 2026.
-
-### 74. Stale comment in `functions/api/courses/[id].js`
-Surfaced by code-reviewer during the #71 build (8 Sep 2026). The PATCH/DELETE ownership-check comments describe protecting a `user_id = null` "system default course", but no current seed path creates one (`functions/api/auth/verify.js:34-44`). The ownership check itself is correct and safe either way — just tidy the comment to match reality, or confirm a null-owner seed course is still intended somewhere and restore it.
-
-### 75. `CourseEdit.jsx` doesn't distinguish a 401 from a genuine not-found
-Surfaced by code-reviewer during the #71 build (8 Sep 2026). `CourseEdit.jsx`'s course-fetch effect doesn't check `res.ok` before reading the courses-list JSON, so a session that's expired mid-flow degrades to the generic "We can't find that course" message rather than prompting to sign in again. Matches an existing pattern elsewhere in the app (not a new gap introduced by #71) — low priority.
+### 77. Recovery-panel buttons drift from the primary-button spec
+Surfaced by code-reviewer during the #74/#65/#75/#1 batch (8 Sep 2026). `CourseEdit.jsx`'s "Back to Home" and the new "Sign in" recovery buttons use `py-3 px-6` (~41px tall), under DESIGN.md's primary-action spec (`py-4 px-6`) and the ~44px touch-target floor. The new button was a deliberate copy of the existing one, so they're consistent with each other but both drift. Low priority - align both to the spec (or add a shared recovery-panel button pattern) next time this screen is touched.
 
