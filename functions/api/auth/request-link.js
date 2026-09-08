@@ -13,12 +13,39 @@ export async function onRequestPost(context) {
     return Response.json({ error: 'Invalid email address' }, { status: 400 });
   }
 
-  const token = crypto.randomUUID();
-  const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+  const now = Date.now();
 
-  await DB.prepare(
-    'INSERT INTO magic_tokens (id, email, token, expires_at, used) VALUES (?, ?, ?, ?, 0)'
-  ).bind(crypto.randomUUID(), email, token, expiresAt).run();
+  // #14 — per-email throttle. magic_tokens has no created_at column, but every
+  // row's expires_at is exactly issued-time + 15 min, so "expires_at > now"
+  // means "issued in the last 15 minutes". Cap the number of still-fresh links
+  // per address so a target inbox can't be flooded with sign-in emails.
+  const MAX_FRESH_LINKS = 5;
+  const { count: freshLinks } = await DB.prepare(
+    'SELECT COUNT(*) AS count FROM magic_tokens WHERE email = ? AND expires_at > ?'
+  ).bind(email, new Date(now).toISOString()).first();
+  if (freshLinks >= MAX_FRESH_LINKS) {
+    return Response.json(
+      { error: 'Too many sign-in requests. Check your inbox, or wait a few minutes and try again.' },
+      { status: 429 }
+    );
+  }
+
+  const token = crypto.randomUUID();
+  const expiresAt = new Date(now + 15 * 60 * 1000).toISOString();
+
+  // #15 — opportunistic cleanup. Every magic token is single-use and expires
+  // 15 minutes after it is issued, so anything whose expiry is more than 24h
+  // in the past is long dead. Deleting it here (batched with the insert, one
+  // round-trip) keeps abandoned sign-in attempts from accumulating email
+  // addresses in the table indefinitely (GDPR data-minimisation, §11.12).
+  const staleCutoff = new Date(now - 24 * 60 * 60 * 1000).toISOString();
+
+  await DB.batch([
+    DB.prepare(
+      'INSERT INTO magic_tokens (id, email, token, expires_at, used) VALUES (?, ?, ?, ?, 0)'
+    ).bind(crypto.randomUUID(), email, token, expiresAt),
+    DB.prepare('DELETE FROM magic_tokens WHERE expires_at < ?').bind(staleCutoff),
+  ]);
 
   const magicLink = `${APP_URL}/api/auth/verify?token=${token}`;
 

@@ -397,6 +397,7 @@ Four tables in Cloudflare D1:
 - `token` — text, unique, not null
 - `expires_at` — timestamp
 - `used` — boolean, default false
+- Rows are pruned opportunistically by `POST /api/auth/request-link` once their expiry is >24h in the past (§11.4).
 
 **sessions**
 - `id` — UUID, primary key (this is the session token stored in the cookie)
@@ -440,7 +441,7 @@ No passwords. Users authenticate with their email address only.
 
 **Flow:**
 1. User enters email address on the login screen
-2. `POST /api/auth/request-link` — validates email format, creates a magic_token record in D1 (expires in 15 minutes), sends the magic link email via Resend
+2. `POST /api/auth/request-link` — validates email format, then (per-email throttle) rejects with `429` if the address already has 5 or more still-fresh links issued in the last 15 minutes, so an inbox can't be flooded; otherwise creates a magic_token record in D1 (expires in 15 minutes) and sends the magic link email via Resend. The same call opportunistically deletes any magic_token rows whose expiry is more than 24 hours in the past, so abandoned sign-in attempts don't retain email addresses indefinitely (§11.12).
 3. User sees a confirmation screen: "Check your email — we've sent a link to [email]"
 4. User taps the link in their email
 5. `GET /api/auth/verify?token=<token>` — validates the token (exists, not expired, not used), marks it as used, creates or finds the user record, creates a session, sets the HttpOnly session cookie, redirects to the app
@@ -556,7 +557,7 @@ Cookie name and session/token expiry are hardcoded in the API layer (not env var
 
 ### 11.12 Information page and privacy policy (v2.0)
 
-The data story lives on a dedicated **"Your data"** privacy page (`Privacy.jsx`), reached from a "Read our privacy policy" link on the information page (§4.8). It states that logged-in users' rounds and scores are stored in a Cloudflare D1 database, that Resend processes email addresses to deliver the sign-in link, that neither provider uses the data for its own purposes, retention (account data kept while in use; sessions expire after 30 days), and account deletion on request. The information page itself no longer carries an inline data disclaimer — it just links here (§4.8).
+The data story lives on a dedicated **"Your data"** privacy page (`Privacy.jsx`), reached from a "Read our privacy policy" link on the information page (§4.8). It states that logged-in users' rounds and scores are stored in a Cloudflare D1 database, that Resend processes email addresses to deliver the sign-in link, that neither provider uses the data for its own purposes, retention (account data kept while in use; sessions expire after 30 days; sign-in link records are pruned within ~24h of expiry), and account deletion on request. The information page itself no longer carries an inline data disclaimer — it just links here (§4.8).
 
 The contact address is `scorecard@outbuild.uk` on the privacy page. Whether the information page also needs its own contact link, and the final address, are tracked in BACKLOG.md (#12).
 
