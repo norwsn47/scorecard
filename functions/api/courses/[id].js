@@ -10,8 +10,9 @@ export async function onRequestPatch(context) {
 
   // Ownership check first — a user must never be able to PATCH another
   // user's course id, and we don't reveal whether an id exists via a
-  // different error. This also correctly 404s on the seeded system default
-  // course, whose user_id is null and so never equals a real user's id.
+  // different error. Every course row has a real user_id owner (the seeded
+  // Bruntsfield copy each user gets on first sign-in included — see
+  // auth/verify.js), so a course owned by someone else reads as "not found".
   const course = await DB.prepare('SELECT id, holes FROM courses WHERE id = ? AND user_id = ?').bind(id, user.id).first()
   if (!course) return Response.json({ error: 'Not found' }, { status: 404 })
 
@@ -72,8 +73,8 @@ export async function onRequestDelete(context) {
 
   const { id } = context.params
 
-  // Ownership check first (also 404s the seeded system default course, whose
-  // user_id is null).
+  // Ownership check first — a course owned by another user reads as "not
+  // found" rather than revealing that the id exists.
   const course = await DB.prepare('SELECT id FROM courses WHERE id = ? AND user_id = ?').bind(id, user.id).first()
   if (!course) return Response.json({ error: 'Not found' }, { status: 404 })
 

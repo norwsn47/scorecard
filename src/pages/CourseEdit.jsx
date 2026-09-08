@@ -30,6 +30,7 @@ export default function CourseEdit({ navigate, params }) {
   const [loading, setLoading]     = useState(true)
   const [course, setCourse]       = useState(null)
   const [notFound, setNotFound]   = useState(false)
+  const [signedOut, setSignedOut] = useState(false)
   const [name, setName]           = useState('')
   const [pars, setPars]           = useState([])
   const [saving, setSaving]       = useState(false)
@@ -42,9 +43,17 @@ export default function CourseEdit({ navigate, params }) {
     let cancelled = false
     if (!courseId) { setLoading(false); setNotFound(true); return }
     fetch('/api/courses', { credentials: 'include' })
-      .then(r => r.json())
+      .then(async r => {
+        // A session that expired mid-flow degrades to a generic "can't find
+        // that course" without this check — surface it as a sign-in prompt
+        // instead (#75).
+        if (r.status === 401) return { signedOut: true }
+        if (!r.ok) throw new Error('fetch failed')
+        return r.json()
+      })
       .then(data => {
         if (cancelled) return
+        if (data.signedOut) { setSignedOut(true); setLoading(false); return }
         const found = (data.courses ?? []).find(c => c.id === courseId)
         if (!found) {
           setNotFound(true)
@@ -134,6 +143,21 @@ export default function CourseEdit({ navigate, params }) {
         {loading && (
           <div className="text-center pt-16">
             <p className="font-ui text-sm text-muted">Loading…</p>
+          </div>
+        )}
+
+        {!loading && signedOut && (
+          <div className="text-center pt-16">
+            <p className="font-display italic text-xl text-text mb-2">Your session has expired</p>
+            <p className="font-ui text-sm text-muted mb-6">
+              Sign in again to edit this course.
+            </p>
+            <button
+              onClick={() => navigate('login')}
+              className="py-3 px-6 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            >
+              Sign in
+            </button>
           </div>
         )}
 

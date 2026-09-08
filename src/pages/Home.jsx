@@ -100,10 +100,7 @@ export default function Home({ navigate }) {
             onClick={() => navigate('bruntsfield')}
             className="w-full px-4 py-3 rounded-md bg-bg-card border border-border text-left flex items-center gap-3 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
-            <div
-              className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
-              style={{ background: 'rgba(26,67,41,0.1)' }}
-            >
+            <div className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-accent/10">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-accent">
                 <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                 <circle cx="12" cy="10" r="3" />
