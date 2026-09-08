@@ -1,5 +1,6 @@
 import { getSessionUser } from '../../_lib/session.js'
 import { validateHolePars } from '../../_lib/hole-pars.js'
+import { validatePlayedAt, validatePlayerData } from '../../_lib/game-input.js'
 
 export async function onRequestDelete(context) {
   const { DB } = context.env
@@ -60,7 +61,8 @@ export async function onRequestPatch(context) {
     values.push(course_id || null)
   }
   if ('played_at' in body) {
-    if (!played_at) return Response.json({ error: 'Invalid played_at' }, { status: 400 })
+    const check = validatePlayedAt(played_at)
+    if (!check.ok) return Response.json({ error: check.error }, { status: 400 })
     columns.push('played_at = ?')
     values.push(played_at)
   }
@@ -72,15 +74,8 @@ export async function onRequestPatch(context) {
     values.push(holes_played)
   }
   if ('player_data' in body) {
-    let parsed
-    try {
-      parsed = typeof player_data === 'string' ? JSON.parse(player_data) : player_data
-    } catch {
-      return Response.json({ error: 'Invalid player_data' }, { status: 400 })
-    }
-    if (!Array.isArray(parsed) || parsed.length === 0) {
-      return Response.json({ error: 'Invalid player_data' }, { status: 400 })
-    }
+    const check = validatePlayerData(player_data)
+    if (!check.ok) return Response.json({ error: check.error }, { status: 400 })
     // Store exactly as onRequestPost does: a string is stored verbatim,
     // an array is JSON-stringified.
     columns.push('player_data = ?')

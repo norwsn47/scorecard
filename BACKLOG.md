@@ -100,9 +100,6 @@ Surfaced in the #48–#55 code review. `buildEditGame` sizes the edit grid to th
 
 ## Housekeeping & tech debt
 
-### 23. `onRequestPatch` / `onRequestPost` input validation is minimal
-`played_at` accepts any non-empty string (no date-format check); `player_data` is only checked for being a non-empty array (element shape not validated). Both client-controlled and consistent with each other, but both would benefit from stricter schema validation.
-
 ### 25. Crisper course map image
 `public/course_map_v2.png` lacks sharpness when zoomed on high-res screens. Replace with a higher-resolution source, or SVG/vector if the course can provide one. (Distinct from #1, which is about when the map appears and its loading state.)
 
