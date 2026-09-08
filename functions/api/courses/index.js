@@ -13,8 +13,13 @@ export async function onRequestGet(context) {
 
   // `hole_pars` is returned as the raw JSON TEXT (or null for a pre-003
   // course); the client parses it, same as `games.player_data`.
+  // `round_count` is a correlated subquery so the frontend can show "this will
+  // also delete N rounds" in the delete-confirmation dialog without a second
+  // request (§11.7).
   const { results } = await DB.prepare(
-    'SELECT id, name, holes, hole_pars, is_default FROM courses WHERE user_id = ? ORDER BY is_default DESC, name ASC'
+    `SELECT id, name, holes, hole_pars, is_default,
+       (SELECT COUNT(*) FROM games g WHERE g.course_id = courses.id) AS round_count
+     FROM courses WHERE user_id = ? ORDER BY is_default DESC, name ASC`
   ).bind(user.id).all()
 
   return Response.json({ courses: results })

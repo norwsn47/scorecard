@@ -235,4 +235,21 @@ describe('onRequestGet /api/courses', () => {
     expect(json.courses[0].hole_pars).toBe(JSON.stringify(Array(36).fill(3)))
     expect(json.courses[1].hole_pars).toBeNull()
   })
+
+  it('returns round_count for a course with rounds and one without', async () => {
+    const ctx = get()
+    ctx.env.DB = makeDB({
+      rows: [
+        { id: 'c1', name: 'Bruntsfield Short Hole Golf Course', holes: 36, hole_pars: JSON.stringify(Array(36).fill(3)), is_default: 1, round_count: 5 },
+        { id: 'c2', name: 'Braid Hills', holes: 9, hole_pars: JSON.stringify(Array(9).fill(3)), is_default: 0, round_count: 0 },
+      ],
+    })
+
+    const res = await onRequestGet(ctx)
+    const json = await res.json()
+
+    expect(res.status).toBe(200)
+    expect(json.courses[0].round_count).toBe(5)
+    expect(json.courses[1].round_count).toBe(0)
+  })
 })
