@@ -68,9 +68,6 @@ Add the club's official logo (likely Home or the course info section) once permi
 
 ## Known issues
 
-### 16. Pre-existing duplicate game rows in production D1
-The 24 Aug hotfix (live since 24 August 2026) stopped new duplicates but didn't touch rows already duplicated before it shipped. Identify and remove them via the Cloudflare D1 console — group by `user_id, played_at, holes_played` looking for counts > 1 (all predate `client_round_id` so all have it `NULL`). Check for other affected users too. Close this once the cleanup has been run.
-
 ### 43b. Back-nav polish (follow-ups from the #43 build) — mostly built 5 September 2026
 The broken loop and the label rationalisation from the 5 Sep scenario review are built. Summary's "← Rounds" and Setup's edit-cancel branch now call `goBack()` instead of pushing a fresh `navigate()`; `App.jsx` persists a round's own `id` (never the mutable object) in history state as `gameId`, and Summary re-resolves the round from storage by that id when a popstate bounce drops the `game` param. Every back button now names its real destination or action instead of a generic "← Back" (History "← Home"; Info/Privacy/Rules context-aware; Setup three ways — "← Summary" / "← History" / "← Home" or "← Bruntsfield"; Login "← Home" on both its screens; Scorecard edit mode "← History"; Scorecard live mode "Pause", no arrow, since it leaves the round intact in storage rather than stepping back or ending it). Home and the Bruntsfield course page keep no in-app back button (root screen; phone browser back nav respectively). A code-review pass (5 Sep) caught two label bugs before this shipped: Login's initial form still said "← Back" (only its "check your email" screen had been updated) — fixed; and the live Scorecard's back action was initially labelled "Quit" though the code never clears the active game — relabelled "Pause" to match actual behaviour rather than changing the behaviour itself. See DESIGN.md "Navigation".
 
@@ -88,8 +85,8 @@ Surfaced in the #48–#55 code review. `buildEditGame` sizes the edit grid to th
 
 ## Housekeeping & tech debt
 
-### 25. Crisper course map image
-`public/course_map_v2.png` lacks sharpness when zoomed on high-res screens. Replace with a higher-resolution source, or SVG/vector if the course can provide one. (Distinct from #1, which is about when the map appears and its loading state.)
+### 25. Crisper course map image — blocked on a better source asset
+`public/course_map_v2.png` is only 443×600px (~444 KB). `CourseMapModal.jsx` displays it at ~320px wide and zooms to 4× (~1300px effective demand), so it is inherently soft on any retina screen — the modal code itself is fine. The fix is purely a better asset: a higher-resolution scan/export (ideally ≥1600px on the long edge) or an SVG/vector from the club. Nothing to do in code until that exists. Overlaps with #13 (official logo) and #1 as things to request from Bruntsfield in one go. (Distinct from #1, which is about when the map appears and its loading state.)
 
 ### 31. Set up analytics — user wants Google Analytics (GA4); blocked on a privacy decision, not on work
 **The user has asked for this directly (GA4 specifically, assistance requested).** It is not blocked on engineering effort — the build is ~2-3 hours — but on one decision that must be made first, because GA4 conflicts with a deliberate product stance.
