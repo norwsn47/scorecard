@@ -8,7 +8,7 @@ export async function onRequestGet(context) {
 
   const now = new Date().toISOString();
   const session = await DB.prepare(
-    `SELECT sessions.user_id, users.email
+    `SELECT sessions.user_id, users.email, users.name, users.pending_email
      FROM sessions
      JOIN users ON sessions.user_id = users.id
      WHERE sessions.id = ? AND sessions.expires_at > ?`
@@ -18,7 +18,14 @@ export async function onRequestGet(context) {
     return Response.json({ user: null }, { status: 401 });
   }
 
-  return Response.json({ user: { id: session.user_id, email: session.email } }, { status: 200 });
+  return Response.json({
+    user: {
+      id: session.user_id,
+      email: session.email,
+      name: session.name ?? null,
+      pending_email: session.pending_email ?? null,
+    },
+  }, { status: 200 });
 }
 
 function getSessionCookie(request) {

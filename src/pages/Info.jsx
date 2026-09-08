@@ -99,7 +99,16 @@ export default function Info({ navigate, goBack, params }) {
         {user ? (
           <section className="space-y-3">
             <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted">Account</p>
-            <p className="font-ui text-sm text-muted truncate">{user.email}</p>
+            {user.name && <p className="font-ui text-sm text-text">{user.name}</p>}
+            <p className="font-ui text-sm text-muted break-words">{user.email}</p>
+            <div>
+              <button
+                onClick={() => navigate('settings', { from: 'info' })}
+                className="inline-block py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              >
+                Edit your name, change your email or delete your account
+              </button>
+            </div>
             <div>
               <button
                 onClick={async () => { await logout(); navigate('home') }}

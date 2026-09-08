@@ -47,6 +47,17 @@ describe('App router — SPA navigation', () => {
     expect(window.location.pathname).toBe('/')
   })
 
+  it('boots on a deep-linked /settings while signed out and bounces to Home (§11.14)', async () => {
+    window.history.replaceState({}, '', '/settings')
+
+    render(<App />)
+
+    // Settings' signed-out guard runs in an effect and calls App's real
+    // navigate — the "New Game" button only exists on Home.
+    expect(await screen.findByRole('button', { name: 'New Game' })).toBeInTheDocument()
+    expect(window.location.pathname).toBe('/')
+  })
+
   it('a popstate bounce onto a param-less Setup discards a stranded edit and lands on History (#18)', async () => {
     // An edit in progress: the working copy sits in the active-game slot with
     // an _edit marker. App boots straight to the Scorecard for it.

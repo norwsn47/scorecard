@@ -5,10 +5,34 @@ import { formatShortDate } from '../utils/format.js'
 import { getActiveGame, getCompletedGames } from '../utils/storage.js'
 import { useAuth } from '../hooks/useAuth.jsx'
 
+// ?email=changed|expired|taken redirected back from GET /api/auth/confirm-email
+// (§11.4.1) — the address change confirmed, the link was dead, or the address
+// was taken in the meantime. useAuth captures the flag and strips the param;
+// Home copies it into local state once and clears the context value straight
+// away, so the banner shows for this visit only and never re-appears on a
+// later return to Home. The link is opened in the new inbox — often on a
+// device with no session — so the `changed` copy adapts to whether the reader
+// is actually signed in here.
+function emailNoticeCopy(flag, signedIn) {
+  switch (flag) {
+    case 'changed':
+      return signedIn
+        ? 'Your email address has been updated.'
+        : 'Your email address has been updated. Sign in with your new address.'
+    case 'expired':
+      return 'That confirmation link has expired or has already been used. Open the app and request the change again.'
+    case 'taken':
+      return 'That email address is now in use by another account.'
+    default:
+      return null
+  }
+}
+
 export default function Home({ navigate }) {
-  const { user }                    = useAuth()
+  const { user, emailNotice, setEmailNotice } = useAuth()
   const [activeGame, setActiveGame] = useState(null)
   const [lastGame, setLastGame]     = useState(null)
+  const [notice, setNotice]         = useState(null)
 
   useEffect(() => {
     setActiveGame(getActiveGame())
@@ -18,8 +42,28 @@ export default function Home({ navigate }) {
     }
   }, [user])
 
+  // Capture the confirm-email flag into local state the moment useAuth exposes
+  // it (its effect runs after this child's, so this fires on the next render),
+  // then clear the shared value. Local state dies with Home on navigation, so
+  // the banner is a one-visit thing and a later return to Home is clean —
+  // StrictMode's mount/cleanup/mount double-invoke can't strand it.
+  useEffect(() => {
+    if (emailNotice) {
+      setNotice(emailNotice)
+      setEmailNotice(null)
+    }
+  }, [emailNotice, setEmailNotice])
+
+  const noticeCopy = notice ? emailNoticeCopy(notice, !!user) : null
+
   return (
     <div className="h-full bg-bg flex flex-col relative">
+
+      {noticeCopy && (
+        <div role="status" className="sticky top-0 z-50 bg-accent text-bg text-center font-ui text-xs py-2 px-4 tracking-wide">
+          {noticeCopy}
+        </div>
+      )}
 
       {/* ── Branding ── */}
       <header className="flex flex-col justify-start px-6 pt-10 pb-2">
@@ -125,8 +169,23 @@ export default function Home({ navigate }) {
           </button>
         )}
 
-        {/* Sign in nudge — logged-out only */}
-        {!user && (
+        {/* Foot of the actions: signed-out sees the sign-in nudge (unchanged,
+            §11.10); signed-in sees a plain "you are signed in" line and the
+            way into Settings (§4.1, §11.6, §11.14). Same slot, mirrored copy. */}
+        {user ? (
+          <div className="pt-0 text-center">
+            <p className="font-ui text-xs text-muted break-words">
+              Signed in as {user.name || user.email}
+              <span aria-hidden="true"> · </span>
+              <button
+                onClick={() => navigate('settings', { from: 'home' })}
+                className="inline-block py-2.5 -my-2.5 text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              >
+                Settings
+              </button>
+            </p>
+          </div>
+        ) : (
           <div className="pt-0 text-center space-y-1">
             <button
               onClick={() => navigate('login')}

@@ -76,7 +76,12 @@ export default function Privacy({ goBack, params }) {
         <section className="space-y-3">
           <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted">How long we keep it</p>
           <p className="font-ui text-sm text-muted leading-relaxed">
-            Your account and scores stay on file as long as you use the app. Sign-in sessions expire after 30 days - after that you'll need to sign in again. If you want us to delete your account and all associated data, email us and we'll do it within 30 days.
+            Your account and scores stay on file as long as you use the app. Sign-in sessions expire after 30 days - after that you'll need to sign in again. Records of abandoned sign-in links are cleared within about a day of expiring.
+          </p>
+          <p className="font-ui text-sm text-muted leading-relaxed">
+            You can delete your account yourself at any time from Settings. It removes your account and every round and course saved to it straight away, and it can't be undone. Quick-play scores saved locally on your device aren't part of your account and aren't affected. If you can't sign in, email{' '}
+            <a href="mailto:scorecard@outbuild.uk" className="text-accent underline underline-offset-2">scorecard@outbuild.uk</a>{' '}
+            and we'll do it for you.
           </p>
         </section>
 

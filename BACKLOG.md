@@ -23,20 +23,8 @@ From the July 2026 feedback list. The loading/error state on `CourseMapModal.jsx
 ### 2b. Sign-in email — inbox sender name (manual, not code)
 The email copy/wordmark now read "Scorecard by Outbuild" (shipped 1 Sep). Remaining: the inbox *sender name* is set by the `RESEND_FROM_EMAIL` env var format — set it to a `Scorecard by Outbuild <address>` display-name format via the Cloudflare Pages dashboard (Settings → Environment variables). No code.
 
-### 3. User profile foundation (backend)
-Groundwork for name capture and account settings. Touches auth data — confirm before starting.
-- Add a nullable `name` column to `users` (D1 migration).
-- Extend `GET /api/auth/me` to return `name`.
-- `PATCH /api/users` — update name and/or email for the current session's user. Open decision: does an email change require re-verification via magic link, or take effect immediately?
-- `DELETE /api/users` — delete the current user's account, send a notification email to williamadamgriffiths@gmail.com via Resend, clear the session.
-
-### 4. Settings panel (UI)
-Depends on #3.
-- Settings (gear) icon on Home, visible only when signed in. Pair with a clearer signed-in vs signed-out indicator on Home.
-- Settings screen: edit name, update email, delete account (confirmation dialog matching the delete-round pattern in `History.jsx`).
-
 ### 5. Signed-in identity in gameplay
-Depends on #3, #4.
+Foundation (#3 profile backend, #4 Settings panel) shipped 8 September 2026 — this is now unblocked. PRD §8, forward-referenced from §11.14.
 - When a signed-in user has no name yet, prompt once (lightweight inline prompt, not a full onboarding flow) or direct them to Settings.
 - Pre-fill the first player slot with the user's own name on New Game; other players stay "guest".
 - Highlight the user's own score as primary in the scorecard, summary, and history views; guest scores stay visually secondary. (This is the "own player" handling the past-round edit view currently defers.)
@@ -147,3 +135,19 @@ The tap-target growth shipped 8 September 2026 - all three foot-of-page links ("
 ### 79. Magic-link abuse protection — revisit if abuse is observed
 #14 (shipped 8 September 2026) added a per-email throttle: `POST /api/auth/request-link` rejects with `429` at 5+ unclaimed links per address per 15 min. Residual surface: ~480 emails/day to a single targeted inbox is still possible, and there is no global or per-IP cap (magic_tokens deliberately stores no IP), so distributed abuse across many victim addresses is unthrottled, and the throttle is soft under concurrency (TOCTOU — N parallel requests can each read a count under the cap). All acceptable at current scale. If abuse is seen: add Cloudflare Turnstile on the login form, or a Cloudflare WAF rate-limit rule on the endpoint. Separately: the #14 window relies on `magic_tokens.expires_at` being exactly issued + 15 min — if a longer-lived link type is ever added, give the table a real `created_at` column so the throttle can be explicit. Low priority until abuse is observed.
 
+### 80. Settings panel (#4) - code-review housekeeping (CLEAR WITH NOTES, 8 Sep 2026)
+Minor items logged from the Phase 2 review of `feat/user-profile-foundation`; none block. All low priority.
+- **`History.jsx` delete-round sheet still lacks dialog semantics.** The new Settings delete sheet got `role="dialog"` + `aria-modal="true"` + `aria-labelledby`, autofocus on the input, and Escape / backdrop dismiss. `History.jsx`'s equivalent bottom sheet (lines ~293-315), the pattern Settings was modelled on and the one documented in `DESIGN.md` under "Bottom sheet / confirmation modal", still has none of these. Bring it up to the same bar and consider adding the semantics to the DESIGN.md pattern block so future sheets inherit them.
+- **Neither sheet has a focus trap or focus-return.** `aria-modal="true"` makes assistive tech treat the background as inert, but Tab can still leave the dialog, and closing it does not return focus to the trigger. Acceptable at this app's scope; revisit if a keyboard-heavy flow lands.
+- **Settings delete-sheet focus effect re-pulls focus when `deleting` flips true** (`Settings.jsx` ~63-71, deps `[confirmDelete, deleting]`). Harmless since the input stays mounted, but focus jumps back to it mid-delete. Gate the `.focus()` on the open transition only if it ever annoys.
+- **Stacked accent banners.** An active `!storageOk` banner (`App.jsx:152`) plus the `?email=` notice banner (`Home.jsx:62`) would render two full-width accent bars at once. Very unlikely combo, cosmetic.
+- **`replaceState` on a recognised `?auth=` / `?email=` param strips the whole query string** (`useAuth.jsx:30`), including any unrelated params. Pre-existing behaviour, no impact today (the app uses no other query params).
+- **`AuthContext` value is a fresh object literal every render** (`useAuth.jsx:100`). Every consumer re-renders on any auth state change. The new Home capture effect is safe regardless because it keys on the referentially-stable `useState` setter, but the context value could be wrapped in `useMemo` if a perf pass ever wants it. Trivial at current scale, not a `performance-auditor` referral.
+
+### 81. PRD §11.2 says `SameSite=Strict`; the session cookie has always been `SameSite=Lax`
+`verify.js`, `logout.js` and the new `DELETE /api/users` all set `session=…; SameSite=Lax`, and have since launch — magic-link sign-in returning from an email client needs at least `Lax`. PRD §11.2 still documents `Strict`. The code is right; this is a PRD-to-match fix. Reconcile §11.2 to `Lax` with a one-line note on why. Doc-only, low priority.
+
+### 82. Email-change / account-deletion edge cases (from the #3 backend review)
+Two narrow wrinkles in `functions/api/users/index.js` / `confirm-email.js`, both low priority, logged so they aren't lost:
+- **Deletion clears an unrelated party's unclaimed sign-in token.** `DELETE /api/users` removes `magic_tokens` rows matching the user's `email` *or* `pending_email`. If user A has an email change pending to address Y, and the owner of Y has separately requested a sign-in link (to make their own account) that's still unclaimed, deleting A's account also burns Y's token. Self-healing — Y just requests another link — and the path is very narrow. Scope a fix only if it ever bites.
+- **No index on `users.pending_email`.** `confirm-email` does `SELECT id FROM users WHERE pending_email = ?` on every click. The table is tiny so a scan is free today; add the index in the next migration that touches `users` if the user base ever grows.

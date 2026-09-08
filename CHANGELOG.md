@@ -9,6 +9,77 @@
 
 ---
 
+## 8 September 2026 (user profile foundation, #3 + #4)
+
+- **Signed-in users can now set a display name, change their email address, and delete
+  their account — all self-serve, from a new Settings screen.** Backend groundwork (#3)
+  and the Settings UI (#4) were scoped, built and reviewed together on one branch and
+  ship as one change.
+  - **Migration `004_add_user_profile.sql`** adds two nullable columns to `users`:
+    `name` (the user's own display name, trimmed to 1–60 chars — the same band as a
+    player name — with an empty string clearing it to null) and `pending_email` (a
+    staging slot for an email change awaiting confirmation). No backfill and no forced
+    re-login: every existing user reads both as null. **Must be applied to production
+    D1 (`wrangler d1 execute scorecard-plus --remote --file=…`) before the deploy**,
+    exactly as `003` was.
+  - **`GET /api/auth/me`** now returns `{ id, email, name, pending_email }`. **New
+    `PATCH /api/users`** and **`DELETE /api/users`** — both act on the current
+    session's user with no id in the path. **New `GET /api/auth/confirm-email`**. The
+    Resend send call and the email-format regex, previously duplicated in
+    `request-link.js`, were extracted to a shared `functions/_lib/email.js` with
+    `request-link.js`'s behaviour unchanged.
+  - **Email changes require magic-link re-verification** — the new address is held in
+    `pending_email` and a confirmation link is sent to it; `users.email` only changes
+    when that link is opened. `confirm-email` is a deliberately separate endpoint from
+    `/api/auth/verify`: reusing `verify` would have find-or-created a second account
+    for the pending address and opened a session as it. The old address gets a
+    best-effort security notice at request time — no action link, and it does not name
+    the new address, so a mistyped address can't leak. The per-email cap from #14
+    applies to the new address. A same-as-current address, an address already in use,
+    or being over the cap are rejected (`400` / `409` / `429`) and reject the **whole**
+    request — a `name` sent in the same call is not saved. Dead links — expired, already
+    used, or superseded by a later change request — all resolve to `?email=expired`;
+    there is deliberately no distinct "superseded" state to surface.
+  - **`DELETE /api/users`** removes the user's `games`, `courses`, `sessions` and
+    `magic_tokens` rows (the token rows by email, including any `pending_email`) and the
+    `users` row itself in one atomic `DB.batch`, then clears the session cookie with a
+    header byte-identical to `POST /api/auth/logout`. It fires a **timestamp-only**
+    admin notification via Resend through `context.waitUntil` with its failure swallowed
+    — a mail problem never blocks or reverses the deletion — to a new `ADMIN_NOTIFY_EMAIL`
+    env var (falls back to `williamadamgriffiths@gmail.com` in code if unset). The
+    notice contains **no email address and nothing else identifying**, only when it
+    happened. There is no "your account was deleted" email to the user. Quick-play
+    localStorage history is deliberately left untouched — it was never tied to the
+    account and is device-local.
+  - **Deletion is gated by a valid session plus a typed-`DELETE` confirmation** in a
+    bottom-sheet dialog matching History's delete-round pattern (`role="dialog"`,
+    `aria-modal`, focus on open, Escape and backdrop dismiss). The typed word is
+    client-side friction only — the server trusts the session.
+  - **Settings screen** (`src/pages/Settings.jsx`, new `settings` route): edit name;
+    change email (surfaces the 409 / 429 / 500 cases inline and shows "Waiting for
+    confirmation of &lt;address&gt;" whenever `pending_email` is set); delete account.
+    Reachable only when signed in — a signed-out visit to `/settings` bounces Home from
+    an effect, the same guard pattern as `/scorecard` with no active game.
+  - **Home** gains a "Signed in as &lt;name or email&gt; · Settings" line in the old
+    sign-in-nudge slot — signed-in only; the signed-out Home is byte-for-byte
+    unchanged. This is the clearer signed-in/signed-out indicator §11.6 had flagged as
+    a backlog item, delivered as one line with the way into Settings. It is a text link
+    rather than a gear icon — a deliberate call against the "fewest taps, no chrome"
+    principles, which §4.1 leaves to the frontend. Home also renders the
+    `?email=changed|expired|taken` outcome as a one-visit banner (dismissed by leaving
+    the screen, matching the existing `?auth=` banner); the signed-out "changed" copy
+    tells the reader to sign in with their new address, since the confirmation link is
+    usually opened on a device with no session.
+  - **`Info.jsx`** Account section now shows the name and email with a link into
+    Settings. **`Privacy.jsx`** "How long we keep it" is rewritten from "email us and
+    we'll do it within 30 days" to self-serve deletion, keeping `scorecard@outbuild.uk`
+    as a fallback for anyone who can't sign in.
+  - PRD §§4.1, 4.8, 11.3, 11.4.1 (new), 11.5, 11.6, 11.11, 11.12, 11.14 (new) updated
+    across the branch. Two follow-ups logged: PRD §11.2 still says `SameSite=Strict`
+    though the app has always sent `Lax` (BACKLOG #81, doc-only), and two narrow
+    email-change / deletion edge cases (BACKLOG #82). Code review left minor a11y
+    housekeeping as BACKLOG #80. 356 tests pass, lint and build clean.
+
 ## 8 September 2026 (Vite 8 + Vitest 5 toolchain upgrade, #45)
 
 - **`vite` 5 → 8, `vitest` 3 → 5, `@vitejs/plugin-react` 4 → 6 — clears the last open security advisory.** The moderate `esbuild` advisory (dev server reachable by any website) and the newer high `vite` advisory (path traversal in optimised-deps `.map` handling) were both fixed only by a Vite major bump; `vitest` had to move in lockstep (its v3 peer-deps cap Vite at 7). `npm audit` now reports **0 vulnerabilities**, down from 2. No production-runtime code was affected — the advisories were always dev-server-only — but the item was no longer "not urgent" once the high `vite` one landed. Coordinated bump done in its own session per the earlier scoping note.
