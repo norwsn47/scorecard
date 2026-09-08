@@ -21,7 +21,10 @@ afterEach(() => {
 })
 
 // popstate the way App's handler expects to see it — a { page, depth, params }
-// state object, pushed and then announced.
+// state object, pushed and then announced. `handlePopState` only reads `.page`
+// and `.params`; `depth` is a placeholder here (a real entry would carry the
+// nav depth, which only `goBack()` reads — don't reuse this helper for a
+// back-button test without setting it).
 function browserPopTo(page, params = {}) {
   act(() => {
     const state = { page, depth: 0, params }
@@ -36,8 +39,10 @@ describe('App router — SPA navigation', () => {
 
     render(<App />)
 
-    // Scorecard's no-game guard runs in an effect and routes home. The "New
-    // Game" button is on Home, never on the Scorecard grid.
+    // Scorecard's no-game guard runs in an effect and calls App's real
+    // (setState-driven) navigate — an inline call during render would throw
+    // the cross-component-update error. The "New Game" button is on Home,
+    // never on the Scorecard grid.
     expect(await screen.findByRole('button', { name: 'New Game' })).toBeInTheDocument()
     expect(window.location.pathname).toBe('/')
   })

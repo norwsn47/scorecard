@@ -4,10 +4,10 @@ import Scorecard from './Scorecard.jsx'
 import { saveActiveGame } from '../utils/storage.js'
 
 // #17 — opening /scorecard with no active game (a direct URL hit, or a
-// browser bounce onto a stale entry). The guard must send the user home
-// from an *effect*, never an inline navigate() during render — an inline
-// call sets state on the parent mid-render, which React rejects with a
-// console error. This pins that it stays an effect.
+// browser bounce onto a stale entry). The guard sends the user home and the
+// component renders nothing in the meantime. That the redirect fires from an
+// effect rather than inline during render is proven by App.test.jsx's #17
+// case, where `navigate` is App's real setState-driven function.
 
 beforeEach(() => {
   localStorage.clear()
@@ -18,8 +18,7 @@ afterEach(() => {
 })
 
 describe('Scorecard — no active game (#17)', () => {
-  it('bounces home from an effect, renders nothing, and logs no React error', async () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+  it('bounces home once and renders nothing', async () => {
     const navigate = vi.fn()
 
     const { container } = render(<Scorecard navigate={navigate} params={{}} />)
@@ -27,7 +26,6 @@ describe('Scorecard — no active game (#17)', () => {
     await waitFor(() => expect(navigate).toHaveBeenCalledWith('home'))
     expect(navigate).toHaveBeenCalledTimes(1)
     expect(container).toBeEmptyDOMElement()
-    expect(errorSpy).not.toHaveBeenCalled()
   })
 
   it('renders the grid and does not bounce when an active game is in storage', async () => {
