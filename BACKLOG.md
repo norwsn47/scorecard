@@ -135,11 +135,6 @@ Fold #58 in here (par stepper — `ParDelta` markup is now covered; the stepper 
 ### 41. Page load performance pass
 Measure and tune actual load performance — Core Web Vitals (LCP, CLS, INP), bundle size (currently ~248 kB / ~76 kB gzip), font loading (three families via Google Fonts with `display=swap`), image weight (`course_map_v2.png` is ~455 kB), and Cloudflare Pages caching headers. Establish a baseline, fix the obvious wins, re-measure. Assistance requested. (The `performance-auditor` agent covers this.)
 
-### 45. Vite major upgrade (esbuild + vite advisories)
-The three easy toolchain vulns (`browserslist`, `nanoid`, `postcss`) were cleared by a non-breaking `npm audit fix` on 3 September. Still open: `esbuild` ≤0.24.2 (moderate — dev server can be probed by any website) **and**, newly disclosed since, a **high** `vite` advisory (path traversal in optimised-deps `.map` handling, plus two Windows-only issues). Both are fixed only by a Vite major bump (`vite@8`, breaking — `npm audit fix --force` installs it). Dev-only, nothing in the production bundle's runtime is affected, but with the new high advisory this is no longer "not urgent". Needs a deliberate upgrade + regression pass (build, dev server, tests, `wrangler pages dev`).
-
-
-
 
 
 
