@@ -5,20 +5,30 @@
 // these functions only gate the request; the handlers still store a string
 // verbatim and stringify an array, exactly as before.
 
+// Safety-net caps an order of magnitude past what the UI allows (Setup.jsx caps
+// a game at 6 players and a name at 30 chars) — deliberately loose so a valid
+// round is never rejected, only an absurd payload is bounded.
 const MAX_PLAYERS = 12
 const MAX_HOLES = 36
 const MAX_NAME_LEN = 60
 
+// The client only ever sends a full ISO timestamp (`new Date().toISOString()`)
+// or a `YYYY-MM-DD` past-round date, so a real value always starts with an ISO
+// calendar date. Requiring that (as well as Date.parse succeeding) rejects the
+// partial strings Date.parse tolerates — "2026", "Aug 2026" — which would sort
+// oddly under History's `ORDER BY played_at DESC`.
+const ISO_DATE_PREFIX = /^\d{4}-\d{2}-\d{2}/
+
 /**
- * `played_at` must be a string that parses to a real date. The client always
- * sends an ISO string (`game.completedAt`). Returns `{ ok: true }` or
- * `{ ok: false, error }` with a message suitable for a 400.
+ * `played_at` must be a string beginning with an ISO calendar date that parses
+ * to a real date. Returns `{ ok: true }` or `{ ok: false, error }` with a
+ * message suitable for a 400.
  */
 export function validatePlayedAt(value) {
   if (typeof value !== 'string' || !value.trim()) {
     return { ok: false, error: 'played_at is required' }
   }
-  if (value.length > 40 || Number.isNaN(Date.parse(value))) {
+  if (value.length > 40 || !ISO_DATE_PREFIX.test(value) || Number.isNaN(Date.parse(value))) {
     return { ok: false, error: 'played_at must be a valid date' }
   }
   return { ok: true }

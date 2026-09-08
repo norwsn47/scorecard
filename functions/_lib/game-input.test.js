@@ -18,6 +18,8 @@ describe('validatePlayedAt (#23)', () => {
     [12345, 'a number'],
     ['not a date', 'unparseable'],
     ['2026-13-45', 'an impossible date'],
+    ['2026', 'a year only (Date.parse tolerates it)'],
+    ['Aug 2026', 'a partial date'],
     ['x'.repeat(60), 'absurdly long'],
   ])('rejects %s (%s)', (value) => {
     const r = validatePlayedAt(value)
