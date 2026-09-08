@@ -441,7 +441,7 @@ No passwords. Users authenticate with their email address only.
 
 **Flow:**
 1. User enters email address on the login screen
-2. `POST /api/auth/request-link` — validates email format, then (per-email throttle) rejects with `429` if the address already has 5 or more still-fresh links issued in the last 15 minutes, so an inbox can't be flooded; otherwise creates a magic_token record in D1 (expires in 15 minutes) and sends the magic link email via Resend. The same call opportunistically deletes any magic_token rows whose expiry is more than 24 hours in the past, so abandoned sign-in attempts don't retain email addresses indefinitely (§11.12).
+2. `POST /api/auth/request-link` — validates email format, then (per-email throttle) rejects with `429` if the address already has 5 or more unclaimed links issued in the last 15 minutes, so an inbox can't be flooded; otherwise creates a magic_token record in D1 (expires in 15 minutes) and sends the magic link email via Resend. The same call also prunes any magic_token rows whose expiry is more than 24 hours in the past — best-effort, after the response, so it can't affect sign-in — so abandoned sign-in attempts don't retain email addresses indefinitely (§11.12). Residual-abuse follow-ups are tracked in BACKLOG.md (#79).
 3. User sees a confirmation screen: "Check your email — we've sent a link to [email]"
 4. User taps the link in their email
 5. `GET /api/auth/verify?token=<token>` — validates the token (exists, not expired, not used), marks it as used, creates or finds the user record, creates a session, sets the HttpOnly session cookie, redirects to the app

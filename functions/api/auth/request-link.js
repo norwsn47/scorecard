@@ -16,12 +16,14 @@ export async function onRequestPost(context) {
   const now = Date.now();
 
   // #14 — per-email throttle. magic_tokens has no created_at column, but every
-  // row's expires_at is exactly issued-time + 15 min, so "expires_at > now"
-  // means "issued in the last 15 minutes". Cap the number of still-fresh links
-  // per address so a target inbox can't be flooded with sign-in emails.
+  // unused row's expires_at is exactly issued-time + 15 min, so "used = 0 AND
+  // expires_at > now" means "an unclaimed link issued in the last 15 minutes".
+  // Cap those per address so a target inbox can't be flooded with sign-in
+  // emails. Used tokens are excluded so signing in on several devices, or
+  // resending then clicking, doesn't count against the cap.
   const MAX_FRESH_LINKS = 5;
   const { count: freshLinks } = await DB.prepare(
-    'SELECT COUNT(*) AS count FROM magic_tokens WHERE email = ? AND expires_at > ?'
+    'SELECT COUNT(*) AS count FROM magic_tokens WHERE email = ? AND used = 0 AND expires_at > ?'
   ).bind(email, new Date(now).toISOString()).first();
   if (freshLinks >= MAX_FRESH_LINKS) {
     return Response.json(
@@ -33,19 +35,24 @@ export async function onRequestPost(context) {
   const token = crypto.randomUUID();
   const expiresAt = new Date(now + 15 * 60 * 1000).toISOString();
 
+  await DB.prepare(
+    'INSERT INTO magic_tokens (id, email, token, expires_at, used) VALUES (?, ?, ?, ?, 0)'
+  ).bind(crypto.randomUUID(), email, token, expiresAt).run();
+
   // #15 — opportunistic cleanup. Every magic token is single-use and expires
   // 15 minutes after it is issued, so anything whose expiry is more than 24h
-  // in the past is long dead. Deleting it here (batched with the insert, one
-  // round-trip) keeps abandoned sign-in attempts from accumulating email
-  // addresses in the table indefinitely (GDPR data-minimisation, §11.12).
+  // in the past is long dead. This keeps abandoned sign-in attempts from
+  // retaining email addresses in the table indefinitely (GDPR data-
+  // minimisation, §11.12). Best-effort and off the critical path: run after
+  // the response via waitUntil, and swallow failures — a prune that fails
+  // (lock contention, a large first-run backlog) must never break sign-in.
   const staleCutoff = new Date(now - 24 * 60 * 60 * 1000).toISOString();
-
-  await DB.batch([
-    DB.prepare(
-      'INSERT INTO magic_tokens (id, email, token, expires_at, used) VALUES (?, ?, ?, ?, 0)'
-    ).bind(crypto.randomUUID(), email, token, expiresAt),
-    DB.prepare('DELETE FROM magic_tokens WHERE expires_at < ?').bind(staleCutoff),
-  ]);
+  context.waitUntil(
+    DB.prepare('DELETE FROM magic_tokens WHERE expires_at < ?')
+      .bind(staleCutoff)
+      .run()
+      .catch(err => console.error('magic_tokens cleanup failed', err))
+  );
 
   const magicLink = `${APP_URL}/api/auth/verify?token=${token}`;
 
