@@ -128,6 +128,17 @@ export default function BruntsfiledCoursePage({ navigate }) {
             </button>
           </div>
         )}
+
+        {/* Discreet way off the course page to the generic scorecard home —
+            Bruntsfield otherwise relies on the phone browser's back nav. */}
+        <div className="pt-1 text-center">
+          <button
+            onClick={() => navigate('home')}
+            className="inline-block py-3 -my-3 font-ui text-xs text-muted active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+          >
+            ← Golf Scorecard home
+          </button>
+        </div>
       </main>
 
       {showMap && <CourseMapModal onClose={() => setShowMap(false)} />}
