@@ -5,6 +5,7 @@ import Info                 from './pages/Info.jsx'
 import Login                from './pages/Login.jsx'
 import Privacy              from './pages/Privacy.jsx'
 import Rules                from './pages/Rules.jsx'
+import Settings             from './pages/Settings.jsx'
 import Home                 from './pages/Home.jsx'
 import Scorecard            from './pages/Scorecard.jsx'
 import Setup                from './pages/Setup.jsx'
@@ -50,6 +51,7 @@ const PAGES = {
   scorecard:   Scorecard,
   summary:     Summary,
   history:     History,
+  settings:    Settings,
   bruntsfield: BruntsfiledCoursePage,
   courseEdit:  CourseEdit,
 }

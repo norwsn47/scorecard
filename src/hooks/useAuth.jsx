@@ -6,13 +6,27 @@ export function AuthProvider({ children }) {
   const [user, setUser]         = useState(null)
   const [loading, setLoading]   = useState(true)
   const [authError, setAuthError] = useState(null)
+  // ?email=changed|expired|taken redirected from GET /api/auth/confirm-email
+  // (§11.4.1). Surfaced as a one-off banner on Home; the param is stripped
+  // straight away, exactly like ?auth= above.
+  const [emailNotice, setEmailNotice] = useState(null)
 
   useEffect(() => {
-    // Capture ?auth=expired|error redirected from the verify endpoint
+    // Capture the status flags the auth endpoints redirect back with, then
+    // strip whichever we recognised so a refresh doesn't replay them.
     const params = new URLSearchParams(window.location.search)
     const errorParam = params.get('auth')
+    const emailParam = params.get('email')
+    let consumed = false
     if (errorParam === 'expired' || errorParam === 'error') {
       setAuthError(errorParam)
+      consumed = true
+    }
+    if (emailParam === 'changed' || emailParam === 'expired' || emailParam === 'taken') {
+      setEmailNotice(emailParam)
+      consumed = true
+    }
+    if (consumed) {
       window.history.replaceState({}, '', window.location.pathname)
     }
 
@@ -83,7 +97,7 @@ export function AuthProvider({ children }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, loading, logout, updateProfile, deleteAccount, authError, setAuthError }}>
+    <AuthContext.Provider value={{ user, loading, logout, updateProfile, deleteAccount, authError, setAuthError, emailNotice, setEmailNotice }}>
       {children}
     </AuthContext.Provider>
   )
