@@ -105,10 +105,10 @@ export default function BruntsfiledCoursePage({ navigate }) {
         )}
 
         {!user && lastGame && (
-          <div className="text-center -mt-1">
+          <div className="text-center">
             <button
               onClick={() => navigate('summary', { game: lastGame })}
-              className="font-ui text-xs text-muted active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="inline-block py-3 -my-3 font-ui text-xs text-muted active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               Last round:{' '}
               <span className="underline underline-offset-2">
@@ -119,10 +119,10 @@ export default function BruntsfiledCoursePage({ navigate }) {
         )}
 
         {!user && (
-          <div className="pt-0 text-center">
+          <div className="pt-4 text-center">
             <button
               onClick={() => navigate('login')}
-              className="font-ui text-xs text-accent active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="inline-block py-3 -my-3 font-ui text-xs text-accent active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               Want to save your scores? <span className="underline underline-offset-2">Sign in</span>
             </button>
@@ -131,7 +131,7 @@ export default function BruntsfiledCoursePage({ navigate }) {
 
         {/* Discreet way off the course page to the generic scorecard home —
             Bruntsfield otherwise relies on the phone browser's back nav. */}
-        <div className="pt-1 text-center">
+        <div className="pt-4 text-center">
           <button
             onClick={() => navigate('home')}
             className="inline-block py-3 -my-3 font-ui text-xs text-muted active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
