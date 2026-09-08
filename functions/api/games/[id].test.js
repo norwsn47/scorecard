@@ -168,6 +168,28 @@ describe('onRequestPatch /api/games/[id]', () => {
     expect(res.status).toBe(400)
   })
 
+  it('rejects player_data entries with a malformed shape (#23)', async () => {
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+    const ctx = patch({ player_data: [{ name: 'Ann', scores: 'nope' }] })
+    ctx.env.DB = makeDB(games)
+
+    const res = await onRequestPatch(ctx)
+
+    expect(res.status).toBe(400)
+    expect(games[0].player_data).not.toBe('[{"name":"Ann","scores":"nope"}]')
+  })
+
+  it('rejects a played_at that is not a date (#23)', async () => {
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+    const ctx = patch({ played_at: 'last tuesday' })
+    ctx.env.DB = makeDB(games)
+
+    const res = await onRequestPatch(ctx)
+
+    expect(res.status).toBe(400)
+    expect((await res.json()).error).toMatch(/played_at/)
+  })
+
   it("rejects a course_id that is not one of the user's courses", async () => {
     getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
     const ctx = patch({ course_id: 'course-owned-by-u2' })

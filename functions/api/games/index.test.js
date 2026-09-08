@@ -197,3 +197,39 @@ describe('onRequestPost /api/games — hole_pars', () => {
     expect(db.inserted).toHaveLength(0)
   })
 })
+
+describe('onRequestPost /api/games — played_at / player_data validation (#23)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+  })
+
+  it('rejects a non-date played_at', async () => {
+    const ctx = post({ ...validBody, played_at: 'whenever' })
+    const db = makeDB()
+    ctx.env.DB = db
+
+    const res = await onRequestPost(ctx)
+
+    expect(res.status).toBe(400)
+    expect((await res.json()).error).toMatch(/played_at/)
+    expect(db.inserted).toHaveLength(0)
+  })
+
+  it('rejects player_data whose entries have no name', async () => {
+    const ctx = post({ ...validBody, player_data: [{ scores: [3] }] })
+    const db = makeDB()
+    ctx.env.DB = db
+
+    const res = await onRequestPost(ctx)
+
+    expect(res.status).toBe(400)
+    expect(db.inserted).toHaveLength(0)
+  })
+
+  it('still accepts the minimal valid shape', async () => {
+    const ctx = post({ ...validBody, player_data: [{ name: 'Ann', scores: [3, null] }] })
+    ctx.env.DB = makeDB()
+    expect((await onRequestPost(ctx)).status).toBe(201)
+  })
+})

@@ -1,5 +1,6 @@
 import { getSessionUser } from '../../_lib/session.js'
 import { validateHolePars } from '../../_lib/hole-pars.js'
+import { validatePlayedAt, validatePlayerData } from '../../_lib/game-input.js'
 
 export async function onRequestGet(context) {
   const { DB } = context.env
@@ -35,9 +36,11 @@ export async function onRequestPost(context) {
 
   const { course_id, played_at, holes_played, player_data, notes, client_round_id, hole_pars } = body
 
-  if (!played_at || !player_data) {
-    return Response.json({ error: 'Missing required fields' }, { status: 400 })
-  }
+  const playedAtCheck = validatePlayedAt(played_at)
+  if (!playedAtCheck.ok) return Response.json({ error: playedAtCheck.error }, { status: 400 })
+
+  const playerDataCheck = validatePlayerData(player_data)
+  if (!playerDataCheck.ok) return Response.json({ error: playerDataCheck.error }, { status: 400 })
 
   // Match the PATCH handler: holes_played must be an integer 1..36. This one
   // check also covers a missing / zero value (0, null, undefined all fail it),
