@@ -50,6 +50,7 @@ Outbuild palette applied for outdoor sunlight legibility on a phone:
 - Two options only: **New Game** and **History**
 - Scorecard by Outbuild branding and Bruntsfield Short Hole Golf Course course name displayed prominently
 - A small **ⓘ** icon sits in the top-right corner — tapping it opens the information page (see 4.8)
+- When signed in, a **settings** affordance is shown on the home screen (not shown to signed-out users) — tapping it opens the Settings panel (§11.14). Home also carries a clearer signed-in/signed-out indicator (§11.6). Exact placement and form are a DESIGN.md / frontend call
 - A **Rules** text link sits below the main New Game and History buttons — tapping it opens the course rules (see 4.9)
 - If a game is in progress and the user navigates to the home screen mid-game, a **Resume Game** prompt appears between the two buttons
 - Note: reopening the app with a game in progress bypasses the home screen and goes directly to the scorecard — see 4.3
@@ -167,7 +168,7 @@ Accessed via the **ⓘ** icon in the top-right corner of the home screen (see 4.
   - "Course rules" link (navigates to the rules page)
   - Permission line: "The course map is reproduced with permission from Bruntsfield Short Hole Golf Club."
 - "About Outbuild" credit
-- Account section: shows the signed-in email with a "Sign out" action, or a "Sign in or create account" prompt when signed out
+- Account section: when signed in, shows the user's name (if set) and email, with a "Sign out" action and a link into the Settings panel (§11.14) for editing name, changing email or deleting the account; when signed out, a "Sign in or create account" prompt. The Settings entry point also lives on Home (§4.1, §11.14)
 - Data line: "Your data is handled under UK GDPR." with a "Read our privacy policy" link to the "Your data" page (§11.12)
 
 The original v1.x plan for this page carried an inline "stored locally, nothing sent to a server, no third-party services" explanation. That is only true for quick-play; once accounts and the D1 database landed (§11), the detail moved to the dedicated privacy page rather than an inline disclaimer.
@@ -318,6 +319,7 @@ The following are out of scope for both the MVP (v1.x) and the Scorecard Plus re
 - Push notifications
 - Native mobile app (web only)
 - Admin tools or course management
+- Full sign-up / onboarding journey — name, home course and per-hole par captured at account creation (BACKLOG #10). Lightweight name capture via the Settings panel (§11.14) does **not** introduce onboarding: `users.name` is optional, set only from Settings, with no sign-in-time prompt (§10)
 
 The following were out of scope in v1.x and are now addressed in v2.0:
 - User accounts and authentication → magic link auth (Section 11)
@@ -333,6 +335,8 @@ The following were out of scope in v1.x and are now addressed in v2.0:
 - Leaderboards or social features (requires account foundation — now built in v2.0)
 - All-time personal leaderboard per user (lowest round, most wins, etc.)
 - Quick-play history import — allow users to migrate existing localStorage games to their new DB account after signing in
+- Signed-in identity in gameplay — own-name pre-fill on New Game, a one-time name prompt, and styling the user's own score as primary across the scorecard, summary and history (BACKLOG #5). Builds on the `users.name` field added in §11.14
+- Full onboarding journey (name + home course + par) — BACKLOG #10; needs a decision on how par interacts with the raw-stroke scoring model (§5) before any build
 - Multiple holes / course configuration beyond the default — **partially delivered:** signed-in users can now create courses at 9 or 18 holes (§11.7). Arbitrary hole counts and structured per-course hole data remain future (BACKLOG #11)
 - hello@outbuild.co as the contact email once configured via Resend
 
@@ -389,6 +393,8 @@ Four tables in Cloudflare D1:
 **users**
 - `id` — UUID, primary key
 - `email` — text, unique, not null
+- `name` — text, nullable — the user's own display name (§11.14). Added in migration `004_add_user_profile.sql`, 8 September 2026, with **no backfill**: every existing user reads `name = null` and is not forced to re-authenticate. Trimmed to 1–60 characters on write (the same length band as a player name in `functions/_lib/game-input.js`); an empty string clears it back to null.
+- `pending_email` — text, nullable — a new email address awaiting magic-link confirmation (§11.4.1, §11.14). `email` itself never changes until the confirmation link is clicked. Normally null; at most one pending change per user — a second email-change request overwrites it. Added in the same migration `004`.
 - `created_at` — timestamp
 
 **magic_tokens**
@@ -431,6 +437,8 @@ Four tables in Cloudflare D1:
 
 **Course edit and delete:** `name` and `hole_pars` are editable in place after creation via `PATCH /api/courses/[id]`; `holes` is never editable post-creation (§11.7). `DELETE /api/courses/[id]` removes the course row and **cascades to delete every `games` row with that `course_id`** — course deletion is destructive to its round history by design, matching the existing single-round delete in `History.jsx` (§11.7). Both routes are gated by session and ownership. Every course row has a real `user_id` owner — including each user's own seeded Bruntsfield copy — so a course belonging to another user reads as "not found"; a user *can* edit or delete their own seeded copy (their call — the course selector then degrades to an honest empty state, §11.7).
 
+**Migration 004:** `004_add_user_profile.sql` adds `users.name` and `users.pending_email`, both nullable, no backfill. Must be applied to production D1 before the deploy that ships §11.14 (as with `002`/`003`).
+
 **Why `hole_pars` is a JSON column, not a `course_holes` table:** par is always read and written as a whole array alongside its course or round — there is no query that needs a single hole's par in isolation, no per-hole row identity, and no other per-hole attributes planned for v2.0. A JSON TEXT column is consistent with `player_data` and keeps `003` a single additive migration with no joins. If structured per-course/per-hole data lands later (BACKLOG #11), a `course_holes` table can be introduced then.
 
 ---
@@ -456,11 +464,29 @@ No passwords. Users authenticate with their email address only.
 
 ---
 
+### 11.4.1 Email change re-verification
+
+Changing the email on an account reuses the magic-link machinery (§11.4) — the change only takes effect once the person proves they control the new address.
+
+**Flow:**
+1. A signed-in user submits a new email via `PATCH /api/users` (§11.14). The endpoint validates format and lowercases it, then **rejects it as a `400` with a clear message if it equals the user's current email** (not a silent success), rejects it as a `409` if it is already registered to another user, and rejects it as a `429` if the new address is over the per-email cap (step 2). Only past all of those does it set `users.pending_email` to the new address and issue a `magic_tokens` row for it (same table, same 15-minute expiry, `used = 0`).
+2. The per-email cap from §11.4 / BACKLOG #14 applies to the new address — 5 unclaimed links per 15 minutes — so `PATCH /api/users` can't be used to flood an inbox. Lower risk than `request-link` since it needs a valid session.
+3. A confirmation email is sent to the **new** address via Resend — layout mirrors the sign-in email, CTA reads "Confirm your email", subject "Confirm your email for Scorecard by Outbuild". If Resend fails the endpoint returns `500`; `users.email` is untouched and `pending_email` is left set (harmless — it does nothing until the link is clicked); the user retries.
+4. Best-effort and non-blocking (`context.waitUntil`), sent from `PATCH /api/users` at request time: a short security notice to the **old** address, subject "Email change requested on your Scorecard account" — "a request was made to change the email on your Scorecard account; if this wasn't you, contact scorecard@outbuild.uk". It does **not** contain the new address (avoids leaking a mistyped address) and carries no action link.
+5. The user clicks the link in the new inbox → `GET /api/auth/confirm-email?token=<token>` — a **new** endpoint, not an extension of `/api/auth/verify`. `verify` finds-or-creates a user and opens a session; neither is wanted here, and running it would create a second account for the pending address. `confirm-email` instead: validates the token (exists, `used = 0`, not expired); finds the user whose `pending_email` matches the token's email; re-checks the address is still free; then atomically (`DB.batch`) sets `users.email` to the pending value, clears `pending_email`, and marks the token used.
+6. Redirects to `APP_URL` with a status flag for the frontend to surface: `?email=changed` on success, `?email=taken` when the address was claimed by someone else in the meantime, and `?email=expired` for **any** dead link — token missing or malformed, genuinely expired, already used, or superseded by a later change request (`pending_email` no longer matches). The dead-link cases are deliberately collapsed into the one `expired` flag: they all mean "this link no longer works, start the change again", and a separate "superseded" flag would add UI copy for no user benefit.
+
+**No re-login.** Sessions key on the session id, not the email, so the current session and every other device's session stay valid — the email changes underneath them.
+
+**Superseded requests:** issuing a new change request overwrites `pending_email`; any earlier outstanding confirmation link is then dead, because step 5's `pending_email` match no longer succeeds — it redirects `?email=expired` (see step 6).
+
+---
+
 ### 11.5 Session management
 
 - Session ID (UUID) stored in D1 `sessions` table
 - Browser receives the session ID as a `session` HttpOnly cookie — never accessible to JavaScript
-- `GET /api/auth/me` — reads the session cookie, validates against D1, returns `{ user: { id, email } }` or 401
+- `GET /api/auth/me` — reads the session cookie, validates against D1, returns `{ user: { id, email, name, pending_email } }` or 401. `name` is `null` for any user who hasn't set one (§11.14); `pending_email` is `null` unless an email change is awaiting confirmation (§11.4.1) and is returned so the Settings panel can show a "confirmation pending" state. `me.js` carries its own inline session query (it does not use `functions/_lib/session.js`) — that query gains `name` and `pending_email`; `getSessionUser` in `session.js`, used by the course and game endpoints, is unchanged
 - All logged-in API routes read and validate the session cookie before executing
 - `POST /api/auth/logout` — deletes the session from D1, clears the cookie, returns 200
 - On app load, the frontend calls `/api/auth/me` to determine whether the user is authenticated — this sets a global `user` context used throughout the app
@@ -473,7 +499,7 @@ As built, the logged-in layer carries **no separate brand in the UI**. The app i
 
 "Scorecard Plus" survives only as an internal shorthand for the logged-in feature set (see §11.1) — it is never shown to users and is not a header label, wordmark, or badge.
 
-The signed-in state is shown functionally, not through branding: a "Past Rounds" button on Home, and the "Want to save your scores? Sign in" nudge is hidden. A clearer signed-in vs signed-out indicator is a backlog item (BACKLOG #4).
+The signed-in state is shown functionally, not through branding: a "Past Rounds" button on Home, and the "Want to save your scores? Sign in" nudge is hidden. A clearer signed-in vs signed-out indicator on Home ships with the Settings panel (§11.14), alongside the settings entry point.
 
 ---
 
@@ -550,6 +576,7 @@ The following are configured in Cloudflare Pages (production and preview):
 | `RESEND_API_KEY` | Cloudflare Pages env (production + preview) | API key held in the Resend dashboard |
 | `RESEND_FROM_EMAIL` | Cloudflare Pages env | Sending address (inbox sender-name display format tracked in BACKLOG #2b) |
 | `APP_URL` | Cloudflare Pages env | Base URL for constructing magic link URLs (e.g. `https://scorecard.outbuild.uk`) |
+| `ADMIN_NOTIFY_EMAIL` | Cloudflare Pages env (production + preview) | Recipient for the best-effort account-deletion notification (§11.14). Falls back to `williamadamgriffiths@gmail.com` in code if unset. Internal ops address — unrelated to the user-facing contact address (`scorecard@outbuild.uk`, BACKLOG #12). |
 | D1 binding: `DB` | wrangler.toml | Not an env var — the `scorecard-plus` Cloudflare D1 database, bound in `wrangler.toml` |
 
 Cookie name and session/token expiry are hardcoded in the API layer (not env vars).
@@ -558,7 +585,7 @@ Cookie name and session/token expiry are hardcoded in the API layer (not env var
 
 ### 11.12 Information page and privacy policy (v2.0)
 
-The data story lives on a dedicated **"Your data"** privacy page (`Privacy.jsx`), reached from a "Read our privacy policy" link on the information page (§4.8). It states that logged-in users' rounds and scores are stored in a Cloudflare D1 database, that Resend processes email addresses to deliver the sign-in link, that neither provider uses the data for its own purposes, retention (account data kept while in use; sessions expire after 30 days; sign-in link records are pruned within ~24h of expiry), and account deletion on request. The information page itself no longer carries an inline data disclaimer — it just links here (§4.8).
+The data story lives on a dedicated **"Your data"** privacy page (`Privacy.jsx`), reached from a "Read our privacy policy" link on the information page (§4.8). It states that logged-in users' rounds and scores are stored in a Cloudflare D1 database, that Resend processes email addresses to deliver the sign-in link, that neither provider uses the data for its own purposes, retention (account data kept while in use; sessions expire after 30 days; sign-in link records are pruned within ~24h of expiry), and **self-serve account deletion** — a signed-in user can delete their account and all associated rounds and courses immediately from the Settings panel (§11.14); emailing `scorecard@outbuild.uk` remains a fallback for anyone who can't sign in. `Privacy.jsx`'s "How long we keep it" section is updated from the old "email us and we'll do it within 30 days" wording to describe the self-serve route with the email as a fallback. Deletion is immediate and irreversible; quick-play history stored locally on a device is not part of the account and is not affected (§11.14). The information page itself no longer carries an inline data disclaimer — it just links here (§4.8).
 
 The contact address is `scorecard@outbuild.uk` on the privacy page. Whether the information page also needs its own contact link, and the final address, are tracked in BACKLOG.md (#12).
 
@@ -601,3 +628,39 @@ Quick-play edits are localStorage-only and device-specific, consistent with all 
 - Logged-out: an update path in `storage.js` overwrites the existing localStorage record in place, keyed on its existing id.
 
 **Sharing:** unchanged. After an edit is saved, the Summary view reflects the recalculated result and the existing Share button (§4.7) generates the share image from the updated data.
+
+---
+
+### 11.14 User profile and account management
+
+Lightweight profile data plus self-serve account controls for signed-in users. The backend (BACKLOG #3) and the Settings panel (BACKLOG #4) ship together on one branch. Signed-in identity in gameplay (BACKLOG #5) is a later, separate effort and is only forward-referenced here.
+
+Requires migration `004_add_user_profile.sql` applied to production D1 before deploy.
+
+**The `name` field**
+- A single nullable `users.name` column (§11.3) — the user's own display name, 1–60 characters after trimming, empty clears to null.
+- Set only via the Settings panel. There is no onboarding step and no prompt at sign-in (§7, §10). A user with no name is fully functional — `name` stays null.
+- In v1 of this capability `name` is **not read anywhere** in gameplay, history or sharing. Pre-filling the user's own player slot and styling their score as primary is BACKLOG #5 and out of scope here. §4.2's player-name entry and duplicate-name blocking are unchanged.
+
+**`PATCH /api/users`** — updates the current session's user; no id in the path, always acts on "me".
+- The session cookie is the only authorisation. Returns `401` with no valid session.
+- Accepts `name` and/or `email`, both optional. A body with neither is a `200` no-op (mirrors `PATCH /api/courses/[id]`).
+- `name`: trimmed; 1–60 chars sets it; empty string sets it to null; over 60 is `400`.
+- `email`: applied **asynchronously** via the re-verification flow (§11.4.1) — the response reports that a confirmation email has been sent; `users.email` is unchanged until the link is clicked.
+- **Partial application rule:** a hard validation failure on the `email` half — `400` (bad format or same as the current address), `409` (already registered to another user) or `429` (over the per-email cap) — **rejects the whole request**; a `name` in the same body is **not** applied. A `name` is applied alongside a pending email change only once the email has passed all validation and merely the Resend send then failed (`500`).
+
+**`DELETE /api/users`** — deletes the current session's user; no id in the path.
+- The session cookie is the only server-side authorisation. The typed-`DELETE` confirmation (below) is client-side friction only, matching the delete-round bottom sheet in `History.jsx` — the server requires no confirmation token.
+- Removes, in one atomic `DB.batch`: every `games` row for the user; every `courses` row for the user (their seeded Bruntsfield copy included); every `sessions` row for the user (signs the account out on all devices); every `magic_tokens` row whose `email` matches the user's `email` or `pending_email` (that table has no `user_id`); then the `users` row itself.
+- Clears the session cookie on the response (identical header to `POST /api/auth/logout`).
+- Sends a best-effort admin notification via Resend (`context.waitUntil`, failure swallowed — a mail failure never blocks or reverses the deletion), subject "Scorecard account deleted". The body is a **timestamp only**; it must not contain the deleted user's email address or any other identifying data. Sent from `RESEND_FROM_EMAIL` to `ADMIN_NOTIFY_EMAIL` (§11.11).
+- **No** user-facing "your account has been deleted" email.
+- **Quick-play localStorage history is deliberately left untouched** — it is device-local, was never tied to the account (§11.9), and the client does not clear it on account deletion.
+- Irreversible: no soft-delete, no grace period, no export-first step.
+
+**Settings panel (BACKLOG #4 — ships with this capability)**
+- Entry point: a settings affordance on Home, shown only when signed in, paired with a clearer signed-in/signed-out indicator on Home. This delivers the indicator that §11.6 previously flagged as a backlog item. The signed-out Home is unchanged (§11.10).
+- Contents: edit name (text field, 1–60, clear-to-empty allowed); change email (shows the current address; on submit, tells the user to check the new inbox and that the address changes only once confirmed; shows the pending address while `pending_email` is set); delete account.
+- Delete account: a confirmation dialog matching `History.jsx`'s delete-round bottom sheet, plus the requirement to type `DELETE` to enable the destructive button. Copy states plainly that all rounds, courses and the account are removed, and that quick-play history on this device is not affected.
+
+**Forward reference — signed-in identity in gameplay (BACKLOG #5, not in this capability):** pre-filling the first player slot with the user's `name`, a one-time name prompt when none is set, and styling the user's own score as primary across the scorecard, summary and history. Deferred; no schema or API groundwork for it is added here beyond the `name` column itself.
