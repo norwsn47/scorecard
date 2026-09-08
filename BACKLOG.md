@@ -149,3 +149,6 @@ The `ParDelta` markup is now covered (`src/components/ParDelta.test.jsx`). The `
 ### 77. Recovery-panel buttons drift from the primary-button spec
 Surfaced by code-reviewer during the #74/#65/#75/#1 batch (8 Sep 2026). `CourseEdit.jsx`'s "Back to Home" and the new "Sign in" recovery buttons use `py-3 px-6` (~41px tall), under DESIGN.md's primary-action spec (`py-4 px-6`) and the ~44px touch-target floor. The new button was a deliberate copy of the existing one, so they're consistent with each other but both drift. Low priority - align both to the spec (or add a shared recovery-panel button pattern) next time this screen is touched.
 
+### 78. `BruntsfiledCoursePage.jsx` discreet-link follow-ups
+Surfaced by code-reviewer during the "Golf Scorecard home" link build (8 Sep 2026). The new home link got the `py-3 -my-3` tap-target growth; its two siblings on the same page did not - `:109` "Last round" and `:123` "Sign in" are still bare `text-xs` (~16-20px hit area). Fix the set together. Also: the new link has no `track()` analytics event (other nav actions on the page do), and there is still no render/interaction test for `BruntsfiledCoursePage` (its conditional links - active game, last round, signed-in Past Rounds - are all uncovered). Low priority.
+
