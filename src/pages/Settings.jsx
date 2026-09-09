@@ -41,10 +41,28 @@ export default function Settings({ navigate, goBack, params }) {
   const [nameSaved, setNameSaved]   = useState(false)
 
   // ── Email ─────────────────────────────────────────────
+  // The new-email form is collapsed behind a "Change email address" control
+  // (#84) — the section leads with the current address and the pending banner,
+  // and only reveals the input on a deliberate tap.
+  const [emailFormOpen, setEmailFormOpen] = useState(false)
   const [newEmail, setNewEmail]     = useState('')
   const [savingEmail, setSavingEmail] = useState(false)
   const [emailError, setEmailError]   = useState(null)
   const [emailSent, setEmailSent]     = useState(false)
+  const emailInputRef = useRef(null)
+
+  // Reveal: pull focus onto the new-email input, mirroring the delete sheet.
+  useEffect(() => {
+    if (emailFormOpen) emailInputRef.current?.focus()
+  }, [emailFormOpen])
+
+  // Back out of the revealed state and reset it, so a re-open starts clean.
+  function closeEmailForm() {
+    setEmailFormOpen(false)
+    setNewEmail('')
+    setEmailError(null)
+    setEmailSent(false)
+  }
 
   // ── Delete ────────────────────────────────────────────
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -194,34 +212,59 @@ export default function Settings({ navigate, goBack, params }) {
             </div>
           )}
 
-          <form onSubmit={handleSaveEmail} className="space-y-3">
-            <input
-              type="email"
-              value={newEmail}
-              onChange={e => { setNewEmail(e.target.value); setEmailError(null); setEmailSent(false) }}
-              placeholder="you@example.com"
-              autoComplete="email"
-              aria-label="New email address"
-              className={fieldClass}
-            />
-            {emailError && <p className="font-ui text-xs text-accent pl-1">{emailError}</p>}
-            {emailSent && (
-              <p className="font-ui text-xs text-muted pl-1 leading-relaxed">
-                Check the new inbox for a confirmation link. Your address only changes once you open it.
-              </p>
-            )}
+          {!emailFormOpen ? (
             <button
-              type="submit"
-              disabled={savingEmail || !newEmail.trim()}
+              type="button"
+              onClick={() => setEmailFormOpen(true)}
+              aria-expanded={false}
               className={[
                 'w-full py-3 px-4 rounded-sm border border-accent text-accent font-ui text-sm tracking-[0.08em] uppercase font-medium',
                 'active:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
-                (savingEmail || !newEmail.trim()) ? 'opacity-40 cursor-not-allowed' : '',
               ].join(' ')}
             >
-              {savingEmail ? 'Sending…' : 'Send confirmation link'}
+              Change email address
             </button>
-          </form>
+          ) : (
+            <form onSubmit={handleSaveEmail} className="space-y-3">
+              <input
+                ref={emailInputRef}
+                type="email"
+                value={newEmail}
+                onChange={e => { setNewEmail(e.target.value); setEmailError(null); setEmailSent(false) }}
+                placeholder="you@example.com"
+                autoComplete="email"
+                aria-label="New email address"
+                className={fieldClass}
+              />
+              {emailError && <p className="font-ui text-xs text-accent pl-1">{emailError}</p>}
+              {emailSent && (
+                <p className="font-ui text-xs text-muted pl-1 leading-relaxed">
+                  Check the new inbox for a confirmation link. Your address only changes once you open it.
+                </p>
+              )}
+              <button
+                type="submit"
+                disabled={savingEmail || !newEmail.trim()}
+                className={[
+                  'w-full py-3 px-4 rounded-sm border border-accent text-accent font-ui text-sm tracking-[0.08em] uppercase font-medium',
+                  'active:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
+                  (savingEmail || !newEmail.trim()) ? 'opacity-40 cursor-not-allowed' : '',
+                ].join(' ')}
+              >
+                {savingEmail ? 'Sending…' : 'Send confirmation link'}
+              </button>
+              <div>
+                <button
+                  type="button"
+                  onClick={closeEmailForm}
+                  disabled={savingEmail}
+                  className="inline-block py-2.5 -my-2.5 font-ui text-sm text-muted underline underline-offset-2 active:opacity-70 disabled:opacity-40 disabled:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                >
+                  Keep my current email
+                </button>
+              </div>
+            </form>
+          )}
         </section>
 
         <div className="w-8 h-0.5 bg-border" />
