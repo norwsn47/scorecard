@@ -161,8 +161,10 @@ export default function Summary({ navigate, goBack, params }) {
       {/* Post-finish: "Done" top-right (saves + goes home). A round opened
           from History: "← Rounds" left, "Edit" right. Composes the shared
           PageHeader rather than hand-rolling its own copy (#69) — this used
-          to duplicate PageHeader's markup exactly, including a px-20 title
-          clearance that drifted out of sync with #44's px-24 fix. */}
+          to duplicate PageHeader's markup exactly, back when the header
+          centred its title on an absolute layer above the side slots; #85
+          replaced that with the three-slot flex layout, so there's nothing
+          left to drift out of sync. */}
       <PageHeader
         title={game.courseName || undefined}
         subtitle={formatDateOnly(game.completedAt)}

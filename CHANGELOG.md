@@ -5,7 +5,49 @@
 > Git history is the full record; this file is for context and decision rationale that commit messages don't carry.
 > Update the date below whenever you add an entry.
 
-**Last updated:** 8 September 2026
+**Last updated:** 9 September 2026
+
+---
+
+## 9 September 2026 (header layout rule #85, email-field disclosure #84)
+
+- **The app's shared header (`PageHeader`, on every utility screen) was rebuilt so the
+  centred title can no longer overlap the back button or the right-hand action (#85).**
+  The old header positioned the title absolutely across the full width behind a fixed
+  96px side clearance; a long back label ("← Add Past Round" on the course-edit screen)
+  or a back label plus a right action (Scorecard, History, Summary) pushed the title
+  under the buttons. It is now three real flex slots — left and right sized to their
+  content and never clipped, a centre slot that takes the space they leave and truncates
+  into it. Collision is structurally impossible rather than tuned around.
+  - **Invisible mirror keeps the title optically centred.** When only one side has a
+    button, the empty side renders an `aria-hidden`, `invisible` copy of it so both
+    sides are equal width. `visibility: hidden` keeps the copy out of the tab order and
+    the accessibility tree — verified, not a duplicate-focus hazard. When both sides
+    have real content (Scorecard, History) the title centres in the gap between them;
+    the labels there are short so the offset is a few pixels.
+  - **Login's two screens moved onto the shared component** via a new `bare` prop
+    (borderless, back-slot only) — this deletes the last hand-rolled copy of the header
+    back button (`Login.jsx`'s local `BackToHome`), which had shipped with slightly
+    different padding. Navigation outcome is unchanged (`goBack('home')`).
+  - **Back-label length budget** written into `DESIGN.md`: one word ideally, two at most,
+    ~12 characters including the arrow. The one over-budget label, course-edit's
+    "← Add Past Round", becomes **"← Past round"** — a budget-shortened reference to its
+    destination, not a verbatim copy of that screen's title ("Add Past Round" stays), the
+    same move as "← Course" for a screen once titled "Bruntsfield".
+  - `DESIGN.md` "Page header" and "Navigation" sections rewritten with the new rule and
+    the doc/code drift reconciled (`truncate` on the text elements only;
+    `pointer-events-none` removed — it only existed to let taps fall through the old
+    absolute layer). `PageHeader.test.jsx` reworked with mirror, `bare` and three-slot
+    coverage. No new design tokens.
+  - Visible changes: the course-edit back label; Login's back link ~4px higher; on
+    single-sided headers the title shifts a few pixels and truncates marginally earlier.
+    No layout break at 390px. Setup's "Add Past Round" title now fits its slot exactly.
+
+- **Settings — the "change email" field is now behind a "Change email address" button (#84).**
+  The new-email input was always visible; it is now collapsed by default (progressive
+  disclosure, matching the delete-account section), revealed on tap with a "Keep my
+  current email" link to close it again. The current address, the pending-confirmation
+  banner and the on-submit behaviour are unchanged.
 
 ---
 

@@ -1,24 +1,15 @@
 import { useState } from 'react'
+import PageHeader from '../components/PageHeader.jsx'
 import { useAuth } from '../hooks/useAuth.jsx'
 
-// Login doesn't use the shared PageHeader — it follows the same editorial,
-// borderless "back-link floating above a big heading" pattern as Home,
-// not the standard boxed header bar every other screen uses (a deliberate
-// difference, not an oversight). But its two screens (the form, and the
-// "check your email" confirmation) each used to hand-roll their own copy of
-// this button — which is exactly how one of them still said "← Back" after
-// the other was relabelled "← Home" in #43b. One shared component instead,
-// so the two can no longer drift apart (#69).
-function BackToHome({ goBack }) {
-  return (
-    <button
-      onClick={() => goBack('home')}
-      className="p-4 font-ui text-sm tracking-[0.08em] uppercase text-muted active:text-accent text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-    >
-      ← Home
-    </button>
-  )
-}
+// Login keeps the editorial, borderless "back link floating above a big
+// heading" pattern Home uses rather than the boxed header bar every utility
+// screen has (a deliberate difference, not an oversight). It gets there by
+// rendering the shared PageHeader in its `bare` variant — back slot only,
+// no border, no boxed padding — on both screens (the form, and the "check
+// your email" confirmation), so the one back button can't drift apart
+// between them. #85 removed Login's local hand-rolled copy, the last one in
+// the app.
 
 export default function Login({ navigate, goBack }) {
   const { authError, setAuthError } = useAuth()
@@ -56,7 +47,7 @@ export default function Login({ navigate, goBack }) {
   if (sent) {
     return (
       <div className="h-full bg-bg flex flex-col">
-        <BackToHome goBack={goBack} />
+        <PageHeader bare backLabel="← Home" onBack={() => goBack('home')} />
         <div className="flex-1 flex flex-col items-center justify-center px-8 text-center gap-6 pb-16">
           <div className="w-12 h-12 rounded-full bg-bg-card border border-border flex items-center justify-center">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-accent">
@@ -79,7 +70,7 @@ export default function Login({ navigate, goBack }) {
 
   return (
     <div className="h-full bg-bg flex flex-col">
-      <BackToHome goBack={goBack} />
+      <PageHeader bare backLabel="← Home" onBack={() => goBack('home')} />
 
       <div className="flex-1 flex flex-col px-6 pt-3 pb-8">
         <div className="mb-2">
