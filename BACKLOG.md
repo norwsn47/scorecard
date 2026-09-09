@@ -6,11 +6,11 @@
 > Nothing here is actioned without explicit instruction — tell the project-manager (or Claude directly) to pull an item into work.
 > Numbers are stable IDs for cross-reference — don't renumber existing items when deleting one, so gaps are expected.
 
-**Last updated:** 8 September 2026
+**Last updated:** 9 September 2026
 
 > The history of shipped and removed items lives in `CHANGELOG.md`. This file is open items only.
 >
-> Still-relevant status notes: #40 needs a product-owner PRD decision before build. #42 (Google sign-in) is Blocked on an external Google Cloud OAuth client. #39/#64 (end-of-round tally) were built and removed the same day — nothing remains; PRD §5.2 is a "removed" stub.
+> Still-relevant status notes: #40 needs a product-owner PRD decision before build. #42 (Google sign-in) is Blocked on an external Google Cloud OAuth client. #31 (analytics / GA4) is Blocked on a privacy/consent decision — route (a)/(b)/(c) must be chosen before any build. #39/#64 (end-of-round tally) were built and removed the same day — nothing remains; PRD §5.2 is a "removed" stub.
 
 ---
 
@@ -51,9 +51,34 @@ The architecture for properly supporting multiple courses, beyond the current v2
 ### 40. Optional match-play game mode (win each hole)
 A game-mode toggle at setup: **stroke play** (current — lowest total wins) or **match play** (win the most holes; each hole won by the lowest score, halved on a tie). Changes the winner calculation, the Summary, and the share image. Explicitly flagged by the user as a future edition. PRD §5 change needed.
 
+### 83. Home (signed in) — fold Settings into the header icon
+When signed in, Home shows a "signed in as…" state plus a standalone **Settings** button that the user considers redundant. Swap the header **info (ℹ) icon for a settings (gear) icon** that opens the Settings screen, and drop the standalone Settings button.
+- **Open question for the product-owner before build:** where the **Info page** (PRD §4.8) is then reached from — move its entry point into Settings, keep an info affordance elsewhere, or show the settings icon only when signed in and keep the info icon when signed out. Resolve first.
+- Frontend-only once decided; likely small. Related: #5 (signed-in identity), #4 (Settings panel, shipped).
+
+### 84. Settings — "Change email address" as an explicit action
+On the Settings screen the new-email input is always visible. Make it a **"Change email address" button** that reveals the input on tap (collapsed by default) — the same progressive-disclosure pattern the delete-account confirm already uses. Frontend-only, small. Related: #4, #80.
+
 ---
 
-## Blocked / waiting on something external
+## Blocked / waiting on a decision or something external
+
+### 31. Set up analytics — user wants Google Analytics (GA4); blocked on a privacy/consent decision, not on work
+**The user has asked for this directly (GA4 specifically, assistance requested).** It is not blocked on engineering effort — the build is ~2-3 hours — but on one decision that must be made first, because GA4 conflicts with a deliberate product stance. Blocked until the route below is chosen (product-owner + user call).
+
+**The conflict:** GA4 sets cookies. Under UK PECR + UK GDPR that normally requires a consent banner, which the app has deliberately never had. The "Your data" privacy page and `Info.jsx` both currently state there is **no tracking or analytics at all** (PRD §4.8 links to that page). Adding GA4 as-is would make both pages false.
+
+**Pick one before any code (product-owner + user call):**
+- **(a)** GA4 with a consent banner — accept the banner, rewrite the privacy page / `Info.jsx` copy and PRD §4.8.
+- **(b)** GA4 in a cookieless / consent-exempt configuration — no banner, but reduced data; still needs the privacy copy updated to name GA as a processor.
+- **(c)** A cookieless tool (Plausible / Fathom) — no banner, minimal privacy-copy change. **The scaffolding already targets this route:** `src/utils/analytics.js` is a `track()` wrapper around `window.plausible?.(...)` (currently a silent no-op) and `index.html:32` has the Plausible `<script>` commented out, ready to enable.
+
+**Already done (whichever route is chosen):** events are instrumented app-wide — New Game Started, Game Completed (player count, holes), Scorecard Shared, Game Edited.
+
+**Build steps once the route is chosen:**
+- Wire the tool: for GA, swap `analytics.js` to the `gtag` API and add the script to `index.html`; for Plausible, just uncomment `index.html:32` and set `data-domain`. Create the account either way.
+- Update `Info.jsx` + `Privacy.jsx` copy and PRD §4.8 to state exactly what is collected and by whom (and add/justify a consent banner if route (a)).
+- Confirm Cloudflare Pages' built-in analytics are on for basic traffic data regardless.
 
 ### 42. "Sign in with Google" (OAuth)
 Add Google as a sign-in option alongside the magic link (PRD §11.4 is currently magic-link-only). Needs: an OAuth client created in the Google Cloud console (external, hence blocked), the redirect/callback Pages Function, and a decision on account linking — a user who has signed in by magic link and then uses Google with the same email address should land on the same account, not a duplicate. PRD §11.4 change needed. Assistance requested — unblock by setting up the Google Cloud OAuth client and confirming the account-linking behaviour.
@@ -81,29 +106,15 @@ Still open:
 ### 56. Length-changing course switch during a D1 past-round edit leaves a stale-size grid
 Surfaced in the #48–#55 code review. `buildEditGame` sizes the edit grid to the *round's saved* hole count, not the newly-selected course's. Switching a 36-hole round onto a 9-hole course mid-edit (D1 rounds only — local rounds can't change course) leaves a 36-row grid with holes 10–36 padded back to par 3. No crash, no data loss, but confusing. Needs a product decision: disallow a length-changing course switch during an edit, or accept it and document the behaviour. (PRD §11.7, §11.13.)
 
+### 85. Header layout — side buttons overlap centred content
+The shared header (`PageHeader.jsx`, used on 10+ screens) has overlap cases: e.g. on the course-edit screen (`CourseEdit.jsx`) the left (back) button overlaps the centred title/content. Needs **one structural layout the header always follows** — equal fixed-width left/right slots, a defined truncation rule for the centre, consistent spacing — documented in `DESIGN.md` under "Navigation" and applied across every screen that renders a header. Larger: design-director sets the layout rule, frontend applies it. Related: #43b (back-nav labels), #34 (header link tap targets), #35 (`PageHeader` render tests).
+
 ---
 
 ## Housekeeping & tech debt
 
 ### 25. Crisper course map image — blocked on a better source asset
 `public/course_map_v2.png` is only 443×600px (~444 KB). `CourseMapModal.jsx` displays it at ~320px wide and zooms to 4× (~1300px effective demand), so it is inherently soft on any retina screen — the modal code itself is fine. The fix is purely a better asset: a higher-resolution scan/export (ideally ≥1600px on the long edge) or an SVG/vector from the club. Nothing to do in code until that exists. Overlaps with #13 (official logo) and #1 as things to request from Bruntsfield in one go. (Distinct from #1, which is about when the map appears and its loading state.)
-
-### 31. Set up analytics — user wants Google Analytics (GA4); blocked on a privacy decision, not on work
-**The user has asked for this directly (GA4 specifically, assistance requested).** It is not blocked on engineering effort — the build is ~2-3 hours — but on one decision that must be made first, because GA4 conflicts with a deliberate product stance.
-
-**The conflict:** GA4 sets cookies. Under UK PECR + UK GDPR that normally requires a consent banner, which the app has deliberately never had. The "Your data" privacy page and `Info.jsx` both currently state there is **no tracking or analytics at all** (PRD §4.8 links to that page). Adding GA4 as-is would make both pages false.
-
-**Pick one before any code (product-owner + user call):**
-- **(a)** GA4 with a consent banner — accept the banner, rewrite the privacy page / `Info.jsx` copy and PRD §4.8.
-- **(b)** GA4 in a cookieless / consent-exempt configuration — no banner, but reduced data; still needs the privacy copy updated to name GA as a processor.
-- **(c)** A cookieless tool (Plausible / Fathom) — no banner, minimal privacy-copy change. **The scaffolding already targets this route:** `src/utils/analytics.js` is a `track()` wrapper around `window.plausible?.(...)` (currently a silent no-op) and `index.html:32` has the Plausible `<script>` commented out, ready to enable.
-
-**Already done (whichever route is chosen):** events are instrumented app-wide — New Game Started, Game Completed (player count, holes), Scorecard Shared, Game Edited.
-
-**Build steps once the route is chosen:**
-- Wire the tool: for GA, swap `analytics.js` to the `gtag` API and add the script to `index.html`; for Plausible, just uncomment `index.html:32` and set `data-domain`. Create the account either way.
-- Update `Info.jsx` + `Privacy.jsx` copy and PRD §4.8 to state exactly what is collected and by whom (and add/justify a consent banner if route (a)).
-- Confirm Cloudflare Pages' built-in analytics are on for basic traffic data regardless.
 
 ### 60. Product-owner pass over §4.8 and its overlap with the privacy page
 Split out from the old #59. §4.8 (Information page) and §11.12 / the "Your data" privacy page (`Privacy.jsx`) describe overlapping things — what the info page contains, what the privacy page contains, where the data explanation lives. The 3 Sep cleanup made both accurate individually but the split between them is implicit. A proper product-owner pass would make §4.8 and §11.12 explicitly complementary. Low priority — both are accurate as they stand.
