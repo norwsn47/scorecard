@@ -103,9 +103,6 @@ Still open:
 ### 56. Length-changing course switch during a D1 past-round edit leaves a stale-size grid
 Surfaced in the #48–#55 code review. `buildEditGame` sizes the edit grid to the *round's saved* hole count, not the newly-selected course's. Switching a 36-hole round onto a 9-hole course mid-edit (D1 rounds only — local rounds can't change course) leaves a 36-row grid with holes 10–36 padded back to par 3. No crash, no data loss, but confusing. Needs a product decision: disallow a length-changing course switch during an edit, or accept it and document the behaviour. (PRD §11.7, §11.13.)
 
-### 85. Header layout — side buttons overlap centred content
-The shared header (`PageHeader.jsx`, used on 10+ screens) has overlap cases: e.g. on the course-edit screen (`CourseEdit.jsx`) the left (back) button overlaps the centred title/content. Needs **one structural layout the header always follows** — equal fixed-width left/right slots, a defined truncation rule for the centre, consistent spacing — documented in `DESIGN.md` under "Navigation" and applied across every screen that renders a header. Larger: design-director sets the layout rule, frontend applies it. Related: #43b (back-nav labels), #34 (header link tap targets), #35 (`PageHeader` render tests).
-
 ---
 
 ## Housekeeping & tech debt

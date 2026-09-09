@@ -22,7 +22,7 @@ export default function CourseEdit({ navigate, params }) {
   const setupGame  = params?.game ?? null
   const bruntsfield = params?.bruntsfield ?? false
 
-  const backLabel = editRound ? '← Edit Round' : pastRound ? '← Add Past Round' : '← New Game'
+  const backLabel = editRound ? '← Edit Round' : pastRound ? '← Past round' : '← New Game'
   function backToSetup() {
     navigate('setup', { editRound, pastRound, game: setupGame, bruntsfield })
   }

@@ -1,7 +1,7 @@
 # Design
 ## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
-Last updated: 8 September 2026
+Last updated: 9 September 2026
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
 ---
@@ -284,16 +284,44 @@ with remove button: pr-10   without: pr-4
 ```
 
 ### Page header (PageHeader component)
-```
-relative flex items-center justify-between px-5 pt-10 pb-4 border-b border-border shrink-0
-```
-- Title: `absolute inset-x-0 text-center px-24 font-display italic text-2xl text-text truncate pointer-events-none`
-- Back: `py-3 min-h-[44px] flex items-center whitespace-nowrap text-muted font-ui text-sm tracking-[0.08em] uppercase` — ← prefix, no button chrome, **never truncates**
-- Right slot: optional (a Header action button, an Edit link) — `whitespace-nowrap`, **never truncates**; its own touch target is set by whatever's passed in
 
-**Never truncate a header button — use a shorter accurate word instead.** Named as a standing rule in this pass, not a one-off fix. The back/right slots used to sit behind a fixed 72px width with `truncate`, which silently clipped "← Bruntsfield" down to the meaningless "← BRUNT". The fix was not a wider box — it was renaming the destination to a word that actually fits: **"Bruntsfield" became "Course"** everywhere in the app (it's the only course today; revisit if a second course ships). `PageHeader`'s back/right slots now carry no width cap and `whitespace-nowrap`, so a button can never clip — the corollary is that a caller must never hand it a label that's genuinely too long for the space. If a destination's real name won't fit, shorten the *word*. Do not widen the box or reintroduce `truncate` on a button label.
+**One structural layout, always.** Three flex slots on a single row — left, centre, right — with no absolute positioning. This replaces the previous `absolute inset-x-0 text-center px-24` title, which floated on a layer above the side slots and overlapped them whenever a back label ran long, or a back label and a right action were both present (#85).
 
-**Title-length budget:** the centred title sits behind `px-24` (96px) clearance on each side and still `truncate`s — this is the one place in the header a defensive `truncate` remains, because a title is editorial content (a course name, a page name) that the app doesn't fully control, not a short button label the app writes itself. At 390px that leaves ~198px for the title. `px-24` was sized to comfortably fit the longest back-button label in the app today ("← History" / "← Summary") in full, alongside a one-word right action. A longer label than either of those needs the clearance measured again at render — but per the rule above, the better fix is almost always a shorter word, not more clearance.
+```
+header:  flex items-center gap-3 px-5 pt-10 pb-4 border-b border-border shrink-0
+left:    shrink-0 flex justify-start      /* back button, or an invisible mirror — see below */
+centre:  flex-1 min-w-0 text-center       /* <h1> + optional subtitle */
+right:   shrink-0 flex justify-end        /* the `right` prop, or an invisible mirror */
+```
+
+- **The side slots are sized to their content and never shrink** (`shrink-0`). The back button and any right action always keep their full intrinsic width — they are never clipped, wrapped or truncated.
+- **The centre slot takes all the width the side slots leave** (`flex-1 min-w-0`) and its text truncates. It is the only element in the header allowed to truncate.
+- **Collision is structurally impossible** — the centre is a real flex child sitting *between* the two side slots, not a layer on top of them, so it can never fall under a button.
+
+**Keeping the title centred on the header — the invisible mirror.** When a title is present and exactly one side slot has real content, the empty side renders an `aria-hidden`, `invisible`, `pointer-events-none` copy of the other side's node. The two side slots are then equal width, so the centre slot is centred on the header rather than merely in the gap between the buttons. When *both* side slots carry real content (Scorecard, History, Summary), the title centres in the space between them; on those screens the label and the title are both short, so the offset from true centre is a few pixels and is accepted. The mirror is only rendered when there is a title to centre.
+
+**Intended markup** (this reconciles the doc/code drift the review flagged — `truncate` was documented on the wrapper but shipped on the inner elements, and `pointer-events-none` was documented but never shipped):
+```
+<header className="flex items-center gap-3 px-5 pt-10 pb-4 border-b border-border shrink-0">
+  <div className="shrink-0 flex justify-start">{ back button | mirror-of-right | null }</div>
+  <div className="flex-1 min-w-0 text-center">
+    {title    && <h1 className="font-display italic text-2xl text-text truncate">{title}</h1>}
+    {subtitle && <p  className="font-ui text-xs tracking-[0.08em] uppercase text-muted mt-0.5 truncate">{subtitle}</p>}
+  </div>
+  <div className="shrink-0 flex justify-end">{ right | mirror-of-back | null }</div>
+</header>
+```
+`truncate` sits on the `<h1>` and the subtitle `<p>` — the text elements — never on the centre wrapper. There is no `pointer-events-none` in the header any more: it was only there to let taps fall through the old absolute title layer to the buttons underneath, and that layer no longer exists.
+
+- **Back button:** `py-3 min-h-[44px] flex items-center whitespace-nowrap text-muted font-ui text-sm tracking-[0.08em] uppercase active:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40` — `←` prefix, no button chrome, **never truncates, never wraps**.
+- **Right slot:** optional — a Header action button (Scorecard Finish/Save, History "+ Add round") or a plain text link (Summary Edit/Done). `whitespace-nowrap`, **never truncates**; its touch target comes from whatever is passed in.
+- **Mirror spacer:** the same node as the side it mirrors, wrapped in a `<div aria-hidden="true" class="invisible pointer-events-none">`. It contributes width and nothing else.
+
+**Bare variant — Login only.** `PageHeader` takes a `bare` boolean prop. `bare` drops `border-b` and the boxed vertical padding, leaving `flex items-center px-4 pt-3 shrink-0` with just the back slot. It exists for Login's two screens (the form and the "check your email" confirmation), which follow Home's borderless "back link floating above a large editorial heading" pattern rather than the boxed header bar every utility screen uses — a deliberate difference, not an oversight. Login passes `bare` + `onBack` + `backLabel` and keeps its `<h1>` in the page body. This removes Login's local `BackToHome` component, the last hand-rolled copy of the header back button (#85) — see Navigation → Known duplication.
+
+**Never truncate a header button — use a shorter accurate word instead.** A standing rule, not a one-off fix. The back/right slots used to sit behind a fixed 72px width with `truncate`, which silently clipped "← Bruntsfield" down to the meaningless "← BRUNT". The fix was not a wider box — it was renaming the destination to a word that actually fits: **"Bruntsfield" became "Course"** everywhere in the app (it's the only course today; revisit if a second course ships). The slots now carry no width cap and `whitespace-nowrap`, so a button can never clip — the corollary is that a caller must never hand it a label that's genuinely too long for the space. If a destination's real name won't fit, shorten the *word*. Never reintroduce `truncate` on a button label.
+
+**Back-label length budget.** With this layout a long back label no longer collides with anything — instead it eats into the centre title's width, and on a screen whose title is a course name the title can compress to almost nothing. So the budget stays, restated against the new geometry: **after the arrow, a back label is one word where possible and two words at the most — about 12 characters including the arrow and its space.** "← Home", "← Rounds", "← History", "← Summary", "← Course", "← Edit Round", "← New Game" all pass. **"← Add Past Round" (16 characters) is the one shipped label over budget** (`src/pages/CourseEdit.jsx:25`, the `pastRound` branch) — shorten it to **"← Past round"** (the other two CourseEdit branches, "← Edit Round" and "← New Game", already fit and stay as they are). A shortened label like "← Past round" or "← Course" still points at the right screen; it does not have to be a verbatim copy of that screen's title. The old `px-24` (96px) title clearance and the fixed ~198px title budget are both gone: the title simply takes the space the side slots leave, and truncates.
 
 ### Inline link tap targets
 
@@ -487,7 +515,13 @@ scorecard / course page → course map (modal, via CourseMapModal)
 
 **Back button labels.** Every back affordance names its real destination or action rather than a generic "← Back" — `PageHeader`'s `backLabel` prop takes the exact string to render (arrow included when relevant). A button that steps back through history is labelled with the destination screen (`"← Home"`, `"← Rounds"`, `"← History"`), context-aware where the destination varies (Info, Privacy, Rules, Setup each pick their label from where they were opened). A **header** button that performs an action other than stepping back — the live Scorecard's "Pause" (which leaves the round in storage to resume, so it reappears as "Resume Game" on Home), CourseEdit's recovery-panel "Back to Home" — drops the arrow and says what it actually does. The one deliberate exception is a **foot-of-page wayfinding link**: the Bruntsfield course page has no header back button, but a discreet "← Golf Scorecard home" text link sits at the very foot of its action list (below the sign-in prompt). It keeps the leading arrow because it reads as "up to the parent screen" even though it is implemented as an explicit `navigate('home')` (not `goBack()`) so it always lands on Home regardless of how the page was reached; the phone browser's own back navigation still covers stepping back. Home itself carries no in-app back button at all (it is the app root). **"Course" replaces "Bruntsfield"** as the destination word wherever a header button needs to name it — see "Never truncate a header button" under Page header, above, for why.
 
-**Known duplication — build note for next pass, not fixed here.** Three hand-rolled copies of "a back button that looks like `PageHeader`'s" exist outside the shared component: Login's two screens (`src/pages/Login.jsx` lines 40-45 and 68-73, `p-4` rather than `py-3 min-h-[44px]` — a real, if small, spacing mismatch against the shared component) and Summary's bespoke header (`src/pages/Summary.jsx` lines 157-207, which reimplements the whole `relative flex items-center justify-between` header shell rather than rendering `PageHeader`, presumably because Summary needs a conditional spacer/Edit-or-Done right slot `PageHeader` doesn't yet support). These should compose `PageHeader` — extending its API if needed — rather than restyle it, so a future header change (like the truncation fix in this pass) only has to happen once. This is a frontend-developer refactor concern, not a DESIGN.md content change; flagging it here so it isn't lost.
+**Back-label length budget.** Every back label must fit the budget defined under "Page header → Back-label length budget" — one word ideally, two at most, about 12 characters including the arrow. The only shipped label over budget was CourseEdit's `pastRound` branch, "← Add Past Round" (`src/pages/CourseEdit.jsx:25`); it becomes "← Past round". Its sibling branches, "← Edit Round" and "← New Game", already fit and are unchanged. "← Past round" is a budget-shortened reference to its destination, not a verbatim copy of that screen's title (which stays "Add Past Round" — the full screen title keeps its meaning) — the same move as "← Course" pointing at a screen the app once titled "Bruntsfield".
+
+**Known duplication — resolved in #85.** Every back affordance now resolves to the shared `PageHeader` back button — one definition, one set of classes:
+- Summary previously reimplemented the whole `relative flex items-center justify-between` header shell; since #69 it composes `PageHeader`, passing its conditional Edit / Done control through the `right` prop.
+- Login's local `BackToHome` component (rendered on both the form and the "check your email" screen, shipped with `p-4` instead of the shared `py-3 min-h-[44px]`) is replaced by `<PageHeader bare .../>` in #85 — see "Bare variant" under Page header.
+
+No hand-rolled header back buttons remain. A future header change is made once, in `PageHeader.jsx`.
 
 ---
 
