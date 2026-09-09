@@ -103,6 +103,8 @@ describe('Settings (#4)', () => {
     mountFetch({ patch })
     renderSettings()
 
+    await screen.findByRole('heading', { name: 'Settings' })
+    await user.click(screen.getByRole('button', { name: 'Change email address' }))
     await screen.findByLabelText('New email address')
     await user.type(screen.getByLabelText('New email address'), 'taken@example.com')
     await user.click(screen.getByRole('button', { name: 'Send confirmation link' }))
@@ -116,6 +118,8 @@ describe('Settings (#4)', () => {
     mountFetch({ patch })
     renderSettings()
 
+    await screen.findByRole('heading', { name: 'Settings' })
+    await user.click(screen.getByRole('button', { name: 'Change email address' }))
     await screen.findByLabelText('New email address')
     await user.type(screen.getByLabelText('New email address'), 'new@example.com')
     await user.click(screen.getByRole('button', { name: 'Send confirmation link' }))
@@ -129,6 +133,8 @@ describe('Settings (#4)', () => {
     mountFetch({ patch })
     renderSettings()
 
+    await screen.findByRole('heading', { name: 'Settings' })
+    await user.click(screen.getByRole('button', { name: 'Change email address' }))
     await screen.findByLabelText('New email address')
     await user.type(screen.getByLabelText('New email address'), 'new@example.com')
     await user.click(screen.getByRole('button', { name: 'Send confirmation link' }))
@@ -143,11 +149,37 @@ describe('Settings (#4)', () => {
     mountFetch({ patch })
     renderSettings()
 
+    await screen.findByRole('heading', { name: 'Settings' })
+    await user.click(screen.getByRole('button', { name: 'Change email address' }))
     await screen.findByLabelText('New email address')
     await user.type(screen.getByLabelText('New email address'), 'new@example.com')
     await user.click(screen.getByRole('button', { name: 'Send confirmation link' }))
 
     expect(await screen.findByText(/sending the confirmation email/i)).toBeInTheDocument()
+  })
+
+  it('keeps the new-email input collapsed until "Change email address" is tapped, and clears it on backing out', async () => {
+    const user = userEvent.setup()
+    mountFetch()
+    renderSettings()
+
+    await screen.findByRole('heading', { name: 'Settings' })
+    expect(screen.queryByLabelText('New email address')).not.toBeInTheDocument()
+
+    const toggle = screen.getByRole('button', { name: 'Change email address' })
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    await user.click(toggle)
+
+    const field = await screen.findByLabelText('New email address')
+    expect(field).toHaveFocus()
+    await user.type(field, 'half-typed@example')
+
+    await user.click(screen.getByRole('button', { name: 'Keep my current email' }))
+    await waitFor(() => expect(screen.queryByLabelText('New email address')).not.toBeInTheDocument())
+
+    // Re-opening starts clean, not with the abandoned value.
+    await user.click(screen.getByRole('button', { name: 'Change email address' }))
+    expect(await screen.findByLabelText('New email address')).toHaveValue('')
   })
 
   it('opens the delete sheet as a labelled dialog, focuses the input, and closes on Escape or backdrop click', async () => {

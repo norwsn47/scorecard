@@ -56,9 +56,6 @@ When signed in, Home shows a "signed in as…" state plus a standalone **Setting
 - **Open question for the product-owner before build:** where the **Info page** (PRD §4.8) is then reached from — move its entry point into Settings, keep an info affordance elsewhere, or show the settings icon only when signed in and keep the info icon when signed out. Resolve first.
 - Frontend-only once decided; likely small. Related: #5 (signed-in identity), #4 (Settings panel, shipped).
 
-### 84. Settings — "Change email address" as an explicit action
-On the Settings screen the new-email input is always visible. Make it a **"Change email address" button** that reveals the input on tap (collapsed by default) — the same progressive-disclosure pattern the delete-account confirm already uses. Frontend-only, small. Related: #4, #80.
-
 ---
 
 ## Blocked / waiting on a decision or something external
@@ -151,6 +148,10 @@ Minor items logged from the Phase 2 review of `feat/user-profile-foundation`; no
 - **Stacked accent banners.** An active `!storageOk` banner (`App.jsx:152`) plus the `?email=` notice banner (`Home.jsx:62`) would render two full-width accent bars at once. Very unlikely combo, cosmetic.
 - **`replaceState` on a recognised `?auth=` / `?email=` param strips the whole query string** (`useAuth.jsx:30`), including any unrelated params. Pre-existing behaviour, no impact today (the app uses no other query params).
 - **`AuthContext` value is a fresh object literal every render** (`useAuth.jsx:100`). Every consumer re-renders on any auth state change. The new Home capture effect is safe regardless because it keys on the referentially-stable `useState` setter, but the context value could be wrapped in `useMemo` if a perf pass ever wants it. Trivial at current scale, not a `performance-auditor` referral.
+
+From the #84 review (email-disclosure, CLEAR WITH NOTES, 9 Sep 2026), same low-priority tier:
+- **No focus-return when the "Change email address" form collapses.** Tapping "Keep my current email" unmounts the form and focus falls to `<body>` — should return to the "Change email address" trigger. Same class as the focus-return gap above; the disclosure adds a second instance.
+- **"Keep my current email" link is ~40px tall** (`Settings.jsx` ~257-264, `py-2.5` + `text-sm`), just under the 44px guideline. Identical to the existing "Delete my account" link right below it (#34 territory), so consistent with the established pattern rather than new.
 
 ### 81. PRD §11.2 says `SameSite=Strict`; the session cookie has always been `SameSite=Lax`
 `verify.js`, `logout.js` and the new `DELETE /api/users` all set `session=…; SameSite=Lax`, and have since launch — magic-link sign-in returning from an email client needs at least `Lax`. PRD §11.2 still documents `Strict`. The code is right; this is a PRD-to-match fix. Reconcile §11.2 to `Lax` with a one-line note on why. Doc-only, low priority.
