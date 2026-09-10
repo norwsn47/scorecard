@@ -5,7 +5,18 @@
 > Git history is the full record; this file is for context and decision rationale that commit messages don't carry.
 > Update the date below whenever you add an entry.
 
-**Last updated:** 9 September 2026
+**Last updated:** 10 September 2026
+
+---
+
+## 10 September 2026 (doc reconciliation #81)
+
+- **PRD §11.2 now documents the session cookie as `SameSite=Lax`, matching the code.**
+  `verify.js`, `logout.js` and `DELETE /api/users` have set `SameSite=Lax` since launch —
+  magic-link sign-in returns the user from their email client on a cross-site top-level
+  navigation, which `Strict` would strip the cookie from. The PRD had carried `Strict`.
+  Code unchanged; PRD brought into line with a one-line note on why `Lax` is deliberate.
+  Clears BACKLOG #81.
 
 ---
 

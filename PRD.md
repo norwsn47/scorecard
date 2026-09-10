@@ -2,7 +2,7 @@
 ## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
 **Version:** 2.0
-**Last updated:** 8 September 2026
+**Last updated:** 10 September 2026
 
 > The rationale and section-by-section history of past updates lives in `CHANGELOG.md`, not here. This line is just a date.
 
@@ -382,7 +382,7 @@ Scorecard Plus is the logged-in layer of the app. It adds persistent history, cu
 - **API layer:** Cloudflare Pages Functions — serverless functions co-deployed with the Cloudflare Pages site, living in the `/functions` directory
 - **Database:** Cloudflare D1 — SQLite-compatible database, bound to the Pages project via wrangler
 - **Email:** Resend — transactional email for magic link delivery. Configured via the `RESEND_API_KEY` environment variable (§11.11)
-- **Session management:** D1 sessions table + HttpOnly cookie — a UUID session token is stored in D1; the browser receives it as a `Set-Cookie: session=<token>; HttpOnly; Secure; SameSite=Strict` header on verification
+- **Session management:** D1 sessions table + HttpOnly cookie — a UUID session token is stored in D1; the browser receives it as a `Set-Cookie: session=<token>; HttpOnly; Secure; SameSite=Lax` header on verification. `Lax` (not `Strict`) is deliberate: the session is set as the user arrives from the magic-link email, a cross-site top-level navigation that `Strict` would strip the cookie from
 
 ---
 

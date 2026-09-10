@@ -6,7 +6,7 @@
 > Nothing here is actioned without explicit instruction — tell the project-manager (or Claude directly) to pull an item into work.
 > Numbers are stable IDs for cross-reference — don't renumber existing items when deleting one, so gaps are expected.
 
-**Last updated:** 9 September 2026
+**Last updated:** 10 September 2026
 
 > The history of shipped and removed items lives in `CHANGELOG.md`. This file is open items only.
 >
@@ -149,9 +149,6 @@ Minor items logged from the Phase 2 review of `feat/user-profile-foundation`; no
 From the #84 review (email-disclosure, CLEAR WITH NOTES, 9 Sep 2026), same low-priority tier:
 - **No focus-return when the "Change email address" form collapses.** Tapping "Keep my current email" unmounts the form and focus falls to `<body>` — should return to the "Change email address" trigger. Same class as the focus-return gap above; the disclosure adds a second instance.
 - **"Keep my current email" link is ~40px tall** (`Settings.jsx` ~257-264, `py-2.5` + `text-sm`), just under the 44px guideline. Identical to the existing "Delete my account" link right below it (#34 territory), so consistent with the established pattern rather than new.
-
-### 81. PRD §11.2 says `SameSite=Strict`; the session cookie has always been `SameSite=Lax`
-`verify.js`, `logout.js` and the new `DELETE /api/users` all set `session=…; SameSite=Lax`, and have since launch — magic-link sign-in returning from an email client needs at least `Lax`. PRD §11.2 still documents `Strict`. The code is right; this is a PRD-to-match fix. Reconcile §11.2 to `Lax` with a one-line note on why. Doc-only, low priority.
 
 ### 82. Email-change / account-deletion edge cases (from the #3 backend review)
 Two narrow wrinkles in `functions/api/users/index.js` / `confirm-email.js`, both low priority, logged so they aren't lost:
