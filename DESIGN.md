@@ -1,7 +1,7 @@
 # Design
 ## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
-Last updated: 9 September 2026
+Last updated: 11 September 2026
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
 ---
@@ -334,11 +334,13 @@ inline-block py-2.5 -my-2.5    /* where line height is tight — ~36-38px */
 
 Match `inline-flex` instead of `inline-block` where the link already uses it (e.g. links with a trailing ↗ icon) — just add the `py-* -my-*`.
 
-**Target:** 44px where the surrounding layout allows it (wrap the link so the padding can grow freely). ~36-40px is the practical floor for a `text-xs` link sitting inline within flowing paragraph text, where more vertical padding would overlap adjacent lines — better than the bare ~16px text height, accepted as a trade-off.
+**Target:** 44px where the surrounding layout allows it (wrap the link so the padding can grow freely). ~36-40px is the practical floor for a `text-xs` link sitting inline within flowing paragraph text, where more vertical padding would overlap adjacent lines — better than the bare ~16px text height, accepted as a trade-off only where a link genuinely cannot be pulled onto its own line.
+
+**Prefer giving the link its own line over accepting the reduced floor.** Where a `text-xs` link can be pulled out of flowing paragraph text (or out of a shared row with another link) onto a line of its own, do that first — it removes the adjacent-line collision that justified the reduced padding, so the link can take `py-3.5 -my-3.5` (~44px even at `text-xs`) instead of settling for `py-2.5 -my-2.5`. Fixed in this pass (#34): Login's "How we handle your data" (already its own paragraph, just needed the padding bump and a touch more margin above it), Info's "Read our privacy policy" (split out of its sentence into its own line below), and Summary's "Share scorecard" (unbulleted from "Edit round" — each link now sits in its own `<div>`, stacked with `space-y-3`, rather than sharing one row). The `py-2.5 -my-2.5` reduced variant remains available for a link that genuinely cannot be isolated this way — it is no longer used by these three.
 
 **`space-y-*` caveat:** if the link is a direct child of a `space-y-*` container, that container's `> :not([hidden]) ~ :not([hidden])` selector out-specifies `-my-*` (specificity 0,3,0 vs 0,1,0), so the negative margin is ignored and the padding shifts the layout. Fix: wrap the link in an unclassed `<div>`. The wrapper absorbs the `space-y` margin and the negative margin then resolves cleanly inside it. Links sitting inline within a `<p>`, or as the sole child of a padded container, need no wrapper.
 
-Precedent: the Setup course-rules link, and the inline links across Info, Login, Summary, `CourseMapModal`, and `RulesContent`.
+Precedent: the Setup course-rules link, Summary's "create an account" link (`py-3.5 -my-3.5`, the standalone-`text-xs`-on-its-own-line reference other fixes in this pass matched), and the inline links across Info, Login, Summary, `CourseMapModal`, and `RulesContent`.
 
 ### Course-creation controls (Setup — "+ New course")
 
@@ -369,12 +371,24 @@ The split tracks a distinction the app already makes on radius (`rounded-md` for
 
 ### Bottom sheet / confirmation modal
 ```
-Backdrop:  fixed inset-0 z-50, background: var(--overlay-backdrop)
-Sheet:     bg-bg rounded-t-2xl w-full max-w-[430px] px-6 pt-6 pb-10 shadow-card
+Backdrop:  fixed inset-0 flex items-end justify-center z-50, background: var(--overlay-backdrop)
+           onClick={close} — tapping the backdrop dismisses the sheet
+Sheet:     role="dialog" aria-modal="true" aria-labelledby="{heading-id}"
+           onClick={e => e.stopPropagation()} — stops the backdrop's onClick firing
+           bg-bg rounded-t-2xl w-full max-w-[430px] px-6 pt-6 pb-10 shadow-card
 Handle:    w-10 h-1 bg-border rounded-full mx-auto mb-6
-Heading:   font-display italic text-2xl text-text
+Heading:   font-display italic text-2xl text-text, id="{heading-id}" (matches the sheet's aria-labelledby)
 Subtext:   font-ui text-xs text-muted tracking-wide
 ```
+
+**Dialog semantics — every bottom sheet, no exceptions (#80).** A confirmation sheet is a real modal dialog, not just a styled panel, and needs the behaviour to match:
+- `role="dialog"`, `aria-modal="true"`, `aria-labelledby` pointing at the heading's own `id` — on the sheet element itself, not the backdrop.
+- **Autofocus on open** — a `useEffect` keyed on the sheet's open state moves focus onto the sheet's most useful control the moment it mounts: the confirmation text input if the sheet has one (Settings' delete-account sheet, which gates on a typed "DELETE"), otherwise the non-destructive button (History's delete-round sheet focuses "Cancel", not "Delete" — a stray Enter keypress should never confirm a destructive action).
+- **Escape dismisses** — the same effect adds a `keydown` listener while the sheet is open (removed on cleanup) that closes it on `Escape`, equivalent to tapping the non-destructive action. Skip this while a destructive action is genuinely in flight (Settings' sheet checks its own `deleting` flag) so an in-progress delete can't be abandoned mid-request; a sheet with no async gap (History's) doesn't need the guard.
+- **Backdrop click dismisses** — `onClick` on the backdrop `div` closes the sheet; the sheet itself carries `onClick={e => e.stopPropagation()}` so a tap inside it doesn't bubble up and immediately close it.
+- Close logic lives in one named function (`closeDelete`, `closeDeleteConfirm`, etc.) reused by the backdrop click, the Escape handler, and the sheet's own Cancel/dismiss button, so the three paths can never drift apart.
+
+Shipped in `Settings.jsx` (delete-account) and `History.jsx` (delete-round, brought up to parity in #80).
 
 ### Scorecard table
 ```

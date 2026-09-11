@@ -123,11 +123,11 @@ export default function Login({ navigate, goBack }) {
         <p className="font-ui text-xs text-muted mt-6 text-center">
           No password. We'll send a link to your inbox.
         </p>
-        <p className="font-ui text-xs text-muted mt-2 text-center">
+        <p className="font-ui text-xs text-muted mt-3 text-center">
           <button
             type="button"
             onClick={() => navigate('privacy', { from: 'login' })}
-            className="inline-block py-2.5 -my-2.5 text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="inline-block py-3.5 -my-3.5 text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             How we handle your data
           </button>

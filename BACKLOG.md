@@ -6,7 +6,7 @@
 > Nothing here is actioned without explicit instruction — tell the project-manager (or Claude directly) to pull an item into work.
 > Numbers are stable IDs for cross-reference — don't renumber existing items when deleting one, so gaps are expected.
 
-**Last updated:** 9 September 2026
+**Last updated:** 11 September 2026
 
 > The history of shipped and removed items lives in `CHANGELOG.md`. This file is open items only.
 >
@@ -113,9 +113,6 @@ Surfaced in the #48–#55 code review. `buildEditGame` sizes the edit grid to th
 ### 60. Product-owner pass over §4.8 and its overlap with the privacy page
 Split out from the old #59. §4.8 (Information page) and §11.12 / the "Your data" privacy page (`Privacy.jsx`) describe overlapping things — what the info page contains, what the privacy page contains, where the data explanation lives. The 3 Sep cleanup made both accurate individually but the split between them is implicit. A proper product-owner pass would make §4.8 and §11.12 explicitly complementary. Low priority — both are accurate as they stand.
 
-### 34. `text-xs` inline links land ~36-38px, below the ~40px floor
-From the batch-B tap-target pass (#28). Three inline-in-paragraph `text-xs` links — `Login.jsx` "How we handle your data", `Info.jsx` "Read our privacy policy", `Summary.jsx` "Share scorecard" — use `py-2.5 -my-2.5` (~36-38px) because more padding would overlap adjacent lines. Better than the bare ~16px but under the documented floor. Revisit if a cleaner pattern turns up (e.g. giving them their own line).
-
 ### 35. Render/flow test coverage — harness landed, more flows to cover
 The React Testing Library harness is in (`vitest.setup.js`, `setupFiles` in `vite.config.js`, `@testing-library/react` + `jest-dom` + `user-event`). Covered so far: `ParDelta` (§5.3 notation + colour override), the `History` player filter (#51/#61), **the edit-past-round flow (#22)** — `Scorecard.edit.test.jsx` — the `CourseEdit` screen incl. its 401 branch (#75), **`Login.jsx`** + **`PageHeader`** (`Login.test.jsx` / `PageHeader.test.jsx`), and (8 Sep 2026) **SPA navigation** — `Scorecard.spa-nav.test.jsx` pins the #17 no-active-game bounce (effect-not-render, no React error) and `App.test.jsx` drives the router end to end: deep-linked `/scorecard` → Home (#17), a `popstate` bounce onto a param-less Setup discarding a stranded edit → History (#18), and plain page restore on `popstate` (#43). Still no render coverage for:
 - **`Setup` course creation** — the 9/18 radiogroup (#57) and the par stepper clamp (#58). The `<select value=… >` "+ New course" option is a command not a real selection, which `userEvent.selectOptions` / `fireEvent.change` don't drive cleanly in jsdom — needs either a small refactor of that control or a workaround before it's testable.
@@ -139,8 +136,11 @@ The tap-target growth shipped 8 September 2026 - all three foot-of-page links ("
 
 ### 80. Settings panel (#4) - code-review housekeeping (CLEAR WITH NOTES, 8 Sep 2026)
 Minor items logged from the Phase 2 review of `feat/user-profile-foundation`; none block. All low priority.
-- **`History.jsx` delete-round sheet still lacks dialog semantics.** The new Settings delete sheet got `role="dialog"` + `aria-modal="true"` + `aria-labelledby`, autofocus on the input, and Escape / backdrop dismiss. `History.jsx`'s equivalent bottom sheet (lines ~293-315), the pattern Settings was modelled on and the one documented in `DESIGN.md` under "Bottom sheet / confirmation modal", still has none of these. Bring it up to the same bar and consider adding the semantics to the DESIGN.md pattern block so future sheets inherit them.
+- ~~`History.jsx` delete-round sheet still lacks dialog semantics.~~ Fixed — brought to parity with Settings.jsx (`role="dialog"`, `aria-modal`, `aria-labelledby`, autofocus, Escape/backdrop dismiss) in the tap-targets/dialog-parity batch, 11 Sep 2026.
 - **Neither sheet has a focus trap or focus-return.** `aria-modal="true"` makes assistive tech treat the background as inert, but Tab can still leave the dialog, and closing it does not return focus to the trigger. Acceptable at this app's scope; revisit if a keyboard-heavy flow lands.
+- **DESIGN.md's dialog-semantics "no exceptions" wording doesn't fully match Settings.jsx.** (From the 11 Sep 2026 dialog-parity review.) The new pattern block states the close handler "lives in one named function... so the three paths can never drift apart", but Settings.jsx's pre-existing "Keep my account" button calls `() => setConfirmDelete(false)` inline rather than the file's own `closeDelete()`. Harmless (the button is disabled while `deleting`), but either tighten Settings.jsx to call `closeDelete()` or soften the DESIGN.md wording.
+- **`History.jsx`'s Delete button has no in-flight guard.** (From the 11 Sep 2026 dialog-parity review.) `executeDelete` awaits a fetch for DB-backed games but the button isn't disabled and shows no "Deleting…" state meanwhile, unlike Settings.jsx's `deleting`-gated equivalent. Pre-existing, low risk (a rapid double-tap could in theory fire two DELETE calls), but now sits next to a DESIGN.md section citing Settings.jsx as the reference pattern for this exact sheet.
+- **No render test for `History.jsx`'s delete-sheet dialog semantics.** (From the 11 Sep 2026 dialog-parity review.) Settings.jsx has a dedicated test covering labelled-dialog role, autofocus and Escape/backdrop close (`Settings.test.jsx:185`); `History.jsx` now has the identical behaviour but no equivalent test — only the player-filter feature is covered in `History.test.jsx`.
 - **Settings delete-sheet focus effect re-pulls focus when `deleting` flips true** (`Settings.jsx` ~63-71, deps `[confirmDelete, deleting]`). Harmless since the input stays mounted, but focus jumps back to it mid-delete. Gate the `.focus()` on the open transition only if it ever annoys.
 - **Stacked accent banners.** An active `!storageOk` banner (`App.jsx:152`) plus the `?email=` notice banner (`Home.jsx:62`) would render two full-width accent bars at once. Very unlikely combo, cosmetic.
 - **`replaceState` on a recognised `?auth=` / `?email=` param strips the whole query string** (`useAuth.jsx:30`), including any unrelated params. Pre-existing behaviour, no impact today (the app uses no other query params).
