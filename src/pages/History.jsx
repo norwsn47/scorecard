@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import PageHeader from '../components/PageHeader.jsx'
 import ParDelta from '../components/ParDelta.jsx'
 import { formatShortDate } from '../utils/format.js'
@@ -24,6 +24,25 @@ export default function History({ navigate, goBack, params }) {
   const [filter, setFilter]           = useState(null)
   const [courseFilter, setCourseFilter] = useState(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState(null)
+  const cancelButtonRef = useRef(null)
+
+  function closeDeleteConfirm() {
+    setConfirmDeleteId(null)
+  }
+
+  // While the delete sheet is open: pull focus onto the non-destructive
+  // "Cancel" action and let Escape dismiss it, matching Settings.jsx's
+  // delete-account sheet (#80). Backdrop click is wired on the overlay
+  // element itself below.
+  useEffect(() => {
+    if (!confirmDeleteId) return
+    cancelButtonRef.current?.focus()
+    function onKey(e) {
+      if (e.key === 'Escape') setConfirmDeleteId(null)
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [confirmDeleteId])
 
   useEffect(() => {
     if (!user) return
@@ -289,16 +308,29 @@ export default function History({ navigate, goBack, params }) {
 
       </main>
 
-      {/* Delete confirmation */}
+      {/* Delete confirmation — mirrors Settings.jsx's delete-account sheet:
+          role="dialog", aria-modal, aria-labelledby, autofocus, Escape and
+          backdrop-click to dismiss (#80). */}
       {confirmDeleteId && (
-        <div className="fixed inset-0 flex items-end justify-center z-50" style={{ background: 'var(--overlay-backdrop)' }}>
-          <div className="bg-bg rounded-t-2xl w-full max-w-[430px] px-6 pt-6 pb-10 shadow-card">
+        <div
+          className="fixed inset-0 flex items-end justify-center z-50"
+          style={{ background: 'var(--overlay-backdrop)' }}
+          onClick={closeDeleteConfirm}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-round-heading"
+            onClick={e => e.stopPropagation()}
+            className="bg-bg rounded-t-2xl w-full max-w-[430px] px-6 pt-6 pb-10 shadow-card"
+          >
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-6" />
-            <h2 className="font-display italic text-2xl text-text mb-1">Delete this round?</h2>
+            <h2 id="delete-round-heading" className="font-display italic text-2xl text-text mb-1">Delete this round?</h2>
             <p className="font-ui text-xs text-muted tracking-wide mb-8">This cannot be undone.</p>
             <div className="flex gap-3">
               <button
-                onClick={() => setConfirmDeleteId(null)}
+                ref={cancelButtonRef}
+                onClick={closeDeleteConfirm}
                 className="flex-1 py-3 rounded-sm border border-border font-ui text-sm tracking-[0.08em] uppercase text-text active:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 Cancel

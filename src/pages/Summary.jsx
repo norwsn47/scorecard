@@ -360,33 +360,34 @@ export default function Summary({ navigate, goBack, params }) {
           </>
         )}
 
-        {/* Edit round • Share scorecard — inline text links. "Done" for a
-            post-finish round lives in the header (top-right). Edit is dropped
-            in the read-only History view (it lives in the header there). */}
-        <div className="text-center">
-          <div className="flex items-center justify-center gap-2 font-ui text-xs text-muted">
-            {!viewingSaved && canEdit && (
-              <>
-                <button
-                  onClick={handleEditRound}
-                  disabled={saving}
-                  className="py-2.5 -my-2.5 underline underline-offset-2 active:opacity-70 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-                >
-                  Edit round
-                </button>
-                <span aria-hidden="true">•</span>
-              </>
-            )}
+        {/* Edit round / Share scorecard — each gets its own line so full
+            tap-target padding can be applied without the two links
+            overlapping (#34). "Done" for a post-finish round lives in the
+            header (top-right). Edit is dropped in the read-only History view
+            (it lives in the header there). */}
+        <div className="text-center space-y-3">
+          {!viewingSaved && canEdit && (
+            <div>
+              <button
+                onClick={handleEditRound}
+                disabled={saving}
+                className="inline-block py-3.5 -my-3.5 font-ui text-xs text-muted underline underline-offset-2 active:opacity-70 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              >
+                Edit round
+              </button>
+            </div>
+          )}
+          <div>
             <button
               onClick={handleShare}
               disabled={sharing}
-              className="py-2.5 -my-2.5 underline underline-offset-2 active:opacity-70 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="inline-block py-3.5 -my-3.5 font-ui text-xs text-muted underline underline-offset-2 active:opacity-70 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               {sharing ? 'Generating…' : 'Share scorecard'}
             </button>
           </div>
           {!viewingSaved && canEdit && editBlocked && (
-            <p className="font-ui text-xs text-accent tracking-wide mt-3 leading-relaxed">
+            <p className="font-ui text-xs text-accent tracking-wide leading-relaxed">
               Finish your current round before editing a past one.
             </p>
           )}
