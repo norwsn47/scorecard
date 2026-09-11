@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import PageHeader from '../components/PageHeader.jsx'
 import { useAuth } from '../hooks/useAuth.jsx'
 
@@ -16,10 +16,19 @@ export default function Login({ navigate, goBack }) {
   const [email, setEmail]           = useState('')
   const [sending, setSending]       = useState(false)
   const [sent, setSent]             = useState(false)
-  const [error, setError]           = useState(() => {
-    if (authError) { setAuthError(null); return authError }
-    return null
-  })
+  const [error, setError]           = useState(null)
+
+  // Capture the auth-error flag into local state the moment useAuth exposes
+  // it (its effect runs after this child's, so this fires on the next render),
+  // then clear the shared value. Local state dies with Login on navigation, so
+  // the banner is a one-visit thing and a later return to Login is clean -
+  // StrictMode's mount/cleanup/mount double-invoke can't strand it.
+  useEffect(() => {
+    if (authError) {
+      setError(authError)
+      setAuthError(null)
+    }
+  }, [authError, setAuthError])
 
   async function handleSubmit(e) {
     e.preventDefault()

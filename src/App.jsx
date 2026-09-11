@@ -90,7 +90,17 @@ function AppContent() {
     setStorageOk(isStorageAvailable())
     // Stamp the initial history entry so the first back press has state.
     // depth 0 = the entry the app was loaded on; each navigate() adds one.
-    window.history.replaceState({ page, depth: 0, params: {} }, '', window.location.pathname)
+    // Bug fix (#35 test pass): this used to pass window.location.pathname on
+    // its own, silently dropping any query string (?auth=expired, ?auth=error,
+    // ?email=changed|expired|taken) on every single app boot. AppContent is a
+    // child of AuthProvider, so this effect always fires before AuthProvider's
+    // own mount effect (child effects run before parent effects) — meaning
+    // AuthContext's read of window.location.search was already empty by the
+    // time it ran, and those redirect flags never reached authError /
+    // emailNotice at all. Preserving the search string here (and hash, for
+    // completeness) fixes that without changing the pathname-only routing
+    // this effect exists for.
+    window.history.replaceState({ page, depth: 0, params: {} }, '', window.location.pathname + window.location.search + window.location.hash)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
