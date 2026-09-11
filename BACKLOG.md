@@ -96,7 +96,7 @@ The broken loop and the label rationalisation from the 5 Sep scenario review are
 Still open:
 - **D1-round gap:** the `gameId` re-resolution only covers local/quick-play rounds (looked up in `localStorage`). A browser back/forward bounce, or Setup's edit-cancel, landing back on a signed-in D1-only round opened from History (never saved locally) still falls back to the most recently completed *local* game, same as before this build — there's no `GET /api/games/:id` to re-fetch a single D1 round by id. Low priority (narrow path: sign in, open a past round from History, tap Edit, cancel before starting the scorecard, or a raw browser bounce) — would need a new API endpoint if it's worth closing.
 - `pastRound` isn't persisted in history state, so a browser back/forward bounce onto the "Add Past Round" Setup screen re-renders it titled "New Game" with no date field (cosmetic; the past round is already saved by then; no worse than pre-#43 behaviour). Add `pastRound` to the `navigate` allowlist in `App.jsx` if that path is worth polishing.
-- `Setup.edit-recovery.test.jsx` covers the abandoned-edit guard directly; `App.test.jsx` now also drives it through a real `popstate` bounce, and `Login.test.jsx` covers the "← Home" label (both tracked under #35). Still no render test for the `goBack()` fix itself.
+- `Setup.edit-recovery.test.jsx` covers the abandoned-edit guard directly; `App.test.jsx` now also drives it through a real `popstate` bounce, and `Login.test.jsx` covers the "← Home" label. Still no render test for the `goBack()` fix itself.
 - **Scorecard "Pause" — no confirmation dialog.** Flagged during the 5 Sep build, not decided: tapping it leaves the app with no confirmation, unlike Finish Game. Scores are autosaved so no data is lost either way, but it's still an accidental-tap risk. Worth a product-owner/user call on whether it needs a guard.
 
 
@@ -142,7 +142,7 @@ Minor items logged from the Phase 2 review of `feat/user-profile-foundation`; no
 
 From the #84 review (email-disclosure, CLEAR WITH NOTES, 9 Sep 2026), same low-priority tier:
 - **No focus-return when the "Change email address" form collapses.** Tapping "Keep my current email" unmounts the form and focus falls to `<body>` — should return to the "Change email address" trigger. Same class as the focus-return gap above; the disclosure adds a second instance.
-- **"Keep my current email" link is ~40px tall** (`Settings.jsx` ~257-264, `py-2.5` + `text-sm`), just under the 44px guideline. Identical to the existing "Delete my account" link right below it (#34 territory), so consistent with the established pattern rather than new.
+- **"Keep my current email" link is ~40px tall** (`Settings.jsx` ~257-264, `py-2.5` + `text-sm`), just under the 44px guideline. Identical to the existing "Delete my account" link right below it — same tap-target class as the links fixed 11 September 2026, but this one wasn't part of that batch.
 
 ### 82. Email-change / account-deletion edge cases (from the #3 backend review)
 Two narrow wrinkles in `functions/api/users/index.js` / `confirm-email.js`, both low priority, logged so they aren't lost:
