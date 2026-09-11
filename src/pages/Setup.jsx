@@ -315,22 +315,12 @@ export default function Setup({ navigate, goBack, params }) {
                 <div className="flex items-center gap-2">
                   <select
                     value={selectedCourseId ?? ''}
-                    onChange={e => {
-                      if (e.target.value === '__new__') {
-                        setCreatingCourse(true)
-                        setSelectedCourseId(null)
-                        setNewCourseHoleCount(9)
-                        setNewCoursePars(Array(9).fill(3))
-                      } else {
-                        setSelectedCourseId(e.target.value)
-                      }
-                    }}
+                    onChange={e => setSelectedCourseId(e.target.value)}
                     className="flex-1 min-w-0 py-3 pl-4 pr-4 rounded-md border border-border font-ui text-base bg-bg-card text-text focus:outline-none focus:ring-2 focus:ring-accent/40"
                   >
                     {courses.map(c => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
-                    <option value="__new__">+ New course</option>
                   </select>
                   {/* Edit affordance — only for a real, selected course (never
                       shown mid "+ New course") (#54/#71). */}
@@ -349,6 +339,26 @@ export default function Setup({ navigate, goBack, params }) {
                       Edit
                     </button>
                   )}
+                  {/* "+ New course" used to be a sentinel option inside the
+                      select above (value="__new__") — picking it didn't
+                      select a course, it flipped the UI into creation mode.
+                      That pattern isn't cleanly drivable by userEvent in
+                      jsdom and reads oddly as a select option, so it's a
+                      separate button beside the select instead — same label
+                      and visual treatment as the zero-courses empty state's
+                      "+ New course" button below. */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCreatingCourse(true)
+                      setSelectedCourseId(null)
+                      setNewCourseHoleCount(9)
+                      setNewCoursePars(Array(9).fill(3))
+                    }}
+                    className="shrink-0 py-2 px-4 rounded-sm border border-accent text-accent font-ui text-xs tracking-[0.1em] uppercase font-semibold active:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  >
+                    + New course
+                  </button>
                 </div>
               )
             ) : (
