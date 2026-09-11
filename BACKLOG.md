@@ -10,7 +10,7 @@
 
 > The history of shipped and removed items lives in `CHANGELOG.md`. This file is open items only.
 >
-> Still-relevant status notes: #40 needs a product-owner PRD decision before build. #42 (Google sign-in) is Blocked on an external Google Cloud OAuth client. #31 (analytics / GA4) is Blocked on a privacy/consent decision — route (a)/(b)/(c) must be chosen before any build. #39/#64 (end-of-round tally) were built and removed the same day — nothing remains; PRD §5.2 is a "removed" stub.
+> Still-relevant status notes: #40 needs a product-owner PRD decision before build. #42 (Google sign-in) is Blocked on an external Google Cloud OAuth client. #31 (analytics / GA4) is Blocked on a privacy/consent decision — route (a)/(b)/(c) must be chosen before any build. #39/#64 (end-of-round tally) were built and removed the same day — nothing remains; PRD §5.2 is a "removed" stub. Settings/account screen text alignment was checked live during the 11 September 2026 UI/UX review and found already left-aligned throughout (labels, body copy, input, button text) — no action needed, not logged as an open item.
 
 ---
 
@@ -103,17 +103,21 @@ Still open:
 ### 56. Length-changing course switch during a D1 past-round edit leaves a stale-size grid
 Surfaced in the #48–#55 code review. `buildEditGame` sizes the edit grid to the *round's saved* hole count, not the newly-selected course's. Switching a 36-hole round onto a 9-hole course mid-edit (D1 rounds only — local rounds can't change course) leaves a 36-row grid with holes 10–36 padded back to par 3. No crash, no data loss, but confusing. Needs a product decision: disallow a length-changing course switch during an edit, or accept it and document the behaviour. (PRD §11.7, §11.13.)
 
+### 86. Edit Course screen always shows 36 holes (functional bug)
+From the 11 September 2026 UI/UX review. The course-edit screen's "Par for each hole" section renders exactly 36 par inputs regardless of the course's actual hole count — reproduced on both a 9-hole and an 18-hole course, both showed 36 rows. High priority — functional bug. Fix is rendering-only: the par-input count should read the course's actual `holes` value, not a hardcoded 36. **Flag:** the original bug report also suggested adding a hole-count control to this screen — that would conflict with PRD §11.7, which states hole count is immutable post-creation and the edit screen must never offer a control for it. Scope this to the rendering bug only, not a new control. The round editor (History → past round → Edit) is confirmed unaffected — it already renders only the holes actually played.
+
+### 90. Header top padding on mobile — reduced, needs on-device confirmation
+From the 11 September 2026 UI/UX review. Reported across mobile screens, not confirmed at pixel level via desktop emulation (doesn't render iOS status bar/notch chrome). Fixed 11 September 2026: `PageHeader.jsx`'s top padding reduced `pt-10` → `pt-6` (an existing DESIGN.md spacing token, not an invented value). Still needs a quick on-device visual check to confirm it reads right with real iOS status-bar/notch chrome. Low priority.
+
+### 92. Edit Round screen reported too wide on iPhone (needs repro)
+From the 11 September 2026 UI/UX review. History → past round → Edit (the round editor, not the course editor). Not reproduced via 375px browser emulation — the page measured exactly viewport-width with no horizontal scroll. Possibly an iOS Safari-specific quirk (e.g. native number-input/stepper styling on the "− 3 +" hole boxes). Not actionable yet — needs an actual on-device screenshot before scoping a fix.
+
 ---
 
 ## Housekeeping & tech debt
 
 ### 25. Crisper course map image — blocked on a better source asset
 `public/course_map_v2.png` is only 443×600px (~444 KB). `CourseMapModal.jsx` displays it at ~320px wide and zooms to 4× (~1300px effective demand), so it is inherently soft on any retina screen — the modal code itself is fine. The fix is purely a better asset: a higher-resolution scan/export (ideally ≥1600px on the long edge) or an SVG/vector from the club. Nothing to do in code until that exists. Overlaps with #13 (official logo) and #1 as things to request from Bruntsfield in one go. (Distinct from #1, which is about when the map appears and its loading state.)
-
-### 35. Render/flow test coverage — harness landed, more flows to cover
-The React Testing Library harness is in (`vitest.setup.js`, `setupFiles` in `vite.config.js`, `@testing-library/react` + `jest-dom` + `user-event`). Covered so far: `ParDelta` (§5.3 notation + colour override), the `History` player filter (#51/#61), **the edit-past-round flow (#22)** — `Scorecard.edit.test.jsx` — the `CourseEdit` screen incl. its 401 branch (#75), **`Login.jsx`** + **`PageHeader`** (`Login.test.jsx` / `PageHeader.test.jsx`), and (8 Sep 2026) **SPA navigation** — `Scorecard.spa-nav.test.jsx` pins the #17 no-active-game bounce (effect-not-render, no React error) and `App.test.jsx` drives the router end to end: deep-linked `/scorecard` → Home (#17), a `popstate` bounce onto a param-less Setup discarding a stranded edit → History (#18), and plain page restore on `popstate` (#43). Still no render coverage for:
-- **`Setup` course creation** — the 9/18 radiogroup (#57) and the par stepper clamp (#58). The `<select value=… >` "+ New course" option is a command not a real selection, which `userEvent.selectOptions` / `fireEvent.change` don't drive cleanly in jsdom — needs either a small refactor of that control or a workaround before it's testable.
-- **`Login.jsx` authError-from-context path** — the `?auth=expired|error` redirect surfacing as an inline message. Needs App's loading gate simulated (Login only mounts after the auth check resolves), so it wasn't covered in the 8 Sep pass.
 
 ### 41. Page load performance pass
 Measure and tune actual load performance — Core Web Vitals (LCP, CLS, INP), bundle size (currently ~248 kB / ~76 kB gzip), font loading (three families via Google Fonts with `display=swap`), image weight (`course_map_v2.png` is ~455 kB), and Cloudflare Pages caching headers. Establish a baseline, fix the obvious wins, re-measure. Assistance requested. (The `performance-auditor` agent covers this.)

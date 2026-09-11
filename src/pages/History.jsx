@@ -8,16 +8,8 @@ import { normalizeDbGame, normalizeLocalGame } from '../utils/history.js'
 import { historyResultLabel } from '../utils/result.js'
 import { useAuth } from '../hooks/useAuth.jsx'
 
-export default function History({ navigate, goBack, params }) {
+export default function History({ navigate }) {
   const { user } = useAuth()
-  // History is reachable from Home OR the Bruntsfield course page (both via
-  // "Past Rounds", signed-in only). The back button used to hardcode
-  // "<- Home" and call goBack() unconditionally — since goBack() steps
-  // through *real* browser history, opening History from Bruntsfield then
-  // tapping "<- Home" actually landed back on Bruntsfield, not Home (#72).
-  // Context-aware like Info/Rules/Setup, so the label always matches goBack's
-  // real target.
-  const fromBruntsfield = params?.bruntsfield ?? false
 
   const [games, setGames]             = useState(() => user ? [] : getCompletedGames().map(normalizeLocalGame))
   const [loading, setLoading]         = useState(!!user)
@@ -25,6 +17,13 @@ export default function History({ navigate, goBack, params }) {
   const [courseFilter, setCourseFilter] = useState(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState(null)
   const cancelButtonRef = useRef(null)
+
+  // A reload, deep link, or restored tab always resets history state to depth
+  // 0 — there's nothing in-app to step back to, and no in-page back button any
+  // more (#89) for the case where there is. Read once on mount: this only
+  // needs to catch the "landed here with a blank history" case, not react to
+  // later in-app navigation (#89 fix-forward).
+  const [showHomeLink] = useState(() => (window.history.state?.depth ?? 0) === 0)
 
   function closeDeleteConfirm() {
     setConfirmDeleteId(null)
@@ -91,14 +90,14 @@ export default function History({ navigate, goBack, params }) {
 
       <PageHeader
         title="History"
-        backLabel={fromBruntsfield ? '← Course' : '← Home'}
-        onBack={() => goBack(fromBruntsfield ? 'bruntsfield' : 'home')}
+        onBack={showHomeLink ? () => navigate('home') : undefined}
+        backLabel="Home"
         right={user ? (
           <button
             onClick={() => navigate('setup', { pastRound: true })}
             className="font-ui text-xs tracking-[0.1em] uppercase font-semibold text-accent py-2 px-4 rounded-sm border border-accent active:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
-            + Add round
+            + Add
           </button>
         ) : null}
       />

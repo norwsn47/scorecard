@@ -10,7 +10,7 @@ import { shareScorecard } from '../utils/share.js'
 import { getActiveGame, getCompletedGames, markCompletedGameSynced } from '../utils/storage.js'
 import { useAuth } from '../hooks/useAuth.jsx'
 
-export default function Summary({ navigate, goBack, params }) {
+export default function Summary({ navigate, params }) {
   const { user }          = useAuth()
 
   // params.game is set on the normal finish-round flow (Scorecard ->
@@ -46,6 +46,16 @@ export default function Summary({ navigate, goBack, params }) {
   const [saving, setSaving]         = useState(false)
   const [editBlocked, setEditBlocked] = useState(false)
   const savingRef                   = useRef(false)
+
+  // A reload, deep link, or restored tab always resets history state to depth
+  // 0 — there's nothing in-app to step back to, and no in-page back button any
+  // more (#89) for the case where there is. Only relevant to the viewingSaved
+  // branch below (a round opened from History, or a synced round with no edit
+  // rights) — the post-finish flow always arrives at depth > 0, straight from
+  // Scorecard. Read once on mount: this only needs to catch the "landed here
+  // with a blank history" case, not react to later in-app navigation (#89
+  // fix-forward).
+  const [showHomeLink] = useState(() => (window.history.state?.depth ?? 0) === 0)
 
   if (!game) {
     navigate('home')
@@ -158,18 +168,24 @@ export default function Summary({ navigate, goBack, params }) {
   return (
     <div className="h-full bg-bg flex flex-col">
 
-      {/* Post-finish: "Done" top-right (saves + goes home). A round opened
-          from History: "← Rounds" left, "Edit" right. Composes the shared
-          PageHeader rather than hand-rolling its own copy (#69) — this used
-          to duplicate PageHeader's markup exactly, back when the header
-          centred its title on an absolute layer above the side slots; #85
-          replaced that with the three-slot flex layout, so there's nothing
-          left to drift out of sync. */}
+      {/* Post-finish: "Done" top-right (saves + goes home), no back slot — this
+          flow always arrives straight from Scorecard (depth > 0), where native
+          back genuinely works. A round opened from History (viewingSaved):
+          "Edit" top-right; no in-page back button either (#89, the phone's own
+          back navigation covers stepping back to the list) except when this
+          screen was reached with nothing in-app to step back to (a reload, a
+          deep link, or a restored tab all reset history depth to 0) — then a
+          "Home" fallback appears on the left so there's still a way out.
+          Composes the shared PageHeader rather than hand-rolling its own copy
+          (#69) — this used to duplicate PageHeader's markup exactly, back when
+          the header centred its title on an absolute layer above the side
+          slots; #85 replaced that with the three-slot flex layout, so
+          there's nothing left to drift out of sync. */}
       <PageHeader
         title={game.courseName || undefined}
         subtitle={formatDateOnly(game.completedAt)}
-        onBack={viewingSaved ? () => goBack('history') : undefined}
-        backLabel="← Rounds"
+        onBack={viewingSaved && showHomeLink ? () => navigate('home') : undefined}
+        backLabel="Home"
         right={
           viewingSaved ? (
             canEdit && (

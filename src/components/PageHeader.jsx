@@ -11,12 +11,14 @@
 // The header is three flex slots on one row — left, centre, right — with no
 // absolute positioning. The side slots size to their content and never
 // shrink; the centre slot takes whatever width they leave (`flex-1
-// min-w-0`) and truncates its <h1> and subtitle into it. Because the centre
-// sits between the two side slots rather than on a layer above them, a long
-// back label can never fall under a button — instead it eats into the
-// centre title's width, so a back label should stay within about 12
-// characters including the arrow and its space (DESIGN.md "Back-label
-// length budget").
+// min-w-0`). Its <h1> wraps onto a second line rather than clipping (up to
+// two lines, `line-clamp-2` — a long course name reads in full instead of
+// ending in an ellipsis, #87); the subtitle stays a single truncated line.
+// Because the centre sits between the two side slots rather than on a layer
+// above them, a long back label can never fall under a button — instead it
+// eats into the centre title's width, so a back label should stay within
+// about 12 characters including the arrow and its space (DESIGN.md
+// "Back-label length budget").
 //
 // Invisible mirror: when the centre slot has content (a title or a
 // subtitle) and exactly one side slot has real content, the empty slot
@@ -60,14 +62,14 @@ export default function PageHeader({ title, subtitle, onBack, backLabel = '← B
   const showMirror = Boolean(title || subtitle) && hasBack !== hasRight
 
   return (
-    <header className="flex items-center gap-3 px-5 pt-10 pb-4 border-b border-border shrink-0">
+    <header className="flex items-center gap-3 px-5 pt-6 pb-4 border-b border-border shrink-0">
       <div className="shrink-0 flex justify-start">
         {backButton || (showMirror && !hasBack ? mirror(right) : null)}
       </div>
 
       <div className="flex-1 min-w-0 text-center">
         {title ? (
-          <h1 className="font-display italic text-2xl text-text truncate">{title}</h1>
+          <h1 className="font-display italic text-2xl text-text line-clamp-2">{title}</h1>
         ) : null}
         {subtitle && (
           <p className="font-ui text-xs tracking-[0.08em] uppercase text-muted mt-0.5 truncate">{subtitle}</p>

@@ -32,6 +32,20 @@ const round = (id, players, completedAt) => ({
   holePars: [3, 3],
 })
 
+describe('History — Home fallback on depth 0 (#89 fix-forward)', () => {
+  it('shows a "Home" link when the app loads straight onto History (depth 0 — e.g. a reload or deep link)', () => {
+    window.history.replaceState({ depth: 0 }, '', '/history')
+    renderHistory()
+    expect(screen.getByRole('button', { name: 'Home' })).toBeInTheDocument()
+  })
+
+  it('hides the "Home" link when there is somewhere in-app to go back to (depth > 0)', () => {
+    window.history.replaceState({ depth: 1 }, '', '/history')
+    renderHistory()
+    expect(screen.queryByRole('button', { name: 'Home' })).not.toBeInTheDocument()
+  })
+})
+
 describe('History — player filter (#51 / #61)', () => {
   it('shows no player-filter row when only one player appears across rounds', () => {
     seedLocalGames([round('g1', ['Ann'], '2026-08-01T10:00:00.000Z')])

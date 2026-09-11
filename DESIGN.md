@@ -124,7 +124,7 @@ Base unit: 4px (Tailwind default).
 | Context | Value |
 |---|---|
 | Page horizontal padding | `px-5` (20px) or `px-6` (24px) |
-| Page header vertical | `pt-10 pb-4` |
+| Page header vertical | `pt-6 pb-4` |
 | Primary button vertical | `py-4` (16px) |
 | Secondary / input vertical | `py-3` (12px) |
 | Items in a list | `space-y-3` (12px gap) |
@@ -134,7 +134,7 @@ Base unit: 4px (Tailwind default).
 | Table cell (vertical) | `py-3` |
 | Table cell (horizontal) | `px-2` (hole col), `px-1` (player cols) |
 
-`pt-10 pb-4` corrects a doc/reality mismatch found in this pass — the table previously read `pt-12 pb-6`, but `PageHeader.jsx` has shipped `pt-10 pb-4` throughout; the code is taken as the source of truth here.
+`pt-6 pb-4` matches what `PageHeader.jsx` ships — the code is taken as the source of truth here. (This table read `pt-12 pb-6`, then briefly `pt-10 pb-4`, in earlier passes; both were doc/reality mismatches corrected against the shipped component.)
 
 ---
 
@@ -288,30 +288,30 @@ with remove button: pr-10   without: pr-4
 **One structural layout, always.** Three flex slots on a single row — left, centre, right — with no absolute positioning. This replaces the previous `absolute inset-x-0 text-center px-24` title, which floated on a layer above the side slots and overlapped them whenever a back label ran long, or a back label and a right action were both present (#85).
 
 ```
-header:  flex items-center gap-3 px-5 pt-10 pb-4 border-b border-border shrink-0
+header:  flex items-center gap-3 px-5 pt-6 pb-4 border-b border-border shrink-0
 left:    shrink-0 flex justify-start      /* back button, or an invisible mirror — see below */
 centre:  flex-1 min-w-0 text-center       /* <h1> + optional subtitle */
 right:   shrink-0 flex justify-end        /* the `right` prop, or an invisible mirror */
 ```
 
 - **The side slots are sized to their content and never shrink** (`shrink-0`). The back button and any right action always keep their full intrinsic width — they are never clipped, wrapped or truncated.
-- **The centre slot takes all the width the side slots leave** (`flex-1 min-w-0`) and its text truncates. It is the only element in the header allowed to truncate.
+- **The centre slot takes all the width the side slots leave** (`flex-1 min-w-0`). The title wraps to two lines (`line-clamp-2`) rather than clipping; the subtitle truncates to one line. Between them, this is the only place in the header where text doesn't reliably fit at its full intrinsic width.
 - **Collision is structurally impossible** — the centre is a real flex child sitting *between* the two side slots, not a layer on top of them, so it can never fall under a button.
 
 **Keeping the title centred on the header — the invisible mirror.** When a title is present and exactly one side slot has real content, the empty side renders an `aria-hidden`, `invisible`, `pointer-events-none` copy of the other side's node. The two side slots are then equal width, so the centre slot is centred on the header rather than merely in the gap between the buttons. When *both* side slots carry real content (Scorecard, History, Summary), the title centres in the space between them; on those screens the label and the title are both short, so the offset from true centre is a few pixels and is accepted. The mirror is only rendered when there is a title to centre.
 
 **Intended markup** (this reconciles the doc/code drift the review flagged — `truncate` was documented on the wrapper but shipped on the inner elements, and `pointer-events-none` was documented but never shipped):
 ```
-<header className="flex items-center gap-3 px-5 pt-10 pb-4 border-b border-border shrink-0">
+<header className="flex items-center gap-3 px-5 pt-6 pb-4 border-b border-border shrink-0">
   <div className="shrink-0 flex justify-start">{ back button | mirror-of-right | null }</div>
   <div className="flex-1 min-w-0 text-center">
-    {title    && <h1 className="font-display italic text-2xl text-text truncate">{title}</h1>}
+    {title    && <h1 className="font-display italic text-2xl text-text line-clamp-2">{title}</h1>}
     {subtitle && <p  className="font-ui text-xs tracking-[0.08em] uppercase text-muted mt-0.5 truncate">{subtitle}</p>}
   </div>
   <div className="shrink-0 flex justify-end">{ right | mirror-of-back | null }</div>
 </header>
 ```
-`truncate` sits on the `<h1>` and the subtitle `<p>` — the text elements — never on the centre wrapper. There is no `pointer-events-none` in the header any more: it was only there to let taps fall through the old absolute title layer to the buttons underneath, and that layer no longer exists.
+`line-clamp-2` sits on the `<h1>` — a long title (a course name) wraps to two lines instead of clipping with an ellipsis. `truncate` sits on the subtitle `<p>` only. Neither sits on the centre wrapper. There is no `pointer-events-none` in the header any more: it was only there to let taps fall through the old absolute title layer to the buttons underneath, and that layer no longer exists.
 
 - **Back button:** `py-3 min-h-[44px] flex items-center whitespace-nowrap text-muted font-ui text-sm tracking-[0.08em] uppercase active:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40` — `←` prefix, no button chrome, **never truncates, never wraps**.
 - **Right slot:** optional — a Header action button (Scorecard Finish/Save, History "+ Add round") or a plain text link (Summary Edit/Done). `whitespace-nowrap`, **never truncates**; its touch target comes from whatever is passed in.
@@ -321,7 +321,7 @@ right:   shrink-0 flex justify-end        /* the `right` prop, or an invisible m
 
 **Never truncate a header button — use a shorter accurate word instead.** A standing rule, not a one-off fix. The back/right slots used to sit behind a fixed 72px width with `truncate`, which silently clipped "← Bruntsfield" down to the meaningless "← BRUNT". The fix was not a wider box — it was renaming the destination to a word that actually fits: **"Bruntsfield" became "Course"** everywhere in the app (it's the only course today; revisit if a second course ships). The slots now carry no width cap and `whitespace-nowrap`, so a button can never clip — the corollary is that a caller must never hand it a label that's genuinely too long for the space. If a destination's real name won't fit, shorten the *word*. Never reintroduce `truncate` on a button label.
 
-**Back-label length budget.** With this layout a long back label no longer collides with anything — instead it eats into the centre title's width, and on a screen whose title is a course name the title can compress to almost nothing. So the budget stays, restated against the new geometry: **after the arrow, a back label is one word where possible and two words at the most — about 12 characters including the arrow and its space.** "← Home", "← Rounds", "← History", "← Summary", "← Course", "← Edit Round", "← New Game" all pass. **"← Add Past Round" (16 characters) is the one shipped label over budget** (`src/pages/CourseEdit.jsx:25`, the `pastRound` branch) — shorten it to **"← Past round"** (the other two CourseEdit branches, "← Edit Round" and "← New Game", already fit and stay as they are). A shortened label like "← Past round" or "← Course" still points at the right screen; it does not have to be a verbatim copy of that screen's title. The old `px-24` (96px) title clearance and the fixed ~198px title budget are both gone: the title simply takes the space the side slots leave, and truncates.
+**Back-label length budget.** With this layout a long back label no longer collides with anything — instead it eats into the centre title's width, and on a screen whose title is a course name the title can compress to almost nothing. So the budget stays, restated against the new geometry: **after the arrow, a back label is one word where possible and two words at the most — about 12 characters including the arrow and its space.** "← Home", "← Rounds", "← History", "← Summary", "← Course", "← Edit Round", "← New Game" all pass. **"← Add Past Round" (16 characters) is the one shipped label over budget** (`src/pages/CourseEdit.jsx:25`, the `pastRound` branch) — shorten it to **"← Past round"** (the other two CourseEdit branches, "← Edit Round" and "← New Game", already fit and stay as they are). A shortened label like "← Past round" or "← Course" still points at the right screen; it does not have to be a verbatim copy of that screen's title. The old `px-24` (96px) title clearance and the fixed ~198px title budget are both gone: the title simply takes the space the side slots leave, wrapping to a second line rather than clipping if it needs to.
 
 ### Inline link tap targets
 

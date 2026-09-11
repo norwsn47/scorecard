@@ -4,9 +4,9 @@ import userEvent from '@testing-library/user-event'
 import PageHeader from './PageHeader.jsx'
 
 // PageHeader is the shared boxed header bar: three flex slots on one row —
-// left, centre, right — with the centre title truncating into whatever
-// width the (never-shrinking) side slots leave (#85). The behaviours worth
-// pinning:
+// left, centre, right — with the centre title wrapping (up to two lines)
+// into whatever width the (never-shrinking) side slots leave (#85, #87). The
+// behaviours worth pinning:
 //  - the optional `title` skips the <h1> entirely when falsy so a caller
 //    like Summary doesn't reserve a blank line (#69)
 //  - `backLabel` is rendered verbatim (caller owns the arrow) and the back
@@ -70,7 +70,8 @@ describe('PageHeader structure (#85)', () => {
     const centre = header.children[1]
     expect(centre.className).toContain('flex-1')
     expect(centre.className).not.toContain('truncate')
-    expect(screen.getByRole('heading', { level: 1 }).className).toContain('truncate')
+    // Title wraps up to two lines rather than clipping to an ellipsis (#87).
+    expect(screen.getByRole('heading', { level: 1 }).className).toContain('line-clamp-2')
     // No absolute title layer, no pointer-events-none anywhere.
     expect(container.querySelector('.absolute')).toBeNull()
     expect(header.className).not.toContain('pointer-events-none')
