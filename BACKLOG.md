@@ -109,9 +109,6 @@ From the 11 September 2026 UI/UX review, reproduced on "Bruntsfield Links" (mean
 ### 90. Header top padding on mobile — reduced, needs on-device confirmation
 From the 11 September 2026 UI/UX review. Reported across mobile screens, not confirmed at pixel level via desktop emulation (doesn't render iOS status bar/notch chrome). Fixed 11 September 2026: `PageHeader.jsx`'s top padding reduced `pt-10` → `pt-6` (an existing DESIGN.md spacing token, not an invented value). Still needs a quick on-device visual check to confirm it reads right with real iOS status-bar/notch chrome. Low priority.
 
-### 92. Edit Round screen reported too wide on iPhone (needs repro)
-From the 11 September 2026 UI/UX review. History → past round → Edit (the round editor, not the course editor). Not reproduced via 375px browser emulation — the page measured exactly viewport-width with no horizontal scroll. Possibly an iOS Safari-specific quirk (e.g. native number-input/stepper styling on the "− 3 +" hole boxes). Not actionable yet — needs an actual on-device screenshot before scoping a fix.
-
 ---
 
 ## Housekeeping & tech debt
