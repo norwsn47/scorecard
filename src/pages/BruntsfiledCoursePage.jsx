@@ -133,7 +133,7 @@ export default function BruntsfiledCoursePage({ navigate }) {
             Bruntsfield otherwise relies on the phone browser's back nav. */}
         <div className="pt-4 text-center">
           <button
-            onClick={() => navigate('home')}
+            onClick={() => { track('Bruntsfield Home Link Clicked'); navigate('home') }}
             className="inline-block py-3 -my-3 font-ui text-xs text-muted active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             ← Golf Scorecard home
