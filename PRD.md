@@ -2,7 +2,7 @@
 ## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
 **Version:** 2.0
-**Last updated:** 8 September 2026
+**Last updated:** 11 September 2026
 
 > The rationale and section-by-section history of past updates lives in `CHANGELOG.md`, not here. This line is just a date.
 
@@ -160,6 +160,8 @@ A **Share** button appears on the end-of-game summary screen (see 4.4). Tapping 
 
 Accessed via the **ⓘ** icon in the top-right corner of the home screen (see 4.1). No first-launch prompt — passive access only.
 
+**Scope split with the privacy page:** this section is the canonical source for what the Information page itself contains. §11.12 is the canonical source for what the linked "Your data" privacy page contains. The two are deliberately different documents doing different jobs — this page is a light, in-app "about the app / about the course" surface; the privacy page is the full data-handling statement. Detail belongs in whichever section owns it, not both — see the single data line below, which is this page's only data-handling content.
+
 **Contents (as built):**
 - "Why we made this" — a short editorial note
 - Course section:
@@ -169,11 +171,11 @@ Accessed via the **ⓘ** icon in the top-right corner of the home screen (see 4.
   - Permission line: "The course map is reproduced with permission from Bruntsfield Short Hole Golf Club."
 - "About Outbuild" credit
 - Account section: when signed in, shows the user's name (if set) and email, with a "Sign out" action and a link into the Settings panel (§11.14) for editing name, changing email or deleting the account; when signed out, a "Sign in or create account" prompt. The Settings entry point also lives on Home (§4.1, §11.14)
-- Data line: "Your data is handled under UK GDPR." with a "Read our privacy policy" link to the "Your data" page (§11.12)
+- Data line: "Your data is handled under UK GDPR." with a "Read our privacy policy" link to the "Your data" page — this one line is the full extent of this page's data-handling content; everything else about what is stored, who processes it and for how long is owned by §11.12, not repeated here
 
-The original v1.x plan for this page carried an inline "stored locally, nothing sent to a server, no third-party services" explanation. That is only true for quick-play; once accounts and the D1 database landed (§11), the detail moved to the dedicated privacy page rather than an inline disclaimer.
+The original v1.x plan for this page carried an inline "stored locally, nothing sent to a server, no third-party services" explanation. That is only true for quick-play; once accounts and the D1 database landed (§11), the detail moved to the dedicated privacy page rather than an inline disclaimer — this page deliberately stayed light-touch rather than growing a second, competing data explanation of its own.
 
-**Note for maintainers:** If analytics is ever added (see BACKLOG.md), this PRD section, the privacy page, and any in-app disclaimer text must all be updated to reflect what data is collected and by whom.
+**Note for maintainers:** If analytics is ever added (see BACKLOG.md), this data line, the privacy page (§11.12), and any in-app disclaimer text must all be updated to reflect what data is collected and by whom.
 
 ### 4.9 Course rules
 
@@ -382,7 +384,7 @@ Scorecard Plus is the logged-in layer of the app. It adds persistent history, cu
 - **API layer:** Cloudflare Pages Functions — serverless functions co-deployed with the Cloudflare Pages site, living in the `/functions` directory
 - **Database:** Cloudflare D1 — SQLite-compatible database, bound to the Pages project via wrangler
 - **Email:** Resend — transactional email for magic link delivery. Configured via the `RESEND_API_KEY` environment variable (§11.11)
-- **Session management:** D1 sessions table + HttpOnly cookie — a UUID session token is stored in D1; the browser receives it as a `Set-Cookie: session=<token>; HttpOnly; Secure; SameSite=Strict` header on verification
+- **Session management:** D1 sessions table + HttpOnly cookie — a UUID session token is stored in D1; the browser receives it as a `Set-Cookie: session=<token>; HttpOnly; Secure; SameSite=Lax` header on verification. `Lax` (not `Strict`) so the cookie is still sent when a user arrives via an external link (e.g. the magic-link email itself), which `Strict` would block on first navigation
 
 ---
 
@@ -583,9 +585,11 @@ Cookie name and session/token expiry are hardcoded in the API layer (not env var
 
 ---
 
-### 11.12 Information page and privacy policy (v2.0)
+### 11.12 Privacy policy ("Your data" page)
 
-The data story lives on a dedicated **"Your data"** privacy page (`Privacy.jsx`), reached from a "Read our privacy policy" link on the information page (§4.8). It states that logged-in users' rounds and scores are stored in a Cloudflare D1 database, that Resend processes email addresses to deliver the sign-in link, that neither provider uses the data for its own purposes, retention (account data kept while in use; sessions expire after 30 days; sign-in link records are pruned within ~24h of expiry), and **self-serve account deletion** — a signed-in user can delete their account and all associated rounds and courses immediately from the Settings panel (§11.14); emailing `scorecard@outbuild.uk` remains a fallback for anyone who can't sign in. `Privacy.jsx`'s "How long we keep it" section is updated from the old "email us and we'll do it within 30 days" wording to describe the self-serve route with the email as a fallback. Deletion is immediate and irreversible; quick-play history stored locally on a device is not part of the account and is not affected (§11.14). The information page itself no longer carries an inline data disclaimer — it just links here (§4.8).
+The full data-handling statement lives on a dedicated **"Your data"** privacy page (`Privacy.jsx`), reached from the single "Read our privacy policy" link on the information page (§4.8). This section is the canonical source for that page's content — §4.8 owns the Information page itself and does not restate any of this; see the "Scope split" note there.
+
+It states that logged-in users' rounds and scores are stored in a Cloudflare D1 database, that Resend processes email addresses to deliver the sign-in link, that neither provider uses the data for its own purposes, retention (account data kept while in use; sessions expire after 30 days; sign-in link records are pruned within ~24h of expiry), and **self-serve account deletion** — a signed-in user can delete their account and all associated rounds and courses immediately from the Settings panel (§11.14); emailing `scorecard@outbuild.uk` remains a fallback for anyone who can't sign in. `Privacy.jsx`'s "How long we keep it" section is updated from the old "email us and we'll do it within 30 days" wording to describe the self-serve route with the email as a fallback. Deletion is immediate and irreversible; quick-play history stored locally on a device is not part of the account and is not affected (§11.14).
 
 The contact address is `scorecard@outbuild.uk` on the privacy page. Whether the information page also needs its own contact link, and the final address, are tracked in BACKLOG.md (#12).
 

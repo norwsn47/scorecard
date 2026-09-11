@@ -5,9 +5,26 @@
 > Git history is the full record; this file is for context and decision rationale that commit messages don't carry.
 > Update the date below whenever you add an entry.
 
-**Last updated:** 9 September 2026
+**Last updated:** 11 September 2026
 
 ---
+
+## 11 September 2026 (PRD housekeeping — Info page vs privacy page split, #60)
+
+- **PRD §4.8 (Information page) and §11.12 (privacy page) made explicitly
+  complementary, not just individually accurate.** Both sections already
+  described their own content correctly, but the split between them was
+  implicit and their content partly restated the same history in two places.
+  §4.8 now opens with a "Scope split with the privacy page" note naming it as
+  the canonical source for the Information page's own contents, and its
+  single data-handling line is now explicit that it is the *only*
+  data-handling content that page carries. §11.12 is retitled from
+  "Information page and privacy policy (v2.0)" to **"Privacy policy ('Your
+  data' page)"** and now opens by stating it is the canonical source for
+  `Privacy.jsx`'s content, deferring to §4.8 for the Information page itself.
+  The sentence in §11.12 duplicating §4.8's "no longer carries an inline data
+  disclaimer" history was removed, since that history now lives once, in
+  §4.8. Doc-only — no code or UI change. Closes BACKLOG #60.
 
 ## 9 September 2026 (header layout rule #85, email-field disclosure #84)
 

@@ -110,23 +110,16 @@ Surfaced in the #48–#55 code review. `buildEditGame` sizes the edit grid to th
 ### 25. Crisper course map image — blocked on a better source asset
 `public/course_map_v2.png` is only 443×600px (~444 KB). `CourseMapModal.jsx` displays it at ~320px wide and zooms to 4× (~1300px effective demand), so it is inherently soft on any retina screen — the modal code itself is fine. The fix is purely a better asset: a higher-resolution scan/export (ideally ≥1600px on the long edge) or an SVG/vector from the club. Nothing to do in code until that exists. Overlaps with #13 (official logo) and #1 as things to request from Bruntsfield in one go. (Distinct from #1, which is about when the map appears and its loading state.)
 
-### 60. Product-owner pass over §4.8 and its overlap with the privacy page
-Split out from the old #59. §4.8 (Information page) and §11.12 / the "Your data" privacy page (`Privacy.jsx`) describe overlapping things — what the info page contains, what the privacy page contains, where the data explanation lives. The 3 Sep cleanup made both accurate individually but the split between them is implicit. A proper product-owner pass would make §4.8 and §11.12 explicitly complementary. Low priority — both are accurate as they stand.
-
 ### 35. Render/flow test coverage — harness landed, more flows to cover
 The React Testing Library harness is in (`vitest.setup.js`, `setupFiles` in `vite.config.js`, `@testing-library/react` + `jest-dom` + `user-event`). Covered so far: `ParDelta` (§5.3 notation + colour override), the `History` player filter (#51/#61), **the edit-past-round flow (#22)** — `Scorecard.edit.test.jsx` — the `CourseEdit` screen incl. its 401 branch (#75), **`Login.jsx`** + **`PageHeader`** (`Login.test.jsx` / `PageHeader.test.jsx`), and (8 Sep 2026) **SPA navigation** — `Scorecard.spa-nav.test.jsx` pins the #17 no-active-game bounce (effect-not-render, no React error) and `App.test.jsx` drives the router end to end: deep-linked `/scorecard` → Home (#17), a `popstate` bounce onto a param-less Setup discarding a stranded edit → History (#18), and plain page restore on `popstate` (#43). Still no render coverage for:
 - **`Setup` course creation** — the 9/18 radiogroup (#57) and the par stepper clamp (#58). The `<select value=… >` "+ New course" option is a command not a real selection, which `userEvent.selectOptions` / `fireEvent.change` don't drive cleanly in jsdom — needs either a small refactor of that control or a workaround before it's testable.
 - **`Login.jsx` authError-from-context path** — the `?auth=expired|error` redirect surfacing as an inline message. Needs App's loading gate simulated (Login only mounts after the auth check resolves), so it wasn't covered in the 8 Sep pass.
-Fold #58 in here (par stepper — `ParDelta` markup is now covered; the stepper isn't).
 
 ### 41. Page load performance pass
 Measure and tune actual load performance — Core Web Vitals (LCP, CLS, INP), bundle size (currently ~248 kB / ~76 kB gzip), font loading (three families via Google Fonts with `display=swap`), image weight (`course_map_v2.png` is ~455 kB), and Cloudflare Pages caching headers. Establish a baseline, fix the obvious wins, re-measure. Assistance requested. (The `performance-auditor` agent covers this.)
 
 
 
-
-### 58. Par stepper render test — folded into #35
-The `ParDelta` markup is now covered (`src/components/ParDelta.test.jsx`). The `Setup.jsx` `stepPar` 2–7 clamp still isn't — tracked under #35 (blocked on the "+ New course" select being hard to drive in jsdom).
 
 ### 78. `BruntsfiledCoursePage.jsx` discreet-link follow-ups
 The tap-target growth shipped 8 September 2026 - all three foot-of-page links ("Last round", "Sign in", "← Golf Scorecard home") now use `inline-block py-3 -my-3` with the wrappers spaced so the hit boxes don't overlap. Still open, all low priority: the home link has no `track()` analytics event (other nav actions on the page do); there is no render/interaction test for `BruntsfiledCoursePage` (its conditional links - active game, last round, signed-in Past Rounds - are all uncovered); and the discreet-link stack now sits closer to the primary-button block above (~4px hit-box clearance) than the links sit to each other (~32px) - deliberate, but if a 4th discreet link is ever added the spacing model should be revisited.
@@ -149,9 +142,6 @@ Minor items logged from the Phase 2 review of `feat/user-profile-foundation`; no
 From the #84 review (email-disclosure, CLEAR WITH NOTES, 9 Sep 2026), same low-priority tier:
 - **No focus-return when the "Change email address" form collapses.** Tapping "Keep my current email" unmounts the form and focus falls to `<body>` — should return to the "Change email address" trigger. Same class as the focus-return gap above; the disclosure adds a second instance.
 - **"Keep my current email" link is ~40px tall** (`Settings.jsx` ~257-264, `py-2.5` + `text-sm`), just under the 44px guideline. Identical to the existing "Delete my account" link right below it (#34 territory), so consistent with the established pattern rather than new.
-
-### 81. PRD §11.2 says `SameSite=Strict`; the session cookie has always been `SameSite=Lax`
-`verify.js`, `logout.js` and the new `DELETE /api/users` all set `session=…; SameSite=Lax`, and have since launch — magic-link sign-in returning from an email client needs at least `Lax`. PRD §11.2 still documents `Strict`. The code is right; this is a PRD-to-match fix. Reconcile §11.2 to `Lax` with a one-line note on why. Doc-only, low priority.
 
 ### 82. Email-change / account-deletion edge cases (from the #3 backend review)
 Two narrow wrinkles in `functions/api/users/index.js` / `confirm-email.js`, both low priority, logged so they aren't lost:
