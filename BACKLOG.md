@@ -70,7 +70,7 @@ When signed in, Home shows a "signed in as…" state plus a standalone **Setting
 - **(b)** GA4 in a cookieless / consent-exempt configuration — no banner, but reduced data; still needs the privacy copy updated to name GA as a processor.
 - **(c)** A cookieless tool (Plausible / Fathom) — no banner, minimal privacy-copy change. **The scaffolding already targets this route:** `src/utils/analytics.js` is a `track()` wrapper around `window.plausible?.(...)` (currently a silent no-op) and `index.html:32` has the Plausible `<script>` commented out, ready to enable.
 
-**Already done (whichever route is chosen):** events are instrumented app-wide — New Game Started, Game Completed (player count, holes), Scorecard Shared, Game Edited.
+**Already done (whichever route is chosen):** events are instrumented app-wide — New Game Started, Game Completed (player count, holes), Scorecard Shared, Game Edited, Bruntsfield Home Link Clicked.
 
 **Build steps once the route is chosen:**
 - Wire the tool: for GA, swap `analytics.js` to the `gtag` API and add the script to `index.html`; for Plausible, just uncomment `index.html:32` and set `data-domain`. Create the account either way.
@@ -121,8 +121,8 @@ Measure and tune actual load performance — Core Web Vitals (LCP, CLS, INP), bu
 
 
 
-### 78. `BruntsfiledCoursePage.jsx` discreet-link follow-ups
-The tap-target growth shipped 8 September 2026 - all three foot-of-page links ("Last round", "Sign in", "← Golf Scorecard home") now use `inline-block py-3 -my-3` with the wrappers spaced so the hit boxes don't overlap. Still open, all low priority: the home link has no `track()` analytics event (other nav actions on the page do); there is no render/interaction test for `BruntsfiledCoursePage` (its conditional links - active game, last round, signed-in Past Rounds - are all uncovered); and the discreet-link stack now sits closer to the primary-button block above (~4px hit-box clearance) than the links sit to each other (~32px) - deliberate, but if a 4th discreet link is ever added the spacing model should be revisited.
+### 78. `BruntsfiledCoursePage.jsx` discreet-link spacing (residual)
+The tap-target growth shipped 8 September 2026 - all three foot-of-page links ("Last round", "Sign in", "← Golf Scorecard home") now use `inline-block py-3 -my-3` with the wrappers spaced so the hit boxes don't overlap. The missing `track()` event and missing render/interaction test were fixed 11 September 2026 (`BruntsfiledCoursePage.test.jsx` added; home link now fires `Bruntsfield Home Link Clicked`, the first click/nav-exit event in an otherwise domain-state-event taxonomy - worth a glance if a second one shows up). Still open, low priority: the discreet-link stack sits closer to the primary-button block above (~4px hit-box clearance) than the links sit to each other (~32px) - deliberate, but if a 4th discreet link is ever added the spacing model should be revisited.
 
 ### 79. Magic-link abuse protection — revisit if abuse is observed
 #14 (shipped 8 September 2026) added a per-email throttle: `POST /api/auth/request-link` rejects with `429` at 5+ unclaimed links per address per 15 min. Residual surface: ~480 emails/day to a single targeted inbox is still possible, and there is no global or per-IP cap (magic_tokens deliberately stores no IP), so distributed abuse across many victim addresses is unthrottled, and the throttle is soft under concurrency (TOCTOU — N parallel requests can each read a count under the cap). All acceptable at current scale. If abuse is seen: add Cloudflare Turnstile on the login form, or a Cloudflare WAF rate-limit rule on the endpoint. Separately: the #14 window relies on `magic_tokens.expires_at` being exactly issued + 15 min — if a longer-lived link type is ever added, give the table a real `created_at` column so the throttle can be explicit. Low priority until abuse is observed.
