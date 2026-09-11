@@ -6,10 +6,11 @@ import { useAuth } from '../hooks/useAuth.jsx'
 // Reachable only when signed in — from the Home indicator (§4.1) or the Info
 // page Account section (§4.8). A signed-out visitor hitting /settings directly
 // bounces to Home from an effect, mirroring the Scorecard no-game guard (#17).
-
-// The back label names the screen goBack() will actually land on, like
-// Info / Privacy / Rules.
-const FROM_LABEL = { home: 'Home', info: 'Info' }
+// No in-page back button for normal in-app navigation (#89) — the phone's
+// own back navigation covers stepping back to wherever this was opened from.
+// A reload, deep link, or restored tab resets history depth to 0 though, with
+// nothing in-app to step back to — a "Home" fallback covers that case (see
+// showHomeLink below).
 
 const EMAIL_ERROR = {
   409: 'That address is already tied to another account.',
@@ -17,11 +18,8 @@ const EMAIL_ERROR = {
   500: 'Something went wrong sending the confirmation email. Please try again in a moment.',
 }
 
-export default function Settings({ navigate, goBack, params }) {
+export default function Settings({ navigate }) {
   const { user, loading, updateProfile, deleteAccount } = useAuth()
-
-  const from = params?.from ?? 'home'
-  const backLabel = `← ${FROM_LABEL[from] ?? 'Home'}`
 
   // Signed-out guard — bounce from an effect, never inline during render
   // (navigate() sets state on the parent). Deleting the account also drops
@@ -29,6 +27,13 @@ export default function Settings({ navigate, goBack, params }) {
   useEffect(() => {
     if (!loading && !user) navigate('home')
   }, [loading, user]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // A reload, deep link, or restored tab always resets history state to depth
+  // 0 — there's nothing in-app to step back to, and no in-page back button any
+  // more (#89) for the case where there is. Read once on mount: this only
+  // needs to catch the "landed here with a blank history" case, not react to
+  // later in-app navigation (#89 fix-forward).
+  const [showHomeLink] = useState(() => (window.history.state?.depth ?? 0) === 0)
 
   // ── Name ──────────────────────────────────────────────
   const [name, setName]           = useState(user?.name ?? '')
@@ -156,8 +161,8 @@ export default function Settings({ navigate, goBack, params }) {
 
       <PageHeader
         title="Settings"
-        backLabel={backLabel}
-        onBack={() => goBack(from)}
+        onBack={showHomeLink ? () => navigate('home') : undefined}
+        backLabel="Home"
       />
 
       <main className="flex-1 overflow-y-auto px-5 pt-6 pb-14 space-y-8 max-w-sm mx-auto w-full">

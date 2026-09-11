@@ -22,7 +22,9 @@ export default function CourseEdit({ navigate, params }) {
   const setupGame  = params?.game ?? null
   const bruntsfield = params?.bruntsfield ?? false
 
-  const backLabel = editRound ? '← Edit Round' : pastRound ? '← Past round' : '← New Game'
+  // Where a successful save returns to — the exact Setup screen the user
+  // came from. No in-page back button any more (#89); the phone's own back
+  // navigation covers stepping back.
   function backToSetup() {
     navigate('setup', { editRound, pastRound, game: setupGame, bruntsfield })
   }
@@ -131,12 +133,7 @@ export default function CourseEdit({ navigate, params }) {
   return (
     <div className="h-full bg-bg flex flex-col">
 
-      <PageHeader
-        title={course?.name}
-        subtitle="Edit course"
-        backLabel={backLabel}
-        onBack={backToSetup}
-      />
+      <PageHeader title={course?.name} subtitle="Edit course" />
 
       <main className="flex-1 overflow-y-auto px-5 pt-6 pb-10 w-full space-y-3">
 

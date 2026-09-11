@@ -58,6 +58,22 @@ describe('Settings (#4)', () => {
     expect(screen.getByText('jane@example.com')).toBeInTheDocument()
   })
 
+  it('shows a "Home" link when the app loads straight onto Settings (depth 0 — e.g. a reload or deep link)', async () => {
+    window.history.replaceState({ depth: 0 }, '', '/settings')
+    mountFetch()
+    renderSettings()
+    await screen.findByRole('heading', { name: 'Settings' })
+    expect(screen.getByRole('button', { name: 'Home' })).toBeInTheDocument()
+  })
+
+  it('hides the "Home" link when there is somewhere in-app to go back to (depth > 0)', async () => {
+    window.history.replaceState({ depth: 1 }, '', '/settings')
+    mountFetch()
+    renderSettings()
+    await screen.findByRole('heading', { name: 'Settings' })
+    expect(screen.queryByRole('button', { name: 'Home' })).not.toBeInTheDocument()
+  })
+
   it('bounces to Home when there is no signed-in user', async () => {
     mountFetch({ user: null })
     const { navigate } = renderSettings()
