@@ -11,12 +11,27 @@ import { useAuth } from '../hooks/useAuth.jsx'
 // between them. #85 removed Login's local hand-rolled copy, the last one in
 // the app.
 
+const RESEND_COOLDOWN_SECONDS = 30
+
 export default function Login({ navigate, goBack }) {
   const { authError, setAuthError } = useAuth()
   const [email, setEmail]           = useState('')
   const [sending, setSending]       = useState(false)
   const [sent, setSent]             = useState(false)
   const [error, setError]           = useState(null)
+
+  // #9 — resend link on the confirmation screen (PRD §11.4.2). Local,
+  // unpersisted state: a 30s cooldown after each resend tap, separate from
+  // (and shorter than) the server's own 5-per-15-minutes throttle.
+  const [resending, setResending]     = useState(false)
+  const [resendError, setResendError] = useState(null)
+  const [cooldown, setCooldown]       = useState(0)
+
+  useEffect(() => {
+    if (cooldown <= 0) return
+    const timer = setTimeout(() => setCooldown(c => c - 1), 1000)
+    return () => clearTimeout(timer)
+  }, [cooldown])
 
   // Capture the auth-error flag into local state the moment useAuth exposes
   // it (its effect runs after this child's, so this fires on the next render),
@@ -53,6 +68,34 @@ export default function Login({ navigate, goBack }) {
     }
   }
 
+  // Re-calls the same endpoint the initial submit used. Cooldown starts the
+  // moment the tap registers (not after the response), so a slow network
+  // can't be beaten with a second tap while the first request is in flight.
+  async function handleResend() {
+    if (cooldown > 0 || resending) return
+    setResending(true)
+    setResendError(null)
+    setCooldown(RESEND_COOLDOWN_SECONDS)
+    try {
+      const res = await fetch('/api/auth/request-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      if (!res.ok) {
+        setResendError(
+          res.status === 429
+            ? "You've requested a few links already - check your inbox (including spam), or try again in a few minutes."
+            : 'Something went wrong. Try again.'
+        )
+      }
+    } catch {
+      setResendError('Something went wrong. Try again.')
+    } finally {
+      setResending(false)
+    }
+  }
+
   if (sent) {
     return (
       <div className="h-full bg-bg flex flex-col">
@@ -72,6 +115,26 @@ export default function Login({ navigate, goBack }) {
           <p className="font-ui text-xs text-muted leading-relaxed">
             Tap the link in your email to sign in.<br />It expires in 15 minutes.
           </p>
+
+          <div className="w-full max-w-[260px] flex flex-col items-stretch gap-3">
+            {resendError && (
+              <div className="px-4 py-3 rounded-md bg-bg-card border border-border">
+                <p className="font-ui text-xs text-accent">{resendError}</p>
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={cooldown > 0 || resending}
+              className="w-full border border-accent text-accent rounded-sm py-3 px-4 font-ui text-sm tracking-[0.08em] uppercase font-medium disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            >
+              {resending
+                ? 'Sending…'
+                : cooldown > 0
+                ? `Resend in ${cooldown}s`
+                : 'Resend link'}
+            </button>
+          </div>
         </div>
       </div>
     )
