@@ -235,10 +235,14 @@ export function createGame(playerNames, courseId = null, courseName = null, past
  * the existing per-player score arrays forward so they can be adjusted on the
  * Scorecard screen.
  *
- * `editedNames` is mapped POSITIONALLY onto the existing player rows: renaming
- * "Bob" to "Robert" in slot 1 keeps slot 1's scores, re-keyed under the new
- * name. Adding or removing players is not supported here — `editedNames` is
- * expected to be the same length as `existingGame.players`.
+ * `editedNames` is mapped onto the existing player rows via `originalIndices`
+ * (§11.13.1) — an array the same length as `editedNames` where each entry is
+ * either the index that name held in `existingGame.players` (its scores carry
+ * forward, covering a plain rename) or `null` for a newly-added player (no
+ * previous scores — every hole starts unscored, the "no backfill" rule). When
+ * `originalIndices` is omitted, it defaults to a straight positional mapping
+ * (`editedNames[i]` <- `existingGame.players[i]`) — the pre-§11.13.1 behaviour,
+ * still correct for a same-length rename-only edit with no roster change.
  *
  * Each row is copied into a fresh array sized to the round's own hole count
  * (`existingGame.holes`, or 36 for a legacy round saved without it) so the
@@ -250,7 +254,7 @@ export function createGame(playerNames, courseId = null, courseName = null, past
  * than "now". Winner, DNF, holesPlayed and completedAt are all left for
  * finishGame to recompute.
  */
-export function buildEditGame(existingGame, editedNames, courseId = null, courseName = null, dateIso = null, holePars = null) {
+export function buildEditGame(existingGame, editedNames, courseId = null, courseName = null, dateIso = null, holePars = null, originalIndices = null) {
   const oldNames = existingGame.players ?? []
 
   // The round's real hole count. Legacy rounds saved without `holes` → 36.
@@ -272,7 +276,11 @@ export function buildEditGame(existingGame, editedNames, courseId = null, course
   const scores = {}
   editedNames.forEach((name, i) => {
     const row = Array(holeCount).fill(null)
-    const oldRow = existingGame.scores?.[oldNames[i]] ?? []
+    // A newly-added player (originalIndices[i] === null) has no prior row —
+    // every hole stays unscored (§11.13.1's "no backfill" rule), so `oldRow`
+    // resolves to an empty array and the fill above is left untouched.
+    const origIndex = originalIndices ? originalIndices[i] : i
+    const oldRow = origIndex != null ? (existingGame.scores?.[oldNames[origIndex]] ?? []) : []
     oldRow.forEach((s, idx) => {
       if (idx < holeCount) row[idx] = s ?? null
     })

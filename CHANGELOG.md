@@ -9,6 +9,29 @@
 
 ---
 
+## 18 September 2026 (add/remove players during a past-round edit, #6)
+
+- **Editing a past round now allows adding and removing players**, reversing
+  the explicit v1 deferral (PRD §11.13). Reuses New Game's existing controls:
+  the same 1-6 player cap, the same duplicate-name blocking, and the same
+  "+ Add player" / "✕" remove UI. No schema or games-API change was needed -
+  `validatePlayerData` already accepted any 1-12 player roster with no length
+  check against the original record.
+- **No floor on removal** - a round can be edited down to a single player,
+  becoming a solo round with no winner/draw, via the existing solo-round
+  rules already in `calculateResult`.
+- **No backfill requirement** - a newly-added player isn't required to have
+  scores entered for holes already played by others; they resolve to DNF via
+  the existing DNF logic, unchanged.
+- **Fixed a data-integrity bug found while building this:** `buildEditGame`
+  previously mapped edited player names onto old scores *positionally*
+  (`editedNames[i]` ← `oldNames[i]`) - correct for a same-length rename, but
+  it would have silently reassigned scores to the wrong remaining player the
+  moment anyone was removed from the middle of the roster. Fixed with an
+  `originalIndices` mapping that tracks each edited slot back to its real
+  original player (or `null` for a newly-added one), independent of position.
+- Closes BACKLOG #6.
+
 ## 18 September 2026 (signed-in identity in gameplay, #5)
 
 - **Signed-in users now see a star badge next to their own name wherever

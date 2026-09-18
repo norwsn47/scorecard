@@ -96,12 +96,12 @@ Outbuild palette applied for outdoor sunlight legibility on a phone:
 - A **confirmation dialog** appears — user must confirm before the game ends (prevents accidental taps). Each player's line shows their total and round score-to-par, e.g. `41 (+5)` (§5.3.2), and carries the same star badge as the live Scorecard for a name-match with the signed-in user (§11.15)
 - Final scores shown in a summary view (all players, all holes, totals), with each total showing the round score-to-par (§5.3.2)
 - Player names in the summary table carry the same star badge as the live Scorecard for a name-match with the signed-in user (§11.15). The winner/tied prose callout below does not carry the star (§11.15)
-- **DNF (did not finish):** a player is DNF when they completed fewer holes than the furthest player in that round, and is excluded from the result. If every player stopped at the same hole, nobody is DNF. A solo round is never DNF once at least one hole is scored.
+- **DNF (did not finish):** a player is DNF when they completed fewer holes than the furthest player in that round, and is excluded from the result. If every player stopped at the same hole, nobody is DNF. A solo round is never DNF once at least one hole is scored. These same DNF and solo-round rules also govern a roster changed via a past-round edit — a retroactively-added player left without early-hole scores, or a round edited down to one player — with no special-casing (§11.13.1)
 - **The result:**
   - **Outright winner** — a single finisher has the lowest total
   - **Tied** — two or more finishers are level on the lowest total. The round is a draw (joint first). There is no tie-break and no countback. The Summary shows "Tied - [Name] & [Name] - [X] strokes"; for four or more level it falls back to "Tied - N players level on [X] strokes"
   - **No winner** — every player is DNF (all dropped out). The round is saved with no winner
-  - **Solo rounds** (one player) — winner and draw concepts do not apply; nothing is highlighted as a result on any screen
+  - **Solo rounds** (one player) — winner and draw concepts do not apply; nothing is highlighted as a result on any screen. This includes a round reduced to one player via an edit (§11.13.1), not just one started solo
 - The result is derived from the per-hole scores by one shared `calculateResult` helper, returning `{ winners, dnf, isDraw, winningTotal }` plus a `winner = winners[0] ?? null` convenience field. It is **re-derived on read** for saved rounds (via the `deriveResult` wrapper) — the stored `game.winner` string on legacy localStorage rounds and the legacy single winner on D1 rounds are not authoritative and are not migrated
 - A **Share** button appears on the summary screen — tapping it generates the share image and triggers the native device share sheet (see 4.7)
 - Completed game saved to local browser storage with:
@@ -620,21 +620,55 @@ Quick-play edits are localStorage-only and device-specific, consistent with all 
 - **Notes** — a pre-filled free-text notes field on the edit screen (same 300-character client-side limit as §11.3), saved with the rest of the round. This is the only route to editing notes on an already-saved round.
 - **Course** — logged-in D1 rounds only, via the existing course selector (§11.7). For local/quick-play rounds the course is fixed and not editable in v1.
 - **This round's hole pars** — a **separate, distinct capability from editing the course itself (§11.7)** and from the "Course" field above. Applies to both round types (local/quick-play and logged-in D1). The user can correct the per-hole par values recorded on this one round (`games.hole_pars`, §11.3) — independent of, and without touching, the course's own par definition (`courses.hole_pars`). Editing a course's par (§11.7) is forward-looking only and never rewrites a round already saved against it; this field is how a user instead goes back and fixes the par on one specific already-played round. Uses the same −/+ stepper pattern (2–7 band) as the course par editor (§11.7), rendered for exactly the round's existing hole count — editing a round's par never changes `holes_played` and has no effect on totals, winner or DNF (par is display-only per §5). **On the edit screen this control must be presented as clearly separate from the course-name/course-selector control** — its own labelled section, not merged into or adjacent-looking to the course picker — so a user cannot confuse "I'm correcting this round's par" with "I'm changing which course this round is attached to".
+- **The player roster** — adding and removing players. Originally deferred at v1 (see the superseded note below); now specified in full at §11.13.1 (BACKLOG #6).
 
-**What is NOT editable in v1 (deferred — see BACKLOG.md):**
-- Adding or removing players during an edit. v1 is renames and score changes only.
+**What is NOT editable (deferred — see BACKLOG.md):**
 - Changing the course on a local/quick-play round.
 - Holes played is not a directly editable field — it is derived from the edited scores (see recalculation below).
+
+> **Superseded note:** v1 of this feature (29 August 2026) explicitly deferred adding/removing players — "v1 is renames and score changes only." That deferral is reversed by §11.13.1 below (BACKLOG #6, confirmed 18 September 2026). Left here for history rather than silently dropped, consistent with how this PRD documents other reversed decisions (e.g. §5.2, §11.15).
 
 **Recalculation on save:**
 - Winner, DNF status, and per-player totals are all recalculated from the edited scores, applying the same rules as finishing a game (§4.4, §5): a player who has not scored every hole is DNF and excluded from the winner calculation; the winner is the lowest total among those who finished; ties and all-DNF cases are handled exactly as in the normal finish flow and the share image (§4.7).
 
 **Persistence and identity:**
 - The round keeps its original identity — same row, same `id`. Only `id`, `client_round_id`, and `created_at` are guaranteed unchanged by an edit. `played_at` (the round date) may change because it is user-editable (see above); this is still a correction to an existing round, not a new round.
-- Logged-in: a `PATCH` on `functions/api/games/[id].js` updates the existing row, gated by the session cookie and by ownership (the round must belong to the requesting user). Editable fields include `played_at`, `player_data`, `hole_pars` (the round-level par correction above), `notes` and `course_id`.
+- Logged-in: a `PATCH` on `functions/api/games/[id].js` updates the existing row, gated by the session cookie and by ownership (the round must belong to the requesting user). Editable fields include `played_at`, `player_data` (a full replacement array — this is also how a changed roster is written, §11.13.1), `hole_pars` (the round-level par correction above), `notes` and `course_id`.
 - Logged-out: an update path in `storage.js` overwrites the existing localStorage record in place, keyed on its existing id.
 
 **Sharing:** unchanged. After an edit is saved, the Summary view reflects the recalculated result and the existing Share button (§4.7) generates the share image from the updated data.
+
+---
+
+### 11.13.1 Adding and removing players during an edit
+
+> **Status:** specification locked, build in progress (branch `feat/edit-round-players`, BACKLOG #6). Reverses the explicit v1 deferral in §11.13 ("Adding or removing players during an edit" was out of scope). Decisions below confirmed by the user on 18 September 2026.
+
+Extends §11.13's edit capability to the player roster itself — not just names, scores, notes, course and par on the *existing* set of players. Applies to both round types (local/quick-play and logged-in D1), same as the rest of §11.13.
+
+**No schema or API change required.** `functions/_lib/game-input.js`'s `validatePlayerData` already accepts any array of 1–12 valid player entries with no comparison against the original record's player count, and `PATCH /api/games/[id]` already writes whatever `player_data` it is given. This is frontend-only work: the edit-mode player-list step (`src/pages/Setup.jsx`) and the Scorecard grid rendering an added player's columns (`src/pages/Scorecard.jsx`).
+
+**Adding a player:**
+- Reuses the same "Add Player" control and name-entry UI as New Game setup (§4.2), including duplicate-name blocking against the other players already in the round.
+- **Floors and caps at the same 1–6 band as New Game setup (§4.2)** — not the API's looser 12-player ceiling (`MAX_PLAYERS` in `game-input.js`), which exists as a backend safety limit, not a product-facing player count. The edit UI stays consistent with the one player-count range the product already exposes anywhere.
+- **No backfill requirement.** A player added to a round that already has scores entered for earlier holes is not required to have those holes filled in before saving. Already-played holes simply stay unscored (—) for them; the user *may* fill them in retroactively if they know the scores, but nothing blocks saving if they don't.
+- Consequence of no backfill: under the existing `calculateResult` rule (§4.4, §5) a player who hasn't filled every hole up to the round's furthest-played hole is DNF, not blocked from saving. A retroactively-added player who only has scores from the hole they joined onward will save as DNF for the round — an accepted, expected outcome of this capability, not an error state. No new DNF rule is introduced; this is the existing rule applied to a new way of reaching it.
+- The added player's row renders in the edit-mode Scorecard grid exactly as any other player column — same width-sharing, same active-cell model, same empty (—) / scored states (§4.3) — across every hole row already shown.
+
+**Removing a player:**
+- Reuses the same "✕" remove control as New Game setup (§4.2) — an immediate action, no separate confirmation dialog beyond whatever the app already shows for a normal edit save.
+- **No minimum-player floor beyond 1.** A user can remove players down to a single remaining player; the round simply becomes a solo round at that point. Removing the round's only player is not offered — the control's floor is 1, matching the same implicit floor as New Game setup's 1–6 range (§4.2).
+- A round reduced to one player is a solo round under the existing rules with no special handling introduced here: winner and draw concepts do not apply, nothing is highlighted as a result on any screen (§4.4), and a solo round is never DNF once at least one hole is scored (§4.4).
+- Removing a player who was the furthest-progressed player in the round can reduce the round's effective `holes_played` on save, same as any other score edit — covered by §11.13's existing "holes played is derived, not directly editable" rule; no new behaviour.
+
+**Recalculation on save:** unchanged from §11.13 — winner, DNF status and per-player totals are recalculated from the edited roster and scores via the same `calculateResult` helper used everywhere else (§4.4, §5), which already returns no winner / `isDraw: false` for a roster under two players and already computes DNF per-player independent of how that player's row came to have gaps in it.
+
+**Sharing:** unchanged. The share image (§4.7) already renders whatever player set and result shape `calculateResult` produces — a solo round (no result callout drawn) and a DNF player (marked DNF in the totals row) are both existing, tested paths, not new ones introduced by this capability.
+
+**Out of scope for this capability:**
+- No change to the 1–6 player range anywhere in the app (§4.2) — this only lets an *existing saved round's* roster move within that same range after the fact.
+- No confirmation/warning dialog on removal beyond the existing save flow, per the user's explicit decision — removing a player down to a solo round carries no extra friction beyond what solo rounds already carry everywhere else in the app.
+- No partial-backfill prompt or "fill in earlier holes?" nudge for an added player — DNF is an accepted, silent outcome, not a state the UI calls out or warns about.
 
 ---
 

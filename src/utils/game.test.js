@@ -568,4 +568,70 @@ describe('buildEditGame', () => {
     expect(finished.dnf).toContain('Bob')
     expect(finished.winner).toBe('Alice')
   })
+
+  // ── §11.13.1 — adding/removing players during an edit ──────────────────────
+
+  it('originalIndices maps scores by original identity, not position, so removing a middle player never misaligns the remaining scores', () => {
+    const threePlayer = {
+      id: 'row-xyz',
+      holes: 3,
+      players: ['Alice', 'Bob', 'Cara'],
+      scores: { Alice: [5, 5, 5], Bob: [3, 3, 3], Cara: [7, 7, 7] },
+    }
+    // Bob (original index 1) removed. Cara keeps her own scores even though
+    // she now sits at position 1, because originalIndices says her scores
+    // live at old index 2, not "whatever is at the new index 1".
+    const game = buildEditGame(threePlayer, ['Alice', 'Cara'], null, null, null, null, [0, 2])
+    expect(game.players).toEqual(['Alice', 'Cara'])
+    expect(game.scores.Alice.slice(0, 3)).toEqual([5, 5, 5])
+    expect(game.scores.Cara.slice(0, 3)).toEqual([7, 7, 7])
+    expect(game.scores.Bob).toBeUndefined()
+  })
+
+  it('a newly-added player (null in originalIndices) starts every hole unscored - the "no backfill" rule', () => {
+    const onePlayer = {
+      id: 'row-xyz',
+      holes: 3,
+      players: ['Alice'],
+      scores: { Alice: [5, 5, 5] },
+    }
+    const game = buildEditGame(onePlayer, ['Alice', 'Priya'], null, null, null, null, [0, null])
+    expect(game.scores.Alice.slice(0, 3)).toEqual([5, 5, 5])
+    expect(game.scores.Priya.slice(0, 3)).toEqual([null, null, null])
+  })
+
+  it('an added player who never gets backfilled saves as DNF, not blocked, once finishGame recalculates', () => {
+    const onePlayer = {
+      id: 'row-xyz',
+      holes: 3,
+      players: ['Alice'],
+      scores: { Alice: [5, 5, 5] },
+    }
+    const game = buildEditGame(onePlayer, ['Alice', 'Priya'], null, null, null, null, [0, null])
+    const finished = finishGame(game)
+    expect(finished.dnf).toEqual(['Priya'])
+    expect(finished.winner).toBe('Alice')
+  })
+
+  it('a round edited down to one player becomes a solo round - no winner, no draw', () => {
+    const twoPlayer = {
+      id: 'row-xyz',
+      holes: 2,
+      players: ['Alice', 'Bob'],
+      scores: { Alice: [4, 4], Bob: [3, 3] },
+    }
+    // Bob (original index 1) removed, leaving only Alice.
+    const game = buildEditGame(twoPlayer, ['Alice'], null, null, null, null, [0])
+    const finished = finishGame(game)
+    expect(finished.winner).toBeNull()
+    expect(finished.winners).toEqual([])
+    expect(finished.isDraw).toBe(false)
+    expect(finished.dnf).toEqual([])
+  })
+
+  it('falls back to positional mapping when originalIndices is omitted (pre-§11.13.1 rename-only callers)', () => {
+    const game = buildEditGame(existing, ['Alice', 'Robert'])
+    expect(game.scores.Robert.slice(0, 3)).toEqual([3, 3, 3])
+    expect(game.scores.Alice.slice(0, 3)).toEqual([5, 5, 5])
+  })
 })

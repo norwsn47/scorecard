@@ -20,6 +20,22 @@ export default function Setup({ navigate, goBack, params }) {
   const [names, setNames]                 = useState(() =>
     editGame?.players?.length ? [...editGame.players] : ['']
   )
+  // Parallel to `names` — for an edit, each entry is the index that name held
+  // in the original saved roster (so its scores carry forward on save), or
+  // `null` for a player added during this edit (no prior scores to carry
+  // forward — §11.13.1's "no backfill" rule). Kept in lock-step with `names`
+  // by handleAddPlayer/handleRemovePlayer so a mid-list removal can never
+  // misalign a remaining player's scores with the wrong name. Unused outside
+  // edit mode (New Game/Add Past Round build fresh score rows regardless).
+  const [originalIndices, setOriginalIndices] = useState(() =>
+    editGame?.players?.length ? editGame.players.map((_, i) => i) : [null]
+  )
+  // The player-name input to autofocus, by index — the single field on a
+  // fresh New Game/Add Past Round screen, or a field just added via "+ Add
+  // player" (in either mode). Null means "don't steal focus", which matters
+  // on an edit screen's initial load, where the roster already holds real
+  // names being corrected, not fresh entries waiting to be typed.
+  const [autoFocusIndex, setAutoFocusIndex] = useState(() => (editRound ? null : names.length - 1))
   const [savedNames]                      = useState(() => getPlayers())
   const [courses, setCourses]             = useState([])
   const [selectedCourseId, setSelectedCourseId] = useState(() => editGame?.courseId ?? null)
@@ -133,11 +149,15 @@ export default function Setup({ navigate, goBack, params }) {
   }
 
   function handleAddPlayer() {
-    if (names.length < MAX_PLAYERS) setNames([...names, ''])
+    if (names.length >= MAX_PLAYERS) return
+    setAutoFocusIndex(names.length)
+    setNames([...names, ''])
+    setOriginalIndices([...originalIndices, null])
   }
 
   function handleRemovePlayer(i) {
     setNames(names.filter((_, idx) => idx !== i))
+    setOriginalIndices(originalIndices.filter((_, idx) => idx !== i))
   }
 
   function handleNewCourseHoleCount(count) {
@@ -224,7 +244,7 @@ export default function Setup({ navigate, goBack, params }) {
       // from the round's own saved snapshot, refreshed to a newly-selected
       // course's par on a course switch (see the reset effect above), and
       // otherwise freely hand-editable. Independent of the course itself.
-      const working = buildEditGame(editGame, trimmed, resolved.courseId, resolved.courseName, dateIso, roundPars)
+      const working = buildEditGame(editGame, trimmed, resolved.courseId, resolved.courseName, dateIso, roundPars, originalIndices)
       working.notes = notes.trim() || null
       working._edit = { id: editGame.id, fromDb: isDbEdit }
       saveActiveGame(working)
@@ -286,7 +306,7 @@ export default function Setup({ navigate, goBack, params }) {
 
         {editRound && (
           <p className="font-ui text-xs text-muted leading-relaxed pb-1">
-            Rename players, fix the date{showCourse ? ', switch the course' : ''} or add a note here. You'll adjust hole scores on the next screen.
+            Rename players, add or remove one, fix the date{showCourse ? ', switch the course' : ''} or add a note here. You'll adjust hole scores on the next screen.
           </p>
         )}
 
@@ -478,7 +498,7 @@ export default function Setup({ navigate, goBack, params }) {
         {names.map((name, i) => {
           const listId = `player-suggestions-${i}`
           const isDupe = dupeIndices.includes(i)
-          const canRemove = names.length > 1 && !editRound
+          const canRemove = names.length > 1
           return (
             <div key={i}>
               <div className="relative">
@@ -490,7 +510,7 @@ export default function Setup({ navigate, goBack, params }) {
                   list={listId}
                   maxLength={30}
                   autoComplete="off"
-                  autoFocus={!editRound && i === names.length - 1}
+                  autoFocus={i === autoFocusIndex}
                   className={[
                     'w-full py-3 pl-4 rounded-md border font-ui text-base bg-bg-card text-text',
                     'placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40',
@@ -524,7 +544,7 @@ export default function Setup({ navigate, goBack, params }) {
           )
         })}
 
-        {!editRound && names.length < MAX_PLAYERS && (
+        {names.length < MAX_PLAYERS && (
           <button
             onClick={handleAddPlayer}
             className="w-full py-3 px-4 rounded-md border border-dashed border-border bg-bg-card text-muted font-ui text-sm active:bg-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
