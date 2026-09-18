@@ -2,10 +2,12 @@ import { useEffect, useRef, useState } from 'react'
 import CourseMapModal from '../components/CourseMapModal.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import ParDelta from '../components/ParDelta.jsx'
+import PlayerStar from '../components/PlayerStar.jsx'
 import { track } from '../utils/analytics.js'
-import { computeDisplayedHoles, finishGame } from '../utils/game.js'
+import { computeDisplayedHoles, finishGame, isSignedInPlayer } from '../utils/game.js'
 import { deriveHolePars, playerTotal, roundToPar, scoreToPar } from '../utils/scores.js'
 import { clearActiveCell, clearActiveGame, getActiveCell, getActiveGame, saveActiveCell, saveActiveGame, saveCompletedGame, updateCompletedGame } from '../utils/storage.js'
+import { useAuth } from '../hooks/useAuth.jsx'
 
 function initialCellFor(g) {
   if (!g) return { holeIndex: 0, playerIndex: 0 }
@@ -19,6 +21,7 @@ function initialCellFor(g) {
 }
 
 export default function Scorecard({ navigate, params }) {
+  const { user } = useAuth()
   const [[initialGame, initialCell]]  = useState(() => {
     const g = params?.game ?? getActiveGame()
     // Only restore a persisted cell on a paramless mount (app reopen / Resume
@@ -263,7 +266,10 @@ export default function Scorecard({ navigate, params }) {
               </th>
               {players.map(player => (
                 <th key={player} className="py-2 px-1 text-center font-ui text-xs tracking-[0.12em] uppercase text-muted">
-                  <span className="block truncate px-1">{player}</span>
+                  <span className="flex items-center justify-center gap-0.5 px-1">
+                    <span className="truncate min-w-0">{player}</span>
+                    {isSignedInPlayer(player, user?.name) && <PlayerStar />}
+                  </span>
                 </th>
               ))}
             </tr>
@@ -390,7 +396,10 @@ export default function Scorecard({ navigate, params }) {
             <div className="space-y-2 mb-8">
               {players.map(player => (
                 <div key={player} className="flex justify-between font-ui text-sm text-text">
-                  <span>{player}</span>
+                  <span>
+                    {player}
+                    {isSignedInPlayer(player, user?.name) && <PlayerStar className="ml-0.5" />}
+                  </span>
                   <span className="font-semibold">
                     {playerTotal(game.scores, player) || '–'}
                     <ParDelta delta={roundToPar((game.scores?.[player] ?? []).slice(0, holePars.length), holePars)} variant="bracket" />

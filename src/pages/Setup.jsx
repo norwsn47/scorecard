@@ -64,6 +64,24 @@ export default function Setup({ navigate, goBack, params }) {
   // edit working copy sits stranded in the active-game slot. Detect that,
   // discard the abandoned edit, and send the user to their rounds list where
   // the original round is untouched.
+  // Pre-fill the first player slot with the signed-in user's own name (§4.2,
+  // §11.15) — a genuinely new round only, never an edit (renaming an existing
+  // player is a different action). `user` resolves asynchronously from
+  // /api/auth/me, so this runs once it (and its `name`) is available rather
+  // than at the useState initialiser above. Guarded so it never clobbers a
+  // name the player has already typed into that slot — a one-time default,
+  // not something re-applied on every render, and still freely overwritable
+  // afterwards like any other player-name field.
+  useEffect(() => {
+    if (editRound || !user?.name) return
+    setNames(prev => {
+      if (!prev.length || prev[0].trim() !== '') return prev
+      const next = [...prev]
+      next[0] = user.name
+      return next
+    })
+  }, [user, editRound])
+
   useEffect(() => {
     if (editRound || pastRound) return
     if (getActiveGame()?._edit) {

@@ -6,7 +6,7 @@
 > Nothing here is actioned without explicit instruction — tell the project-manager (or Claude directly) to pull an item into work.
 > Numbers are stable IDs for cross-reference — don't renumber existing items when deleting one, so gaps are expected.
 
-**Last updated:** 11 September 2026
+**Last updated:** 18 September 2026
 
 > The history of shipped and removed items lives in `CHANGELOG.md`. This file is open items only.
 >
@@ -22,12 +22,6 @@ From the July 2026 feedback list. The loading/error state on `CourseMapModal.jsx
 
 ### 2b. Sign-in email — inbox sender name (manual, not code)
 The email copy/wordmark now read "Scorecard by Outbuild" (shipped 1 Sep). Remaining: the inbox *sender name* is set by the `RESEND_FROM_EMAIL` env var format — set it to a `Scorecard by Outbuild <address>` display-name format via the Cloudflare Pages dashboard (Settings → Environment variables). No code.
-
-### 5. Signed-in identity in gameplay
-Foundation (#3 profile backend, #4 Settings panel) shipped 8 September 2026 — this is now unblocked. PRD §8, forward-referenced from §11.14.
-- When a signed-in user has no name yet, prompt once (lightweight inline prompt, not a full onboarding flow) or direct them to Settings.
-- Pre-fill the first player slot with the user's own name on New Game; other players stay "guest".
-- Highlight the user's own score as primary in the scorecard, summary, and history views; guest scores stay visually secondary. (This is the "own player" handling the past-round edit view currently defers.)
 
 ### 6. Add / remove players during a past-round edit
 Deferred from the edit-past-round feature. v1 lets you edit a saved round's date, names, scores, notes, and (signed-in only) course — but not the set of players. Follow-up: allow adding a player (with a full set of hole scores) and removing one, then recalculating winner/DNF/totals. Needs decisions on: what removing a player does to a round left with one player, and how the grid handles a newly added player's empty columns. (PRD §11.13.)
@@ -54,7 +48,7 @@ A game-mode toggle at setup: **stroke play** (current — lowest total wins) or 
 ### 83. Home (signed in) — fold Settings into the header icon
 When signed in, Home shows a "signed in as…" state plus a standalone **Settings** button that the user considers redundant. Swap the header **info (ℹ) icon for a settings (gear) icon** that opens the Settings screen, and drop the standalone Settings button.
 - **Open question for the product-owner before build:** where the **Info page** (PRD §4.8) is then reached from — move its entry point into Settings, keep an info affordance elsewhere, or show the settings icon only when signed in and keep the info icon when signed out. Resolve first.
-- Frontend-only once decided; likely small. Related: #5 (signed-in identity), #4 (Settings panel, shipped).
+- Frontend-only once decided; likely small. Related: #5 (signed-in identity, shipped 18 Sep 2026), #4 (Settings panel, shipped).
 
 ---
 
@@ -112,6 +106,12 @@ From the 11 September 2026 UI/UX review. Reported across mobile screens, not con
 ---
 
 ## Housekeeping & tech debt
+
+### 91. Signed-in identity in gameplay (#5) - code-review housekeeping (CLEAR WITH NOTES, 18 Sep 2026)
+Minor items logged from the Phase 2 review of `feat/signed-in-identity-gameplay` (PRD §11.15); none block.
+- **No component-level render test asserts the star itself appears.** `isSignedInPlayer()` has full unit coverage (`game.test.js`) and Setup's pre-fill has its own test file, but no test in `Scorecard.jsx`, `Summary.jsx` or `History.jsx`'s existing test suites renders a signed-in matched player and asserts `PlayerStar` (or its `aria-label="You"`) is present. Verified correct by source inspection during review; worth a direct render assertion so a future refactor can't silently drop it.
+- **No explicit test for the "Add Past Round" pre-fill path.** `Setup.signed-in-prefill.test.jsx` covers New Game (implicit `pastRound: false`) and explicitly excludes `editRound: true`, but doesn't assert the pre-fill also fires with `pastRound: true` — PRD §11.15 calls this out by name. The guard (`if (editRound || !user?.name) return`) is correct by inspection since it never checks `pastRound`, but an explicit test would close the gap.
+- **`PlayerStar`'s `aria-label="You"` may fold into the History filter-chip button's accessible name** (e.g. announced as "Alice You" rather than "Alice" with a separate marker), since the star sits inside the `<button>` alongside the plain-text name. Not wrong, but wasn't an explicit accessibility decision — worth a quick screen-reader spot-check.
 
 ### 25. Crisper course map image — blocked on a better source asset
 `public/course_map_v2.png` is only 443×600px (~444 KB). `CourseMapModal.jsx` displays it at ~320px wide and zooms to 4× (~1300px effective demand), so it is inherently soft on any retina screen — the modal code itself is fine. The fix is purely a better asset: a higher-resolution scan/export (ideally ≥1600px on the long edge) or an SVG/vector from the club. Nothing to do in code until that exists. Overlaps with #13 (official logo) and #1 as things to request from Bruntsfield in one go. (Distinct from #1, which is about when the map appears and its loading state.)

@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import Scorecard from './Scorecard.jsx'
 import { buildEditGame } from '../utils/game.js'
 import { getCompletedGames } from '../utils/storage.js'
+import { AuthProvider } from '../hooks/useAuth.jsx'
 
 // Editing a saved round must OVERWRITE it, never create a second row — the
 // regression class behind the 24 August duplicate-save hotfix (#22 / PRD §11.13).
@@ -22,7 +23,11 @@ const savedRound = {
 function renderEdit(editContext) {
   const editGame = buildEditGame(savedRound, ['Ann'], editContext.courseId ?? null, 'Bruntsfield', savedRound.completedAt, [3, 3])
   const navigate = vi.fn()
-  render(<Scorecard navigate={navigate} params={{ game: editGame, editContext }} />)
+  render(
+    <AuthProvider>
+      <Scorecard navigate={navigate} params={{ game: editGame, editContext }} />
+    </AuthProvider>,
+  )
   return { navigate }
 }
 
@@ -32,8 +37,13 @@ async function changeHole1AndSave(user) {
   await user.click(screen.getByRole('button', { name: /save changes/i }))
 }
 
+// Scorecard reads useAuth() (§11.15, the signed-in identity star) — the
+// localStorage-path case needs a resolvable /api/auth/me even though it
+// otherwise never touches the network; the D1-path case supplies its own
+// fetch mock per-test below.
 beforeEach(() => {
   localStorage.clear()
+  global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ user: null }) })
 })
 
 describe('Scorecard — editing a saved round (#22)', () => {

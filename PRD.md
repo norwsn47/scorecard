@@ -2,7 +2,7 @@
 ## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
 **Version:** 2.0
-**Last updated:** 11 September 2026
+**Last updated:** 18 September 2026
 
 > The rationale and section-by-section history of past updates lives in `CHANGELOG.md`, not here. This line is just a date.
 
@@ -58,6 +58,7 @@ Outbuild palette applied for outdoor sunlight legibility on a phone:
 ### 4.2 Start a new game
 - User taps **New Game**
 - The setup screen opens straight at the player name fields (for logged-in users a course selector sits above them — see §11.7)
+- For signed-in users, the first player slot is pre-filled with the user's own name if `users.name` (§11.3, §11.14) is set — editable like any other slot, same as any other player field (§11.15)
 - Adds players dynamically (1–6) — tap **Add Player** to add, tap **✕** to remove; names can be typed or selected from suggestions
 - Each player enters or selects a name
   - Names previously used are suggested from local browser storage
@@ -84,6 +85,7 @@ Outbuild palette applied for outdoor sunlight legibility on a phone:
   - **Maximum score per hole: 14 strokes.** The **+** button is disabled once 14 is reached. Note: the official Bruntsfield Short Hole Golf Club stroke limit is 7 per hole (see 4.9); the app uses a higher practical cap of 14 to accommodate casual play without being as restrictive as the official rule.
   - The **→** button advances focus to the next player on the same hole, or the next hole's first player
 - Each scored cell shows its result against the hole's par as a small superscript (`+1` / `-1` / `E`), live as the score changes — see §5.3.1
+- A player's name carries a small star badge when it matches the signed-in user's own name (§11.15)
 - Running totals shown above the control bar, always visible — each total also shows the player's round score-to-par in brackets, e.g. `41 (+5)` (§5.3.2)
 - Progress is **auto-saved to local storage continuously**
   - **On reopening the app with a game in progress:** the user is taken directly to the scorecard, bypassing the home screen. Focus is restored to the exact cell — the specific player and hole — that was active when the app was closed or the browser was shut.
@@ -91,8 +93,9 @@ Outbuild palette applied for outdoor sunlight legibility on a phone:
 
 ### 4.4 Finishing a game
 - User taps **Finish Game**
-- A **confirmation dialog** appears — user must confirm before the game ends (prevents accidental taps). Each player's line shows their total and round score-to-par, e.g. `41 (+5)` (§5.3.2)
+- A **confirmation dialog** appears — user must confirm before the game ends (prevents accidental taps). Each player's line shows their total and round score-to-par, e.g. `41 (+5)` (§5.3.2), and carries the same star badge as the live Scorecard for a name-match with the signed-in user (§11.15)
 - Final scores shown in a summary view (all players, all holes, totals), with each total showing the round score-to-par (§5.3.2)
+- Player names in the summary table carry the same star badge as the live Scorecard for a name-match with the signed-in user (§11.15). The winner/tied prose callout below does not carry the star (§11.15)
 - **DNF (did not finish):** a player is DNF when they completed fewer holes than the furthest player in that round, and is excluded from the result. If every player stopped at the same hole, nobody is DNF. A solo round is never DNF once at least one hole is scored.
 - **The result:**
   - **Outright winner** — a single finisher has the lowest total
@@ -113,6 +116,7 @@ Outbuild palette applied for outdoor sunlight legibility on a phone:
 - Lists all previously saved games, each showing: course name (where one is recorded), date, players, number of holes, and a **result label line** — "Winner: X - N strokes" / "Tied: X & Y - N strokes" / "No winner" (four or more level: "Tied: N players level on X strokes"). Two or three level winners are named; " - " (spaced hyphen) is the separator, matching the Summary and share image. Solo rounds show no result label, matching the Summary
   - The result label is re-derived from the stored scores on every History load (see 4.4) — it is not read from a stored winner field
   - Each round is identified by its date; there is no game-name field (see §4.2)
+  - Player names carry the star badge (§11.15) in the per-round player rows and the player filter chips, consistent with the live Scorecard and Summary. The result label line itself ("Winner: X - N strokes" etc.) does not carry the star — see §11.15's explicit scope note
 - Tapping a game shows the full scorecard for that game
 - Tapping a player name filters to all games that player has appeared in
 - A saved game can be edited from its detail view — see §11.13 (applies to both quick-play and logged-in rounds)
@@ -337,7 +341,6 @@ The following were out of scope in v1.x and are now addressed in v2.0:
 - Leaderboards or social features (requires account foundation — now built in v2.0)
 - All-time personal leaderboard per user (lowest round, most wins, etc.)
 - Quick-play history import — allow users to migrate existing localStorage games to their new DB account after signing in
-- Signed-in identity in gameplay — own-name pre-fill on New Game, a one-time name prompt, and styling the user's own score as primary across the scorecard, summary and history (BACKLOG #5). Builds on the `users.name` field added in §11.14
 - Full onboarding journey (name + home course + par) — BACKLOG #10; needs a decision on how par interacts with the raw-stroke scoring model (§5) before any build
 - Multiple holes / course configuration beyond the default — **partially delivered:** signed-in users can now create courses at 9 or 18 holes (§11.7). Arbitrary hole counts and structured per-course hole data remain future (BACKLOG #11)
 - hello@outbuild.co as the contact email once configured via Resend
@@ -637,14 +640,14 @@ Quick-play edits are localStorage-only and device-specific, consistent with all 
 
 ### 11.14 User profile and account management
 
-Lightweight profile data plus self-serve account controls for signed-in users. The backend (BACKLOG #3) and the Settings panel (BACKLOG #4) ship together on one branch. Signed-in identity in gameplay (BACKLOG #5) is a later, separate effort and is only forward-referenced here.
+Lightweight profile data plus self-serve account controls for signed-in users. The backend (BACKLOG #3) and the Settings panel (BACKLOG #4) ship together on one branch. Signed-in identity in gameplay (BACKLOG #5) is a separate, later effort — specified in full at §11.15.
 
 Requires migration `004_add_user_profile.sql` applied to production D1 before deploy.
 
 **The `name` field**
 - A single nullable `users.name` column (§11.3) — the user's own display name, 1–60 characters after trimming, empty clears to null.
 - Set only via the Settings panel. There is no onboarding step and no prompt at sign-in (§7, §10). A user with no name is fully functional — `name` stays null.
-- In v1 of this capability `name` is **not read anywhere** in gameplay, history or sharing. Pre-filling the user's own player slot and styling their score as primary is BACKLOG #5 and out of scope here. §4.2's player-name entry and duplicate-name blocking are unchanged.
+- In v1 of this capability `name` is **not read anywhere** in gameplay, history or sharing. Pre-filling the user's own player slot and marking it with a star badge is BACKLOG #5 (§11.15) and out of scope here. §4.2's player-name entry and duplicate-name blocking are unchanged.
 
 **`PATCH /api/users`** — updates the current session's user; no id in the path, always acts on "me".
 - The session cookie is the only authorisation. Returns `401` with no valid session.
@@ -667,4 +670,51 @@ Requires migration `004_add_user_profile.sql` applied to production D1 before de
 - Contents: edit name (text field, 1–60, clear-to-empty allowed); change email (shows the current address; on submit, tells the user to check the new inbox and that the address changes only once confirmed; shows the pending address while `pending_email` is set); delete account.
 - Delete account: a confirmation dialog matching `History.jsx`'s delete-round bottom sheet, plus the requirement to type `DELETE` to enable the destructive button. Copy states plainly that all rounds, courses and the account are removed, and that quick-play history on this device is not affected.
 
-**Forward reference — signed-in identity in gameplay (BACKLOG #5, not in this capability):** pre-filling the first player slot with the user's `name`, a one-time name prompt when none is set, and styling the user's own score as primary across the scorecard, summary and history. Deferred; no schema or API groundwork for it is added here beyond the `name` column itself.
+**Forward reference — signed-in identity in gameplay (BACKLOG #5): now specified in full at §11.15.** First-player-slot pre-fill on New Game, and a star badge marking the signed-in user's name wherever players are listed (name-match against this `name` field, computed live — no stored link, no onboarding prompt). No schema or API groundwork beyond the `name` column itself was needed.
+
+---
+
+### 11.15 Signed-in identity in gameplay
+
+> **Status:** specification locked, build in progress (branch `feat/signed-in-identity-gameplay`, BACKLOG #5). This section supersedes the earlier forward-references in §8 and §11.14, which described a different mechanism (a one-time name prompt plus "primary" score styling) that was never built.
+> **PRD alignment check (18 September 2026):** four deviations flagged by frontend-developer in handoff, resolved by product-owner — see the "Visual treatment" and "New Game pre-fill" notes below for the locked decisions. One follow-up code change is needed before this branch is ready to commit: the star is not yet shown on the "Finish Game?" confirmation dialog.
+
+Signed-in users get a lightweight way to see which scores in a round are theirs, without introducing a second identity system alongside player names.
+
+**Identification mechanism — name match, not a stored link:**
+- A player within a round is treated as "the signed-in user" whenever that player's name exactly equals the signed-in account's `users.name` value (§11.3, §11.14).
+- This is computed live, from the two existing name strings, wherever players are rendered — there is no new `user_id`-per-player field, no change to `player_data`, and no games-API or schema change of any kind.
+- Because it's a display-time comparison rather than a stored link, it works **retroactively** on rounds saved before this capability existed, and on any round where a player happens to be named to match — no backfill, no migration.
+- The comparison: exact string match after trimming whitespace and case-folding (lower-casing) both sides — the same normalisation `findDuplicateIndices` already uses for the duplicate-name check at §4.2 (`src/utils/game.js`). This keeps the two name-comparison rules in the app consistent rather than introducing a second, stricter one.
+- If `users.name` is null (never set), no player in any round ever matches — see "No onboarding prompt" below.
+
+**Visual treatment — a star, not a primary/highlight style:**
+- The matched player's name carries a small star icon/badge wherever players are listed **as a row in a structured, scannable roster** as part of a round: the live Scorecard grid (§4.3), the post-finish and read-only Summary player-totals table (§4.4, §11.9), History's per-round player rows, and History's player filter chips (§4.5, §11.9).
+- This replaces the "styling the user's own score as primary" idea floated in the earlier §8/§11.14 forward-references — that approach (a bold/colour treatment implying visual hierarchy over guest players) was not built. The star is an identity marker only; it does not change score colour or weight, does not interact with the §5.3 vs-par colour system, and does not imply the signed-in player is more important than guests in the round.
+- **Explicitly starred — the "Finish Game?" confirmation dialog (§4.4).** This sheet lists each player's name against their live total, in the same row-per-player shape as the Summary table it leads into a few seconds later — it is a structured roster, not a one-off sentence, and §5.3.2 already treats it as a first-class surface for the same score-to-par figure the star sits beside. Omitting the star here while showing it on Summary moments later would read as a bug, not a scope boundary. **This was not built in v1 and needs a small code change** (`src/pages/Scorecard.jsx`'s `showConfirm` dialog) to add it, matching the pattern already used in Summary's table row.
+- **Explicitly not starred — prose result callouts that name a winner.** Summary's "Winner - [Name] - [X] strokes" / "Tied - [Name] & [Name] - [X] strokes" line (§4.4), and History's equivalent one-line result label per round (§4.5), do **not** carry the star, even when the named winner is the signed-in user. These are one-off announcement sentences, not a scannable list a player needs help finding their own row in — the star's job (help you spot your row among several) doesn't apply to a sentence that already names one or two people in full. It also avoids stacking two "this one's special" signals (the winner's accent-green treatment plus a star) on the exact moment a signed-in user wins, which sits closer to the "does not imply more important" line this section already draws. This was a deliberate reading by the developer, applied consistently in both Summary and History, and is confirmed correct — not left ambiguous for a future build to re-litigate.
+- Exact icon, size and placement (inline after the name vs. a fixed-position badge) are a DESIGN.md / frontend-developer call, following the existing icon language. Built as `src/components/PlayerStar.jsx`, `w-2.5 h-2.5`, matching the existing external-link ↗ annotation size tier, and rendered in `currentColor` (see "Colour" below).
+- The star does **not** appear on the share image (§4.7) in v1. The share image is a static export handed off outside the app via the OS share sheet, to a recipient who is not necessarily signed in and for whom "this is the app's current viewer" has no meaning. Omitting it is a deliberate scope decision, not an oversight.
+
+**Colour — inherits, does not introduce a token:**
+- `PlayerStar` carries no colour of its own; it renders in `currentColor` and inherits whatever colour its surrounding name already has (muted list text, the accent winner-name treatment, white-on-accent inside a filter chip). Confirmed correct and consistent with this section's "does not imply the signed-in player is more important than guests" requirement: a fixed accent/brand colour on the star would visually mark the signed-in player as special independent of context (bold even in a muted, non-winner row), which is exactly what this section rules out. This is a single-component styling decision within `PlayerStar.jsx`, not a new DESIGN.md token, so it did not need a design-director pass. Documented in DESIGN.md under "Icons".
+
+**No onboarding prompt:**
+- There is no blocking interstitial, inline nudge, or "set your name" prompt anywhere in this capability — not at sign-in, not on New Game, not the first time a round finishes without a star. This reverses the "one-time name prompt" idea in the earlier §8/§11.14 forward-references, which was never built.
+- A signed-in user with no `users.name` set simply sees no star anywhere, indefinitely, until they choose to set a name from the Settings panel (§11.14). Setting a name is entirely self-directed and unrelated to this capability's own UI.
+
+**New Game pre-fill (unchanged from the original backlog description):**
+- On the Setup screen (§4.2), a signed-in user's `users.name` — if set — pre-fills the first player slot. Other player slots are unaffected and still default to empty/guest.
+- If `users.name` is null, the first slot behaves exactly as it does today (empty, no pre-fill).
+- The pre-filled name is editable like any other player-name field. A user can overwrite it for that round, in which case that round's first player simply won't match their account name and won't carry a star — nothing forces the first slot to stay "the signed-in player" once the round starts.
+- **Also applies to Add Past Round.** The Setup screen is shared by New Game and Add Past Round (History's "+ Add" button, `pastRound: true`) — both present a fresh, unfilled player list rather than an existing round being edited, so the pre-fill applies to both. It does **not** apply when Setup is opened to edit an existing saved round (`editRound: true`) — there the player slots already hold real names being corrected, not fresh entries, and pre-filling over one would be a rename, not a default. The guard is "not an edit", not "New Game specifically."
+
+**Known edge case — accepted, not solved:**
+- Because matching is purely by name text, a guest player in a round can coincidentally (or deliberately) type the exact same name as the signed-in account holder and will also display the star, even though they are not that account. This is only possible when the actual account holder either isn't a player in that round, or is playing under a different name that round — §4.2's duplicate-name blocking already prevents two players sharing one name *within the same round*, so it cannot happen alongside the real account holder under the same name in the same round.
+- This is an accepted limitation of the name-match approach, not a bug to fix now. A future `user_id`-per-player field (out of scope here) would be the way to close it if it ever becomes a real problem.
+
+**Scope boundary:**
+- This capability is display-only. It does not change scoring, totals, winner/DNF/draw logic (§5), sharing (§4.7), or any API contract. No schema change, no new environment variable.
+- It reads `users.name`, already returned by `GET /api/auth/me` (§11.5) — no new endpoint required.
+
+**Touchpoints:** §4.2 (Setup pre-fill, New Game and Add Past Round), §4.3 (live Scorecard star), §4.4 (Finish Game? confirmation dialog star — pending build; post-finish and read-only Summary table star, shipped; winner prose line — deliberately not starred), §11.9 (History player-row and filter-chip star, shipped; result-label line — deliberately not starred), §11.3/§11.14 (`users.name` source field).
