@@ -477,6 +477,24 @@ Changing the email on an account reuses the magic-link machinery (§11.4) — th
 1. A signed-in user submits a new email via `PATCH /api/users` (§11.14). The endpoint validates format and lowercases it, then **rejects it as a `400` with a clear message if it equals the user's current email** (not a silent success), rejects it as a `409` if it is already registered to another user, and rejects it as a `429` if the new address is over the per-email cap (step 2). Only past all of those does it set `users.pending_email` to the new address and issue a `magic_tokens` row for it (same table, same 15-minute expiry, `used = 0`).
 2. The per-email cap from §11.4 / BACKLOG #14 applies to the new address — 5 unclaimed links per 15 minutes — so `PATCH /api/users` can't be used to flood an inbox. Lower risk than `request-link` since it needs a valid session.
 3. A confirmation email is sent to the **new** address via Resend — layout mirrors the sign-in email, CTA reads "Confirm your email", subject "Confirm your email for Scorecard by Outbuild". If Resend fails the endpoint returns `500`; `users.email` is untouched and `pending_email` is left set (harmless — it does nothing until the link is clicked); the user retries.
+
+---
+
+### 11.4.2 Resend link on the confirmation screen
+
+> **Status:** specification locked, build in progress (branch `feat/magic-link-resend`, BACKLOG #9). Decisions below confirmed by the user 18 September 2026.
+
+Adds a "Resend link" control to step 3 of §11.4's flow - the "Check your email" confirmation screen (`src/pages/Login.jsx`), which currently shows static confirmation text with no way to resend without navigating back to the form.
+
+**No new backend surface.** The button re-calls the existing `POST /api/auth/request-link` (§11.4), reusing the email address already held in Login's local component state from the initial submission. No new endpoint, no schema change.
+
+**Client-side cooldown (new, in addition to the existing server-side throttle):** after a tap, the button disables for **30 seconds**, showing a countdown state (e.g. "Resend in 30s") before re-enabling as "Resend link". This is a UX guard against accidental repeat taps, deliberately short and separate from - not a replacement for - the server's existing 5-links-per-15-minutes-per-email cap (§11.4). Cooldown state is local component state only, not persisted, so it resets on page refresh or re-navigation to the screen.
+
+**429 handling:** if `request-link` rejects the resend because the server throttle has been hit, the screen shows plain-language copy in place of a raw error - e.g. "You've requested a few links already - check your inbox (including spam), or try again in a few minutes." - rather than surfacing the API's raw error text. The button still returns to its normal 30-second client cooldown afterwards; the UI does not attempt to compute or display the server throttle's own reset time.
+
+A successful resend re-confirms in place, reusing the existing "we've sent a link to [email]" copy from step 3 of §11.4 rather than introducing new wording.
+
+**Out of scope for this capability:** no attempts-remaining counter, no way to change the email address from this screen (existing "back to form" navigation already covers that), no change to the server-side throttle itself (§11.4 / BACKLOG #79 track that separately).
 4. Best-effort and non-blocking (`context.waitUntil`), sent from `PATCH /api/users` at request time: a short security notice to the **old** address, subject "Email change requested on your Scorecard account" — "a request was made to change the email on your Scorecard account; if this wasn't you, contact scorecard@outbuild.uk". It does **not** contain the new address (avoids leaking a mistyped address) and carries no action link.
 5. The user clicks the link in the new inbox → `GET /api/auth/confirm-email?token=<token>` — a **new** endpoint, not an extension of `/api/auth/verify`. `verify` finds-or-creates a user and opens a session; neither is wanted here, and running it would create a second account for the pending address. `confirm-email` instead: validates the token (exists, `used = 0`, not expired); finds the user whose `pending_email` matches the token's email; re-checks the address is still free; then atomically (`DB.batch`) sets `users.email` to the pending value, clears `pending_email`, and marks the token used.
 6. Redirects to `APP_URL` with a status flag for the frontend to surface: `?email=changed` on success, `?email=taken` when the address was claimed by someone else in the meantime, and `?email=expired` for **any** dead link — token missing or malformed, genuinely expired, already used, or superseded by a later change request (`pending_email` no longer matches). The dead-link cases are deliberately collapsed into the one `expired` flag: they all mean "this link no longer works, start the change again", and a separate "superseded" flag would add UI copy for no user benefit.

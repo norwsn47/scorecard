@@ -29,9 +29,6 @@ A screen that picks a course and shows the best (lowest) rounds recorded on it. 
 ### 8. Quick-play history import after sign-in
 Offer a one-time prompt after first sign-in to migrate localStorage game history into the new account (`POST` each local game with a migrated flag). Deferred because the two histories are deliberately separate in v2.0 (PRD §11.9) and this adds complexity without blocking the core Plus experience.
 
-### 9. Magic link resend
-A "Resend link" button on the post-send confirmation screen. Currently a missed email means starting over. Needs throttling. (PRD §11.4.)
-
 ### 10. Full onboarding journey (name + home course + par)
 A proper sign-up flow capturing name and home course together, with editable per-hole par. Introduces par as a first-class concept — currently explicitly out of scope for MVP and v2.0 (PRD §7). Materially bigger than the lightweight name capture in #5; needs a decision on how par interacts with the raw-stroke scoring model (PRD §5) before any code.
 
@@ -112,6 +109,9 @@ Minor items logged from the Phase 2 review of `feat/signed-in-identity-gameplay`
 
 ### 92. Remove-player (✕) touch target below 44px guideline
 Flagged in the code review of `feat/edit-round-players` (PRD §11.13.1, 18 September 2026). The per-row remove control on Setup's player list (`src/pages/Setup.jsx`) is ~32×32px (`p-2` padding around a `w-4 h-4` icon) — below the 44×44px minimum touch target. Pre-existing on New Game, not a regression introduced by that chunk, but now also reachable via past-round edit (a phone-in-hand, outdoors context per DESIGN.md's own rationale), so raising its priority slightly. Low priority, cosmetic/accessibility only — no functional impact.
+
+### 93. Login resend countdown/error text not in an aria-live region
+Flagged in the code review of `feat/magic-link-resend` (PRD §11.4.2, 18 September 2026). The "Resend in Ns" countdown and the 429/generic error box on Login's confirmation screen (`src/pages/Login.jsx`) update visually but aren't announced to screen readers via `aria-live`. Consistent with the pre-existing error banner pattern on the same screen (not a regression), so low priority.
 
 ### 25. Crisper course map image — blocked on a better source asset
 `public/course_map_v2.png` is only 443×600px (~444 KB). `CourseMapModal.jsx` displays it at ~320px wide and zooms to 4× (~1300px effective demand), so it is inherently soft on any retina screen — the modal code itself is fine. The fix is purely a better asset: a higher-resolution scan/export (ideally ≥1600px on the long edge) or an SVG/vector from the club. Nothing to do in code until that exists. Overlaps with #13 (official logo) and #1 as things to request from Bruntsfield in one go. (Distinct from #1, which is about when the map appears and its loading state.)

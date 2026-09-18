@@ -9,6 +9,22 @@
 
 ---
 
+## 18 September 2026 (magic link resend, #9)
+
+- **A "Resend link" button was added to Login's "Check your email"
+  confirmation screen** (`src/pages/Login.jsx`), so a missed or delayed
+  email no longer means navigating back to the sign-in form and starting
+  over. Re-calls the existing `POST /api/auth/request-link` endpoint with
+  the email already held in local state - no new backend endpoint, no
+  schema change.
+- **A 30-second client-side cooldown** disables the button with a countdown
+  after each tap, separate from and shorter than the existing server-side
+  throttle (5 unclaimed links per email per 15 minutes, unchanged).
+- **A 429 from the server throttle shows plain-language copy** ("You've
+  requested a few links already...") instead of a raw error; other failures
+  reuse the existing generic error copy. Neither path leaks response detail.
+- Closes BACKLOG #9.
+
 ## 18 September 2026 (add/remove players during a past-round edit, #6)
 
 - **Editing a past round now allows adding and removing players**, reversing

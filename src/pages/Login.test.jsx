@@ -120,6 +120,63 @@ describe('Login (#35)', () => {
   })
 })
 
+// #9 — resend link on the confirmation screen (PRD §11.4.2).
+describe('Login (#9) — resend link', () => {
+  async function reachConfirmation(user) {
+    await user.type(screen.getByPlaceholderText('you@example.com'), 'player@example.com')
+    await user.click(screen.getByRole('button', { name: 'Send sign-in link' }))
+    expect(await screen.findByRole('heading', { name: 'Check your email' })).toBeInTheDocument()
+  }
+
+  it('re-calls request-link with the same email and starts a 30s cooldown', async () => {
+    const user = userEvent.setup()
+    renderLogin()
+    await reachConfirmation(user)
+
+    const resend = screen.getByRole('button', { name: 'Resend link' })
+    await user.click(resend)
+
+    await waitFor(() => {
+      const calls = global.fetch.mock.calls.filter(([url]) => url.includes('/api/auth/request-link'))
+      expect(calls).toHaveLength(2)
+      expect(JSON.parse(calls[1][1].body)).toEqual({ email: 'player@example.com' })
+    })
+
+    expect(screen.getByRole('button', { name: 'Resend in 30s' })).toBeDisabled()
+  })
+
+  it('re-enables the button once the cooldown elapses', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    const user = userEvent.setup({ delay: null })
+    renderLogin()
+    await reachConfirmation(user)
+
+    await user.click(screen.getByRole('button', { name: 'Resend link' }))
+    expect(screen.getByRole('button', { name: 'Resend in 30s' })).toBeDisabled()
+
+    await vi.advanceTimersByTimeAsync(30000)
+
+    expect(screen.getByRole('button', { name: 'Resend link' })).not.toBeDisabled()
+    vi.useRealTimers()
+  })
+
+  it('shows plain-language copy on a 429 and still applies the cooldown', async () => {
+    const user = userEvent.setup()
+    renderLogin()
+    await reachConfirmation(user)
+
+    global.fetch = routedFetch({
+      requestLink: () => Promise.resolve({ ok: false, status: 429, json: async () => ({ error: 'Too many sign-in requests.' }) }),
+    })
+
+    await user.click(screen.getByRole('button', { name: 'Resend link' }))
+
+    expect(await screen.findByText(/You've requested a few links already/)).toBeInTheDocument()
+    expect(screen.queryByText('Too many sign-in requests.')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Resend in 30s' })).toBeDisabled()
+  })
+})
+
 describe('Login (#35) — ?auth= inline error, past App\'s real auth-check gate', () => {
   it('shows the expired-link message for ?auth=expired', async () => {
     window.history.replaceState({}, '', '/login?auth=expired')
