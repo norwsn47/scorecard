@@ -5,9 +5,36 @@
 > Git history is the full record; this file is for context and decision rationale that commit messages don't carry.
 > Update the date below whenever you add an entry.
 
-**Last updated:** 11 September 2026
+**Last updated:** 18 September 2026
 
 ---
+
+## 18 September 2026 (signed-in identity in gameplay, #5)
+
+- **Signed-in users now see a star badge next to their own name wherever
+  players are listed** — the live Scorecard header, the "Finish Game?"
+  confirmation dialog, the Summary player-totals table, and History (both
+  per-round player rows and the filter chips). A player is identified as
+  "the signed-in user" by exact name match (trimmed, case-insensitive)
+  against the account's `users.name` — the same normalisation the existing
+  duplicate-name check already used, so the app now has one name-comparison
+  rule instead of two. This is a display-time comparison only: no new
+  `user_id`-per-player field, no schema or games-API change, and it works
+  retroactively on rounds saved before this shipped.
+- **New Game and Add Past Round pre-fill the first player slot** with the
+  signed-in user's name when one is set (editable/overwritable like any
+  other player field); Edit Round is untouched.
+- Deliberately **not** shown: on the generated share image (a static export
+  handed to a recipient who isn't necessarily signed in), or on the
+  Summary/History winner-result prose lines (a one-off sentence naming a
+  winner isn't a scannable roster, and stacking the star with the winner's
+  own accent colour would over-signal at the exact moment a signed-in user
+  wins). See PRD §11.15 for the full spec and the accepted edge case (a
+  guest typing the same name as the account holder also gets the star).
+  Supersedes the earlier §8/§11.14 forward-references, which described a
+  different approach (a name-entry prompt, a "primary" score treatment)
+  that was never built.
+- Closes BACKLOG #5.
 
 ## 11 September 2026 (PRD housekeeping — Info page vs privacy page split, #60)
 

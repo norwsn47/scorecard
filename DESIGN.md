@@ -1,7 +1,7 @@
 # Design
 ## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
-Last updated: 11 September 2026
+Last updated: 18 September 2026
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
 ---
@@ -545,6 +545,8 @@ Inline SVGs throughout — no icon library dependency.
 - Stroke-based, `strokeLinecap="round" strokeLinejoin="round"`
 - Standard `strokeWidth`: `1.5` (general UI), `2` (close/X), `2.5` (advance chevron)
 - Sizes: `w-2.5 h-2.5` (external link ↗), `w-4 h-4` (close ✕), `w-6 h-6` (map, chevron)
+
+**Signed-in identity star (§11.15, `src/components/PlayerStar.jsx`)** — a small star badge trailing a player's name wherever players are listed (live Scorecard, Summary, History player rows and filter chips) when that name matches the signed-in user's own `users.name`. Stroke-based like the rest of the set, `w-2.5 h-2.5` — the same size tier as the external-link ↗ annotation, since the role is identical (a small glyph beside text, not a standalone control). Deliberately carries no colour of its own — it renders in `currentColor` and inherits whatever colour its surrounding name already has (muted header, accent winner name, text-on-accent filter chip), so it never introduces a competing colour rule or implies the signed-in player outranks guests in the round. Never shown on the share image (§4.7) — that's a static export for a recipient who may not be signed in.
 
 ---
 

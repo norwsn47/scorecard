@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildEditGame, calculateResult, canStartGame, computeDisplayedHoles, createGame, deriveResult, findDuplicateIndices, finishGame } from './game.js'
+import { buildEditGame, calculateResult, canStartGame, computeDisplayedHoles, createGame, deriveResult, findDuplicateIndices, finishGame, isSignedInPlayer } from './game.js'
 
 // ── findDuplicateIndices ──────────────────────────────────────────────────────
 
@@ -32,6 +32,37 @@ describe('findDuplicateIndices', () => {
     expect(result).toContain(0)
     expect(result).toContain(2)
     expect(result).not.toContain(1)
+  })
+})
+
+// ── isSignedInPlayer (§11.15) ────────────────────────────────────────────────
+
+describe('isSignedInPlayer', () => {
+  it('matches an exact name', () => {
+    expect(isSignedInPlayer('Alice', 'Alice')).toBe(true)
+  })
+
+  it('matches case-insensitively, same as findDuplicateIndices', () => {
+    expect(isSignedInPlayer('alice', 'Alice')).toBe(true)
+    expect(isSignedInPlayer('ALICE', 'alice')).toBe(true)
+  })
+
+  it('matches after trimming surrounding whitespace on either side', () => {
+    expect(isSignedInPlayer('  Alice  ', 'Alice')).toBe(true)
+    expect(isSignedInPlayer('Alice', '  Alice  ')).toBe(true)
+  })
+
+  it('does not match a different name', () => {
+    expect(isSignedInPlayer('Bob', 'Alice')).toBe(false)
+  })
+
+  it('is false when the player name is empty', () => {
+    expect(isSignedInPlayer('', 'Alice')).toBe(false)
+  })
+
+  it('is false when there is no signed-in user name (null or undefined)', () => {
+    expect(isSignedInPlayer('Alice', null)).toBe(false)
+    expect(isSignedInPlayer('Alice', undefined)).toBe(false)
   })
 })
 

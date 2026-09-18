@@ -32,6 +32,21 @@ export function canStartGame(names, count) {
 }
 
 /**
+ * True when `playerName` is the signed-in account holder's own name (§11.15)
+ * — an exact match against `users.name` after trimming whitespace and
+ * lower-casing both sides. Same normalisation findDuplicateIndices uses for
+ * the duplicate-name check above, so the app has one name-comparison rule,
+ * not two. Returns false whenever either name is empty/unset (including a
+ * signed-out visitor, where `userName` is undefined/null).
+ */
+export function isSignedInPlayer(playerName, userName) {
+  if (!playerName || !userName) return false
+  const a = playerName.trim().toLowerCase()
+  const b = userName.trim().toLowerCase()
+  return a !== '' && a === b
+}
+
+/**
  * How many hole rows to show in the live scorecard.
  * Displays up to and including the first hole where not all players have
  * scored — so a new row appears automatically once the previous hole is full.

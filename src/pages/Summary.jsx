@@ -1,11 +1,12 @@
 import { useRef, useState } from 'react'
 import { track } from '../utils/analytics.js'
 import { formatDateOnly } from '../utils/format.js'
-import { deriveResult } from '../utils/game.js'
+import { deriveResult, isSignedInPlayer } from '../utils/game.js'
 import { tiedNames } from '../utils/result.js'
 import { deriveHolePars, playerTotal, roundToPar, scoreToPar } from '../utils/scores.js'
 import PageHeader from '../components/PageHeader.jsx'
 import ParDelta from '../components/ParDelta.jsx'
+import PlayerStar from '../components/PlayerStar.jsx'
 import { shareScorecard } from '../utils/share.js'
 import { getActiveGame, getCompletedGames, markCompletedGameSynced } from '../utils/storage.js'
 import { useAuth } from '../hooks/useAuth.jsx'
@@ -267,7 +268,10 @@ export default function Summary({ navigate, params }) {
                     isWinner(player) ? 'text-accent font-semibold' : 'text-muted',
                   ].join(' ')}
                 >
-                  <span className="block truncate">{player}</span>
+                  <span className="flex items-center justify-center gap-0.5">
+                    <span className="truncate min-w-0">{player}</span>
+                    {isSignedInPlayer(player, user?.name) && <PlayerStar />}
+                  </span>
                   {isDnf(player) && <span className="block text-muted normal-case tracking-normal font-normal">DNF</span>}
                 </th>
               ))}

@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import PageHeader from '../components/PageHeader.jsx'
 import ParDelta from '../components/ParDelta.jsx'
+import PlayerStar from '../components/PlayerStar.jsx'
 import { formatShortDate } from '../utils/format.js'
+import { isSignedInPlayer } from '../utils/game.js'
 import { playerTotal, roundToPar } from '../utils/scores.js'
 import { deleteCompletedGame, getCompletedGames } from '../utils/storage.js'
 import { normalizeDbGame, normalizeLocalGame } from '../utils/history.js'
@@ -167,13 +169,14 @@ export default function History({ navigate }) {
               key={name}
               onClick={() => toggleFilter(name)}
               className={[
-                'shrink-0 inline-flex items-center py-1.5 px-3 rounded-full border font-ui text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
+                'shrink-0 inline-flex items-center gap-1 py-1.5 px-3 rounded-full border font-ui text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
                 filter === name
                   ? 'bg-accent border-accent text-bg'
                   : 'border-border text-muted',
               ].join(' ')}
             >
               {name}
+              {isSignedInPlayer(name, user?.name) && <PlayerStar />}
             </button>
           ))}
         </div>
@@ -267,6 +270,7 @@ export default function History({ navigate }) {
                         ].join(' ')}
                       >
                         {name}
+                        {isSignedInPlayer(name, user?.name) && <PlayerStar className="ml-0.5" />}
                         {isDnf && <span className="text-muted font-normal"> (DNF)</span>}
                       </span>
                       {/* Total-to-par, matching Summary's totals row (#70) — was
