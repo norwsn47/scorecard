@@ -192,7 +192,6 @@ Logged from the first `/full-audit` (code-reviewer, read-only). Baseline at the 
 - `Setup.jsx:113-130` courses fetch has no 401/`res.ok` handling and an empty catch, so a failed or expired session shows "No courses yet" and allows a no-course 36-hole round. `CourseEdit.jsx:52` handles 401 properly (#75).
 - `Setup.jsx:242,266` `new Date(pastDate + 'T12:00:00').toISOString()` throws RangeError if the date field is cleared; `ready` never checks the date, so "Enter scores" / "Edit hole scores" silently does nothing (reproduced in Node).
 - `Scorecard.jsx:222-224` ignores the false return of `saveCompletedGame` (quota/blocked storage), then `clearActiveGame()` runs: silent loss of a finished round for a signed-out user. The active-game path shows a "Couldn't save" banner; the finish path does not.
-- `Summary.jsx:61-64` calls `navigate('home')` during render. `Scorecard.jsx:67-72` and `Settings.jsx:27-29` do it from an effect and comment why. Expect a React "update a component while rendering" warning (needs debugger repro, see #106).
 - Low: share failures swallowed silently (`Summary.jsx:157-167`, AbortError should stay silent but others need feedback); `logout()` has no try/catch (`Info.jsx:114`, `useAuth.jsx:45-48`); date defaults use the UTC date via `toISOString().slice(0,10)` (`Setup.jsx:51,486`), so between 00:00 and 01:00 BST "today" is not selectable and a round played 00:30 BST edits as the previous day (reproduced in Node).
 
 ### 100. Audit: inconsistent patterns (mostly Low)
@@ -230,8 +229,7 @@ No test files for `Summary.jsx` (the save logic, cf. #95), `useAuth.jsx`, `share
 - PRD.md:731-733 §11.15 status still says "build in progress" and that the star is not yet on the Finish Game dialog; it is (`Scorecard.jsx:417`). Product-owner to update.
 - DESIGN.md "Divergences" (~569-577) lists as pending items already fixed (`Scorecard.jsx:412` and `Login.jsx:117` opacity, the "no shipped buttons yet" focus-visible note), and refers to History "+ Add round" (code says "+ Add") and a `CourseEdit.jsx:25` "← Add Past Round" back button removed in #89.
 
-### 106. Audit: debugger handoffs (not yet run)
-- Suspected React render-phase state update in `Summary.jsx:61-64`: `navigate('home')` during render when no completed game resolves (e.g. `/summary` deep-linked with empty storage). Needs a dev-console repro to confirm the warning and whether the redirect is reliable under StrictMode.
+### 106. Audit: debugger handoffs (item 1 done, item 2 not yet run)
 - Magic-link "expired" for users whose mail client prefetches links (`verify.js:14-22`, `confirm-email.js:24-26`). Assumed; reproduction needs a real mail client or scanner. Links to #102.
 
 ### 107. Audit: performance-auditor handoffs (not yet run)
@@ -240,3 +238,6 @@ No test files for `Summary.jsx` (the save logic, cf. #95), `useAuth.jsx`, `share
 
 ### 108. Input and outline-button border contrast (~1.39:1) - design decision (design-director, 19 Sep 2026)
 Found while proposing the sunlight-contrast fix (branch `fix/sunlight-contrast-tokens`, which deliberately left it out). The `border` token `#D9D0C4` is about 1.39:1 on the page background (hand-computed, not browser-measured), below the 3:1 that WCAG SC 1.4.11 expects for identifying a control's boundary. Inputs also differ from the page only by a faint fill. Buttons carry text labels, so they are the lesser concern; inputs are the weaker case. Fixing it would change the app's warm-hairline character across the whole UI, so it needs a design-director call on whether to darken `border` for controls only (leaving decorative hairlines alone) or accept the current look. Not actioned.
+
+### 109. Redirect-to-Home pushes history instead of replacing it (Low - from the #106 debugger investigation, 19 Sep 2026)
+The no-data redirects in `Summary.jsx`, `Scorecard.jsx` and `Settings.jsx` call `navigate('home')`, which uses `history.pushState`. After a deep link or bounce to one of those pages, history reads `[/summary, /]`, so pressing Back from Home returns to the page that just bounced to Home again (a Back loop). Separately, under React StrictMode in dev the effect runs twice, so two entries are pushed (dev-only; a production build shows one). Fixing either needs a router-level decision in `App.jsx`: give `navigate` a `replace` option (or a guard) and use it for redirects. Changes shared behaviour across three pages and needs a code-reviewer pass plus a check of the popstate tests. Not actioned. Related: #43b (back-nav polish). Fixed alongside this: the render-phase `navigate` warning in Summary (see the merge of `fix/summary-render-redirect`).
