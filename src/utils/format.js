@@ -1,17 +1,3 @@
-export function formatGameNameDate(date = new Date()) {
-  return new Intl.DateTimeFormat('en-GB', {
-    weekday: 'long', day: 'numeric', month: 'long',
-  }).format(date)
-}
-
-export function formatDate(isoString) {
-  if (!isoString) return ''
-  return new Intl.DateTimeFormat('en-GB', {
-    day: 'numeric', month: 'long', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  }).format(new Date(isoString))
-}
-
 export function formatDateOnly(isoString) {
   if (!isoString) return ''
   return new Intl.DateTimeFormat('en-GB', {

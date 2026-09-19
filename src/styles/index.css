@@ -3,11 +3,6 @@
 @tailwind utilities;
 
 @layer utilities {
-  /* Standardised page-top padding — includes safe-area-inset-top for notched devices */
-  .pt-page {
-    padding-top: calc(3rem + env(safe-area-inset-top, 0px));
-  }
-
   /* iOS zoom prevention — inputs must be at least 16px */
   input,
   textarea,
@@ -101,17 +96,6 @@
       0 0 0 11px rgba(255,255,255,0.06),
       0 32px 80px rgba(26, 26, 24, 0.45);
   }
-}
-
-/* Shared map vignette — fades image edges to cream */
-.map-vignette {
-  background: radial-gradient(
-    ellipse at center,
-    transparent 45%,
-    rgba(247,244,238,0.55) 68%,
-    rgba(247,244,238,0.92) 85%,
-    rgba(247,244,238,1) 100%
-  );
 }
 
 /* Desktop annotation note — hidden on mobile */
