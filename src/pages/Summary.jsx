@@ -370,7 +370,7 @@ export default function Summary({ navigate, params }) {
                   rows={2}
                   readOnly={alreadySaved}
                   disabled={saving}
-                  className="w-full px-4 py-3 rounded-md border border-border bg-bg-card font-ui text-base text-text placeholder:text-chrome resize-none focus:outline-none focus:ring-2 focus:ring-accent/40 read-only:opacity-70"
+                  className="w-full px-4 py-3 rounded-md border border-border bg-bg-card font-ui text-base text-text placeholder:text-muted resize-none focus:outline-none focus:ring-2 focus:ring-accent/40 read-only:opacity-70"
                 />
                 <p className="font-ui text-xs text-muted mt-1 pl-1">
                   {alreadySaved ? 'Round notes' : 'Round notes - optional'}

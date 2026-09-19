@@ -17,7 +17,6 @@ export default {
         accent:      'rgb(var(--color-accent) / <alpha-value>)',
         'accent-hover':  'var(--color-accent-hover)',
         border:          'var(--color-border)',
-        chrome:          'var(--color-chrome)',
         'control-warm':  'var(--color-control-warm)',
         'accent-tint':   'var(--color-accent-tint)',
         'under-par':      'var(--color-under-par)',
