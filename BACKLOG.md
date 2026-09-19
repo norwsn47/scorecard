@@ -172,12 +172,10 @@ Two narrow wrinkles in `functions/api/users/index.js` / `confirm-email.js`, both
 ### Full-codebase audit, 19 September 2026 (#97-#108)
 Logged from the first `/full-audit` (code-reviewer, read-only). Baseline at the time: lint clean, 35 test files / 419 tests passing. Contrast ratios and tap-target sizes below are hand-computed estimates, not browser measurements; nothing was tested with a screen reader; `npm audit` was not run. The two High findings are #95 and #96 under Known issues. Nothing here is actioned.
 
-### 97. Audit: dead code (Low)
-- `format.js:1,7` - `formatGameNameDate` and `formatDate` exported, never imported (including tests).
-- `index.css:107-116` `.map-vignette` and `index.css:6-9` `.pt-page` unused.
-- `functions/_lib/email.js:10` `EMAIL_RE` and `ParStepperGrid.jsx:9-10` `PAR_MIN`/`PAR_MAX` are exported but only used inside their own file (or tests).
-- Four `.gitkeep` placeholders in `src/{components,hooks,pages,utils}` now that they hold real files; `README.md` is effectively empty (11 bytes).
-- Stale comments: orphaned "Browser Back out of an in-progress edit..." above the wrong effect (`Setup.jsx:77-82`, describes the effect at ~101); `// totals + avg` in `share.js:99` (average dropped in #70).
+### 97. Audit: dead code - remainder (Low)
+Most of #97 was removed on 19 September 2026 (`chore/dead-code-cleanup`: unused `formatGameNameDate`/`formatDate`, `.pt-page` and `.map-vignette` CSS, the four `.gitkeep` files, `PAR_MIN`/`PAR_MAX` un-exported, two stale comments). Left on purpose:
+- `functions/_lib/email.js:10` `EMAIL_RE` is exported but only used inside its own file and in tests. The tests import it, so un-exporting it would break them; leave unless the tests are changed.
+- `README.md` is effectively empty (11 bytes). Needs content written, not deleted; decide whether it is worth doing.
 
 ### 98. Audit: duplicated logic
 - **Medium** - `auth/request-link.js:26-42` and `users/index.js:13-14,94-131` duplicate the throttle count query, `MAX_FRESH_LINKS = 5`, the 15-minute TTL and the token INSERT plus email send. No shared helper.

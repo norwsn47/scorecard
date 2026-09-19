@@ -96,7 +96,7 @@ async function buildCanvas(game) {
   const DIV_H     = 1
   const COL_H     = 30   // column headers
   const ROW_H     = 32
-  const TOTAL_H   = 54   // totals + avg
+  const TOTAL_H   = 54   // totals
   const BOT_PAD   = 20
 
   // Solo rounds carry no result — the winner callout box is omitted entirely.

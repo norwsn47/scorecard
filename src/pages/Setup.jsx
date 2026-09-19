@@ -74,12 +74,6 @@ export default function Setup({ navigate, goBack, params }) {
   const courseReady = !showCourse || !creatingCourse || newCourseName.trim().length > 0
   const ready       = canStartGame(names, names.length) && courseReady
 
-  // Browser Back out of an in-progress edit lands here with the edit-flow
-  // params gone (App.jsx never persists editRound / game in history state), so
-  // this screen would otherwise render as a mislabelled "New Game" while the
-  // edit working copy sits stranded in the active-game slot. Detect that,
-  // discard the abandoned edit, and send the user to their rounds list where
-  // the original round is untouched.
   // Pre-fill the first player slot with the signed-in user's own name (§4.2,
   // §11.15) — a genuinely new round only, never an edit (renaming an existing
   // player is a different action). `user` resolves asynchronously from
@@ -98,6 +92,12 @@ export default function Setup({ navigate, goBack, params }) {
     })
   }, [user, editRound])
 
+  // Browser Back out of an in-progress edit lands here with the edit-flow
+  // params gone (App.jsx never persists editRound / game in history state), so
+  // this screen would otherwise render as a mislabelled "New Game" while the
+  // edit working copy sits stranded in the active-game slot. Detect that,
+  // discard the abandoned edit, and send the user to their rounds list where
+  // the original round is untouched.
   useEffect(() => {
     if (editRound || pastRound) return
     if (getActiveGame()?._edit) {
