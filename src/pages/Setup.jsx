@@ -70,6 +70,17 @@ export default function Setup({ navigate, goBack, params }) {
   // local/quick-play round — its course is not editable (confirmed scope).
   const showCourse  = !!user && (!editRound || isDbEdit)
   const showDate    = pastRound || editRound
+
+  // A round's hole count can't change while editing it (#56): switching a
+  // 36-hole round onto a 9-hole course would leave a 36-row grid with the
+  // extra holes padded to par 3. So an edit only offers courses with the
+  // round's own hole count (plus the round's current course, so it always
+  // stays selectable), and a course created mid-edit gets that hole count.
+  const selectableCourses = editRound
+    ? courses.filter(c => c.holes === roundHoleCount || c.id === editGame?.courseId)
+    : courses
+  const canCreateCourse   = !editRound || NEW_COURSE_HOLE_OPTIONS.includes(roundHoleCount)
+  const newCourseDefaultHoles = editRound && canCreateCourse ? roundHoleCount : 9
   const dupeIndices = findDuplicateIndices(names)
   const courseReady = !showCourse || !creatingCourse || newCourseName.trim().length > 0
   const ready       = canStartGame(names, names.length) && courseReady
@@ -314,7 +325,7 @@ export default function Setup({ navigate, goBack, params }) {
         {showCourse && (
           <div className="pb-1">
             {!creatingCourse ? (
-              courses.length === 0 ? (
+              selectableCourses.length === 0 ? (
                 // Zero courses — e.g. after deleting the only one (#54/#71).
                 // A <select> with nothing but "+ New course" in it reads as
                 // an accidentally-blank dropdown, so this degrades to an
@@ -325,19 +336,25 @@ export default function Setup({ navigate, goBack, params }) {
                 // logged-out Quick Play), so this state says so explicitly
                 // rather than leaving it as an undiscoverable accident (#76).
                 <div className="py-4 px-4 rounded-md border border-dashed border-border bg-bg-card text-center">
-                  <p className="font-ui text-sm text-muted mb-3">No courses yet - add one to get started</p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCreatingCourse(true)
-                      setSelectedCourseId(null)
-                      setNewCourseHoleCount(9)
-                      setNewCoursePars(Array(9).fill(3))
-                    }}
-                    className="py-2 px-4 rounded-sm border border-accent text-accent font-ui text-xs tracking-[0.1em] uppercase font-semibold active:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-                  >
-                    + New course
-                  </button>
+                  <p className="font-ui text-sm text-muted mb-3">
+                    {editRound && courses.length > 0
+                      ? `No courses with ${roundHoleCount} holes - a round's hole count can't change while editing`
+                      : 'No courses yet - add one to get started'}
+                  </p>
+                  {canCreateCourse && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCreatingCourse(true)
+                        setSelectedCourseId(null)
+                        setNewCourseHoleCount(newCourseDefaultHoles)
+                        setNewCoursePars(Array(newCourseDefaultHoles).fill(3))
+                      }}
+                      className="py-2 px-4 rounded-sm border border-accent text-accent font-ui text-xs tracking-[0.1em] uppercase font-semibold active:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                    >
+                      + New course
+                    </button>
+                  )}
                   {/* Only true for a genuinely new round (New Game / Add Past
                       Round) — an editRound detour through this same empty
                       state (editing an existing no-course D1 round while the
@@ -356,7 +373,7 @@ export default function Setup({ navigate, goBack, params }) {
                     onChange={e => setSelectedCourseId(e.target.value)}
                     className="flex-1 min-w-0 py-3 pl-4 pr-4 rounded-md border border-border font-ui text-base bg-bg-card text-text focus:outline-none focus:ring-2 focus:ring-accent/40"
                   >
-                    {courses.map(c => (
+                    {selectableCourses.map(c => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
                   </select>
@@ -385,18 +402,20 @@ export default function Setup({ navigate, goBack, params }) {
                       separate button beside the select instead — same label
                       and visual treatment as the zero-courses empty state's
                       "+ New course" button below. */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCreatingCourse(true)
-                      setSelectedCourseId(null)
-                      setNewCourseHoleCount(9)
-                      setNewCoursePars(Array(9).fill(3))
-                    }}
-                    className="shrink-0 py-2 px-4 rounded-sm border border-accent text-accent font-ui text-xs tracking-[0.1em] uppercase font-semibold active:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-                  >
-                    + New course
-                  </button>
+                  {canCreateCourse && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCreatingCourse(true)
+                        setSelectedCourseId(null)
+                        setNewCourseHoleCount(newCourseDefaultHoles)
+                        setNewCoursePars(Array(newCourseDefaultHoles).fill(3))
+                      }}
+                      className="shrink-0 py-2 px-4 rounded-sm border border-accent text-accent font-ui text-xs tracking-[0.1em] uppercase font-semibold active:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                    >
+                      + New course
+                    </button>
+                  )}
                 </div>
               )
             ) : (
@@ -412,7 +431,7 @@ export default function Setup({ navigate, goBack, params }) {
                       className="flex-1 min-w-0 py-3 pl-4 pr-4 rounded-md border border-border font-ui text-base bg-bg-card text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40"
                     />
                     <button
-                      onClick={() => { setCreatingCourse(false); setNewCourseName(''); setCourseError(null); setNewCourseHoleCount(9); setNewCoursePars(Array(9).fill(3)) }}
+                      onClick={() => { setCreatingCourse(false); setNewCourseName(''); setCourseError(null); setNewCourseHoleCount(newCourseDefaultHoles); setNewCoursePars(Array(newCourseDefaultHoles).fill(3)) }}
                       className="px-4 py-3 rounded-sm border border-border text-muted font-ui text-sm active:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                     >
                       Cancel
@@ -427,26 +446,32 @@ export default function Setup({ navigate, goBack, params }) {
                     created (no course-edit flow yet, #54). Changing it resets
                     the par list to that many par-3 holes. */}
                 <div className="mt-4">
-                  <div className="flex gap-2" role="radiogroup" aria-label="Number of holes on this course">
-                    {NEW_COURSE_HOLE_OPTIONS.map(n => (
-                      <button
-                        key={n}
-                        type="button"
-                        role="radio"
-                        aria-checked={newCourseHoleCount === n}
-                        onClick={() => handleNewCourseHoleCount(n)}
-                        className={[
-                          'flex-1 h-11 rounded-md border font-ui text-sm active:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
-                          newCourseHoleCount === n
-                            ? 'border-accent text-accent'
-                            : 'border-border text-text',
-                        ].join(' ')}
-                      >
-                        {n} holes
-                      </button>
-                    ))}
-                  </div>
-                  <p className="font-ui text-xs text-muted mt-1.5 pl-1">Holes — can't be changed later</p>
+                  {editRound ? (
+                    <p className="font-ui text-sm text-text pl-1">{roundHoleCount} holes</p>
+                  ) : (
+                    <div className="flex gap-2" role="radiogroup" aria-label="Number of holes on this course">
+                      {NEW_COURSE_HOLE_OPTIONS.map(n => (
+                        <button
+                          key={n}
+                          type="button"
+                          role="radio"
+                          aria-checked={newCourseHoleCount === n}
+                          onClick={() => handleNewCourseHoleCount(n)}
+                          className={[
+                            'flex-1 h-11 rounded-md border font-ui text-sm active:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
+                            newCourseHoleCount === n
+                              ? 'border-accent text-accent'
+                              : 'border-border text-text',
+                          ].join(' ')}
+                        >
+                          {n} holes
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <p className="font-ui text-xs text-muted mt-1.5 pl-1">
+                    {editRound ? "Holes - matches this round, can't be changed" : "Holes — can't be changed later"}
+                  </p>
                 </div>
 
                 {/* Per-hole par — course creation only. Every hole starts at
@@ -457,7 +482,9 @@ export default function Setup({ navigate, goBack, params }) {
                 </div>
               </>
             )}
-            <p className="font-ui text-xs text-muted mt-1.5 pl-1">Course</p>
+            <p className="font-ui text-xs text-muted mt-1.5 pl-1">
+              {editRound ? `Course - ${roundHoleCount}-hole courses only, to match this round` : 'Course'}
+            </p>
           </div>
         )}
 
