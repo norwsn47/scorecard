@@ -135,7 +135,7 @@ Minor items logged from the review of `fix/map-button-course-match` (BACKLOG #1)
 `public/course_map_v2.png` is only 443×600px (~444 KB). `CourseMapModal.jsx` displays it at ~320px wide and zooms to 4× (~1300px effective demand), so it is inherently soft on any retina screen — the modal code itself is fine. The fix is purely a better asset: a higher-resolution scan/export (ideally ≥1600px on the long edge) or an SVG/vector from the club. Nothing to do in code until that exists. Overlaps with #13 (official logo) and #1 as things to request from Bruntsfield in one go. (Distinct from #1, which is about when the map appears and its loading state.)
 
 ### 41. Page load performance pass
-Measure and tune actual load performance — Core Web Vitals (LCP, CLS, INP), bundle size (currently ~248 kB / ~76 kB gzip), font loading (three families via Google Fonts with `display=swap`), image weight (`course_map_v2.png` is ~455 kB), and Cloudflare Pages caching headers. Establish a baseline, fix the obvious wins, re-measure. Assistance requested. (The `performance-auditor` agent covers this.)
+Measure and tune actual load performance — Core Web Vitals (LCP, CLS, INP), bundle size (currently ~282 kB / ~82 kB gzip as of 19 September 2026), font loading (three families via Google Fonts with `display=swap`), image weight (`course_map_v2.png` is ~455 kB), and Cloudflare Pages caching headers. Establish a baseline, fix the obvious wins, re-measure. Assistance requested. (The `performance-auditor` agent covers this.)
 
 
 
@@ -169,7 +169,7 @@ Two narrow wrinkles in `functions/api/users/index.js` / `confirm-email.js`, both
 
 ---
 
-### Full-codebase audit, 19 September 2026 (#97-#107)
+### Full-codebase audit, 19 September 2026 (#97-#108)
 Logged from the first `/full-audit` (code-reviewer, read-only). Baseline at the time: lint clean, 35 test files / 419 tests passing. Contrast ratios and tap-target sizes below are hand-computed estimates, not browser measurements; nothing was tested with a screen reader; `npm audit` was not run. The two High findings are #95 and #96 under Known issues. Nothing here is actioned.
 
 ### 97. Audit: dead code (Low)
@@ -208,7 +208,6 @@ Logged from the first `/full-audit` (code-reviewer, read-only). Baseline at the 
 - No error or status message is in a live region except `Home.jsx:63` `role="status"`: `App.jsx:162`, `Scorecard.jsx:232`, `Login.jsx:120,158`, `Settings.jsx:185,244`, `Setup.jsx:421`, `CourseEdit.jsx:199,225`. #93 covers only Login's resend.
 - `History.jsx:234-296` nests `role="button"` spans inside the card's `<button>` (invalid, unreliable under assistive tech).
 - Home tap targets: "Last round", "Want to save your scores? Sign in" and the Outbuild footer link are bare `text-xs` with no padding (~16px tall, estimated); the course page got `py-3 -my-3` in #78, Home did not (`Home.jsx:128-136,190-196,205`).
-- Contrast (estimated): `text-chrome` #C0B8B0 on #F7F4EE is ~1.8:1 for inactive hole numbers and the Map/Decrement controls (`Scorecard.jsx:308,363,374`); Advance button #F7F4EE on #9A9189 is ~2.8:1 (`Scorecard.jsx:389`, Low); `placeholder:text-chrome` ~1.8:1 (`Login.jsx:183`, `Setup.jsx:564`, `Summary.jsx:373`, Low). This is what DESIGN.md prescribes, so it is a token-level decision, routed to the design-director (proposal only, no DESIGN.md change yet).
 - Low: info icon button ~40px (`Home.jsx:76-80`, `BruntsfiledCoursePage.jsx:33-37`); Privacy/Rules inline links ~20px tall and `<a>` lacks the DESIGN.md focus-visible ring (`Privacy.jsx:3-15,83,97,109`, `RulesContent.jsx:49`); History delete button is `w-9 h-9` (36px) and reads "Delete game" while the UI says "round" (`History.jsx:301-302`); no `<main>` landmark on Scorecard, Summary, Login (and the `CourseEdit.jsx:136` area); focus-return missing on several sheets (see #80).
 
 ### 102. Audit: security hardening (Medium unless stated; no Critical, no secrets found in tracked files)
@@ -226,7 +225,6 @@ Logged from the first `/full-audit` (code-reviewer, read-only). Baseline at the 
 No test files for `Summary.jsx` (the save logic, cf. #95), `useAuth.jsx`, `share.js`, `ParStepperGrid`, `PlayerStar`, `Info`/`Privacy`/`Rules`, and the `logout` and `session` functions. Adds to the gaps already in #91 and #80.
 
 ### 105. Audit: stale or inaccurate documentation (log only, not corrected)
-- BACKLOG #41 says bundle "~248 kB / ~76 kB gzip"; local `dist/` is 281,717 bytes raw / 81,123 gzip (dist is gitignored, indicative).
 - BACKLOG #80 line refs are stale: Settings focus effect is now `Settings.jsx:86-94`, the storage banner is `App.jsx:162`, the notice banner is `Home.jsx:63`. See #100 for "parity" being true only for Settings and History.
 - BACKLOG #86 says "Closing" but is still listed under Known issues (this file is open items only).
 - PRD.md:731-733 §11.15 status still says "build in progress" and that the star is not yet on the Finish Game dialog; it is (`Scorecard.jsx:417`). Product-owner to update.
