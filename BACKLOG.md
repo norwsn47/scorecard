@@ -129,8 +129,8 @@ Minor items logged from the Phase 2 review of `feat/user-profile-foundation`; no
 - **DESIGN.md's dialog-semantics "no exceptions" wording doesn't fully match Settings.jsx.** (From the 11 Sep 2026 dialog-parity review.) The new pattern block states the close handler "lives in one named function... so the three paths can never drift apart", but Settings.jsx's pre-existing "Keep my account" button calls `() => setConfirmDelete(false)` inline rather than the file's own `closeDelete()`. Harmless (the button is disabled while `deleting`), but either tighten Settings.jsx to call `closeDelete()` or soften the DESIGN.md wording.
 - **`History.jsx`'s Delete button has no in-flight guard.** (From the 11 Sep 2026 dialog-parity review.) `executeDelete` awaits a fetch for DB-backed games but the button isn't disabled and shows no "Deleting…" state meanwhile, unlike Settings.jsx's `deleting`-gated equivalent. Pre-existing, low risk (a rapid double-tap could in theory fire two DELETE calls), but now sits next to a DESIGN.md section citing Settings.jsx as the reference pattern for this exact sheet.
 - **No render test for `History.jsx`'s delete-sheet dialog semantics.** (From the 11 Sep 2026 dialog-parity review.) Settings.jsx has a dedicated test covering labelled-dialog role, autofocus and Escape/backdrop close (`Settings.test.jsx:185`); `History.jsx` now has the identical behaviour but no equivalent test — only the player-filter feature is covered in `History.test.jsx`.
-- **Settings delete-sheet focus effect re-pulls focus when `deleting` flips true** (`Settings.jsx` ~63-71, deps `[confirmDelete, deleting]`). Harmless since the input stays mounted, but focus jumps back to it mid-delete. Gate the `.focus()` on the open transition only if it ever annoys.
-- **Stacked accent banners.** An active `!storageOk` banner (`App.jsx:152`) plus the `?email=` notice banner (`Home.jsx:62`) would render two full-width accent bars at once. Very unlikely combo, cosmetic.
+- **Settings delete-sheet focus effect re-pulls focus when `deleting` flips true** (`Settings.jsx` ~86-94, deps `[confirmDelete, deleting]`). Harmless since the input stays mounted, but focus jumps back to it mid-delete. Gate the `.focus()` on the open transition only if it ever annoys.
+- **Stacked accent banners.** An active `!storageOk` banner (`App.jsx:162`) plus the `?email=` notice banner (`Home.jsx:63`) would render two full-width accent bars at once. Very unlikely combo, cosmetic.
 - **`replaceState` on a recognised `?auth=` / `?email=` param strips the whole query string** (`useAuth.jsx:30`), including any unrelated params. Pre-existing behaviour, no impact today (the app uses no other query params).
 - **`AuthContext` value is a fresh object literal every render** (`useAuth.jsx:100`). Every consumer re-renders on any auth state change. The new Home capture effect is safe regardless because it keys on the referentially-stable `useState` setter, but the context value could be wrapped in `useMemo` if a perf pass ever wants it. Trivial at current scale, not worth a perf pass on its own.
 
@@ -145,7 +145,7 @@ Two narrow wrinkles in `functions/api/users/index.js` / `confirm-email.js`, both
 
 ---
 
-### Full-codebase audit, 19 September 2026 (#97-#109, #111) - lower findings, short form
+### Full-codebase audit, 19 September 2026 (#97-#103, #106-#109, #111) - lower findings, short form
 From the first `/full-audit`. Contrast ratios and tap sizes are hand-computed estimates, not browser measurements; nothing was screen-reader tested; `npm audit` was not run. The High findings are #95 and #96 above.
 
 ### 97. Dead code - remainder (Low)
@@ -187,12 +187,6 @@ From the first `/full-audit`. Contrast ratios and tap sizes are hand-computed es
 ### 103. Performance smells (flag only; not measured)
 - Medium: blank shell until `/api/auth/me` resolves or 5s abort (`App.jsx:156`, `useAuth.jsx`). Decided 19 Sep 2026: leave the `GET /api/games` `LIMIT 100` cap as it is (History silently stops at 100 rounds); revisit if anyone nears 100.
 - Low: pan-zoom library statically bundled; render-blocking Google Fonts CSS; missing indexes (`games.course_id`, `courses.user_id`, `sessions.user_id`, `magic_tokens.email`); History aggregations every render.
-
-### 104. Test coverage - remainder (Low)
-No tests for the `Info`, `Privacy` and `Rules` pages, or the `logout` and `session` Pages Functions. Summary tests for a failed save and share failures wait on #95 and #111.
-
-### 105. Stale documentation (Low)
-BACKLOG #80 line refs (Settings focus effect now `Settings.jsx:86-94`, storage banner `App.jsx:162`, notice banner `Home.jsx:63`); PRD §11.15 status still says "build in progress" and that the star is not on the Finish dialog (it is); DESIGN.md "Divergences" (~569-577) lists items already fixed and a removed "← Add Past Round" back button.
 
 ### 106. Magic-link prefetch investigation (not yet run)
 Check whether mail-security scanners burn the single-use link (`verify.js:14-22`, `confirm-email.js:24-26`), leaving the user on "expired". Needs a real mail client or scanner. Links to #102.
