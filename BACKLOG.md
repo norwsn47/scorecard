@@ -163,8 +163,7 @@ Two narrow wrinkles in `functions/api/users/index.js` / `confirm-email.js`, both
 ### Full-codebase audit, 19 September 2026 (#97-#107)
 Logged from the first `/full-audit` (code-reviewer, read-only). Baseline at the time: lint clean, 35 test files / 419 tests passing. Contrast ratios and tap-target sizes below are hand-computed estimates, not browser measurements; nothing was tested with a screen reader; `npm audit` was not run. The two High findings are #95 and #96 under Known issues. Nothing here is actioned.
 
-### 97. Audit: dead code and unused dependency (Low, one Medium)
-- **Medium - `html2canvas` is in `dependencies` but never imported** (`package.json:14`). The share image is hand-drawn on a canvas in `share.js`. Removal agreed with the user on 19 Sep 2026; being done as its own branch, delete this line once merged.
+### 97. Audit: dead code (Low)
 - `format.js:1,7` - `formatGameNameDate` and `formatDate` exported, never imported (including tests).
 - `index.css:107-116` `.map-vignette` and `index.css:6-9` `.pt-page` unused.
 - `functions/_lib/email.js:10` `EMAIL_RE` and `ParStepperGrid.jsx:9-10` `PAR_MIN`/`PAR_MAX` are exported but only used inside their own file (or tests).
@@ -231,3 +230,6 @@ No test files for `Summary.jsx` (the save logic, cf. #95), `useAuth.jsx`, `share
 ### 107. Audit: performance-auditor handoffs (not yet run)
 - App start gated on the 5s `/api/auth/me` timeout, static import of the pan-zoom library, render-blocking third-party font CSS. Needs LCP/first-paint on a throttled mobile profile; fits the #41 baseline.
 - `GET /api/games` (LIMIT 100, full `player_data`) and `GET /api/courses` correlated `round_count` with no supporting indexes (`migrations/001-004`). Needs D1 timing at realistic row counts, plus the product question in #103.
+
+### 108. Input and outline-button border contrast (~1.39:1) - design decision (design-director, 19 Sep 2026)
+Found while proposing the sunlight-contrast fix (branch `fix/sunlight-contrast-tokens`, which deliberately left it out). The `border` token `#D9D0C4` is about 1.39:1 on the page background (hand-computed, not browser-measured), below the 3:1 that WCAG SC 1.4.11 expects for identifying a control's boundary. Inputs also differ from the page only by a faint fill. Buttons carry text labels, so they are the lesser concern; inputs are the weaker case. Fixing it would change the app's warm-hairline character across the whole UI, so it needs a design-director call on whether to darken `border` for controls only (leaving decorative hairlines alone) or accept the current look. Not actioned.
