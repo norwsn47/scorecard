@@ -4,7 +4,9 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import globals from 'globals'
 
 export default [
-  { ignores: ['dist/', 'node_modules/', '.wrangler/'] },
+  // .claude/ holds agent files and git worktrees of other branches - never
+  // lint or test those from this checkout.
+  { ignores: ['dist/', 'node_modules/', '.wrangler/', '.claude/'] },
 
   js.configs.recommended,
 
