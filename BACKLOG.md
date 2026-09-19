@@ -6,7 +6,7 @@
 > Nothing here is actioned without explicit instruction — tell the project-manager (or Claude directly) to pull an item into work.
 > Numbers are stable IDs for cross-reference — don't renumber existing items when deleting one, so gaps are expected.
 
-**Last updated:** 18 September 2026
+**Last updated:** 19 September 2026
 
 > The history of shipped and removed items lives in `CHANGELOG.md`. This file is open items only.
 >
@@ -44,22 +44,23 @@ When signed in, Home shows a "signed in as…" state plus a standalone **Setting
 
 ## Blocked / waiting on a decision or something external
 
-### 31. Set up analytics — user wants Google Analytics (GA4); blocked on a privacy/consent decision, not on work
-**The user has asked for this directly (GA4 specifically, assistance requested).** It is not blocked on engineering effort — the build is ~2-3 hours — but on one decision that must be made first, because GA4 conflicts with a deliberate product stance. Blocked until the route below is chosen (product-owner + user call).
+### 31. Set up analytics — explored 19 September 2026, parked for now (not actioned)
+**Not blocked on a decision any more — the user reviewed the options directly and chose not to proceed with any of them for now.** Revisit only if the user raises it again; the research below stands so it doesn't need re-doing.
 
-**The conflict:** GA4 sets cookies. Under UK PECR + UK GDPR that normally requires a consent banner, which the app has deliberately never had. The "Your data" privacy page and `Info.jsx` both currently state there is **no tracking or analytics at all** (PRD §4.8 links to that page). Adding GA4 as-is would make both pages false.
+**What they actually want:** unique visitors, visit count, and time-on-page, simple, free, no consent banner.
 
-**Pick one before any code (product-owner + user call):**
-- **(a)** GA4 with a consent banner — accept the banner, rewrite the privacy page / `Info.jsx` copy and PRD §4.8.
-- **(b)** GA4 in a cookieless / consent-exempt configuration — no banner, but reduced data; still needs the privacy copy updated to name GA as a processor.
-- **(c)** A cookieless tool (Plausible / Fathom) — no banner, minimal privacy-copy change. **The scaffolding already targets this route:** `src/utils/analytics.js` is a `track()` wrapper around `window.plausible?.(...)` (currently a silent no-op) and `index.html:32` has the Plausible `<script>` commented out, ready to enable.
+**The conflict (why this isn't a five-minute job):** any tool that identifies a visitor via cookies/localStorage (GA4, PostHog's default mode) sets non-essential identifiers, which under UK PECR + UK GDPR requires a consent banner - the app has deliberately never had one. The "Your data" privacy page and `Info.jsx` both currently state there is **no tracking or analytics at all** (PRD §4.8 links to that page); any of these routes makes that copy false and needs it corrected, banner or not.
 
-**Already done (whichever route is chosen):** events are instrumented app-wide — New Game Started, Game Completed (player count, holes), Scorecard Shared, Game Edited, Bruntsfield Home Link Clicked.
+**Options reviewed with the user, in order:**
+- **GA4 + consent banner** - free, gives time-on-page via "engagement time" (which Plausible's own testing found can underreport actual time-on-page by up to 80% vs their method). Rejected: user didn't want a banner in any form, including a single discreet line requiring a tap - PECR requires an affirmative action before the tracking script loads, a passive sentence with no action isn't valid consent.
+- **GA4 cookieless/consent-exempt config** - not really viable; GA4 fundamentally relies on cookies, a cookieless config is a lossy hack, not a clean supported mode.
+- **Plausible (cookieless by design, no banner ever needed - confirmed via independent legal review)** - gives real per-page time-on-page and country-level geolocation without storing IPs. Rejected: paid (~$9/month), user needs free.
+- **Cloudflare Web Analytics (already available, free, cookieless, no banner)** - gives visits/pageviews/top pages/referrers/countries/Core Web Vitals. Doesn't give time-on-page. Not rejected outright but doesn't fully meet the "time on page" ask - worth reconsidering alone if analytics comes back up and per-page duration turns out not to matter.
+- **PostHog in `cookieless_mode: 'always'`** - free, no banner (cookieless by design when configured this way, not by default), gives visitors/pageviews/sessions/avg session duration/bounce rate/top pages with time-on-page/referrers/devices/active-hours heatmap. **What it loses in this mode:** country/location data (IP is stripped before GeoIP enrichment runs), true multi-day return-visitor tracking (anonymous ID is a daily-rotating hash, so the same person on different days counts as different visitors), and nearly everything else PostHog is otherwise known for - session replay, surveys, feature flags, A/B testing, funnels tied to real people - all of those need persistent identity, which is exactly what this mode avoids. Would have been the closest fit to the stated ask (free + no banner + time-on-page), but the user chose to park the whole idea rather than proceed once the trade-offs were clear.
 
-**Build steps once the route is chosen:**
-- Wire the tool: for GA, swap `analytics.js` to the `gtag` API and add the script to `index.html`; for Plausible, just uncomment `index.html:32` and set `data-domain`. Create the account either way.
-- Update `Info.jsx` + `Privacy.jsx` copy and PRD §4.8 to state exactly what is collected and by whom (and add/justify a consent banner if route (a)).
-- Confirm Cloudflare Pages' built-in analytics are on for basic traffic data regardless.
+**Already done regardless of what's eventually chosen:** events are instrumented app-wide - New Game Started, Game Completed (player count, holes), Scorecard Shared, Game Edited, Bruntsfield Home Link Clicked. `src/utils/analytics.js` is a `track()` wrapper around `window.plausible?.(...)` (currently a silent no-op) and `index.html:32` has the Plausible `<script>` commented out, ready to enable if that route is ever picked.
+
+**If revisited:** re-confirm pricing/feature details before building (this research is dated 19 September 2026 and analytics-tool pricing/features change). Still needs `Info.jsx` + `Privacy.jsx` + PRD §4.8 copy updated whatever's chosen, since all routes above make the current "no tracking" claim false.
 
 ### 42. "Sign in with Google" (OAuth)
 Add Google as a sign-in option alongside the magic link (PRD §11.4 is currently magic-link-only). Needs: an OAuth client created in the Google Cloud console (external, hence blocked), the redirect/callback Pages Function, and a decision on account linking — a user who has signed in by magic link and then uses Google with the same email address should land on the same account, not a duplicate. PRD §11.4 change needed. Assistance requested — unblock by setting up the Google Cloud OAuth client and confirming the account-linking behaviour.
@@ -92,6 +93,21 @@ From the 11 September 2026 UI/UX review, reproduced on "Bruntsfield Links" (mean
 
 ### 90. Header top padding on mobile — reduced, needs on-device confirmation
 From the 11 September 2026 UI/UX review. Reported across mobile screens, not confirmed at pixel level via desktop emulation (doesn't render iOS status bar/notch chrome). Fixed 11 September 2026: `PageHeader.jsx`'s top padding reduced `pt-10` → `pt-6` (an existing DESIGN.md spacing token, not an invented value). Still needs a quick on-device visual check to confirm it reads right with real iOS status-bar/notch chrome. Low priority.
+
+### 95. Signed-in "Done" silently loses the round if the save to D1 fails (HIGH - full audit, 19 Sep 2026)
+`Summary.jsx:132-153`: for a signed-in user, "Done" POSTs the round to `/api/games`. A non-OK response or network error is ignored (empty catch, `res.ok` never checked) and `navigate('home')` runs regardless. The round then exists only in localStorage. Signed-in History reads D1 only (`History.jsx:16,50`), Home's "Last round" shows for signed-out users only (`Home.jsx:126`), and nothing retries the sync, so the round is invisible to the user with no message. Realistic on a golf course with patchy signal. There is no recovery path because #8 (history import) is not built. Needs a product/scope call (show an error and stay on Summary, retry, or queue for later sync) - likely project-manager scoping. Not actioned. (PRD §11.)
+
+**Scoped and decided 19 September 2026 (project-manager plan + user decisions; not yet built, needs a PRD update first).** Size: Large. Chosen approach: project-manager's "B + C" - mark a failed round as pending locally, re-sync automatically, and show pending rounds in History. Rough effort (Estimated) about 3 days. No backend change needed: `POST /api/games` is already idempotent on `client_round_id` (UNIQUE(user_id, client_round_id), migration 002) and Summary already sends it.
+1. **On failure the user chooses:** Retry, or "Keep on this device and go home" (never trapped with no signal).
+2. **Visibility:** unsaved rounds appear in signed-in History with a "Not yet saved" badge. This needs a narrow, marker-gated exception to PRD §11.9 ("strictly separate, no merging"); delete, edit and dedupe-on-sync of a pending round are new cases, and the 100-row D1 cap interacts with the merged ordering.
+3. **Retry:** automatic on app open and when signal returns (`online` event), guarded against double-firing. No user action needed.
+4. **Rejections:** a permanent 400 (e.g. course deleted) or a 401 (session expired) keeps the round locally and flags it, never deletes it. 401 waits for the user to sign in again.
+5. **Shared device:** a pending round is tagged with the user who played it and only syncs when that user signs in.
+6. **#8 stays separate**, but the pending marker should be designed so #8 can reuse it later.
+Findings to carry into the build: `synced` alone cannot mark a failed save (it is undefined on every quick-play round, so signed-in failures would look identical to pre-sign-in quick-play rounds - a new marker such as `pendingSyncUserId` is needed); PRD §11.8 says a failed POST "can be retried on the next Summary visit" but no path reaches that Summary again (PRD to be corrected); `Scorecard.jsx:215` sets `synced: true` on a locally edited round without POSTing it (unreachable for signed-in users today, but it makes `synced` untrustworthy as an "on the server" flag - log as a follow-up). Build sequence: branch from an up-to-date `main` after the audit, html2canvas and contrast branches are merged; product-owner updates PRD §11.8 and §11.9 first; frontend-developer builds in pieces (marker + Summary error handling, then the sync runner, then History visibility); code-reviewer; human localhost review with `/api/games` blocked or offline; PRD alignment check; CHANGELOG and BACKLOG. Suggested branch: `fix/summary-save-failure-retry`. Note: the project-manager could not read this entry's original text when scoping (no shell), so the plan is based on the code and PRD.
+
+### 96. Scorecard scoring cells not reachable by keyboard or screen reader (HIGH - full audit, 19 Sep 2026)
+`Scorecard.jsx:317-319`: choosing a hole to score is a `<td onClick>` with no role, `tabIndex` or key handler. Keyboard, switch and screen-reader users can only move forward with Advance and cannot jump back to correct an earlier score. The header, +, - and Advance buttons are fine. This is the app's core interaction. Not actioned.
 
 ---
 
@@ -150,3 +166,79 @@ From the #84 review (email-disclosure, CLEAR WITH NOTES, 9 Sep 2026), same low-p
 Two narrow wrinkles in `functions/api/users/index.js` / `confirm-email.js`, both low priority, logged so they aren't lost:
 - **Deletion clears an unrelated party's unclaimed sign-in token.** `DELETE /api/users` removes `magic_tokens` rows matching the user's `email` *or* `pending_email`. If user A has an email change pending to address Y, and the owner of Y has separately requested a sign-in link (to make their own account) that's still unclaimed, deleting A's account also burns Y's token. Self-healing — Y just requests another link — and the path is very narrow. Scope a fix only if it ever bites.
 - **No index on `users.pending_email`.** `confirm-email` does `SELECT id FROM users WHERE pending_email = ?` on every click. The table is tiny so a scan is free today; add the index in the next migration that touches `users` if the user base ever grows.
+
+---
+
+### Full-codebase audit, 19 September 2026 (#97-#107)
+Logged from the first `/full-audit` (code-reviewer, read-only). Baseline at the time: lint clean, 35 test files / 419 tests passing. Contrast ratios and tap-target sizes below are hand-computed estimates, not browser measurements; nothing was tested with a screen reader; `npm audit` was not run. The two High findings are #95 and #96 under Known issues. Nothing here is actioned.
+
+### 97. Audit: dead code (Low)
+- `format.js:1,7` - `formatGameNameDate` and `formatDate` exported, never imported (including tests).
+- `index.css:107-116` `.map-vignette` and `index.css:6-9` `.pt-page` unused.
+- `functions/_lib/email.js:10` `EMAIL_RE` and `ParStepperGrid.jsx:9-10` `PAR_MIN`/`PAR_MAX` are exported but only used inside their own file (or tests).
+- Four `.gitkeep` placeholders in `src/{components,hooks,pages,utils}` now that they hold real files; `README.md` is effectively empty (11 bytes).
+- Stale comments: orphaned "Browser Back out of an in-progress edit..." above the wrong effect (`Setup.jsx:77-82`, describes the effect at ~101); `// totals + avg` in `share.js:99` (average dropped in #70).
+
+### 98. Audit: duplicated logic
+- **Medium** - `auth/request-link.js:26-42` and `users/index.js:13-14,94-131` duplicate the throttle count query, `MAX_FRESH_LINKS = 5`, the 15-minute TTL and the token INSERT plus email send. No shared helper.
+- **Medium** - `Scorecard.jsx:146-153` (`buildPlayerData`) and `Summary.jsx:126-131` build the same `player_data` payload.
+- **Medium** - `share.js:55-64` `winnerLabel` re-implements `tiedNames` and the "Tied: ... level on N strokes" wording from `result.js`, whose header says those strings are shared.
+- **Medium** - `Home.jsx:69-100` vs `BruntsfiledCoursePage.jsx` header, info icon, 1/2/3 list, Resume Game, Last round and Sign-in links are near-copies. Home never received the tap-target fixes the course page got (see #101).
+- Low: session cookie regex implemented three times (`session.js:3`, `me.js:33`, `logout.js:20`; `me.js` also re-implements the session JOIN, deliberately, but it can drift); clear-cookie and set-cookie header strings duplicated (`logout.js:13`, `users/index.js:228`, `verify.js:56`); the "+ New course" reset handler pasted twice with a third variant (`Setup.jsx:331-336,390-395,415`); two near-identical resend POSTs (`Login.jsx:53,80`); the external-link arrow SVG inlined ~5 times (Home, Info x3, Privacy has its own local `ExternalLink`); hole count `36` in five places (`game.js:3`, `history.js:42`, `Summary.jsx:73`, `Scorecard.jsx:78`, `constants.js:20,25`) despite `constants.js` claiming to be the one place; par band 2-7 and default 3 defined three times (`scores.js:11,88`, `ParStepperGrid.jsx`, `hole-pars.js:10-12`); client email check `/.+@.+\..+/` (`Settings.jsx:122`) looser than server `EMAIL_RE`; security-notice email HTML re-inlines the branded shell (`users/index.js:245-264` vs `email.js:55-81`). The Bruntsfield name literal duplication is already in #94.
+
+### 99. Audit: error handling that reports false success or a misleading state (Medium)
+- `History.jsx:80-86` `executeDelete` swallows the fetch and never checks `res.ok`: on 401/500/offline the round vanishes from the list but stays in D1 and returns on reload.
+- `History.jsx:50-55` games fetch has no `res.ok` check: a 401/500 renders "No rounds yet". One unparseable `player_data` row makes `normalizeDbGame` throw and blanks the whole list. No error state.
+- `Setup.jsx:113-130` courses fetch has no 401/`res.ok` handling and an empty catch, so a failed or expired session shows "No courses yet" and allows a no-course 36-hole round. `CourseEdit.jsx:52` handles 401 properly (#75).
+- `Setup.jsx:242,266` `new Date(pastDate + 'T12:00:00').toISOString()` throws RangeError if the date field is cleared; `ready` never checks the date, so "Enter scores" / "Edit hole scores" silently does nothing (reproduced in Node).
+- `Scorecard.jsx:222-224` ignores the false return of `saveCompletedGame` (quota/blocked storage), then `clearActiveGame()` runs: silent loss of a finished round for a signed-out user. The active-game path shows a "Couldn't save" banner; the finish path does not.
+- `Summary.jsx:61-64` calls `navigate('home')` during render. `Scorecard.jsx:67-72` and `Settings.jsx:27-29` do it from an effect and comment why. Expect a React "update a component while rendering" warning (needs debugger repro, see #106).
+- Low: share failures swallowed silently (`Summary.jsx:157-167`, AbortError should stay silent but others need feedback); `logout()` has no try/catch (`Info.jsx:114`, `useAuth.jsx:45-48`); date defaults use the UTC date via `toISOString().slice(0,10)` (`Setup.jsx:51,486`), so between 00:00 and 01:00 BST "today" is not selectable and a round played 00:30 BST edits as the previous day (reproduced in Node).
+
+### 100. Audit: inconsistent patterns (mostly Low)
+- **Medium - dialog semantics missing** on the Finish/Save confirm sheet (`Scorecard.jsx:403`), the delete-course sheet (`CourseEdit.jsx:238`) and `CourseMapModal.jsx:23-31` (no role, `aria-modal`, labelling, autofocus, Escape; map modal is backdrop-dismiss only). DESIGN.md says "every bottom sheet, no exceptions (#80)" but only Settings and History are done, so #80's "parity" note is only true for those two.
+- **Medium - stale copy** `Settings.jsx:174`: "Just for you for now - it is not shown on any scorecard yet." The name is now used (PlayerStar, Setup pre-fill) since #5.
+- Low, backend: `request-link.js:13`, `courses/index.js:40`, `games/index.js:37` throw an unhandled 500 on a `null` or non-string JSON body (the PATCH handlers guard this); `games/index.js:37-105` POST does not cap `notes` (PATCH caps at 300) or validate `client_round_id`; `games/[id].js:14` DELETE lacks `AND user_id = ?` (safe via the preceding check, but `courses/[id].js` scopes both as defence in depth); `me.js:6,18` returns `{ user: null }` with 401 where every other endpoint returns `{ error }` (intentional, but logs a console 401 on every signed-out load); mixed semicolon style (`auth/*` uses them, the rest does not).
+- Low, frontend: ErrorBoundary Reload button uses `rounded-md py-3`, which matches no DESIGN.md tier, and has no `componentDidCatch` logging (`App.jsx:28-37`); `useAuth.jsx:30` `replaceState({}, ...)` wipes the history stamp `App.jsx` just set (harmless fallback, contradicts the `App.jsx:89-103` comment); fallback back labels read "Home" with no arrow (`History.jsx:96`, `Settings.jsx:165`, `Summary.jsx:189`) vs DESIGN.md/#43b "← Home"; empty-score glyph is en dash in Scorecard, hyphen in Summary/share, and DESIGN.md specifies an em dash; `Scorecard.jsx:116` `MAX_STROKES = 14` declared inside the component (backend allows 99, rules say 7); `createGame`/`buildEditGame` take 6-7 positional parameters (`game.js:212,257`); "Bruntsfiled" typo in the `BruntsfiledCoursePage` filename, import and tests; `Setup.jsx` (607 lines), `Scorecard.jsx` (447) and `Summary.jsx` (436) are large multi-concern components.
+- Content flag for product-owner: `BruntsfiledCoursePage.jsx:46` says "Golf played here since 1456"; that is not in PRD.md and `Info.jsx` says 1895.
+
+### 101. Audit: accessibility beyond #95/#96 (Medium unless stated)
+- `Login.jsx:172` `<label>` has no `htmlFor` and does not wrap the input.
+- `Setup.jsx:354,406,483,505,559` and `CourseEdit.jsx:179` (course select, course name, player names, date, notes, course-edit name) have no `aria-label` or association. `Settings.jsx` does this correctly.
+- No error or status message is in a live region except `Home.jsx:63` `role="status"`: `App.jsx:162`, `Scorecard.jsx:232`, `Login.jsx:120,158`, `Settings.jsx:185,244`, `Setup.jsx:421`, `CourseEdit.jsx:199,225`. #93 covers only Login's resend.
+- `History.jsx:234-296` nests `role="button"` spans inside the card's `<button>` (invalid, unreliable under assistive tech).
+- Home tap targets: "Last round", "Want to save your scores? Sign in" and the Outbuild footer link are bare `text-xs` with no padding (~16px tall, estimated); the course page got `py-3 -my-3` in #78, Home did not (`Home.jsx:128-136,190-196,205`).
+- Contrast (estimated): `text-chrome` #C0B8B0 on #F7F4EE is ~1.8:1 for inactive hole numbers and the Map/Decrement controls (`Scorecard.jsx:308,363,374`); Advance button #F7F4EE on #9A9189 is ~2.8:1 (`Scorecard.jsx:389`, Low); `placeholder:text-chrome` ~1.8:1 (`Login.jsx:183`, `Setup.jsx:564`, `Summary.jsx:373`, Low). This is what DESIGN.md prescribes, so it is a token-level decision, routed to the design-director (proposal only, no DESIGN.md change yet).
+- Low: info icon button ~40px (`Home.jsx:76-80`, `BruntsfiledCoursePage.jsx:33-37`); Privacy/Rules inline links ~20px tall and `<a>` lacks the DESIGN.md focus-visible ring (`Privacy.jsx:3-15,83,97,109`, `RulesContent.jsx:49`); History delete button is `w-9 h-9` (36px) and reads "Delete game" while the UI says "round" (`History.jsx:301-302`); no `<main>` landmark on Scorecard, Summary, Login (and the `CourseEdit.jsx:136` area); focus-return missing on several sheets (see #80).
+
+### 102. Audit: security hardening (Medium unless stated; no Critical, no secrets found in tracked files)
+- **No security headers**: there is no `public/_headers`, so no CSP, frame-ancestors/X-Frame-Options, X-Content-Type-Options or Referrer-Policy from the repo. Dashboard-level settings were not checked. The session cookie is `SameSite=Lax` (HttpOnly, Secure), so this is hardening, not an open hole.
+- **Magic and email-confirmation links are consumed on a plain GET** (`verify.js:14-22`, `confirm-email.js:24-26`), so a mail-security scanner that prefetches links could burn the token and the user would see "expired". Assumed, needs a real mail-flow test (see #106).
+- **Google Fonts loaded on every visit** (`index.html:28-30`) sends visitor IPs to Google before interaction, while `Privacy.jsx` says two companies handle data and there is "no tracking". Self-hosting the fonts would close it. Legal weight assumed. Overlaps #41.
+- Low: `verify.js:14-22` token check and mark-used are separate statements, so two parallel requests can both pass (fix: `UPDATE ... WHERE used = 0` and check `changes`; same class as #79); expired `sessions` rows are never deleted (`Privacy.jsx` says 30 days); personal Gmail hardcoded as the `ADMIN_NOTIFY_EMAIL` fallback (`users/index.js:210`, asserted in `users/index.test.js:422`; documented in PRD §11.11, but it is PII in source if the repo ever goes public); `.gitignore` ignores `.env*` but not `.dev.vars`; `EMAIL_RE` accepts `x<y@z.com>`; `email.js:42` logs the full Resend error body (may echo the recipient); tokens share one table with no type column, so sign-in and email-change links are interchangeable at the endpoint level (both need inbox control).
+
+### 103. Audit: performance smells (flag only, no measurement; performance-auditor to measure later)
+- **Medium** - the whole app renders a blank shell until `/api/auth/me` resolves or the 5s abort fires, including for signed-out quick-play users (`App.jsx:156`, `useAuth.jsx:34,38`).
+- **Medium** - `GET /api/games` is `LIMIT 100` with no offset and returns every row's full `player_data`; History silently stops at 100 rounds with no notice (`games/index.js:12-20`). Needs a product decision on what happens past 100.
+- Low: `react-zoom-pan-pinch` and `CourseMapModal` are statically bundled into the main JS (no `React.lazy` anywhere); render-blocking Google Fonts stylesheet with three families, the desktop-only Caveat downloaded by every mobile visitor (`index.html:30`, overlaps #41); `courses/index.js:19-22` correlated `round_count` subquery with no index on `games.course_id`, and no index on `courses.user_id`, `sessions.user_id` or `magic_tokens.email` (tiny tables today); History aggregations recomputed every render; every score tap writes the whole active game to localStorage synchronously (fine at 36 holes x 6 players). The `AuthContext` fresh-object point is already in #80.
+
+### 104. Audit: test-coverage gaps
+No test files for `Summary.jsx` (the save logic, cf. #95), `useAuth.jsx`, `share.js`, `ParStepperGrid`, `PlayerStar`, `Info`/`Privacy`/`Rules`, and the `logout` and `session` functions. Adds to the gaps already in #91 and #80.
+
+### 105. Audit: stale or inaccurate documentation (log only, not corrected)
+- BACKLOG #41 says bundle "~248 kB / ~76 kB gzip"; local `dist/` is 281,717 bytes raw / 81,123 gzip (dist is gitignored, indicative).
+- BACKLOG #80 line refs are stale: Settings focus effect is now `Settings.jsx:86-94`, the storage banner is `App.jsx:162`, the notice banner is `Home.jsx:63`. See #100 for "parity" being true only for Settings and History.
+- BACKLOG #86 says "Closing" but is still listed under Known issues (this file is open items only).
+- PRD.md:731-733 §11.15 status still says "build in progress" and that the star is not yet on the Finish Game dialog; it is (`Scorecard.jsx:417`). Product-owner to update.
+- DESIGN.md "Divergences" (~569-577) lists as pending items already fixed (`Scorecard.jsx:412` and `Login.jsx:117` opacity, the "no shipped buttons yet" focus-visible note), and refers to History "+ Add round" (code says "+ Add") and a `CourseEdit.jsx:25` "← Add Past Round" back button removed in #89.
+
+### 106. Audit: debugger handoffs (not yet run)
+- Suspected React render-phase state update in `Summary.jsx:61-64`: `navigate('home')` during render when no completed game resolves (e.g. `/summary` deep-linked with empty storage). Needs a dev-console repro to confirm the warning and whether the redirect is reliable under StrictMode.
+- Magic-link "expired" for users whose mail client prefetches links (`verify.js:14-22`, `confirm-email.js:24-26`). Assumed; reproduction needs a real mail client or scanner. Links to #102.
+
+### 107. Audit: performance-auditor handoffs (not yet run)
+- App start gated on the 5s `/api/auth/me` timeout, static import of the pan-zoom library, render-blocking third-party font CSS. Needs LCP/first-paint on a throttled mobile profile; fits the #41 baseline.
+- `GET /api/games` (LIMIT 100, full `player_data`) and `GET /api/courses` correlated `round_count` with no supporting indexes (`migrations/001-004`). Needs D1 timing at realistic row counts, plus the product question in #103.
+
+### 108. Input and outline-button border contrast (~1.39:1) - design decision (design-director, 19 Sep 2026)
+Found while proposing the sunlight-contrast fix (branch `fix/sunlight-contrast-tokens`, which deliberately left it out). The `border` token `#D9D0C4` is about 1.39:1 on the page background (hand-computed, not browser-measured), below the 3:1 that WCAG SC 1.4.11 expects for identifying a control's boundary. Inputs also differ from the page only by a faint fill. Buttons carry text labels, so they are the lesser concern; inputs are the weaker case. Fixing it would change the app's warm-hairline character across the whole UI, so it needs a design-director call on whether to darken `border` for controls only (leaving decorative hairlines alone) or accept the current look. Not actioned.
