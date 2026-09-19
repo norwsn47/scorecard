@@ -100,7 +100,7 @@ export default function Login({ navigate, goBack }) {
     return (
       <div className="h-full bg-bg flex flex-col">
         <PageHeader bare backLabel="← Home" onBack={() => goBack('home')} />
-        <div className="flex-1 flex flex-col items-center justify-center px-8 text-center gap-6 pb-16">
+        <main className="flex-1 flex flex-col items-center justify-center px-8 text-center gap-6 pb-16">
           <div className="w-12 h-12 rounded-full bg-bg-card border border-border flex items-center justify-center">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-accent">
               <rect x="2" y="4" width="20" height="16" rx="2" />
@@ -118,7 +118,7 @@ export default function Login({ navigate, goBack }) {
 
           <div className="w-full max-w-[260px] flex flex-col items-stretch gap-3">
             {resendError && (
-              <div className="px-4 py-3 rounded-md bg-bg-card border border-border">
+              <div role="alert" className="px-4 py-3 rounded-md bg-bg-card border border-border">
                 <p className="font-ui text-xs text-accent">{resendError}</p>
               </div>
             )}
@@ -135,7 +135,7 @@ export default function Login({ navigate, goBack }) {
                 : 'Resend link'}
             </button>
           </div>
-        </div>
+        </main>
       </div>
     )
   }
@@ -144,7 +144,7 @@ export default function Login({ navigate, goBack }) {
     <div className="h-full bg-bg flex flex-col">
       <PageHeader bare backLabel="← Home" onBack={() => goBack('home')} />
 
-      <div className="flex-1 flex flex-col px-6 pt-3 pb-8">
+      <main className="flex-1 flex flex-col px-6 pt-3 pb-8">
         <div className="mb-2">
           <h1 className="font-display text-2xl italic text-text leading-tight">
             Sign in to Scorecard
@@ -156,7 +156,7 @@ export default function Login({ navigate, goBack }) {
         </p>
 
         {error && (
-          <div className="mb-5 px-4 py-3 rounded-md bg-bg-card border border-border">
+          <div role="alert" className="mb-5 px-4 py-3 rounded-md bg-bg-card border border-border">
             <p className="font-ui text-xs text-accent">
               {error === 'expired'
                 ? 'Your link has expired. Request a new one.'
@@ -169,10 +169,11 @@ export default function Login({ navigate, goBack }) {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
-            <label className="font-ui text-xs tracking-[0.12em] uppercase text-muted block mb-2">
+            <label htmlFor="login-email" className="font-ui text-xs tracking-[0.12em] uppercase text-muted block mb-2">
               Email address
             </label>
             <input
+              id="login-email"
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
@@ -204,7 +205,7 @@ export default function Login({ navigate, goBack }) {
             How we handle your data
           </button>
         </p>
-      </div>
+      </main>
     </div>
   )
 }

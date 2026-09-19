@@ -369,6 +369,7 @@ export default function Setup({ navigate, goBack, params }) {
               ) : (
                 <div className="flex items-center gap-2">
                   <select
+                    aria-label="Course"
                     value={selectedCourseId ?? ''}
                     onChange={e => setSelectedCourseId(e.target.value)}
                     className="flex-1 min-w-0 py-3 pl-4 pr-4 rounded-md border border-border font-ui text-base bg-bg-card text-text focus:outline-none focus:ring-2 focus:ring-accent/40"
@@ -424,6 +425,7 @@ export default function Setup({ navigate, goBack, params }) {
                   <div className="flex gap-2">
                     <input
                       type="text"
+                      aria-label="Course name"
                       value={newCourseName}
                       onChange={e => { setNewCourseName(e.target.value.slice(0, 60)); setCourseError(null) }}
                       placeholder="Course name"
@@ -438,7 +440,7 @@ export default function Setup({ navigate, goBack, params }) {
                     </button>
                   </div>
                   {courseError && (
-                    <p className="font-ui text-xs text-accent pl-1">{courseError}</p>
+                    <p role="alert" className="font-ui text-xs text-accent pl-1">{courseError}</p>
                   )}
                 </div>
 
@@ -509,6 +511,7 @@ export default function Setup({ navigate, goBack, params }) {
           <div className="pb-1">
             <input
               type="date"
+              aria-label="Date played"
               value={pastDate}
               max={new Date().toISOString().slice(0, 10)}
               onChange={e => setPastDate(e.target.value)}
@@ -531,6 +534,7 @@ export default function Setup({ navigate, goBack, params }) {
               <div className="relative">
                 <input
                   type="text"
+                  aria-label={`Player ${i + 1} name`}
                   value={name}
                   onChange={e => handleNameChange(i, e.target.value)}
                   placeholder={`Player ${i + 1}`}
@@ -584,6 +588,7 @@ export default function Setup({ navigate, goBack, params }) {
         {editRound && (
           <div className="pt-2 pb-1">
             <textarea
+              aria-label="Round notes"
               value={notes}
               onChange={e => setNotes(e.target.value.slice(0, 300))}
               placeholder="Add a note about this round..."
