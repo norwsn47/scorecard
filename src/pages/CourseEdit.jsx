@@ -218,7 +218,7 @@ export default function CourseEdit({ navigate, params }) {
             <div className="text-center pt-2">
               <button
                 onClick={() => { setDeleteError(null); setConfirmDelete(true) }}
-                className="inline-block py-2.5 -my-2.5 font-ui text-xs text-muted underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                className="inline-block py-3 -my-3 font-ui text-xs text-muted underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 Delete this course
               </button>

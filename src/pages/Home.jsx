@@ -71,14 +71,14 @@ export default function Home({ navigate }) {
         {/* Heading row — h1 + header icon inline, icon aligns to first line.
             Signed in: a settings gear (the Info page is reached from inside
             Settings, #83). Signed out: the info icon, as before. */}
-        <div className="flex items-start -mr-2">
+        <div className="flex items-start -mr-2.5">
           <h1 className="font-display text-[42px] italic text-text leading-[1.1] text-left flex-1">
             Golf<br />Scorecard
           </h1>
           <button
             onClick={() => (user ? navigate('settings', { from: 'home' }) : navigate('info'))}
             aria-label={user ? 'Settings' : 'Information'}
-            className="text-muted active:text-accent p-2 flex-shrink-0 mt-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="text-muted active:text-accent p-2.5 flex-shrink-0 mt-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             {user ? (
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
@@ -136,7 +136,7 @@ export default function Home({ navigate }) {
           <div className="text-center -mt-1">
             <button
               onClick={() => navigate('summary', { game: lastGame })}
-              className="font-ui text-xs text-muted active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="inline-block py-3 -my-3 font-ui text-xs text-muted active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               Last round:{' '}
               <span className="underline underline-offset-2">
@@ -191,7 +191,7 @@ export default function Home({ navigate }) {
           <div className="pt-0 text-center space-y-1">
             <button
               onClick={() => navigate('login')}
-              className="font-ui text-xs text-accent active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="inline-block py-3 -my-3 font-ui text-xs text-accent active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               Want to save your scores? <span className="underline underline-offset-2">Sign in</span>
             </button>
@@ -204,7 +204,7 @@ export default function Home({ navigate }) {
         <p className="font-ui text-text leading-tight inline-flex items-baseline gap-1">
           <span className="text-base font-bold">Scorecard</span>
           <span className="text-xs text-muted font-normal"> by </span>
-          <a href="https://outbuild.uk" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 text-xs text-muted font-normal underline underline-offset-2">
+          <a href="https://outbuild.uk" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 py-3 -my-3 text-xs text-muted font-normal underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40">
             Outbuild
             <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5 relative top-px">
               <path d="M2 8L8 2M8 2H4M8 2V6" />

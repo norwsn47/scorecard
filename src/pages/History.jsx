@@ -298,8 +298,8 @@ export default function History({ navigate }) {
             {/* Delete button */}
             <button
               onClick={e => { e.stopPropagation(); setConfirmDeleteId(game.id) }}
-              aria-label="Delete game"
-              className="absolute top-2 right-2 w-9 h-9 flex items-center justify-center text-muted active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              aria-label="Delete round"
+              className="absolute top-1 right-1 w-11 h-11 flex items-center justify-center text-muted active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

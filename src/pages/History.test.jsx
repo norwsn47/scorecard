@@ -32,6 +32,18 @@ const round = (id, players, completedAt) => ({
   holePars: [3, 3],
 })
 
+describe('History - delete control', () => {
+  it('is labelled "Delete round" (the UI says round, not game) and opens the confirm sheet', async () => {
+    const user = userEvent.setup()
+    seedLocalGames([round('g1', ['Ann'], '2026-08-01T10:00:00.000Z')])
+    renderHistory()
+
+    await user.click(await screen.findByRole('button', { name: 'Delete round' }))
+    expect(screen.queryByRole('button', { name: 'Delete game' })).not.toBeInTheDocument()
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+  })
+})
+
 describe('History — Home fallback on depth 0 (#89 fix-forward)', () => {
   it('shows a "Home" link when the app loads straight onto History (depth 0 — e.g. a reload or deep link)', () => {
     window.history.replaceState({ depth: 0 }, '', '/history')
