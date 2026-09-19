@@ -1,5 +1,5 @@
 # CLAUDE.md
-Last updated: 4 September 2026
+Last updated: 19 September 2026
 > Ground rules for this project. Read this at the start of every session.
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
@@ -9,15 +9,9 @@ Last updated: 4 September 2026
 
 The app is shipped and in production. Work now arrives as individual requests, not a linear build plan.
 
-At the start of a session, skim `BACKLOG.md` and the most recent `CHANGELOG.md` entries for context. You don't need the project-manager agent for every session — invoke it when:
-- the work is large or spans several parts (see "Change size" below)
-- you want a considered plan before starting
-- the request is vague and needs shaping into scoped work
-- the user asks for it
+At the start of a session, skim `BACKLOG.md` (a short to-do list) and the most recent `CHANGELOG.md` entries for context. Small, well-defined changes: just do them (see "Change size" and "Review gate"). For large or vague work, dispatch the project-manager (see below).
 
-For a small, well-defined change, just do it (following "Change size" and the review gate).
-
-If a new idea comes up that isn't being actioned now, add it to `BACKLOG.md` — one entry, no ceremony.
+`BACKLOG.md` is a to-do list so nothing is forgotten. Add a one-line entry when the user asks, or when a genuine follow-up comes out of a change. Delete an item's line in the same commit that finishes it. IDs are never reused. Its header has the full rules.
 
 ---
 
@@ -27,16 +21,16 @@ Decide which category a piece of work falls into and follow that path.
 
 **Small** — a single component or file, visual/copy/layout, a contained bug fix, config. No database schema, no auth, no API contract change, no new user-facing capability.
 - Build it directly (or via frontend-developer / backend-developer if you want).
-- Review gate: code-reviewer static + render check → human localhost review (mandatory for anything visible in the browser) → commit.
-- No PRD update, no project-manager, no CHANGELOG entry unless it's notable.
-- A batch of small cosmetic changes given together is still "small": make them all on one branch, one code-review pass, one localhost review, one commit (`fix/...` describing the batch).
+- Review gate: `npm run lint` and `npm test` pass → human localhost review (mandatory for anything visible in the browser) → commit. No separate reviewer agent unless the change touches auth, security or user data.
+- No PRD update, no project-manager, no CHANGELOG entry unless it records a decision or a reversal.
+- Delete the finished item from `BACKLOG.md` in the same commit.
+- A batch of small cosmetic changes given together is still "small": make them all on one branch, one localhost review, one commit (`fix/...` describing the batch).
 
 **Large** — backend logic, database schema or migration, auth, an API contract change, a new feature or user-facing capability, or anything touching several files across concerns.
-- Start with the project-manager to scope and plan it.
-- product-owner updates `PRD.md` first if it's a new capability or a scope change.
-- Build via the right specialist agent.
-- Full review gate (below), including PRD alignment.
-- Add a `CHANGELOG.md` entry. Update `BACKLOG.md` (remove done items, log any follow-ups).
+- The main session creates the branch (see "Version control"), then dispatches the project-manager. It scopes, plans and orchestrates: it dispatches the specialist agents and the code-reviewer, keeps `BACKLOG.md` current, and stops before the localhost review.
+- product-owner updates `PRD.md` first only if the change alters what the app does (a new capability or scope change).
+- Full review gate (below): code-reviewer, then your localhost review.
+- `CHANGELOG.md` entry only for a decision or a reversal.
 
 If a "small" change turns out to need schema/auth/API/feature work once you're in it, stop and treat it as large.
 
@@ -51,21 +45,24 @@ Stack: Vite + React + Tailwind CSS · localStorage (quick-play) · Cloudflare Pa
 
 ## Agent setup
 Specialist agents live in `.claude/agents/`. In active use:
-- **project-manager** — scopes and coordinates large work
-- **product-owner** — owns PRD.md and BACKLOG.md; PRD alignment checks
+- **project-manager** — plans and orchestrates large changes; keeps BACKLOG.md current; stops before localhost review and merge
+- **product-owner** — owns PRD.md; runs only when a change alters product behaviour
 - **frontend-developer** — builds UI, always reads DESIGN.md first
 - **backend-developer** — builds APIs, database, auth, integrations
-- **code-reviewer** — runs the review gate
-- **debugger** — root-cause investigation when something is broken
+- **code-reviewer** — read-only reviewer for large or risky changes and the audit commands; hands findings back, never edits or commits
 
-Situational (did their main job pre-launch, still available):
+On request only:
+- **debugger** — root-cause investigation when something is broken
 - **design-director** — token-level design changes to DESIGN.md
-- **performance-auditor** — performance measurement
+
+There is no performance agent. When performance needs measuring, the main session does it.
+
+Commands in `.claude/commands/`, run only when asked: `/full-audit` (Critical/High findings go to BACKLOG, the rest are reported in chat), `/process-review`, `/pre-launch`.
 
 Project documents in the root, kept current:
 `CLAUDE.md` · `PRD.md` · `DESIGN.md` · `BACKLOG.md` · `CHANGELOG.md`
 
-**Date rule:** Whenever a project document or an agent file in `.claude/agents/` is edited, update its `Last updated:` line to today's date before saving. Agent files carry the `Last updated:` line but rely on this rule rather than restating it.
+**Date rule:** Whenever a project document or an agent file in `.claude/agents/` is edited, update its `Last updated:` line to today's date before saving. Agent files carry the `Last updated:` line but rely on this rule rather than restating it. A pre-commit hook (`scripts/hooks/pre-commit`) blocks a commit when a staged document or agent file has a stale date. Install it once per clone with `git config core.hooksPath scripts/hooks`.
 
 ---
 
@@ -113,6 +110,8 @@ Do not invent a visual style. Do not default to generic patterns. Follow the pri
 Git + GitHub, full workflow with remote (Outbuild "Mode C"). If the user ever asks to change this, update this section.
 
 - **Branch first — before editing a single file or dispatching any agent.** Run `git checkout -b <prefix>/<description>` from an up-to-date `main` as the very first step of any task that will change files. Never make edits while on `main` and branch later, even if the changes would move with you — the order is the rule.
+- The main session creates the branch and does the commits. Agents (including the project-manager) never branch, commit, push or merge.
+- If another Claude session is working in the same repo, use a separate `git worktree` so branch switches don't collide.
 - Prefix is one of `feat/`, `fix/`, `chore/`, `refactor/`, `security/`; the description is clear enough to understand from the branch list alone.
 - Push the branch and show the user the branch name and a summary of what's on it.
 - Wait for the user to explicitly say "go ahead and merge" before running any merge command. Implied consent ("let's do X") is not sign-off — ask.
@@ -132,16 +131,17 @@ Git + GitHub, full workflow with remote (Outbuild "Mode C"). If the user ever as
 Runs before a change is committed. Scales with change size (see "Change size").
 
 **Small changes:**
-1. code-reviewer — static analysis (Critical findings block) + rendering verification (dev server, tests, routes)
+1. `npm run lint` and `npm test` pass
 2. Human reviews the running app at localhost and confirms — mandatory for anything visible in the browser
-3. Commit on a named branch → push → wait for merge sign-off (Mode C rules below)
+3. Commit on a named branch → push → wait for merge sign-off (see "Version control")
 
-**Large changes:** all of the above, plus —
-- product-owner updates `PRD.md` first if it's a new capability or scope change
-- product-owner runs a PRD alignment check after the build — conflicts block the commit
-- `CHANGELOG.md` entry added; `BACKLOG.md` updated (done items removed, follow-ups logged)
+**Large changes (and anything touching auth, security or user data):**
+1. code-reviewer — static analysis (Critical findings block) and rendering verification, then hands back
+2. Human reviews at localhost and confirms
+3. product-owner PRD alignment check, only if product behaviour changed — conflicts block the commit
+4. Commit → push → wait for merge sign-off
 
-The human localhost review is never skipped, regardless of how small the change looks.
+The human localhost review is never skipped for anything browser-visible, regardless of how small the change looks. Docs-only and config-only changes skip it.
 
 ### PRD deviations
 If any agent's build differs from what `PRD.md` specifies — even a small, reasonable-looking call — it flags that explicitly in its handoff. It does not decide how to resolve it. The product-owner decides whether the PRD updates to match or the code changes. (Agent files reference this rather than restating it.)

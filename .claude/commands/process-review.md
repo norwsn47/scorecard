@@ -16,7 +16,7 @@ Invoke the code-reviewer agent with the following brief:
 
 2. **Duplicated instruction text.** Is there instruction text repeated across agent files that should live once in `CLAUDE.md` with a one-line reference instead? Flag any block that appears in more than two files.
 
-3. **Doc bloat.** Has `PRD.md`, `CHANGELOG.md`, or `BACKLOG.md` accumulated stale or duplicated content - changelog detail duplicated in the PRD header, build-planning language left in place after a feature shipped, an ever-growing summary line that is never trimmed, resolved items never removed?
+3. **Doc bloat.** Has `PRD.md`, `CHANGELOG.md`, or `BACKLOG.md` accumulated stale or duplicated content - changelog detail duplicated in the PRD header, build-planning language left in place after a feature shipped, an ever-growing summary line that is never trimmed, resolved items never removed? `BACKLOG.md` should be a short to-do list: flag entries that read as history, reviewer notes nobody will action, or items that are already done.
 
 4. **Change-size gating.** Check the last ~10 `CHANGELOG.md` entries against CLAUDE.md's 'Change size' section. Are small changes skipping the full flow as intended? Are large changes actually getting a PRD alignment check and a BACKLOG update?
 

@@ -1,13 +1,30 @@
 # Changelog
 ## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
-> Human-readable record of what shipped and why. One entry per notable change, newest first.
+> Human-readable record of decisions and reversals, and notable behaviour changes. Newest first.
 > Git history is the full record; this file is for context and decision rationale that commit messages don't carry.
 > Update the date below whenever you add an entry.
 
 **Last updated:** 19 September 2026
 
 ---
+
+## 19 September 2026 (simplified agent workflow)
+
+- **Decision: the process was creating more work than it saved.** After the
+  first `/full-audit`, BACKLOG had grown to 240+ lines, over half of it review
+  and audit findings nobody had asked for. It is now a plain to-do list: the
+  project-manager (large changes) or the main session (small ones) deletes
+  finished items in the same commit; only Critical/High findings are filed
+  automatically; Medium/Low findings stay in the chat report until triaged.
+- **Agents:** the project-manager now orchestrates large changes (it gets the
+  Agent tool) and stops before the localhost review; the product-owner runs
+  only when product behaviour changes and no longer owns BACKLOG; the
+  code-reviewer is read-only and used for large or risky changes (small
+  changes get lint, tests and the localhost check); `performance-auditor` is
+  retired. CHANGELOG entries are now for decisions and reversals only.
+- BACKLOG #92 was found reused for an unrelated item after being deleted; it
+  is renumbered #110 and the header now states IDs are never reused.
 
 ## 19 September 2026 (course map button visibility, #1)
 
