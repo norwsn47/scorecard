@@ -1,7 +1,7 @@
 # Design
 ## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
-Last updated: 18 September 2026
+Last updated: 19 September 2026
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
 ---
@@ -31,8 +31,7 @@ All tokens are defined as CSS custom properties in `src/styles/index.css` and al
 | `accent` | `--color-accent` | `#1A4329` | Brand colour — deep historic Scottish green; all interactive highlights, active cell, winner |
 | `accent-hover` | `--color-accent-hover` | `#142f1e` | Accent on press |
 | `border` | `--color-border` | `#D9D0C4` | All borders — warm light |
-| `chrome` | `--color-chrome` | `#C0B8B0` | Inactive chrome — disabled icons, borders |
-| `control-warm` | `--color-control-warm` | `#9A9189` | Warm grey fill — advance button background |
+| `control-warm` | `--color-control-warm` | `#7D746C` | Warm grey for secondary game controls: Map and Decrement outline and glyph, Advance fill |
 | `under-par` | `--color-under-par` | `#2C6B3C` | Score-vs-par **delta** when under par (`-1`, `-2` …). Deltas only — never chrome, never interactive |
 | `over-par` | `--color-over-par` | `#9B3A24` | Score-vs-par **delta** when over par (`+1`, `+5` …). Deltas only — never chrome, never interactive |
 | *(desktop only)* | — | `#E8E2D6` | Background behind phone frame on desktop |
@@ -61,6 +60,8 @@ This keeps within the Outbuild allowance of "no more than two accents beyond the
 
 ### Sunlight contrast — the score-vs-par colours
 
+**Rule:** Anything a golfer reads or taps outdoors: text at least 4.5:1, icons, rings and fills at least 3:1 (aim for 4:1). `muted` is the lightest permitted text colour. Only disabled states and decorative hairlines (`border`) may fall below.
+
 The app is used outdoors on a phone in bright light, so both delta colours were chosen to clear **WCAG AA for small text (4.5:1)** against every surface a delta can sit on, with headroom for glare. Ratios:
 
 | Colour | on `bg` `#F7F4EE` | on `bg-card` `#F5EFE3` | on `accent` fill `#1A4329` |
@@ -69,6 +70,10 @@ The app is used outdoors on a phone in bright light, so both delta colours were 
 | `over-par` `#9B3A24` | **6.3 : 1** ✓ | **6.1 : 1** ✓ | 1.6 : 1 ✗ |
 | white `#FFFFFF` (active-cell text) | — | — | **11.2 : 1** ✓ |
 | `accent` `#1A4329` (winner column text) | 10.2 : 1 ✓ | 9.8 : 1 ✓ | — |
+| `control-warm` `#7D746C` (Map / Decrement outline and glyph, Advance fill) | 4.2 : 1 ✓ | 4.0 : 1 ✓ | — |
+| `muted` `#6B6560` (secondary text, inactive hole numbers, placeholders) | 5.2 : 1 ✓ | 5.0 : 1 ✓ | — |
+
+`control-warm` is a graphics colour (icons, rings, fills), held to the 3:1 floor with a 4:1 aim, so it clears the rule at about 4:1. `muted` is text and clears 4.5:1.
 
 Both delta colours **fail** on the solid `accent` fill — this is expected and is exactly why the override rule below forces them off inside a filled cell. On every non-filled surface (cream ground or card, including behind a winner's accent-green *text*) they pass comfortably.
 
@@ -266,8 +271,8 @@ active:bg-border
 
 | Button | Classes |
 |---|---|
-| Map | `rounded-full border-2 border-chrome text-chrome` |
-| Decrement (−) | `rounded-full border-2 border-chrome text-chrome text-2xl` — disabled: `opacity-25` |
+| Map | `rounded-full border-2 border-control-warm text-control-warm` |
+| Decrement (−) | `rounded-full border-2 border-control-warm text-control-warm text-2xl` — disabled: `opacity-25` |
 | Increment (+) | `rounded-full bg-accent border-2 border-accent text-bg text-2xl` |
 | Advance (→) | `rounded-full bg-control-warm border-2 border-control-warm text-bg` — disabled: `opacity-25` |
 
@@ -402,8 +407,8 @@ table-fixed border-collapse w-full
 | Active row | `bg-[rgba(26,67,41,0.05)]` |
 | Active cell | `bg-accent text-white font-semibold` |
 | Hole # (active row) | `text-accent font-semibold` |
-| Hole # (inactive) | `text-chrome` |
-| Hole # + par | hole number `font-semibold`, then the hole's par in brackets `font-normal ml-0.5` at the same size — e.g. **3** (3). The bracketed par **label** carries no colour of its own; it inherits the cell colour (chrome / muted / accent). Same treatment on the live grid and the read-only Summary table, and mirrored (bold hole number + normal-weight bracket, same muted colour) on the hand-drawn share canvas (`src/utils/share.js`) since 5 September 2026. Replaces the earlier raised `(N)` superscript. *Deltas-only exception:* the par carries no colour rule holds for this par **label** — but score-vs-par **deltas** (the `+1` / `-1` / `E` superscript and the round total-to-par) do take a semantic colour. See "Score vs par" below. |
+| Hole # (inactive) | `text-muted` |
+| Hole # + par | hole number `font-semibold`, then the hole's par in brackets `font-normal ml-0.5` at the same size — e.g. **3** (3). The bracketed par **label** carries no colour of its own; it inherits the cell colour (muted / accent). Same treatment on the live grid and the read-only Summary table, and mirrored (bold hole number + normal-weight bracket, same muted colour) on the hand-drawn share canvas (`src/utils/share.js`) since 5 September 2026. Replaces the earlier raised `(N)` superscript. *Deltas-only exception:* the par carries no colour rule holds for this par **label** — but score-vs-par **deltas** (the `+1` / `-1` / `E` superscript and the round total-to-par) do take a semantic colour. See "Score vs par" below. |
 | Empty score | `—` (em dash) |
 
 ### Score vs par
