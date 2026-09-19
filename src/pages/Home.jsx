@@ -68,20 +68,29 @@ export default function Home({ navigate }) {
       {/* ── Branding ── */}
       <header className="flex flex-col justify-start px-6 pt-10 pb-2">
 
-        {/* Heading row — h1 + info icon inline, icon aligns to first line */}
+        {/* Heading row — h1 + header icon inline, icon aligns to first line.
+            Signed in: a settings gear (the Info page is reached from inside
+            Settings, #83). Signed out: the info icon, as before. */}
         <div className="flex items-start -mr-2">
           <h1 className="font-display text-[42px] italic text-text leading-[1.1] text-left flex-1">
             Golf<br />Scorecard
           </h1>
           <button
-            onClick={() => navigate('info')}
-            aria-label="Information"
+            onClick={() => (user ? navigate('settings', { from: 'home' }) : navigate('info'))}
+            aria-label={user ? 'Settings' : 'Information'}
             className="text-muted active:text-accent p-2 flex-shrink-0 mt-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
-              <circle cx="12" cy="12" r="9" />
-              <path d="M12 8h.01M12 12v4" />
-            </svg>
+            {user ? (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 8h.01M12 12v4" />
+              </svg>
+            )}
           </button>
         </div>
 
@@ -170,19 +179,12 @@ export default function Home({ navigate }) {
         )}
 
         {/* Foot of the actions: signed-out sees the sign-in nudge (unchanged,
-            §11.10); signed-in sees a plain "you are signed in" line and the
-            way into Settings (§4.1, §11.6, §11.14). Same slot, mirrored copy. */}
+            §11.10); signed-in sees a plain "you are signed in" line (§4.1,
+            §11.6). The way into Settings is the header gear (#83). */}
         {user ? (
           <div className="pt-0 text-center">
             <p className="font-ui text-xs text-muted break-words">
               Signed in as {user.name || user.email}
-              <span aria-hidden="true"> · </span>
-              <button
-                onClick={() => navigate('settings', { from: 'home' })}
-                className="inline-block py-2.5 -my-2.5 text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-              >
-                Settings
-              </button>
             </p>
           </div>
         ) : (

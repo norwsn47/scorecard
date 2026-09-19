@@ -4,13 +4,15 @@ import { useAuth } from '../hooks/useAuth.jsx'
 export default function Info({ navigate, goBack, params }) {
   const { user, logout } = useAuth()
   const fromBruntsfield  = params?.bruntsfield ?? false
+  // Opened from the Settings "About" row (#83) - step back to Settings.
+  const fromSettings     = params?.from === 'settings'
   return (
     <div className="h-full bg-bg flex flex-col">
 
       <PageHeader
         title="Information"
-        backLabel={fromBruntsfield ? '← Course' : '← Home'}
-        onBack={() => goBack(fromBruntsfield ? 'bruntsfield' : 'home')}
+        backLabel={fromBruntsfield ? '← Course' : fromSettings ? '← Settings' : '← Home'}
+        onBack={() => goBack(fromBruntsfield ? 'bruntsfield' : fromSettings ? 'settings' : 'home')}
       />
 
       <main className="flex-1 overflow-y-auto px-5 pt-6 pb-14 space-y-8 max-w-sm mx-auto w-full">

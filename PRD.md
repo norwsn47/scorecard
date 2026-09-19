@@ -49,8 +49,8 @@ Outbuild palette applied for outdoor sunlight legibility on a phone:
 ### 4.1 Home screen
 - Two options only: **New Game** and **History**
 - Scorecard by Outbuild branding and Bruntsfield Short Hole Golf Course course name displayed prominently
-- A small **ⓘ** icon sits in the top-right corner — tapping it opens the information page (see 4.8)
-- When signed in, a **settings** affordance is shown on the home screen (not shown to signed-out users) — tapping it opens the Settings panel (§11.14). Home also carries a clearer signed-in/signed-out indicator (§11.6). Exact placement and form are a DESIGN.md / frontend call
+- A small icon sits in the top-right corner. **Signed out:** an **ⓘ** icon that opens the information page (see 4.8). **Signed in:** a **settings gear** in the same place that opens the Settings panel (§11.14); the information page is then reached from an **About** row inside Settings (BACKLOG #83)
+- When signed in, the header gear (above) is the way into Settings (§11.14); there is no separate Settings button. Home also carries a plain "Signed in as ..." line (§11.6), which is text only. Exact placement and form are a DESIGN.md / frontend call
 - A **Rules** text link sits below the main New Game and History buttons — tapping it opens the course rules (see 4.9)
 - If a game is in progress and the user navigates to the home screen mid-game, a **Resume Game** prompt appears between the two buttons
 - Note: reopening the app with a game in progress bypasses the home screen and goes directly to the scorecard — see 4.3
@@ -163,7 +163,7 @@ A **Share** button appears on the end-of-game summary screen (see 4.4). Tapping 
 
 ### 4.8 Information page
 
-Accessed via the **ⓘ** icon in the top-right corner of the home screen (see 4.1). No first-launch prompt — passive access only.
+Accessed via the **ⓘ** icon in the top-right corner of the home screen when signed out (see 4.1), or via the **About** row in Settings (§11.14) when signed in, since the signed-in header shows the settings gear instead. From Settings, the page's back button returns to Settings. No first-launch prompt — passive access only.
 
 **Scope split with the privacy page:** this section is the canonical source for what the Information page itself contains. §11.12 is the canonical source for what the linked "Your data" privacy page contains. The two are deliberately different documents doing different jobs — this page is a light, in-app "about the app / about the course" surface; the privacy page is the full data-handling statement. Detail belongs in whichever section owns it, not both — see the single data line below, which is this page's only data-handling content.
 
