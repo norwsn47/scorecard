@@ -50,6 +50,18 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
+describe('Settings - About row (#83)', () => {
+  it('opens the Information page, telling it to step back to Settings', async () => {
+    const user = userEvent.setup()
+    mountFetch()
+    const { navigate } = renderSettings()
+
+    await screen.findByRole('heading', { name: 'Settings' })
+    await user.click(screen.getByRole('button', { name: 'Information' }))
+    expect(navigate).toHaveBeenCalledWith('info', { from: 'settings' })
+  })
+})
+
 describe('Settings (#4)', () => {
   it('renders the panel when signed in', async () => {
     mountFetch()

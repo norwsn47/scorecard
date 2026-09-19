@@ -60,6 +60,26 @@ describe('Home — signed-in indicator and Settings entry (§11.14)', () => {
     expect(await screen.findByText(/Signed in as Jane/)).toBeInTheDocument()
   })
 
+  it('signed in: the header icon is the Settings gear, there is no standalone Settings link and no Information icon (#83)', async () => {
+    mountFetch({ id: 'u1', email: 'jane@example.com', name: null, pending_email: null })
+    renderHome()
+
+    await screen.findByText(/Signed in as jane@example.com/)
+    // Exactly one Settings control (the header gear), and the info icon is gone.
+    expect(screen.getAllByRole('button', { name: 'Settings' })).toHaveLength(1)
+    expect(screen.queryByRole('button', { name: 'Information' })).not.toBeInTheDocument()
+  })
+
+  it('signed out: the header icon is the Information icon and opens the Info page (#83)', async () => {
+    const user = userEvent.setup()
+    mountFetch(null)
+    const { navigate } = renderHome()
+
+    await screen.findByRole('button', { name: /Want to save your scores/ })
+    await user.click(screen.getByRole('button', { name: 'Information' }))
+    expect(navigate).toHaveBeenCalledWith('info')
+  })
+
   it('shows the sign-in nudge and no Settings link for a signed-out user', async () => {
     mountFetch(null)
     renderHome()

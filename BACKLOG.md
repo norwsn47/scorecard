@@ -32,11 +32,6 @@ The architecture for properly supporting multiple courses, beyond the current v2
 ### 40. Optional match-play game mode (win each hole)
 A game-mode toggle at setup: **stroke play** (current — lowest total wins) or **match play** (win the most holes; each hole won by the lowest score, halved on a tie). Changes the winner calculation, the Summary, and the share image. Explicitly flagged by the user as a future edition. PRD §5 change needed.
 
-### 83. Home (signed in) — fold Settings into the header icon
-When signed in, Home shows a "signed in as…" state plus a standalone **Settings** button that the user considers redundant. Swap the header **info (ℹ) icon for a settings (gear) icon** that opens the Settings screen, and drop the standalone Settings button.
-- **Decided 19 Sep 2026:** signed in, the header shows the gear and Settings gets an "About" row that links to the Info page; signed out, the info icon stays (no Settings to fold into). Needs a PRD §4.8 update.
-- Frontend-only once decided; likely small. Related: #5 (signed-in identity, shipped 18 Sep 2026), #4 (Settings panel, shipped).
-
 ---
 
 ## Blocked / waiting on a decision or something external

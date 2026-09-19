@@ -3,8 +3,8 @@ import PageHeader from '../components/PageHeader.jsx'
 import { useAuth } from '../hooks/useAuth.jsx'
 
 // Self-serve profile and account controls for a signed-in user (§11.14, #4).
-// Reachable only when signed in — from the Home indicator (§4.1) or the Info
-// page Account section (§4.8). A signed-out visitor hitting /settings directly
+// Reachable only when signed in — from the Home header gear (§4.1, #83) or the
+// Info page Account section (§4.8). A signed-out visitor hitting /settings directly
 // bounces to Home from an effect, mirroring the Scorecard no-game guard (#17).
 // No in-page back button for normal in-app navigation (#89) — the phone's
 // own back navigation covers stepping back to wherever this was opened from.
@@ -273,6 +273,24 @@ export default function Settings({ navigate }) {
         </section>
 
         <div className="w-8 h-0.5 bg-border" />
+
+        {/* ── About ── */}
+        {/* The header gear replaced the info icon for signed-in users (#83), so
+            the Information page (rules, privacy, contact) is reached from here. */}
+        <section className="space-y-3">
+          <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted">About</p>
+          <p className="font-ui text-sm text-muted leading-relaxed">
+            About the app, the course rules, how your data is handled and how to get in touch.
+          </p>
+          <div>
+            <button
+              onClick={() => navigate('info', { from: 'settings' })}
+              className="inline-block py-2.5 -my-2.5 font-ui text-sm text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            >
+              Information
+            </button>
+          </div>
+        </section>
 
         {/* ── Delete account ── */}
         <section className="space-y-3">
