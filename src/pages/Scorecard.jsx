@@ -316,16 +316,29 @@ export default function Scorecard({ navigate, params }) {
                     return (
                       <td
                         key={player}
-                        onClick={() => moveToCell({ holeIndex, playerIndex })}
                         className={[
-                          'py-3 px-1 text-center font-ui text-sm cursor-pointer select-none transition-colors',
+                          'p-0 text-center font-ui text-sm select-none transition-colors',
                           isActive ? 'bg-accent text-white font-semibold' : 'text-text',
                         ].join(' ')}
                       >
-                        {score ?? '–'}
-                        {score != null && (
-                          <ParDelta delta={scoreToPar(score, holePars[holeIndex])} inverted={isActive} />
-                        )}
+                        {/* A real button filling the cell, so a keyboard, switch
+                            or screen-reader user can jump to any hole to correct
+                            a score, not just step forward with Advance (#96). */}
+                        <button
+                          type="button"
+                          onClick={() => moveToCell({ holeIndex, playerIndex })}
+                          aria-label={`Hole ${holeIndex + 1}, par ${holePars[holeIndex]}, ${player}: ${score ?? 'no score yet'}`}
+                          aria-current={isActive ? 'true' : undefined}
+                          className={[
+                            'block w-full py-3 px-1 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset',
+                            isActive ? 'focus-visible:ring-white/80' : 'focus-visible:ring-accent/40',
+                          ].join(' ')}
+                        >
+                          {score ?? '–'}
+                          {score != null && (
+                            <ParDelta delta={scoreToPar(score, holePars[holeIndex])} inverted={isActive} />
+                          )}
+                        </button>
                       </td>
                     )
                   })}
