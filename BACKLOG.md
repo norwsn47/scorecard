@@ -34,7 +34,7 @@ A game-mode toggle at setup: **stroke play** (current — lowest total wins) or 
 
 ### 83. Home (signed in) — fold Settings into the header icon
 When signed in, Home shows a "signed in as…" state plus a standalone **Settings** button that the user considers redundant. Swap the header **info (ℹ) icon for a settings (gear) icon** that opens the Settings screen, and drop the standalone Settings button.
-- **Open question for the product-owner before build:** where the **Info page** (PRD §4.8) is then reached from — move its entry point into Settings, keep an info affordance elsewhere, or show the settings icon only when signed in and keep the info icon when signed out. Resolve first.
+- **Decided 19 Sep 2026:** signed in, the header shows the gear and Settings gets an "About" row that links to the Info page; signed out, the info icon stays (no Settings to fold into). Needs a PRD §4.8 update.
 - Frontend-only once decided; likely small. Related: #5 (signed-in identity, shipped 18 Sep 2026), #4 (Settings panel, shipped).
 
 ---
@@ -63,7 +63,7 @@ When signed in, Home shows a "signed in as…" state plus a standalone **Setting
 Add Google as a sign-in option alongside the magic link (PRD §11.4 is currently magic-link-only). Needs: an OAuth client created in the Google Cloud console (external, hence blocked), the redirect/callback Pages Function, and a decision on account linking — a user who has signed in by magic link and then uses Google with the same email address should land on the same account, not a duplicate. PRD §11.4 change needed. Assistance requested — unblock by setting up the Google Cloud OAuth client and confirming the account-linking behaviour.
 
 ### 12. Contact email — decide the final address and whether Info needs a link
-The placeholder gmail is already gone: `Privacy.jsx` uses `scorecard@outbuild.uk`, and the Info page (PRD §4.8) currently has no contact `mailto:` at all. Decide whether the Info page should carry a contact link, and confirm `scorecard@outbuild.uk` is the address to standardise on (PRD §4.8 and earlier notes assumed `hello@outbuild.co`). Align both pages and the PRD once decided.
+The placeholder gmail is already gone: `Privacy.jsx` uses `scorecard@outbuild.uk`, and the Info page (PRD §4.8) currently has no contact `mailto:` at all. Decide whether the Info page should carry a contact link, and confirm `scorecard@outbuild.uk` is the address to standardise on (PRD §4.8 and earlier notes assumed `hello@outbuild.co`). Align both pages and the PRD once decided. **Decided 19 Sep 2026:** standardise on `scorecard@outbuild.uk` and add a `mailto:` link to the Info page; update PRD §4.8 to match.
 
 ### 13. Official Bruntsfield logo
 Add the club's official logo (likely Home or the course info section) once permission to use it is obtained.
@@ -76,11 +76,10 @@ Add the club's official logo (likely Home or the course info section) once permi
 - **D1-round gap:** the `gameId` re-resolution only covers local/quick-play rounds (looked up in `localStorage`). A browser back/forward bounce, or Setup's edit-cancel, landing back on a signed-in D1-only round opened from History (never saved locally) still falls back to the most recently completed *local* game, same as before this build — there's no `GET /api/games/:id` to re-fetch a single D1 round by id. Low priority (narrow path: sign in, open a past round from History, tap Edit, cancel before starting the scorecard, or a raw browser bounce) — would need a new API endpoint if it's worth closing.
 - `pastRound` isn't persisted in history state, so a browser back/forward bounce onto the "Add Past Round" Setup screen re-renders it titled "New Game" with no date field (cosmetic; the past round is already saved by then; no worse than pre-#43 behaviour). Add `pastRound` to the `navigate` allowlist in `App.jsx` if that path is worth polishing.
 - `Setup.edit-recovery.test.jsx` covers the abandoned-edit guard directly; `App.test.jsx` now also drives it through a real `popstate` bounce, and `Login.test.jsx` covers the "← Home" label. Still no render test for the `goBack()` fix itself.
-- **Scorecard "Pause" — no confirmation dialog.** Flagged during the 5 Sep build, not decided: tapping it leaves the app with no confirmation, unlike Finish Game. Scores are autosaved so no data is lost either way, but it's still an accidental-tap risk. Worth a product-owner/user call on whether it needs a guard.
 
 
 ### 56. Length-changing course switch during a D1 past-round edit leaves a stale-size grid
-Surfaced in the #48–#55 code review. `buildEditGame` sizes the edit grid to the *round's saved* hole count, not the newly-selected course's. Switching a 36-hole round onto a 9-hole course mid-edit (D1 rounds only — local rounds can't change course) leaves a 36-row grid with holes 10–36 padded back to par 3. No crash, no data loss, but confusing. Needs a product decision: disallow a length-changing course switch during an edit, or accept it and document the behaviour. (PRD §11.7, §11.13.)
+Surfaced in the #48–#55 code review. `buildEditGame` sizes the edit grid to the *round's saved* hole count, not the newly-selected course's. Switching a 36-hole round onto a 9-hole course mid-edit (D1 rounds only — local rounds can't change course) leaves a 36-row grid with holes 10–36 padded back to par 3. No crash, no data loss, but confusing. **Decided 19 Sep 2026:** disallow a length-changing course switch during an edit (offer only courses with the same hole count). Small fix in Setup's edit flow; needs a PRD §11.7/§11.13 note and a localhost check. (PRD §11.7, §11.13.)
 
 ### 90. Header top padding on mobile — reduced, needs on-device confirmation
 From the 11 September 2026 UI/UX review. Reported across mobile screens, not confirmed at pixel level via desktop emulation (doesn't render iOS status bar/notch chrome). Fixed 11 September 2026: `PageHeader.jsx`'s top padding reduced `pt-10` → `pt-6` (an existing DESIGN.md spacing token, not an invented value). Still needs a quick on-device visual check to confirm it reads right with real iOS status-bar/notch chrome. Low priority.
@@ -95,7 +94,7 @@ From the 11 September 2026 UI/UX review. Reported across mobile screens, not con
 4. **Rejections:** a permanent 400 (e.g. course deleted) or a 401 (session expired) keeps the round locally and flags it, never deletes it. 401 waits for the user to sign in again.
 5. **Shared device:** a pending round is tagged with the user who played it and only syncs when that user signs in.
 6. **#8 stays separate**, but the pending marker should be designed so #8 can reuse it later.
-Findings to carry into the build: `synced` alone cannot mark a failed save (it is undefined on every quick-play round, so signed-in failures would look identical to pre-sign-in quick-play rounds - a new marker such as `pendingSyncUserId` is needed); PRD §11.8 says a failed POST "can be retried on the next Summary visit" but no path reaches that Summary again (PRD to be corrected); `Scorecard.jsx:215` sets `synced: true` on a locally edited round without POSTing it (unreachable for signed-in users today, but it makes `synced` untrustworthy as an "on the server" flag - log as a follow-up). Build sequence: branch from an up-to-date `main` after the audit, html2canvas and contrast branches are merged; product-owner updates PRD §11.8 and §11.9 first; frontend-developer builds in pieces (marker + Summary error handling, then the sync runner, then History visibility); code-reviewer; human localhost review with `/api/games` blocked or offline; PRD alignment check; CHANGELOG and BACKLOG. Suggested branch: `fix/summary-save-failure-retry`. Note: the project-manager could not read this entry's original text when scoping (no shell), so the plan is based on the code and PRD.
+Findings to carry into the build: `synced` alone cannot mark a failed save (it is undefined on every quick-play round, so signed-in failures would look identical to pre-sign-in quick-play rounds - a new marker such as `pendingSyncUserId` is needed); PRD §11.8 says a failed POST "can be retried on the next Summary visit" but no path reaches that Summary again (PRD to be corrected); `Scorecard.jsx:215` `synced: true` oddity is logged in #111. Build sequence: product-owner updates PRD §11.8 and §11.9 first; frontend-developer builds in pieces (marker + Summary error handling, then the sync runner, then History visibility); code-reviewer; human localhost review with `/api/games` blocked or offline; PRD alignment check; CHANGELOG and BACKLOG. Suggested branch: `fix/summary-save-failure-retry`.
 
 ### 96. Scorecard scoring cells not reachable by keyboard or screen reader (HIGH - full audit, 19 Sep 2026)
 `Scorecard.jsx:317-319`: choosing a hole to score is a `<td onClick>` with no role, `tabIndex` or key handler. Keyboard, switch and screen-reader users can only move forward with Advance and cannot jump back to correct an earlier score. The header, +, - and Advance buttons are fine. This is the app's core interaction. Not actioned.
@@ -197,7 +196,7 @@ From the first `/full-audit`. Contrast ratios and tap sizes are hand-computed es
 - Low: token check and mark-used not atomic (`verify.js`); expired `sessions` rows never deleted; personal Gmail hardcoded as `ADMIN_NOTIFY_EMAIL` fallback (`users/index.js:210`); `.dev.vars` not in `.gitignore`; permissive `EMAIL_RE`; full Resend error logged; tokens have no type column.
 
 ### 103. Performance smells (flag only; not measured)
-- Medium: blank shell until `/api/auth/me` resolves or 5s abort (`App.jsx:156`, `useAuth.jsx`); `GET /api/games` is `LIMIT 100` with no notice past 100 rounds (needs a product decision).
+- Medium: blank shell until `/api/auth/me` resolves or 5s abort (`App.jsx:156`, `useAuth.jsx`). Decided 19 Sep 2026: leave the `GET /api/games` `LIMIT 100` cap as it is (History silently stops at 100 rounds); revisit if anyone nears 100.
 - Low: pan-zoom library statically bundled; render-blocking Google Fonts CSS; missing indexes (`games.course_id`, `courses.user_id`, `sessions.user_id`, `magic_tokens.email`); History aggregations every render.
 
 ### 104. Test coverage - remainder (Low)
@@ -210,17 +209,17 @@ BACKLOG #80 line refs (Settings focus effect now `Settings.jsx:86-94`, storage b
 Check whether mail-security scanners burn the single-use link (`verify.js:14-22`, `confirm-email.js:24-26`), leaving the user on "expired". Needs a real mail client or scanner. Links to #102.
 
 ### 107. Measure performance (not yet run)
-App-start auth gating, bundle and font loading (LCP on a throttled mobile profile, fits #41), and D1 timings for `GET /api/games` and `GET /api/courses` at realistic row counts. Plus the past-100-rounds product question in #103.
+App-start auth gating, bundle and font loading (LCP on a throttled mobile profile, fits #41), and D1 timings for `GET /api/games` and `GET /api/courses` at realistic row counts.
 
 ### 108. Input and outline-button border contrast (design decision)
-`border` `#D9D0C4` is ~1.39:1 on the page background, below the 3:1 WCAG expects for control boundaries (estimate). Decide whether to darken it for controls only or accept the warm-hairline look. Design-director call.
+`border` `#D9D0C4` is ~1.39:1 on the page background, below the 3:1 WCAG expects for control boundaries (estimate). **Decided 19 Sep 2026:** darken borders on inputs only, via a new stronger border token for form fields; decorative hairlines stay light. Design-director proposes the value, then a localhost check.
 
 ### 109. Redirect-to-Home uses pushState (Low)
 The no-data redirects in `Summary.jsx`, `Scorecard.jsx` and `Settings.jsx` push history, so Back from Home returns to the page that bounced (a Back loop); StrictMode also pushes twice in dev. Needs a `replace` option on `navigate` in `App.jsx`; affects three pages and the popstate tests. Related: #43b.
 
 ### 111. Smaller findings from the #104 tests (Low)
 - `Summary.jsx:117-125` `alreadySaved` re-POST guard is unreachable and its comment stale; tidy when #95 reworks it.
-- A signed-in user cannot edit a round between finishing and tapping Done (`Summary.jsx:104`); confirm that is intended.
 - Share failures give no feedback (`Summary.jsx:167-172`); needs an intended-behaviour decision.
 - `share.js` `winnerLabel` says "1 strokes" for a winning total of 1.
+- `Scorecard.jsx:215` sets `synced: true` on a locally edited round without POSTing it (unreachable for signed-in users today), so `synced` is not a trustworthy "on the server" flag; matters for #8 and #95.
 - Possible race, Assumed and probably unreachable: Done tapped before `/api/auth/me` resolves skips the save (`Summary.jsx:125`).
