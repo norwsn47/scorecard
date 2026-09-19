@@ -78,6 +78,7 @@ Outbuild palette applied for outdoor sunlight legibility on a phone:
   - Any cell can be tapped directly to jump to it
 - Scores are entered via a **floating control bar** fixed to the bottom of the screen (never scrolls away):
   - **Map** button (left) · large **−** button · large **+** button · **→** advance button — spread across the bar
+  - The **Map** button only shows when the active game's course is actually Bruntsfield, matched by the game itself rather than which route it was started from, and gated on sign-in state: a logged-out game is always Bruntsfield (quick-play has no course selector at all, so this covers it and a generic New Game alike); a signed-in game is matched by course name against the one canonical Bruntsfield name — which means a signed-in round with no course selected does **not** show the button, since a missing course there is a real, intentional state rather than Bruntsfield by default
   - A hole score has two states: **empty (—)** and **scored (1 or above)** — there is no zero
   - Tapping **+** on an empty cell sets it to 1; tapping **+** on a scored cell increments by 1
   - Tapping **−** on a cell showing 1 returns it to empty (—); tapping **−** on a cell showing 2+ decrements by 1
