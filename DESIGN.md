@@ -197,7 +197,7 @@ Every button in the app belongs to one of three sizes. The tier says how much we
 |---|---|---|---|
 | **Full CTA** | "This is the one thing to do on this screen" | `py-4 px-6`, `text-sm tracking-[0.1em] uppercase font-semibold` (filled) / `font-medium` (outline) | Home primary/secondary, Bruntsfield course page, Login submit, Setup "Start Game" |
 | **Dialog button** | "Choose one of two things, right now" | `py-3 px-4` full-width standalone, or `flex-1 py-3` paired in a row; `text-sm tracking-[0.08em] uppercase font-medium` (outline) / `font-semibold` (filled) | Resume Game, course-map link (standalone); Scorecard finish-confirm, History delete-confirm (paired) |
-| **Header action** | "A secondary action that shouldn't outweigh the page title" | `py-2 px-4`, `text-xs tracking-[0.1em] uppercase font-semibold` | Scorecard header Finish/Save, History "+ Add round" |
+| **Header action** | "A secondary action that shouldn't outweigh the page title" | `py-2 px-4`, `text-xs tracking-[0.1em] uppercase font-semibold` | Scorecard header Finish/Save, History "+ Add" |
 
 **Disabled state — every tier, no exceptions: `opacity-40`.** Circular control-bar buttons (Increment/Decrement/Advance) are a different affordance and keep their own already-documented `opacity-25` — see "Control bar buttons" below for why.
 
@@ -250,15 +250,13 @@ Used in Scorecard's finish-confirm sheet and History's delete-confirm sheet.
 
 **Disabled opacity standardised to `opacity-40` in this pass.** Scorecard's confirm button shipped with `disabled:opacity-60` and no documented reason — **`src/pages/Scorecard.jsx` line 412 needs a code change** to bring it in line with every other disabled button in the app.
 
-### Header action button (Header action tier) — Finish/Save, + Add round
+### Header action button (Header action tier) — Finish/Save, + Add
 ```
 py-2 px-4 rounded-sm border border-accent text-accent
 font-ui text-xs tracking-[0.1em] uppercase font-semibold
 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40
 ```
-Sits inside a `PageHeader` right slot (or an equivalent compact context) — small enough not to outweigh the page title, still comfortably legible at `text-xs` because it carries a short, familiar word ("Finish", "Save", "+ Add round"). Touch target is ~34px including border, below the 44px ideal; accepted for the same reason "Inline link tap targets" (below) accepts ~36-40px for `text-xs` inline elements — this is a deliberately quiet secondary action inside a fixed-height chrome bar, not the screen's one primary action.
-
-**Needs a code change to match this spec:** `src/pages/History.jsx` line 71 ("+ Add round") currently ships as `py-2 px-3`, `tracking-[0.08em]`, no `font-semibold`, plus an extra `active:bg-accent/10` state not present on Scorecard's Finish/Save button. Three of those four are drift within the same tier. Align it to the spec above; the `active:bg-accent/10` press state can stay — it's a reasonable addition, just not yet documented, so it becomes this tier's standard active state going forward.
+Sits inside a `PageHeader` right slot (or an equivalent compact context) — small enough not to outweigh the page title, still comfortably legible at `text-xs` because it carries a short, familiar word ("Finish", "Save", "+ Add"). Touch target is ~34px including border, below the 44px ideal; accepted for the same reason "Inline link tap targets" (below) accepts ~36-40px for `text-xs` inline elements — this is a deliberately quiet secondary action inside a fixed-height chrome bar, not the screen's one primary action.
 
 ### Add-player button (dashed ghost)
 ```
@@ -319,7 +317,7 @@ right:   shrink-0 flex justify-end        /* the `right` prop, or an invisible m
 `line-clamp-2` sits on the `<h1>` — a long title (a course name) wraps to two lines instead of clipping with an ellipsis. `truncate` sits on the subtitle `<p>` only. Neither sits on the centre wrapper. There is no `pointer-events-none` in the header any more: it was only there to let taps fall through the old absolute title layer to the buttons underneath, and that layer no longer exists.
 
 - **Back button:** `py-3 min-h-[44px] flex items-center whitespace-nowrap text-muted font-ui text-sm tracking-[0.08em] uppercase active:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40` — `←` prefix, no button chrome, **never truncates, never wraps**.
-- **Right slot:** optional — a Header action button (Scorecard Finish/Save, History "+ Add round") or a plain text link (Summary Edit/Done). `whitespace-nowrap`, **never truncates**; its touch target comes from whatever is passed in.
+- **Right slot:** optional — a Header action button (Scorecard Finish/Save, History "+ Add") or a plain text link (Summary Edit/Done). `whitespace-nowrap`, **never truncates**; its touch target comes from whatever is passed in.
 - **Mirror spacer:** the same node as the side it mirrors, wrapped in a `<div aria-hidden="true" class="invisible pointer-events-none">`. It contributes width and nothing else.
 
 **Bare variant — Login only.** `PageHeader` takes a `bare` boolean prop. `bare` drops `border-b` and the boxed vertical padding, leaving `flex items-center px-4 pt-3 shrink-0` with just the back slot. It exists for Login's two screens (the form and the "check your email" confirmation), which follow Home's borderless "back link floating above a large editorial heading" pattern rather than the boxed header bar every utility screen uses — a deliberate difference, not an oversight. Login passes `bare` + `onBack` + `backLabel` and keeps its `<h1>` in the page body. This removes Login's local `BackToHome` component, the last hand-rolled copy of the header back button (#85) — see Navigation → Known duplication.
@@ -575,8 +573,4 @@ Inline SVGs throughout — no icon library dependency.
 
 **Intended state:** the advance-button fill is the `control-warm` token, the active-row tint is `accent-tint` (`--color-accent-tint`), and every focus ring is `ring-accent/40`. All are now fully implemented — `src/pages/Login.jsx:111`'s hardcoded `focus:ring-[rgba(26,67,41,0.4)]` was swapped for the token on 5 September 2026, and `Home.jsx`'s inline `rgba(26,67,41,0.1)` decorative circle became `bg-accent/10` on 8 September 2026 (#65). This section describes the intended, shipped state.
 
-**New divergences found in this pass (#44, button-size system) — for frontend-developer to pick up next, not yet in BACKLOG as separate items:**
-- `src/pages/Scorecard.jsx:412` — dialog confirm button ships `disabled:opacity-60`; should be `opacity-40` per the standardised Dialog button spec.
-- `src/pages/Login.jsx:117` — submit button ships `disabled:opacity-50`; found independently while verifying this pass (not in the original audit), same fix, `opacity-40`.
-- `src/pages/History.jsx:71` — "+ Add round" ships as `py-2 px-3`, `tracking-[0.08em]`, no `font-semibold`; should match the Header action tier spec (`py-2 px-4`, `tracking-[0.1em]`, `font-semibold`) it's grouped with.
-- Focus-visible ring is a net-new rule (see "Button size system") with no shipped buttons yet — every button in the app needs the `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40` class added.
+**No outstanding divergences.** The four items found in the #44 button-size pass are all fixed in code: dialog and submit buttons use `disabled:opacity-40`, the History "+ Add" header action matches the Header action tier, and every button carries the `focus-visible` ring.

@@ -482,7 +482,7 @@ Changing the email on an account reuses the magic-link machinery (§11.4) — th
 
 ### 11.4.2 Resend link on the confirmation screen
 
-> **Status:** specification locked, build in progress (branch `feat/magic-link-resend`, BACKLOG #9). Decisions below confirmed by the user 18 September 2026.
+> **Status:** shipped 18 September 2026 (BACKLOG #9). Decisions below confirmed by the user 18 September 2026.
 
 Adds a "Resend link" control to step 3 of §11.4's flow - the "Check your email" confirmation screen (`src/pages/Login.jsx`), which currently shows static confirmation text with no way to resend without navigating back to the form.
 
@@ -660,7 +660,7 @@ Quick-play edits are localStorage-only and device-specific, consistent with all 
 
 ### 11.13.1 Adding and removing players during an edit
 
-> **Status:** specification locked, build in progress (branch `feat/edit-round-players`, BACKLOG #6). Reverses the explicit v1 deferral in §11.13 ("Adding or removing players during an edit" was out of scope). Decisions below confirmed by the user on 18 September 2026.
+> **Status:** shipped 18 September 2026 (BACKLOG #6). Reverses the explicit v1 deferral in §11.13 ("Adding or removing players during an edit" was out of scope). Decisions below confirmed by the user on 18 September 2026.
 
 Extends §11.13's edit capability to the player roster itself — not just names, scores, notes, course and par on the *existing* set of players. Applies to both round types (local/quick-play and logged-in D1), same as the rest of §11.13.
 
@@ -728,8 +728,8 @@ Requires migration `004_add_user_profile.sql` applied to production D1 before de
 
 ### 11.15 Signed-in identity in gameplay
 
-> **Status:** specification locked, build in progress (branch `feat/signed-in-identity-gameplay`, BACKLOG #5). This section supersedes the earlier forward-references in §8 and §11.14, which described a different mechanism (a one-time name prompt plus "primary" score styling) that was never built.
-> **PRD alignment check (18 September 2026):** four deviations flagged by frontend-developer in handoff, resolved by product-owner — see the "Visual treatment" and "New Game pre-fill" notes below for the locked decisions. One follow-up code change is needed before this branch is ready to commit: the star is not yet shown on the "Finish Game?" confirmation dialog.
+> **Status:** shipped 18 September 2026 (BACKLOG #5). This section supersedes the earlier forward-references in §8 and §11.14, which described a different mechanism (a one-time name prompt plus "primary" score styling) that was never built.
+> **PRD alignment check (18 September 2026):** four deviations flagged by frontend-developer in handoff, resolved by product-owner — see the "Visual treatment" and "New Game pre-fill" notes below for the locked decisions. The follow-up (the star on the "Finish Game?" confirmation dialog) was built before merge.
 
 Signed-in users get a lightweight way to see which scores in a round are theirs, without introducing a second identity system alongside player names.
 
