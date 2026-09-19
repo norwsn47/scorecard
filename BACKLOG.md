@@ -85,9 +85,6 @@ From the 11 September 2026 UI/UX review. Reported across mobile screens, not con
 6. **#8 stays separate**, but the pending marker should be designed so #8 can reuse it later.
 Findings to carry into the build: `synced` alone cannot mark a failed save (it is undefined on every quick-play round, so signed-in failures would look identical to pre-sign-in quick-play rounds - a new marker such as `pendingSyncUserId` is needed); PRD §11.8 says a failed POST "can be retried on the next Summary visit" but no path reaches that Summary again (PRD to be corrected); `Scorecard.jsx:215` `synced: true` oddity is logged in #111. Build sequence: product-owner updates PRD §11.8 and §11.9 first; frontend-developer builds in pieces (marker + Summary error handling, then the sync runner, then History visibility); code-reviewer; human localhost review with `/api/games` blocked or offline; PRD alignment check; CHANGELOG and BACKLOG. Suggested branch: `fix/summary-save-failure-retry`.
 
-### 96. Scorecard scoring cells not reachable by keyboard or screen reader (HIGH - full audit, 19 Sep 2026)
-`Scorecard.jsx:317-319`: choosing a hole to score is a `<td onClick>` with no role, `tabIndex` or key handler. Keyboard, switch and screen-reader users can only move forward with Advance and cannot jump back to correct an earlier score. The header, +, - and Advance buttons are fine. This is the app's core interaction. Not actioned.
-
 ---
 
 ## Housekeeping & tech debt

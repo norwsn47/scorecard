@@ -404,6 +404,7 @@ table-fixed border-collapse w-full
 | Data rows | `border-b border-border` |
 | Active row | `bg-[rgba(26,67,41,0.05)]` |
 | Active cell | `bg-accent text-white font-semibold` |
+| Score cell (element) | A real `<button type="button">` filling the `td` (`block w-full py-3 px-1`, `td` is `p-0`), labelled "Hole N, par P, Player: score" (or "no score yet") with `aria-current="true"` on the active cell, so any hole can be reached and corrected by keyboard or screen reader (#96). Focus ring is inset: `focus-visible:ring-2 focus-visible:ring-inset`, `ring-accent/40` on a normal cell and `ring-white/80` on the accent-filled active cell. |
 | Hole # (active row) | `text-accent font-semibold` |
 | Hole # (inactive) | `text-muted` |
 | Hole # + par | hole number `font-semibold`, then the hole's par in brackets `font-normal ml-0.5` at the same size — e.g. **3** (3). The bracketed par **label** carries no colour of its own; it inherits the cell colour (muted / accent). Same treatment on the live grid and the read-only Summary table, and mirrored (bold hole number + normal-weight bracket, same muted colour) on the hand-drawn share canvas (`src/utils/share.js`) since 5 September 2026. Replaces the earlier raised `(N)` superscript. *Deltas-only exception:* the par carries no colour rule holds for this par **label** — but score-vs-par **deltas** (the `+1` / `-1` / `E` superscript and the round total-to-par) do take a semantic colour. See "Score vs par" below. |
