@@ -5,7 +5,7 @@
 > - **Removing:** whoever finishes an item deletes its line in the same commit as the change (the project-manager for large changes, the main session for small ones). Add a `CHANGELOG.md` note only if it was a decision or a reversal.
 > - **Adding:** you ask; the project-manager adds genuine follow-ups from a large change; Critical/High review and audit findings are added. Lower findings stay in the chat report until you triage them.
 > - **Entries are short:** what needs doing, not the history. Nothing here is actioned without explicit instruction.
-> - **IDs are stable and never reused**, even after an item is deleted, so gaps are expected. Next free ID: **#111**.
+> - **IDs are stable and never reused**, even after an item is deleted, so gaps are expected. Next free ID: **#112**.
 
 **Last updated:** 19 September 2026
 
@@ -207,7 +207,7 @@ Most of #97 was removed on 19 September 2026 (`chore/dead-code-cleanup`: unused 
 - Low: `react-zoom-pan-pinch` and `CourseMapModal` are statically bundled into the main JS (no `React.lazy` anywhere); render-blocking Google Fonts stylesheet with three families, the desktop-only Caveat downloaded by every mobile visitor (`index.html:30`, overlaps #41); `courses/index.js:19-22` correlated `round_count` subquery with no index on `games.course_id`, and no index on `courses.user_id`, `sessions.user_id` or `magic_tokens.email` (tiny tables today); History aggregations recomputed every render; every score tap writes the whole active game to localStorage synchronously (fine at 36 holes x 6 players). The `AuthContext` fresh-object point is already in #80.
 
 ### 104. Audit: test-coverage gaps - remainder (Low)
-Most of #104 was closed on 19 September 2026 (`chore/test-coverage-gaps`: `Summary.jsx` save logic, `useAuth.jsx`, `share.js`, `ParStepperGrid`, `PlayerStar`, and signed-in star assertions; 420 -> 516 tests). Still without test files: the `Info`, `Privacy` and `Rules` pages, and the `logout` and `session` Pages Functions (`functions/api/auth/logout.js`, `functions/_lib/session.js`). Summary-level tests for a failed save and for share failures wait on the intended-behaviour decisions in #95 and #110.
+Most of #104 was closed on 19 September 2026 (`chore/test-coverage-gaps`: `Summary.jsx` save logic, `useAuth.jsx`, `share.js`, `ParStepperGrid`, `PlayerStar`, and signed-in star assertions; 420 -> 516 tests). Still without test files: the `Info`, `Privacy` and `Rules` pages, and the `logout` and `session` Pages Functions (`functions/api/auth/logout.js`, `functions/_lib/session.js`). Summary-level tests for a failed save and for share failures wait on the intended-behaviour decisions in #95 and #111.
 
 ### 105. Audit: stale or inaccurate documentation (log only, not corrected)
 - BACKLOG #80 line refs are stale: Settings focus effect is now `Settings.jsx:86-94`, the storage banner is `App.jsx:162`, the notice banner is `Home.jsx:63`. See #100 for "parity" being true only for Settings and History.
@@ -227,7 +227,7 @@ Found while proposing the sunlight-contrast fix (branch `fix/sunlight-contrast-t
 ### 109. Redirect-to-Home pushes history instead of replacing it (Low - from the #106 debugger investigation, 19 Sep 2026)
 The no-data redirects in `Summary.jsx`, `Scorecard.jsx` and `Settings.jsx` call `navigate('home')`, which uses `history.pushState`. After a deep link or bounce to one of those pages, history reads `[/summary, /]`, so pressing Back from Home returns to the page that just bounced to Home again (a Back loop). Separately, under React StrictMode in dev the effect runs twice, so two entries are pushed (dev-only; a production build shows one). Fixing either needs a router-level decision in `App.jsx`: give `navigate` a `replace` option (or a guard) and use it for redirects. Changes shared behaviour across three pages and needs a code-reviewer pass plus a check of the popstate tests. Not actioned. Related: #43b (back-nav polish). Fixed alongside this: the render-phase `navigate` warning in Summary (see the merge of `fix/summary-render-redirect`).
 
-### 110. Smaller findings from writing the #104 tests (Low, 19 Sep 2026; none actioned)
+### 111. Smaller findings from writing the #104 tests (Low, 19 Sep 2026; none actioned)
 Surfaced by the test-coverage branch (`chore/test-coverage-gaps`), which changed no source files.
 - **Stale unreachable guard in `Summary.jsx:117-125`.** `alreadySaved` (`_fromDb` or `synced`) forces `viewingSaved` (line ~99), which hides the Done button (lines ~198-216), so the re-POST guard in `handleGoHome` can never run from the UI, and its comment ("Done is this screen's only way back") no longer matches: a saved round is left via the Home fallback or Edit, neither of which POSTs. Harmless; tidy the guard and comment when #95 reworks this function. The `savingRef` re-entrance guard likewise cannot be tested independently (React disables the button between clicks).
 - **No edit between finishing and tapping Done for a signed-in user** (`Summary.jsx:104`): `canEdit` is false on a fresh post-finish round, so "Edit round" only appears once the round is opened from History. Intentional per the comment, but worth confirming as a product decision.
