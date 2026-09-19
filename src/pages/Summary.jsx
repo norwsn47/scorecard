@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { track } from '../utils/analytics.js'
 import { formatDateOnly } from '../utils/format.js'
 import { deriveResult, isSignedInPlayer } from '../utils/game.js'
@@ -58,10 +58,17 @@ export default function Summary({ navigate, params }) {
   // fix-forward).
   const [showHomeLink] = useState(() => (window.history.state?.depth ?? 0) === 0)
 
-  if (!game) {
-    navigate('home')
-    return null
-  }
+  // No round to show (e.g. /summary opened directly with nothing in storage).
+  // Bounce home from an effect, not an inline navigate() during render -
+  // navigate() sets state on the parent, which React rejects mid-render (same
+  // pattern as Scorecard). Keyed on a boolean because `game` is rebuilt as a
+  // new object every render.
+  const missing = !game
+  useEffect(() => {
+    if (missing) navigate('home')
+  }, [missing]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!game) return null
 
   const isDnf    = player => game.dnf?.includes(player)
   // Every tied winner gets the accent treatment, not just winners[0] (item 36).
