@@ -67,6 +67,15 @@ describe('Setup — signed-in name pre-fill on New Game (§4.2, §11.15)', () =>
     expect(input).toHaveValue('Someone Else')
   })
 
+  it('also pre-fills the first slot when adding a past round (pastRound: true)', async () => {
+    mockAuthMe({ id: 'u1', name: 'Alice' })
+    renderSetup({ pastRound: true })
+
+    expect(await screen.findByDisplayValue('Alice')).toBeInTheDocument()
+    // Confirm this really is the Add Past Round flow, not New Game.
+    expect(screen.getByText('Add Past Round')).toBeInTheDocument()
+  })
+
   it('does not pre-fill the first slot when editing an existing round', async () => {
     mockAuthMe({ id: 'u1', name: 'Alice' })
     renderSetup({
