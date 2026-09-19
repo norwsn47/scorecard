@@ -157,80 +157,70 @@ Two narrow wrinkles in `functions/api/users/index.js` / `confirm-email.js`, both
 
 ---
 
-### Full-codebase audit, 19 September 2026 (#97-#108)
-Logged from the first `/full-audit` (code-reviewer, read-only). Baseline at the time: lint clean, 35 test files / 419 tests passing. Contrast ratios and tap-target sizes below are hand-computed estimates, not browser measurements; nothing was tested with a screen reader; `npm audit` was not run. The two High findings are #95 and #96 under Known issues. Nothing here is actioned.
+### Full-codebase audit, 19 September 2026 (#97-#109, #111) - lower findings, short form
+From the first `/full-audit`. Contrast ratios and tap sizes are hand-computed estimates, not browser measurements; nothing was screen-reader tested; `npm audit` was not run. The High findings are #95 and #96 above.
 
-### 97. Audit: dead code - remainder (Low)
-Most of #97 was removed on 19 September 2026 (`chore/dead-code-cleanup`: unused `formatGameNameDate`/`formatDate`, `.pt-page` and `.map-vignette` CSS, the four `.gitkeep` files, `PAR_MIN`/`PAR_MAX` un-exported, two stale comments). Left on purpose:
-- `functions/_lib/email.js:10` `EMAIL_RE` is exported but only used inside its own file and in tests. The tests import it, so un-exporting it would break them; leave unless the tests are changed.
-- `README.md` is effectively empty (11 bytes). Needs content written, not deleted; decide whether it is worth doing.
+### 97. Dead code - remainder (Low)
+`EMAIL_RE` in `functions/_lib/email.js:10` stays exported because tests import it. `README.md` is effectively empty (11 bytes) and needs content, not deletion.
 
-### 98. Audit: duplicated logic
-- **Medium** - `auth/request-link.js:26-42` and `users/index.js:13-14,94-131` duplicate the throttle count query, `MAX_FRESH_LINKS = 5`, the 15-minute TTL and the token INSERT plus email send. No shared helper.
-- **Medium** - `Scorecard.jsx:146-153` (`buildPlayerData`) and `Summary.jsx:126-131` build the same `player_data` payload.
-- **Medium** - `share.js:55-64` `winnerLabel` re-implements `tiedNames` and the "Tied: ... level on N strokes" wording from `result.js`, whose header says those strings are shared.
-- **Medium** - `Home.jsx:69-100` vs `BruntsfiledCoursePage.jsx` header, info icon, 1/2/3 list, Resume Game, Last round and Sign-in links are near-copies. Home never received the tap-target fixes the course page got (see #101).
-- Low: session cookie regex implemented three times (`session.js:3`, `me.js:33`, `logout.js:20`; `me.js` also re-implements the session JOIN, deliberately, but it can drift); clear-cookie and set-cookie header strings duplicated (`logout.js:13`, `users/index.js:228`, `verify.js:56`); the "+ New course" reset handler pasted twice with a third variant (`Setup.jsx:331-336,390-395,415`); two near-identical resend POSTs (`Login.jsx:53,80`); the external-link arrow SVG inlined ~5 times (Home, Info x3, Privacy has its own local `ExternalLink`); hole count `36` in five places (`game.js:3`, `history.js:42`, `Summary.jsx:73`, `Scorecard.jsx:78`, `constants.js:20,25`) despite `constants.js` claiming to be the one place; par band 2-7 and default 3 defined three times (`scores.js:11,88`, `ParStepperGrid.jsx`, `hole-pars.js:10-12`); client email check `/.+@.+\..+/` (`Settings.jsx:122`) looser than server `EMAIL_RE`; security-notice email HTML re-inlines the branded shell (`users/index.js:245-264` vs `email.js:55-81`). The Bruntsfield name literal duplication is already in #94.
+### 98. Duplicated logic (Medium/Low)
+- Magic-link throttle, TTL, token INSERT and email send duplicated in `auth/request-link.js` and `users/index.js`.
+- `player_data` payload built twice (`Scorecard.jsx` `buildPlayerData`, `Summary.jsx`).
+- `share.js` `winnerLabel` re-implements `tiedNames` and the tie wording from `result.js`.
+- `Home.jsx` and `BruntsfiledCoursePage.jsx` are near-copies; Home lacks the tap-target fixes from #78.
+- Low: session cookie regex x3 and cookie header strings x3; "+ New course" reset handler in `Setup.jsx`; two resend POSTs in `Login.jsx`; external-link SVG inlined ~5 times; hole count `36` in five places; par band 2-7 defined three times; client email regex looser than server `EMAIL_RE`; security-notice email re-inlines the branded shell.
 
-### 99. Audit: error handling that reports false success or a misleading state (Medium)
-- `History.jsx:80-86` `executeDelete` swallows the fetch and never checks `res.ok`: on 401/500/offline the round vanishes from the list but stays in D1 and returns on reload.
-- `History.jsx:50-55` games fetch has no `res.ok` check: a 401/500 renders "No rounds yet". One unparseable `player_data` row makes `normalizeDbGame` throw and blanks the whole list. No error state.
-- `Setup.jsx:113-130` courses fetch has no 401/`res.ok` handling and an empty catch, so a failed or expired session shows "No courses yet" and allows a no-course 36-hole round. `CourseEdit.jsx:52` handles 401 properly (#75).
-- `Setup.jsx:242,266` `new Date(pastDate + 'T12:00:00').toISOString()` throws RangeError if the date field is cleared; `ready` never checks the date, so "Enter scores" / "Edit hole scores" silently does nothing (reproduced in Node).
-- `Scorecard.jsx:222-224` ignores the false return of `saveCompletedGame` (quota/blocked storage), then `clearActiveGame()` runs: silent loss of a finished round for a signed-out user. The active-game path shows a "Couldn't save" banner; the finish path does not.
-- Low: share failures swallowed silently (`Summary.jsx:157-167`, AbortError should stay silent but others need feedback); `logout()` has no try/catch (`Info.jsx:114`, `useAuth.jsx:45-48`); date defaults use the UTC date via `toISOString().slice(0,10)` (`Setup.jsx:51,486`), so between 00:00 and 01:00 BST "today" is not selectable and a round played 00:30 BST edits as the previous day (reproduced in Node).
+### 99. Error handling that shows false success or a misleading state (Medium)
+- `History.jsx`: delete ignores `res.ok`; games fetch has no `res.ok` check (a 401/500 shows "No rounds yet"; one bad `player_data` row blanks the list).
+- `Setup.jsx`: courses fetch has no 401 handling (expired session shows "No courses yet"); clearing the date field throws a RangeError so "Enter scores" silently does nothing; date defaults use the UTC date (wrong 00:00-01:00 BST).
+- `Scorecard.jsx:222-224`: ignores a failed `saveCompletedGame` (quota/blocked storage) then clears the active game.
+- Low: `logout()` has no try/catch (`Info.jsx`, `useAuth.jsx`).
 
-### 100. Audit: inconsistent patterns (mostly Low)
-- **Medium - dialog semantics missing** on the Finish/Save confirm sheet (`Scorecard.jsx:403`), the delete-course sheet (`CourseEdit.jsx:238`) and `CourseMapModal.jsx:23-31` (no role, `aria-modal`, labelling, autofocus, Escape; map modal is backdrop-dismiss only). DESIGN.md says "every bottom sheet, no exceptions (#80)" but only Settings and History are done, so #80's "parity" note is only true for those two.
-- **Medium - stale copy** `Settings.jsx:174`: "Just for you for now - it is not shown on any scorecard yet." The name is now used (PlayerStar, Setup pre-fill) since #5.
-- Low, backend: `request-link.js:13`, `courses/index.js:40`, `games/index.js:37` throw an unhandled 500 on a `null` or non-string JSON body (the PATCH handlers guard this); `games/index.js:37-105` POST does not cap `notes` (PATCH caps at 300) or validate `client_round_id`; `games/[id].js:14` DELETE lacks `AND user_id = ?` (safe via the preceding check, but `courses/[id].js` scopes both as defence in depth); `me.js:6,18` returns `{ user: null }` with 401 where every other endpoint returns `{ error }` (intentional, but logs a console 401 on every signed-out load); mixed semicolon style (`auth/*` uses them, the rest does not).
-- Low, frontend: ErrorBoundary Reload button uses `rounded-md py-3`, which matches no DESIGN.md tier, and has no `componentDidCatch` logging (`App.jsx:28-37`); `useAuth.jsx:30` `replaceState({}, ...)` wipes the history stamp `App.jsx` just set (harmless fallback, contradicts the `App.jsx:89-103` comment); fallback back labels read "Home" with no arrow (`History.jsx:96`, `Settings.jsx:165`, `Summary.jsx:189`) vs DESIGN.md/#43b "← Home"; empty-score glyph is en dash in Scorecard, hyphen in Summary/share, and DESIGN.md specifies an em dash; `Scorecard.jsx:116` `MAX_STROKES = 14` declared inside the component (backend allows 99, rules say 7); `createGame`/`buildEditGame` take 6-7 positional parameters (`game.js:212,257`); "Bruntsfiled" typo in the `BruntsfiledCoursePage` filename, import and tests; `Setup.jsx` (607 lines), `Scorecard.jsx` (447) and `Summary.jsx` (436) are large multi-concern components.
-- Content flag for product-owner: `BruntsfiledCoursePage.jsx:46` says "Golf played here since 1456"; that is not in PRD.md and `Info.jsx` says 1895.
+### 100. Inconsistent patterns (Medium/Low)
+- Medium: no dialog semantics on the Finish sheet (`Scorecard.jsx:403`), delete-course sheet (`CourseEdit.jsx:238`) and `CourseMapModal.jsx` (no role, `aria-modal`, Escape, focus).
+- Medium: stale copy in `Settings.jsx:174` ("...not shown on any scorecard yet"); the name is now shown.
+- Low, backend: unhandled 500 on a null or non-string JSON body (`request-link.js`, `courses/index.js`, `games/index.js`); `games` POST does not cap `notes` or validate `client_round_id`; `games/[id].js` DELETE lacks `AND user_id = ?`; `me.js` returns `{ user: null }` with 401; mixed semicolon style.
+- Low, frontend: ErrorBoundary button styling and no logging (`App.jsx`); `useAuth.jsx:30` wipes the history stamp; back labels lack the arrow; empty-score glyph differs from DESIGN.md's em dash; `MAX_STROKES` declared inside `Scorecard`; `createGame`/`buildEditGame` take 6-7 positional args; "Bruntsfiled" filename typo; large `Setup.jsx`, `Scorecard.jsx`, `Summary.jsx`.
+- Content flag: `BruntsfiledCoursePage.jsx:46` says "since 1456" (not in PRD; `Info.jsx` says 1895).
 
-### 101. Audit: accessibility beyond #95/#96 (Medium unless stated)
-- `Login.jsx:172` `<label>` has no `htmlFor` and does not wrap the input.
-- `Setup.jsx:354,406,483,505,559` and `CourseEdit.jsx:179` (course select, course name, player names, date, notes, course-edit name) have no `aria-label` or association. `Settings.jsx` does this correctly.
-- No error or status message is in a live region except `Home.jsx:63` `role="status"`: `App.jsx:162`, `Scorecard.jsx:232`, `Login.jsx:120,158`, `Settings.jsx:185,244`, `Setup.jsx:421`, `CourseEdit.jsx:199,225`. #93 covers only Login's resend.
-- `History.jsx:234-296` nests `role="button"` spans inside the card's `<button>` (invalid, unreliable under assistive tech).
-- Home tap targets: "Last round", "Want to save your scores? Sign in" and the Outbuild footer link are bare `text-xs` with no padding (~16px tall, estimated); the course page got `py-3 -my-3` in #78, Home did not (`Home.jsx:128-136,190-196,205`).
-- Low: info icon button ~40px (`Home.jsx:76-80`, `BruntsfiledCoursePage.jsx:33-37`); Privacy/Rules inline links ~20px tall and `<a>` lacks the DESIGN.md focus-visible ring (`Privacy.jsx:3-15,83,97,109`, `RulesContent.jsx:49`); History delete button is `w-9 h-9` (36px) and reads "Delete game" while the UI says "round" (`History.jsx:301-302`); no `<main>` landmark on Scorecard, Summary, Login (and the `CourseEdit.jsx:136` area); focus-return missing on several sheets (see #80).
+### 101. Accessibility beyond #95/#96 (Medium unless stated)
+- Missing accessible names: `Login.jsx:172` label lacks `htmlFor`; `Setup.jsx` and `CourseEdit.jsx` inputs, select, date and notes.
+- No live regions for errors/status app-wide (only `Home.jsx:63`); #93 covers Login only.
+- `History.jsx:234-296` nests `role="button"` spans inside a `<button>`.
+- Home tap targets are ~16px ("Last round", "Sign in", Outbuild link; `Home.jsx`).
+- Low: info icon ~40px; Privacy/Rules links ~20px with no focus ring; History delete is 36px and says "Delete game"; no `<main>` on Scorecard, Summary, Login; missing focus-return (see #80).
 
-### 102. Audit: security hardening (Medium unless stated; no Critical, no secrets found in tracked files)
-- **No security headers**: there is no `public/_headers`, so no CSP, frame-ancestors/X-Frame-Options, X-Content-Type-Options or Referrer-Policy from the repo. Dashboard-level settings were not checked. The session cookie is `SameSite=Lax` (HttpOnly, Secure), so this is hardening, not an open hole.
-- **Magic and email-confirmation links are consumed on a plain GET** (`verify.js:14-22`, `confirm-email.js:24-26`), so a mail-security scanner that prefetches links could burn the token and the user would see "expired". Assumed, needs a real mail-flow test (see #106).
-- **Google Fonts loaded on every visit** (`index.html:28-30`) sends visitor IPs to Google before interaction, while `Privacy.jsx` says two companies handle data and there is "no tracking". Self-hosting the fonts would close it. Legal weight assumed. Overlaps #41.
-- Low: `verify.js:14-22` token check and mark-used are separate statements, so two parallel requests can both pass (fix: `UPDATE ... WHERE used = 0` and check `changes`; same class as #79); expired `sessions` rows are never deleted (`Privacy.jsx` says 30 days); personal Gmail hardcoded as the `ADMIN_NOTIFY_EMAIL` fallback (`users/index.js:210`, asserted in `users/index.test.js:422`; documented in PRD §11.11, but it is PII in source if the repo ever goes public); `.gitignore` ignores `.env*` but not `.dev.vars`; `EMAIL_RE` accepts `x<y@z.com>`; `email.js:42` logs the full Resend error body (may echo the recipient); tokens share one table with no type column, so sign-in and email-change links are interchangeable at the endpoint level (both need inbox control).
+### 102. Security hardening (Medium unless stated; no secrets found)
+- No security headers (no `public/_headers`: CSP, frame-ancestors, X-Content-Type-Options, Referrer-Policy).
+- Magic and email-confirm links are consumed on GET, so a mail scanner could burn them (Assumed; see #106).
+- Google Fonts on every visit sends IPs to Google, against the "no tracking" copy; self-host the fonts (overlaps #41).
+- Low: token check and mark-used not atomic (`verify.js`); expired `sessions` rows never deleted; personal Gmail hardcoded as `ADMIN_NOTIFY_EMAIL` fallback (`users/index.js:210`); `.dev.vars` not in `.gitignore`; permissive `EMAIL_RE`; full Resend error logged; tokens have no type column.
 
-### 103. Audit: performance smells (flag only, no measurement; measure later)
-- **Medium** - the whole app renders a blank shell until `/api/auth/me` resolves or the 5s abort fires, including for signed-out quick-play users (`App.jsx:156`, `useAuth.jsx:34,38`).
-- **Medium** - `GET /api/games` is `LIMIT 100` with no offset and returns every row's full `player_data`; History silently stops at 100 rounds with no notice (`games/index.js:12-20`). Needs a product decision on what happens past 100.
-- Low: `react-zoom-pan-pinch` and `CourseMapModal` are statically bundled into the main JS (no `React.lazy` anywhere); render-blocking Google Fonts stylesheet with three families, the desktop-only Caveat downloaded by every mobile visitor (`index.html:30`, overlaps #41); `courses/index.js:19-22` correlated `round_count` subquery with no index on `games.course_id`, and no index on `courses.user_id`, `sessions.user_id` or `magic_tokens.email` (tiny tables today); History aggregations recomputed every render; every score tap writes the whole active game to localStorage synchronously (fine at 36 holes x 6 players). The `AuthContext` fresh-object point is already in #80.
+### 103. Performance smells (flag only; not measured)
+- Medium: blank shell until `/api/auth/me` resolves or 5s abort (`App.jsx:156`, `useAuth.jsx`); `GET /api/games` is `LIMIT 100` with no notice past 100 rounds (needs a product decision).
+- Low: pan-zoom library statically bundled; render-blocking Google Fonts CSS; missing indexes (`games.course_id`, `courses.user_id`, `sessions.user_id`, `magic_tokens.email`); History aggregations every render.
 
-### 104. Audit: test-coverage gaps - remainder (Low)
-Most of #104 was closed on 19 September 2026 (`chore/test-coverage-gaps`: `Summary.jsx` save logic, `useAuth.jsx`, `share.js`, `ParStepperGrid`, `PlayerStar`, and signed-in star assertions; 420 -> 516 tests). Still without test files: the `Info`, `Privacy` and `Rules` pages, and the `logout` and `session` Pages Functions (`functions/api/auth/logout.js`, `functions/_lib/session.js`). Summary-level tests for a failed save and for share failures wait on the intended-behaviour decisions in #95 and #111.
+### 104. Test coverage - remainder (Low)
+No tests for the `Info`, `Privacy` and `Rules` pages, or the `logout` and `session` Pages Functions. Summary tests for a failed save and share failures wait on #95 and #111.
 
-### 105. Audit: stale or inaccurate documentation (log only, not corrected)
-- BACKLOG #80 line refs are stale: Settings focus effect is now `Settings.jsx:86-94`, the storage banner is `App.jsx:162`, the notice banner is `Home.jsx:63`. See #100 for "parity" being true only for Settings and History.
-- PRD.md:731-733 §11.15 status still says "build in progress" and that the star is not yet on the Finish Game dialog; it is (`Scorecard.jsx:417`). Product-owner to update.
-- DESIGN.md "Divergences" (~569-577) lists as pending items already fixed (`Scorecard.jsx:412` and `Login.jsx:117` opacity, the "no shipped buttons yet" focus-visible note), and refers to History "+ Add round" (code says "+ Add") and a `CourseEdit.jsx:25` "← Add Past Round" back button removed in #89.
+### 105. Stale documentation (Low)
+BACKLOG #80 line refs (Settings focus effect now `Settings.jsx:86-94`, storage banner `App.jsx:162`, notice banner `Home.jsx:63`); PRD §11.15 status still says "build in progress" and that the star is not on the Finish dialog (it is); DESIGN.md "Divergences" (~569-577) lists items already fixed and a removed "← Add Past Round" back button.
 
-### 106. Audit: debugger handoffs (item 1 done, item 2 not yet run)
-- Magic-link "expired" for users whose mail client prefetches links (`verify.js:14-22`, `confirm-email.js:24-26`). Assumed; reproduction needs a real mail client or scanner. Links to #102.
+### 106. Magic-link prefetch investigation (not yet run)
+Check whether mail-security scanners burn the single-use link (`verify.js:14-22`, `confirm-email.js:24-26`), leaving the user on "expired". Needs a real mail client or scanner. Links to #102.
 
-### 107. Audit: performance measurement handoffs (not yet run)
-- App start gated on the 5s `/api/auth/me` timeout, static import of the pan-zoom library, render-blocking third-party font CSS. Needs LCP/first-paint on a throttled mobile profile; fits the #41 baseline.
-- `GET /api/games` (LIMIT 100, full `player_data`) and `GET /api/courses` correlated `round_count` with no supporting indexes (`migrations/001-004`). Needs D1 timing at realistic row counts, plus the product question in #103.
+### 107. Measure performance (not yet run)
+App-start auth gating, bundle and font loading (LCP on a throttled mobile profile, fits #41), and D1 timings for `GET /api/games` and `GET /api/courses` at realistic row counts. Plus the past-100-rounds product question in #103.
 
-### 108. Input and outline-button border contrast (~1.39:1) - design decision (design-director, 19 Sep 2026)
-Found while proposing the sunlight-contrast fix (branch `fix/sunlight-contrast-tokens`, which deliberately left it out). The `border` token `#D9D0C4` is about 1.39:1 on the page background (hand-computed, not browser-measured), below the 3:1 that WCAG SC 1.4.11 expects for identifying a control's boundary. Inputs also differ from the page only by a faint fill. Buttons carry text labels, so they are the lesser concern; inputs are the weaker case. Fixing it would change the app's warm-hairline character across the whole UI, so it needs a design-director call on whether to darken `border` for controls only (leaving decorative hairlines alone) or accept the current look. Not actioned.
+### 108. Input and outline-button border contrast (design decision)
+`border` `#D9D0C4` is ~1.39:1 on the page background, below the 3:1 WCAG expects for control boundaries (estimate). Decide whether to darken it for controls only or accept the warm-hairline look. Design-director call.
 
-### 109. Redirect-to-Home pushes history instead of replacing it (Low - from the #106 debugger investigation, 19 Sep 2026)
-The no-data redirects in `Summary.jsx`, `Scorecard.jsx` and `Settings.jsx` call `navigate('home')`, which uses `history.pushState`. After a deep link or bounce to one of those pages, history reads `[/summary, /]`, so pressing Back from Home returns to the page that just bounced to Home again (a Back loop). Separately, under React StrictMode in dev the effect runs twice, so two entries are pushed (dev-only; a production build shows one). Fixing either needs a router-level decision in `App.jsx`: give `navigate` a `replace` option (or a guard) and use it for redirects. Changes shared behaviour across three pages and needs a code-reviewer pass plus a check of the popstate tests. Not actioned. Related: #43b (back-nav polish). Fixed alongside this: the render-phase `navigate` warning in Summary (see the merge of `fix/summary-render-redirect`).
+### 109. Redirect-to-Home uses pushState (Low)
+The no-data redirects in `Summary.jsx`, `Scorecard.jsx` and `Settings.jsx` push history, so Back from Home returns to the page that bounced (a Back loop); StrictMode also pushes twice in dev. Needs a `replace` option on `navigate` in `App.jsx`; affects three pages and the popstate tests. Related: #43b.
 
-### 111. Smaller findings from writing the #104 tests (Low, 19 Sep 2026; none actioned)
-Surfaced by the test-coverage branch (`chore/test-coverage-gaps`), which changed no source files.
-- **Stale unreachable guard in `Summary.jsx:117-125`.** `alreadySaved` (`_fromDb` or `synced`) forces `viewingSaved` (line ~99), which hides the Done button (lines ~198-216), so the re-POST guard in `handleGoHome` can never run from the UI, and its comment ("Done is this screen's only way back") no longer matches: a saved round is left via the Home fallback or Edit, neither of which POSTs. Harmless; tidy the guard and comment when #95 reworks this function. The `savingRef` re-entrance guard likewise cannot be tested independently (React disables the button between clicks).
-- **No edit between finishing and tapping Done for a signed-in user** (`Summary.jsx:104`): `canEdit` is false on a fresh post-finish round, so "Edit round" only appears once the round is opened from History. Intentional per the comment, but worth confirming as a product decision.
-- **Share failures give no feedback** (`Summary.jsx:167-172`): `share.js` rejects with real errors (only `AbortError` resolves 'cancelled'), but `handleShare` catches everything silently. Same finding as the #99 share bullet; needs an intended-behaviour decision before a Summary-level test.
-- **`share.js` `winnerLabel` reads "1 strokes"** if the winning total is 1 (a hole-in-one round in a 1-hole game). Cosmetic.
-- **Possible race, Assumed and probably unreachable:** a signed-in user tapping Done before `/api/auth/me` resolves has `user === null` and skips the save (`Summary.jsx:125`). `App.jsx` gates on `loading`, so this should not happen in practice; not verified.
+### 111. Smaller findings from the #104 tests (Low)
+- `Summary.jsx:117-125` `alreadySaved` re-POST guard is unreachable and its comment stale; tidy when #95 reworks it.
+- A signed-in user cannot edit a round between finishing and tapping Done (`Summary.jsx:104`); confirm that is intended.
+- Share failures give no feedback (`Summary.jsx:167-172`); needs an intended-behaviour decision.
+- `share.js` `winnerLabel` says "1 strokes" for a winning total of 1.
+- Possible race, Assumed and probably unreachable: Done tapped before `/api/auth/me` resolves skips the save (`Summary.jsx:125`).
