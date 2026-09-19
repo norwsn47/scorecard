@@ -2,7 +2,7 @@
 ## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
 **Version:** 2.0
-**Last updated:** 18 September 2026
+**Last updated:** 19 September 2026
 
 > The rationale and section-by-section history of past updates lives in `CHANGELOG.md`, not here. This line is just a date.
 
@@ -174,7 +174,7 @@ Accessed via the **ⓘ** icon in the top-right corner of the home screen (see 4.
   - "Find out more" external link to https://www.bruntsfieldshortholegolfclub.co.uk/history/
   - "Course rules" link (navigates to the rules page)
   - Permission line: "The course map is reproduced with permission from Bruntsfield Short Hole Golf Club."
-- "About Outbuild" credit
+- "About Outbuild" credit, with a "Questions or feedback? Get in touch." line and a `mailto:` link to `scorecard@outbuild.uk` (the same address as the privacy page)
 - Account section: when signed in, shows the user's name (if set) and email, with a "Sign out" action and a link into the Settings panel (§11.14) for editing name, changing email or deleting the account; when signed out, a "Sign in or create account" prompt. The Settings entry point also lives on Home (§4.1, §11.14)
 - Data line: "Your data is handled under UK GDPR." with a "Read our privacy policy" link to the "Your data" page — this one line is the full extent of this page's data-handling content; everything else about what is stored, who processes it and for how long is owned by §11.12, not repeated here
 
@@ -344,7 +344,6 @@ The following were out of scope in v1.x and are now addressed in v2.0:
 - Quick-play history import — allow users to migrate existing localStorage games to their new DB account after signing in
 - Full onboarding journey (name + home course + par) — BACKLOG #10; needs a decision on how par interacts with the raw-stroke scoring model (§5) before any build
 - Multiple holes / course configuration beyond the default — **partially delivered:** signed-in users can now create courses at 9 or 18 holes (§11.7). Arbitrary hole counts and structured per-course hole data remain future (BACKLOG #11)
-- hello@outbuild.co as the contact email once configured via Resend
 
 ---
 
@@ -613,7 +612,7 @@ The full data-handling statement lives on a dedicated **"Your data"** privacy pa
 
 It states that logged-in users' rounds and scores are stored in a Cloudflare D1 database, that Resend processes email addresses to deliver the sign-in link, that neither provider uses the data for its own purposes, retention (account data kept while in use; sessions expire after 30 days; sign-in link records are pruned within ~24h of expiry), and **self-serve account deletion** — a signed-in user can delete their account and all associated rounds and courses immediately from the Settings panel (§11.14); emailing `scorecard@outbuild.uk` remains a fallback for anyone who can't sign in. `Privacy.jsx`'s "How long we keep it" section is updated from the old "email us and we'll do it within 30 days" wording to describe the self-serve route with the email as a fallback. Deletion is immediate and irreversible; quick-play history stored locally on a device is not part of the account and is not affected (§11.14).
 
-The contact address is `scorecard@outbuild.uk` on the privacy page. Whether the information page also needs its own contact link, and the final address, are tracked in BACKLOG.md (#12).
+The contact address is `scorecard@outbuild.uk`, shown on both the privacy page and the information page (§4.8).
 
 ---
 

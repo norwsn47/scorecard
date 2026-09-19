@@ -91,6 +91,17 @@ export default function Info({ navigate, goBack, params }) {
               </svg>
             </a>
           </div>
+          <p className="font-ui text-sm text-muted leading-relaxed">
+            Questions or feedback? Get in touch.
+          </p>
+          <div>
+            <a
+              href="mailto:scorecard@outbuild.uk"
+              className="inline-block py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            >
+              scorecard@outbuild.uk
+            </a>
+          </div>
         </section>
 
         <div className="w-8 h-0.5 bg-border" />

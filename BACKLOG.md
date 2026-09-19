@@ -62,9 +62,6 @@ When signed in, Home shows a "signed in as…" state plus a standalone **Setting
 ### 42. "Sign in with Google" (OAuth)
 Add Google as a sign-in option alongside the magic link (PRD §11.4 is currently magic-link-only). Needs: an OAuth client created in the Google Cloud console (external, hence blocked), the redirect/callback Pages Function, and a decision on account linking — a user who has signed in by magic link and then uses Google with the same email address should land on the same account, not a duplicate. PRD §11.4 change needed. Assistance requested — unblock by setting up the Google Cloud OAuth client and confirming the account-linking behaviour.
 
-### 12. Contact email — decide the final address and whether Info needs a link
-The placeholder gmail is already gone: `Privacy.jsx` uses `scorecard@outbuild.uk`, and the Info page (PRD §4.8) currently has no contact `mailto:` at all. Decide whether the Info page should carry a contact link, and confirm `scorecard@outbuild.uk` is the address to standardise on (PRD §4.8 and earlier notes assumed `hello@outbuild.co`). Align both pages and the PRD once decided. **Decided 19 Sep 2026:** standardise on `scorecard@outbuild.uk` and add a `mailto:` link to the Info page; update PRD §4.8 to match.
-
 ### 13. Official Bruntsfield logo
 Add the club's official logo (likely Home or the course info section) once permission to use it is obtained.
 
