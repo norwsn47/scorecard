@@ -62,7 +62,7 @@ Commands in `.claude/commands/`, run only when asked: `/full-audit` (Critical/Hi
 Project documents in the root, kept current:
 `CLAUDE.md` · `PRD.md` · `DESIGN.md` · `BACKLOG.md` · `CHANGELOG.md`
 
-**Date rule:** Whenever a project document or an agent file in `.claude/agents/` is edited, update its `Last updated:` line to today's date before saving. Agent files carry the `Last updated:` line but rely on this rule rather than restating it.
+**Date rule:** Whenever a project document or an agent file in `.claude/agents/` is edited, update its `Last updated:` line to today's date before saving. Agent files carry the `Last updated:` line but rely on this rule rather than restating it. A pre-commit hook (`scripts/hooks/pre-commit`) blocks a commit when a staged document or agent file has a stale date. Install it once per clone with `git config core.hooksPath scripts/hooks`.
 
 ---
 
