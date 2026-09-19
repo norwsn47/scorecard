@@ -47,6 +47,22 @@ describe('App router — SPA navigation', () => {
     expect(window.location.pathname).toBe('/')
   })
 
+  it('boots on a deep-linked /summary with no stored round and bounces to Home without a render-phase update (#106)', async () => {
+    window.history.replaceState({}, '', '/summary')
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    render(<App />)
+
+    // Summary's no-round guard runs in an effect. An inline navigate() during
+    // render makes React log "Cannot update a component while rendering a
+    // different component" - that must not happen.
+    expect(await screen.findByRole('button', { name: 'New Game' })).toBeInTheDocument()
+    expect(window.location.pathname).toBe('/')
+    const renderPhaseWarnings = errorSpy.mock.calls.filter(args =>
+      args.some(a => typeof a === 'string' && a.includes('Cannot update a component')))
+    expect(renderPhaseWarnings).toHaveLength(0)
+  })
+
   it('boots on a deep-linked /settings while signed out and bounces to Home (§11.14)', async () => {
     window.history.replaceState({}, '', '/settings')
 
