@@ -1,16 +1,13 @@
 # Backlog
 ## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
-> Open items only — ideas, deferred work, and known issues not yet done.
-> When something ships, delete its line and add a note to `CHANGELOG.md`.
-> Nothing here is actioned without explicit instruction — tell the project-manager (or Claude directly) to pull an item into work.
-> Numbers are stable IDs for cross-reference — don't renumber existing items when deleting one, so gaps are expected.
+> A to-do list, so nothing gets forgotten. Open items only.
+> - **Removing:** whoever finishes an item deletes its line in the same commit as the change (the project-manager for large changes, the main session for small ones). Add a `CHANGELOG.md` note only if it was a decision or a reversal.
+> - **Adding:** you ask; the project-manager adds genuine follow-ups from a large change; Critical/High review and audit findings are added. Lower findings stay in the chat report until you triage them.
+> - **Entries are short:** what needs doing, not the history. Nothing here is actioned without explicit instruction.
+> - **IDs are stable and never reused**, even after an item is deleted, so gaps are expected. Next free ID: **#111**.
 
 **Last updated:** 19 September 2026
-
-> The history of shipped and removed items lives in `CHANGELOG.md`. This file is open items only.
->
-> Still-relevant status notes: #40 needs a product-owner PRD decision before build. #42 (Google sign-in) is Blocked on an external Google Cloud OAuth client. #31 (analytics / GA4) is Blocked on a privacy/consent decision — route (a)/(b)/(c) must be chosen before any build. #39/#64 (end-of-round tally) were built and removed the same day — nothing remains; PRD §5.2 is a "removed" stub. Settings/account screen text alignment was checked live during the 11 September 2026 UI/UX review and found already left-aligned throughout (labels, body copy, input, button text) — no action needed, not logged as an open item.
 
 ---
 
@@ -75,10 +72,7 @@ Add the club's official logo (likely Home or the course info section) once permi
 
 ## Known issues
 
-### 43b. Back-nav polish (follow-ups from the #43 build) — mostly built 5 September 2026
-The broken loop and the label rationalisation from the 5 Sep scenario review are built. Summary's "← Rounds" and Setup's edit-cancel branch now call `goBack()` instead of pushing a fresh `navigate()`; `App.jsx` persists a round's own `id` (never the mutable object) in history state as `gameId`, and Summary re-resolves the round from storage by that id when a popstate bounce drops the `game` param. Every back button now names its real destination or action instead of a generic "← Back" (History "← Home"; Info/Privacy/Rules context-aware; Setup three ways — "← Summary" / "← History" / "← Home" or "← Bruntsfield"; Login "← Home" on both its screens; Scorecard edit mode "← History"; Scorecard live mode "Pause", no arrow, since it leaves the round intact in storage rather than stepping back or ending it). Home and the Bruntsfield course page keep no in-app back button (root screen; phone browser back nav respectively). A code-review pass (5 Sep) caught two label bugs before this shipped: Login's initial form still said "← Back" (only its "check your email" screen had been updated) — fixed; and the live Scorecard's back action was initially labelled "Quit" though the code never clears the active game — relabelled "Pause" to match actual behaviour rather than changing the behaviour itself. See DESIGN.md "Navigation".
-
-Still open:
+### 43b. Back-nav polish - still open (follow-ups from the #43 build)
 - **D1-round gap:** the `gameId` re-resolution only covers local/quick-play rounds (looked up in `localStorage`). A browser back/forward bounce, or Setup's edit-cancel, landing back on a signed-in D1-only round opened from History (never saved locally) still falls back to the most recently completed *local* game, same as before this build — there's no `GET /api/games/:id` to re-fetch a single D1 round by id. Low priority (narrow path: sign in, open a past round from History, tap Edit, cancel before starting the scorecard, or a raw browser bounce) — would need a new API endpoint if it's worth closing.
 - `pastRound` isn't persisted in history state, so a browser back/forward bounce onto the "Add Past Round" Setup screen re-renders it titled "New Game" with no date field (cosmetic; the past round is already saved by then; no worse than pre-#43 behaviour). Add `pastRound` to the `navigate` allowlist in `App.jsx` if that path is worth polishing.
 - `Setup.edit-recovery.test.jsx` covers the abandoned-edit guard directly; `App.test.jsx` now also drives it through a real `popstate` bounce, and `Login.test.jsx` covers the "← Home" label. Still no render test for the `goBack()` fix itself.
@@ -87,9 +81,6 @@ Still open:
 
 ### 56. Length-changing course switch during a D1 past-round edit leaves a stale-size grid
 Surfaced in the #48–#55 code review. `buildEditGame` sizes the edit grid to the *round's saved* hole count, not the newly-selected course's. Switching a 36-hole round onto a 9-hole course mid-edit (D1 rounds only — local rounds can't change course) leaves a 36-row grid with holes 10–36 padded back to par 3. No crash, no data loss, but confusing. Needs a product decision: disallow a length-changing course switch during an edit, or accept it and document the behaviour. (PRD §11.7, §11.13.)
-
-### 86. Edit Course screen showed 36 holes for two specific courses — traced to bad data, not code (11 Sep 2026)
-From the 11 September 2026 UI/UX review, reproduced on "Bruntsfield Links" (meant to be 9 holes) and "Swanston 18 hole". Investigated 11 September 2026: `CourseEdit.jsx` renders `deriveHolePars(found.hole_pars, found.holes)` (sized to the course's real `holes`), `ParStepperGrid` just maps over whatever array it's given, `POST /api/courses` strictly validates `holes` to 9 or 18 on create, and `PATCH /api/courses/[id]` explicitly rejects any attempt to change `holes` post-creation. No code path renders a hardcoded 36 or lets hole count drift after creation — these two rows genuinely have `holes = 36` stored in D1, most likely predating the strict 9/18 validation. No code fix needed. User will correct the two affected rows directly in D1. Closing — reopen only if a *newly created* 9/18 course is ever seen with the wrong hole count, which would point at an actual regression.
 
 ### 90. Header top padding on mobile — reduced, needs on-device confirmation
 From the 11 September 2026 UI/UX review. Reported across mobile screens, not confirmed at pixel level via desktop emulation (doesn't render iOS status bar/notch chrome). Fixed 11 September 2026: `PageHeader.jsx`'s top padding reduced `pt-10` → `pt-6` (an existing DESIGN.md spacing token, not an invented value). Still needs a quick on-device visual check to confirm it reads right with real iOS status-bar/notch chrome. Low priority.
@@ -119,7 +110,7 @@ Minor items logged from the Phase 2 review of `feat/signed-in-identity-gameplay`
 - **No explicit test for the "Add Past Round" pre-fill path.** `Setup.signed-in-prefill.test.jsx` covers New Game (implicit `pastRound: false`) and explicitly excludes `editRound: true`, but doesn't assert the pre-fill also fires with `pastRound: true` — PRD §11.15 calls this out by name. The guard (`if (editRound || !user?.name) return`) is correct by inspection since it never checks `pastRound`, but an explicit test would close the gap.
 - **`PlayerStar`'s `aria-label="You"` may fold into the History filter-chip button's accessible name** (e.g. announced as "Alice You" rather than "Alice" with a separate marker), since the star sits inside the `<button>` alongside the plain-text name. Not wrong, but wasn't an explicit accessibility decision — worth a quick screen-reader spot-check.
 
-### 92. Remove-player (✕) touch target below 44px guideline
+### 110. Remove-player (✕) touch target below 44px guideline
 Flagged in the code review of `feat/edit-round-players` (PRD §11.13.1, 18 September 2026). The per-row remove control on Setup's player list (`src/pages/Setup.jsx`) is ~32×32px (`p-2` padding around a `w-4 h-4` icon) — below the 44×44px minimum touch target. Pre-existing on New Game, not a regression introduced by that chunk, but now also reachable via past-round edit (a phone-in-hand, outdoors context per DESIGN.md's own rationale), so raising its priority slightly. Low priority, cosmetic/accessibility only — no functional impact.
 
 ### 93. Login resend countdown/error text not in an aria-live region
@@ -135,7 +126,7 @@ Minor items logged from the review of `fix/map-button-course-match` (BACKLOG #1)
 `public/course_map_v2.png` is only 443×600px (~444 KB). `CourseMapModal.jsx` displays it at ~320px wide and zooms to 4× (~1300px effective demand), so it is inherently soft on any retina screen — the modal code itself is fine. The fix is purely a better asset: a higher-resolution scan/export (ideally ≥1600px on the long edge) or an SVG/vector from the club. Nothing to do in code until that exists. Overlaps with #13 (official logo) and #1 as things to request from Bruntsfield in one go. (Distinct from #1, which is about when the map appears and its loading state.)
 
 ### 41. Page load performance pass
-Measure and tune actual load performance — Core Web Vitals (LCP, CLS, INP), bundle size (currently ~282 kB / ~82 kB gzip as of 19 September 2026), font loading (three families via Google Fonts with `display=swap`), image weight (`course_map_v2.png` is ~455 kB), and Cloudflare Pages caching headers. Establish a baseline, fix the obvious wins, re-measure. Assistance requested. (The `performance-auditor` agent covers this.)
+Measure and tune actual load performance — Core Web Vitals (LCP, CLS, INP), bundle size (currently ~282 kB / ~82 kB gzip as of 19 September 2026), font loading (three families via Google Fonts with `display=swap`), image weight (`course_map_v2.png` is ~455 kB), and Cloudflare Pages caching headers. Establish a baseline, fix the obvious wins, re-measure. Assistance requested.
 
 
 
@@ -148,7 +139,6 @@ The tap-target growth shipped 8 September 2026 - all three foot-of-page links ("
 
 ### 80. Settings panel (#4) - code-review housekeeping (CLEAR WITH NOTES, 8 Sep 2026)
 Minor items logged from the Phase 2 review of `feat/user-profile-foundation`; none block. All low priority.
-- ~~`History.jsx` delete-round sheet still lacks dialog semantics.~~ Fixed — brought to parity with Settings.jsx (`role="dialog"`, `aria-modal`, `aria-labelledby`, autofocus, Escape/backdrop dismiss) in the tap-targets/dialog-parity batch, 11 Sep 2026.
 - **Neither sheet has a focus trap or focus-return.** `aria-modal="true"` makes assistive tech treat the background as inert, but Tab can still leave the dialog, and closing it does not return focus to the trigger. Acceptable at this app's scope; revisit if a keyboard-heavy flow lands.
 - **DESIGN.md's dialog-semantics "no exceptions" wording doesn't fully match Settings.jsx.** (From the 11 Sep 2026 dialog-parity review.) The new pattern block states the close handler "lives in one named function... so the three paths can never drift apart", but Settings.jsx's pre-existing "Keep my account" button calls `() => setConfirmDelete(false)` inline rather than the file's own `closeDelete()`. Harmless (the button is disabled while `deleting`), but either tighten Settings.jsx to call `closeDelete()` or soften the DESIGN.md wording.
 - **`History.jsx`'s Delete button has no in-flight guard.** (From the 11 Sep 2026 dialog-parity review.) `executeDelete` awaits a fetch for DB-backed games but the button isn't disabled and shows no "Deleting…" state meanwhile, unlike Settings.jsx's `deleting`-gated equivalent. Pre-existing, low risk (a rapid double-tap could in theory fire two DELETE calls), but now sits next to a DESIGN.md section citing Settings.jsx as the reference pattern for this exact sheet.
@@ -156,7 +146,7 @@ Minor items logged from the Phase 2 review of `feat/user-profile-foundation`; no
 - **Settings delete-sheet focus effect re-pulls focus when `deleting` flips true** (`Settings.jsx` ~63-71, deps `[confirmDelete, deleting]`). Harmless since the input stays mounted, but focus jumps back to it mid-delete. Gate the `.focus()` on the open transition only if it ever annoys.
 - **Stacked accent banners.** An active `!storageOk` banner (`App.jsx:152`) plus the `?email=` notice banner (`Home.jsx:62`) would render two full-width accent bars at once. Very unlikely combo, cosmetic.
 - **`replaceState` on a recognised `?auth=` / `?email=` param strips the whole query string** (`useAuth.jsx:30`), including any unrelated params. Pre-existing behaviour, no impact today (the app uses no other query params).
-- **`AuthContext` value is a fresh object literal every render** (`useAuth.jsx:100`). Every consumer re-renders on any auth state change. The new Home capture effect is safe regardless because it keys on the referentially-stable `useState` setter, but the context value could be wrapped in `useMemo` if a perf pass ever wants it. Trivial at current scale, not a `performance-auditor` referral.
+- **`AuthContext` value is a fresh object literal every render** (`useAuth.jsx:100`). Every consumer re-renders on any auth state change. The new Home capture effect is safe regardless because it keys on the referentially-stable `useState` setter, but the context value could be wrapped in `useMemo` if a perf pass ever wants it. Trivial at current scale, not worth a perf pass on its own.
 
 From the #84 review (email-disclosure, CLEAR WITH NOTES, 9 Sep 2026), same low-priority tier:
 - **No focus-return when the "Change email address" form collapses.** Tapping "Keep my current email" unmounts the form and focus falls to `<body>` — should return to the "Change email address" trigger. Same class as the focus-return gap above; the disclosure adds a second instance.
@@ -213,7 +203,7 @@ Most of #97 was removed on 19 September 2026 (`chore/dead-code-cleanup`: unused 
 - **Google Fonts loaded on every visit** (`index.html:28-30`) sends visitor IPs to Google before interaction, while `Privacy.jsx` says two companies handle data and there is "no tracking". Self-hosting the fonts would close it. Legal weight assumed. Overlaps #41.
 - Low: `verify.js:14-22` token check and mark-used are separate statements, so two parallel requests can both pass (fix: `UPDATE ... WHERE used = 0` and check `changes`; same class as #79); expired `sessions` rows are never deleted (`Privacy.jsx` says 30 days); personal Gmail hardcoded as the `ADMIN_NOTIFY_EMAIL` fallback (`users/index.js:210`, asserted in `users/index.test.js:422`; documented in PRD §11.11, but it is PII in source if the repo ever goes public); `.gitignore` ignores `.env*` but not `.dev.vars`; `EMAIL_RE` accepts `x<y@z.com>`; `email.js:42` logs the full Resend error body (may echo the recipient); tokens share one table with no type column, so sign-in and email-change links are interchangeable at the endpoint level (both need inbox control).
 
-### 103. Audit: performance smells (flag only, no measurement; performance-auditor to measure later)
+### 103. Audit: performance smells (flag only, no measurement; measure later)
 - **Medium** - the whole app renders a blank shell until `/api/auth/me` resolves or the 5s abort fires, including for signed-out quick-play users (`App.jsx:156`, `useAuth.jsx:34,38`).
 - **Medium** - `GET /api/games` is `LIMIT 100` with no offset and returns every row's full `player_data`; History silently stops at 100 rounds with no notice (`games/index.js:12-20`). Needs a product decision on what happens past 100.
 - Low: `react-zoom-pan-pinch` and `CourseMapModal` are statically bundled into the main JS (no `React.lazy` anywhere); render-blocking Google Fonts stylesheet with three families, the desktop-only Caveat downloaded by every mobile visitor (`index.html:30`, overlaps #41); `courses/index.js:19-22` correlated `round_count` subquery with no index on `games.course_id`, and no index on `courses.user_id`, `sessions.user_id` or `magic_tokens.email` (tiny tables today); History aggregations recomputed every render; every score tap writes the whole active game to localStorage synchronously (fine at 36 holes x 6 players). The `AuthContext` fresh-object point is already in #80.
@@ -223,14 +213,13 @@ No test files for `Summary.jsx` (the save logic, cf. #95), `useAuth.jsx`, `share
 
 ### 105. Audit: stale or inaccurate documentation (log only, not corrected)
 - BACKLOG #80 line refs are stale: Settings focus effect is now `Settings.jsx:86-94`, the storage banner is `App.jsx:162`, the notice banner is `Home.jsx:63`. See #100 for "parity" being true only for Settings and History.
-- BACKLOG #86 says "Closing" but is still listed under Known issues (this file is open items only).
 - PRD.md:731-733 §11.15 status still says "build in progress" and that the star is not yet on the Finish Game dialog; it is (`Scorecard.jsx:417`). Product-owner to update.
 - DESIGN.md "Divergences" (~569-577) lists as pending items already fixed (`Scorecard.jsx:412` and `Login.jsx:117` opacity, the "no shipped buttons yet" focus-visible note), and refers to History "+ Add round" (code says "+ Add") and a `CourseEdit.jsx:25` "← Add Past Round" back button removed in #89.
 
 ### 106. Audit: debugger handoffs (item 1 done, item 2 not yet run)
 - Magic-link "expired" for users whose mail client prefetches links (`verify.js:14-22`, `confirm-email.js:24-26`). Assumed; reproduction needs a real mail client or scanner. Links to #102.
 
-### 107. Audit: performance-auditor handoffs (not yet run)
+### 107. Audit: performance measurement handoffs (not yet run)
 - App start gated on the 5s `/api/auth/me` timeout, static import of the pan-zoom library, render-blocking third-party font CSS. Needs LCP/first-paint on a throttled mobile profile; fits the #41 baseline.
 - `GET /api/games` (LIMIT 100, full `player_data`) and `GET /api/courses` correlated `round_count` with no supporting indexes (`migrations/001-004`). Needs D1 timing at realistic row counts, plus the product question in #103.
 
