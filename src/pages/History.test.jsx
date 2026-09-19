@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import History from './History.jsx'
 import { AuthProvider } from '../hooks/useAuth.jsx'
@@ -76,5 +76,64 @@ describe('History — player filter (#51 / #61)', () => {
     // "All players" clears the filter — g2 is back.
     await user.click(within(chips).getByRole('button', { name: 'All players' }))
     expect(within(list).getByText('Cass')).toBeInTheDocument()
+  })
+})
+
+// Signed-in identity star (PRD 11.15, BACKLOG #91). A signed-in user's History
+// reads from D1, so this mocks /api/games as well as /api/auth/me. The star
+// shows on the player's filter chip and on their name in each round row.
+describe('History - signed-in star (#91)', () => {
+  const dbRound = {
+    id: 'db1',
+    played_at: '2026-08-01T10:00:00.000Z',
+    holes_played: 2,
+    course_id: null,
+    course_name: null,
+    notes: null,
+    hole_pars: '[3,3]',
+    player_data: JSON.stringify([
+      { name: 'Ann', scores: [3, 3], total: 6 },
+      { name: 'Bo', scores: [4, 4], total: 8 },
+    ]),
+  }
+
+  async function renderSignedIn(userName) {
+    global.fetch = vi.fn(url => {
+      if (url.includes('/api/auth/me')) {
+        return Promise.resolve({ ok: true, json: async () => ({ user: { id: 'u1', email: 'ann@example.com', name: userName } }) })
+      }
+      if (url.includes('/api/games')) {
+        return Promise.resolve({ ok: true, json: async () => ({ games: [dbRound] }) })
+      }
+      return Promise.reject(new Error(`unexpected fetch: ${url}`))
+    })
+    renderHistory()
+    await screen.findByText('Bo', { selector: '[role="button"]' })
+    await act(async () => { await Promise.resolve() })
+  }
+
+  it('stars the matching player on their filter chip and in the round row, and nobody else', async () => {
+    await renderSignedIn('ann')
+
+    const chips = screen.getByRole('group', { name: 'Filter by player' })
+    const list = screen.getByRole('main')
+    expect(within(chips).getAllByRole('img', { name: 'You' })).toHaveLength(1)
+    expect(within(list).getAllByRole('img', { name: 'You' })).toHaveLength(1)
+
+    expect(within(within(chips).getByRole('button', { name: /^Ann/ })).getByRole('img', { name: 'You' })).toBeInTheDocument()
+    expect(within(within(chips).getByRole('button', { name: /^Bo/ })).queryByRole('img', { name: 'You' })).not.toBeInTheDocument()
+  })
+
+  it('shows no star when the signed-in user has no name set', async () => {
+    await renderSignedIn(null)
+
+    expect(screen.queryByRole('img', { name: 'You' })).not.toBeInTheDocument()
+  })
+
+  it('shows no star when signed out', async () => {
+    seedLocalGames([round('g1', ['Ann', 'Bo'], '2026-08-01T10:00:00.000Z')])
+    renderHistory()
+
+    expect(screen.queryByRole('img', { name: 'You' })).not.toBeInTheDocument()
   })
 })
