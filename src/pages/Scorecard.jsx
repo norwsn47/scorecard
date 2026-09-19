@@ -3,6 +3,7 @@ import CourseMapModal from '../components/CourseMapModal.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import ParDelta from '../components/ParDelta.jsx'
 import PlayerStar from '../components/PlayerStar.jsx'
+import { BRUNTSFIELD_COURSE_NAME } from '../constants.js'
 import { track } from '../utils/analytics.js'
 import { computeDisplayedHoles, finishGame, isSignedInPlayer } from '../utils/game.js'
 import { deriveHolePars, playerTotal, roundToPar, scoreToPar } from '../utils/scores.js'
@@ -43,7 +44,6 @@ export default function Scorecard({ navigate, params }) {
   const [game, setGame]               = useState(initialGame)
   const [showConfirm, setShowConfirm] = useState(false)
 
-  const fromBruntsfield               = params?.bruntsfield ?? false
   const [showMap, setShowMap]         = useState(false)
   const [saveError, setSaveError]     = useState(false)
   const [finishing, setFinishing]     = useState(false)
@@ -76,6 +76,22 @@ export default function Scorecard({ navigate, params }) {
   const players       = Array.isArray(game.players) ? game.players : []
   const displayedHoles = computeDisplayedHoles(players, game.scores ?? {}, game.holes)
   const holePars      = deriveHolePars(game.holePars, game.holes ?? 36)
+
+  // Whether the active game's course is actually Bruntsfield — matched by
+  // the game itself, not by which route it was started from (#1, reverses
+  // the earlier route-only gate). Gated on sign-in state first, because a
+  // missing courseId means two different things depending on who's playing:
+  // logged-out quick-play never has a course row at all (no course selector
+  // exists for it) so it's always Bruntsfield, regardless of its display
+  // name — a generic New Game labels it "Quick Play" (#73) rather than the
+  // course's real name, but it's the same course. A signed-in game
+  // references a real course row (or genuinely none, by design — Setup
+  // supports starting/editing a round with no course selected), so a missing
+  // courseId there must NOT default to Bruntsfield — it's matched by name
+  // against the one canonical Bruntsfield name constant instead (used only
+  // as a value here; CourseMapModal/Home render that same constant purely as
+  // a label and don't do a comparison of their own).
+  const isBruntsfieldCourse = !user ? true : game.courseName === BRUNTSFIELD_COURSE_NAME
 
   // Active cell values
   const activePlayer = players[activeCell.playerIndex] ?? null
@@ -340,7 +356,7 @@ export default function Scorecard({ navigate, params }) {
       {/* Floating control bar */}
       <div className="bg-bg border-t border-border px-5 py-4">
         <div className="flex items-center justify-between">
-          {fromBruntsfield ? (
+          {isBruntsfieldCourse ? (
             <button
               onClick={() => setShowMap(true)}
               aria-label="View course map"
@@ -379,7 +395,7 @@ export default function Scorecard({ navigate, params }) {
         </div>
       </div>
 
-      {fromBruntsfield && showMap && <CourseMapModal onClose={() => setShowMap(false)} />}
+      {isBruntsfieldCourse && showMap && <CourseMapModal onClose={() => setShowMap(false)} />}
 
 
       {/* Confirmation dialog */}

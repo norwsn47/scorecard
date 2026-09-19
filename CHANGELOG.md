@@ -5,9 +5,33 @@
 > Git history is the full record; this file is for context and decision rationale that commit messages don't carry.
 > Update the date below whenever you add an entry.
 
-**Last updated:** 18 September 2026
+**Last updated:** 19 September 2026
 
 ---
+
+## 19 September 2026 (course map button visibility, #1)
+
+- **The Map button on Scorecard now shows whenever the active round's course
+  is actually Bruntsfield, not just when the round was started from the
+  `/bruntsfield-short-course` route.** This reverses a deliberate Wave 5
+  scoping decision. Previously, a game started from the generic "New Game"
+  home screen, or resumed via "Resume Game", never showed the button even
+  though it was the same course - now fixed as a side effect too, since
+  visibility is derived from the game's own data rather than which route
+  it was started from.
+- **This was a second attempt at the same fix** - an earlier implementation
+  was flagged wrong and reverted (undocumented at the time). This attempt's
+  first draft repeated a related class of mistake, caught in code review
+  before merge: gating purely on the absence of a `courseId` conflated two
+  different states that both have `courseId: null` - logged-out quick-play
+  (always Bruntsfield) and a signed-in user's genuinely courseless round (a
+  real, intentional state, not Bruntsfield). The shipped logic gates on
+  sign-in state first, then matches signed-in games by course name against
+  the existing `BRUNTSFIELD_COURSE_NAME` constant - never on `courseId`
+  presence alone. Six regression tests pin all five scenarios (logged-out,
+  signed-in matched/unmatched/no-course, and both Resume Game paths) so a
+  third regression here would be caught automatically.
+- Closes BACKLOG #1.
 
 ## 18 September 2026 (magic link resend, #9)
 
