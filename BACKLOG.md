@@ -96,9 +96,6 @@ Findings to carry into the build: `synced` alone cannot mark a failed save (it i
 Minor items logged from the Phase 2 review of `feat/signed-in-identity-gameplay` (PRD §11.15); none block. (The two test-coverage gaps originally listed here - a star render assertion and an explicit `pastRound` pre-fill test - were closed on 19 September 2026 by `chore/test-coverage-gaps`.)
 - **`PlayerStar`'s `aria-label="You"` may fold into the History filter-chip button's accessible name** (e.g. announced as "Alice You" rather than "Alice" with a separate marker), since the star sits inside the `<button>` alongside the plain-text name. Not wrong, but wasn't an explicit accessibility decision — worth a quick screen-reader spot-check.
 
-### 110. Remove-player (✕) touch target below 44px guideline
-Flagged in the code review of `feat/edit-round-players` (PRD §11.13.1, 18 September 2026). The per-row remove control on Setup's player list (`src/pages/Setup.jsx`) is ~32×32px (`p-2` padding around a `w-4 h-4` icon) — below the 44×44px minimum touch target. Pre-existing on New Game, not a regression introduced by that chunk, but now also reachable via past-round edit (a phone-in-hand, outdoors context per DESIGN.md's own rationale), so raising its priority slightly. Low priority, cosmetic/accessibility only — no functional impact.
-
 ### 93. Login resend countdown/error text not in an aria-live region
 Flagged in the code review of `feat/magic-link-resend` (PRD §11.4.2, 18 September 2026). The "Resend in Ns" countdown and the 429/generic error box on Login's confirmation screen (`src/pages/Login.jsx`) update visually but aren't announced to screen readers via `aria-live`. Consistent with the pre-existing error banner pattern on the same screen (not a regression), so low priority.
 
@@ -136,7 +133,6 @@ Minor items logged from the Phase 2 review of `feat/user-profile-foundation`; no
 
 From the #84 review (email-disclosure, CLEAR WITH NOTES, 9 Sep 2026), same low-priority tier:
 - **No focus-return when the "Change email address" form collapses.** Tapping "Keep my current email" unmounts the form and focus falls to `<body>` — should return to the "Change email address" trigger. Same class as the focus-return gap above; the disclosure adds a second instance.
-- **"Keep my current email" link is ~40px tall** (`Settings.jsx` ~257-264, `py-2.5` + `text-sm`), just under the 44px guideline. Identical to the existing "Delete my account" link right below it — same tap-target class as the links fixed 11 September 2026, but this one wasn't part of that batch.
 
 ### 82. Email-change / account-deletion edge cases (from the #3 backend review)
 Two narrow wrinkles in `functions/api/users/index.js` / `confirm-email.js`, both low priority, logged so they aren't lost:
@@ -155,7 +151,7 @@ From the first `/full-audit`. Contrast ratios and tap sizes are hand-computed es
 - Magic-link throttle, TTL, token INSERT and email send duplicated in `auth/request-link.js` and `users/index.js`.
 - `player_data` payload built twice (`Scorecard.jsx` `buildPlayerData`, `Summary.jsx`).
 - `share.js` `winnerLabel` re-implements `tiedNames` and the tie wording from `result.js`.
-- `Home.jsx` and `BruntsfiledCoursePage.jsx` are near-copies; Home lacks the tap-target fixes from #78.
+- `Home.jsx` and `BruntsfiledCoursePage.jsx` are near-copies (header, info icon, 1/2/3 list, Last round and Sign-in links).
 - Low: session cookie regex x3 and cookie header strings x3; "+ New course" reset handler in `Setup.jsx`; two resend POSTs in `Login.jsx`; external-link SVG inlined ~5 times; hole count `36` in five places; par band 2-7 defined three times; client email regex looser than server `EMAIL_RE`; security-notice email re-inlines the branded shell.
 
 ### 99. Error handling that shows false success or a misleading state (Medium)
@@ -175,8 +171,7 @@ From the first `/full-audit`. Contrast ratios and tap sizes are hand-computed es
 - Missing accessible names: `Login.jsx:172` label lacks `htmlFor`; `Setup.jsx` and `CourseEdit.jsx` inputs, select, date and notes.
 - No live regions for errors/status app-wide (only `Home.jsx:63`); #93 covers Login only.
 - `History.jsx:234-296` nests `role="button"` spans inside a `<button>`.
-- Home tap targets are ~16px ("Last round", "Sign in", Outbuild link; `Home.jsx`).
-- Low: info icon ~40px; Privacy/Rules links ~20px with no focus ring; History delete is 36px and says "Delete game"; no `<main>` on Scorecard, Summary, Login; missing focus-return (see #80).
+- Low: no `<main>` on Scorecard, Summary, Login; missing focus-return (see #80).
 
 ### 102. Security hardening (Medium unless stated; no secrets found)
 - No security headers (no `public/_headers`: CSP, frame-ancestors, X-Content-Type-Options, Referrer-Policy).

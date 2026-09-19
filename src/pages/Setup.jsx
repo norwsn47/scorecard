@@ -541,7 +541,7 @@ export default function Setup({ navigate, goBack, params }) {
                   className={[
                     'w-full py-3 pl-4 rounded-md border font-ui text-base bg-bg-card text-text',
                     'placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40',
-                    canRemove ? 'pr-10' : 'pr-4',
+                    canRemove ? 'pr-12' : 'pr-4',
                     isDupe ? 'border-accent' : 'border-border',
                   ].join(' ')}
                 />
@@ -549,7 +549,7 @@ export default function Setup({ navigate, goBack, params }) {
                   <button
                     onClick={() => handleRemovePlayer(i)}
                     aria-label={`Remove player ${i + 1}`}
-                    className="absolute right-1 top-1/2 -translate-y-1/2 p-2 text-muted active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 p-3.5 text-muted active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

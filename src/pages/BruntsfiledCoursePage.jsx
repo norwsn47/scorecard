@@ -26,14 +26,14 @@ export default function BruntsfiledCoursePage({ navigate }) {
       <header className="flex-1 flex flex-col justify-start px-6 pt-10 pb-2">
 
         {/* Heading row — h1 + info icon inline, icon aligns to first line */}
-        <div className="flex items-start -mr-2">
+        <div className="flex items-start -mr-2.5">
           <h1 className="font-display text-[42px] italic text-text leading-[1.1] text-left flex-1">
             <span className="whitespace-nowrap">Bruntsfield Short</span><br />Hole Scorecard
           </h1>
           <button
             onClick={() => navigate('info', { bruntsfield: true })}
             aria-label="Information"
-            className="text-muted active:text-accent p-2 flex-shrink-0 mt-[11px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="text-muted active:text-accent p-2.5 flex-shrink-0 mt-[9px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
               <circle cx="12" cy="12" r="9" />

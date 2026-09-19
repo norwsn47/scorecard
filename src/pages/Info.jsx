@@ -85,7 +85,7 @@ export default function Info({ navigate, goBack, params }) {
               href="https://outbuild.uk"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2"
+              className="inline-flex items-center gap-1 py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               outbuild.uk
               <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5 relative top-px">

@@ -263,7 +263,7 @@ export default function Settings({ navigate }) {
                   type="button"
                   onClick={closeEmailForm}
                   disabled={savingEmail}
-                  className="inline-block py-2.5 -my-2.5 font-ui text-sm text-muted underline underline-offset-2 active:opacity-70 disabled:opacity-40 disabled:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  className="inline-block py-3 -my-3 font-ui text-sm text-muted underline underline-offset-2 active:opacity-70 disabled:opacity-40 disabled:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                 >
                   Keep my current email
                 </button>
@@ -285,7 +285,7 @@ export default function Settings({ navigate }) {
           <div>
             <button
               onClick={() => navigate('info', { from: 'settings' })}
-              className="inline-block py-2.5 -my-2.5 font-ui text-sm text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="inline-block py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               Information
             </button>
@@ -301,7 +301,7 @@ export default function Settings({ navigate }) {
           <div>
             <button
               onClick={() => { setDeleteError(null); setDeleteWord(''); setConfirmDelete(true) }}
-              className="inline-block py-2.5 -my-2.5 font-ui text-sm text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="inline-block py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               Delete my account
             </button>
