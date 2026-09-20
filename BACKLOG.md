@@ -131,9 +131,8 @@ Minor items logged from the Phase 2 review of `feat/user-profile-foundation`; no
 
 
 ### 82. Email-change / account-deletion edge cases (from the #3 backend review)
-Two narrow wrinkles in `functions/api/users/index.js` / `confirm-email.js`, both low priority, logged so they aren't lost:
+One narrow wrinkle in `functions/api/users/index.js`, low priority, logged so it isn't lost:
 - **Deletion clears an unrelated party's unclaimed sign-in token.** `DELETE /api/users` removes `magic_tokens` rows matching the user's `email` *or* `pending_email`. If user A has an email change pending to address Y, and the owner of Y has separately requested a sign-in link (to make their own account) that's still unclaimed, deleting A's account also burns Y's token. Self-healing — Y just requests another link — and the path is very narrow. Scope a fix only if it ever bites.
-- **No index on `users.pending_email`.** `confirm-email` does `SELECT id FROM users WHERE pending_email = ?` on every click. The table is tiny so a scan is free today; add the index in the next migration that touches `users` if the user base ever grows.
 
 ---
 
@@ -163,7 +162,7 @@ From the first `/full-audit`. Contrast ratios and tap sizes are hand-computed es
 
 ### 103. Performance smells (flag only; not measured)
 - Medium: blank shell until `/api/auth/me` resolves or 5s abort (`App.jsx:156`, `useAuth.jsx`). Decided 19 Sep 2026: leave the `GET /api/games` `LIMIT 100` cap as it is (History silently stops at 100 rounds); revisit if anyone nears 100.
-- Low: pan-zoom library statically bundled; render-blocking Google Fonts CSS; missing indexes (`games.course_id`, `courses.user_id`, `sessions.user_id`, `magic_tokens.email`); History aggregations every render.
+- Low: pan-zoom library statically bundled; render-blocking Google Fonts CSS; History aggregations every render.
 
 ### 106. Magic-link prefetch investigation (not yet run)
 Check whether mail-security scanners burn the single-use link (`verify.js:14-22`, `confirm-email.js:24-26`), leaving the user on "expired". Needs a real mail client or scanner. Links to #102.
