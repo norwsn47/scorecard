@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import PageHeader from '../components/PageHeader.jsx'
 import ParStepperGrid, { stepPar as stepParArray } from '../components/ParStepperGrid.jsx'
 import { deriveHolePars } from '../utils/scores.js'
@@ -40,6 +40,25 @@ export default function CourseEdit({ navigate, params }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting]   = useState(false)
   const [deleteError, setDeleteError] = useState(null)
+  const cancelDeleteRef = useRef(null)
+
+  // While the delete-course sheet is open: pull focus onto the non-destructive
+  // "Cancel", hand focus back to the "Delete this course" control on close, and
+  // let Escape dismiss it - not mid-delete (#100, DESIGN.md "Dialog semantics").
+  useEffect(() => {
+    if (!confirmDelete) return
+    const opener = document.activeElement
+    cancelDeleteRef.current?.focus()
+    return () => opener?.focus?.()
+  }, [confirmDelete])
+  useEffect(() => {
+    if (!confirmDelete || deleting) return
+    function onKey(e) {
+      if (e.key === 'Escape') setConfirmDelete(false)
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [confirmDelete, deleting])
 
   useEffect(() => {
     let cancelled = false
@@ -236,13 +255,24 @@ export default function CourseEdit({ navigate, params }) {
           exactly, but the copy states the round count up front (§11.7) so
           the user knows the cascade before confirming. */}
       {confirmDelete && course && (
-        <div className="fixed inset-0 flex items-end justify-center z-50" style={{ background: 'var(--overlay-backdrop)' }}>
-          <div className="bg-bg rounded-t-2xl w-full max-w-[430px] px-6 pt-6 pb-10 shadow-card">
+        <div
+          className="fixed inset-0 flex items-end justify-center z-50"
+          style={{ background: 'var(--overlay-backdrop)' }}
+          onClick={() => { if (!deleting) setConfirmDelete(false) }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-course-heading"
+            onClick={e => e.stopPropagation()}
+            className="bg-bg rounded-t-2xl w-full max-w-[430px] px-6 pt-6 pb-10 shadow-card"
+          >
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-6" />
-            <h2 className="font-display italic text-2xl text-text mb-1">Delete {course.name}?</h2>
+            <h2 id="delete-course-heading" className="font-display italic text-2xl text-text mb-1">Delete {course.name}?</h2>
             <p className="font-ui text-xs text-muted tracking-wide mb-8">{roundsClause}This cannot be undone.</p>
             <div className="flex gap-3">
               <button
+                ref={cancelDeleteRef}
                 onClick={() => setConfirmDelete(false)}
                 disabled={deleting}
                 className="flex-1 py-3 rounded-sm border border-border font-ui text-sm tracking-[0.08em] uppercase text-text active:bg-bg-card disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"

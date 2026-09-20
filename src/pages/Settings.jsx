@@ -57,8 +57,14 @@ export default function Settings({ navigate }) {
   const emailInputRef = useRef(null)
 
   // Reveal: pull focus onto the new-email input, mirroring the delete sheet.
+  // Collapse: hand focus back to the "Change email address" trigger, so it does
+  // not fall to <body> when the form unmounts (#80).
+  const emailTriggerRef = useRef(null)
+  const emailWasOpenRef = useRef(false)
   useEffect(() => {
     if (emailFormOpen) emailInputRef.current?.focus()
+    else if (emailWasOpenRef.current) emailTriggerRef.current?.focus()
+    emailWasOpenRef.current = emailFormOpen
   }, [emailFormOpen])
 
   // Back out of the revealed state and reset it, so a re-open starts clean.
@@ -80,14 +86,21 @@ export default function Settings({ navigate }) {
     if (!deleting) setConfirmDelete(false)
   }
 
-  // While the delete sheet is open: pull focus onto the confirmation input and
-  // let Escape dismiss it (equivalent to "Keep my account"). Backdrop click is
-  // wired on the overlay element itself below.
+  // While the delete sheet is open: pull focus onto the confirmation input once
+  // (on open, not again when `deleting` flips), and hand it back to whatever
+  // opened the sheet on close (#80).
   useEffect(() => {
     if (!confirmDelete) return
+    const opener = document.activeElement
     deleteInputRef.current?.focus()
+    return () => opener?.focus?.()
+  }, [confirmDelete])
+  // Escape dismisses it (equivalent to "Keep my account") unless a delete is in
+  // flight. Backdrop click is wired on the overlay element itself below.
+  useEffect(() => {
+    if (!confirmDelete || deleting) return
     function onKey(e) {
-      if (e.key === 'Escape' && !deleting) setConfirmDelete(false)
+      if (e.key === 'Escape') setConfirmDelete(false)
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
@@ -219,6 +232,7 @@ export default function Settings({ navigate }) {
 
           {!emailFormOpen ? (
             <button
+              ref={emailTriggerRef}
               type="button"
               onClick={() => setEmailFormOpen(true)}
               aria-expanded={false}

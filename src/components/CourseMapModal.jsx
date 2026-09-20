@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { BRUNTSFIELD_COURSE_NAME } from '../constants.js'
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch'
 import RulesContent from './RulesContent.jsx'
@@ -19,6 +19,28 @@ export default function CourseMapModal({ onClose }) {
     }
   }, [])
 
+  // Dialog behaviour (#100, DESIGN.md "Dialog semantics"): focus the Close
+  // button on open, hand focus back to whatever opened the modal when it
+  // unmounts, and let Escape close it. Backdrop click is on the overlay below.
+  // `onClose` is a fresh function every parent render, so it is read through a
+  // ref: the effect below must run once per open, not once per parent render
+  // (which would keep re-grabbing focus).
+  const closeButtonRef = useRef(null)
+  const onCloseRef = useRef(onClose)
+  useEffect(() => { onCloseRef.current = onClose })
+  useEffect(() => {
+    const opener = document.activeElement
+    closeButtonRef.current?.focus()
+    function onKey(e) {
+      if (e.key === 'Escape') onCloseRef.current()
+    }
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      opener?.focus?.()
+    }
+  }, [])
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-5"
@@ -26,18 +48,22 @@ export default function CourseMapModal({ onClose }) {
       onClick={onClose}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="course-map-heading"
         className="bg-bg rounded-2xl w-[360px] shadow-card overflow-hidden max-h-[80vh] flex flex-col"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
         <div className="relative px-5 py-4 border-b border-border shrink-0">
-          <p className="font-display italic text-xl text-text leading-tight">
+          <p id="course-map-heading" className="font-display italic text-xl text-text leading-tight">
             {BRUNTSFIELD_COURSE_NAME}
           </p>
           <p className="font-ui text-xs tracking-[0.15em] uppercase text-muted mt-0.5">
             {showRules ? 'Course Rules' : 'Course Map'}
           </p>
           <button
+            ref={closeButtonRef}
             onClick={onClose}
             aria-label="Close"
             className="absolute top-1.5 right-2.5 w-11 h-11 flex items-center justify-center text-muted active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"

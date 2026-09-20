@@ -120,7 +120,7 @@ describe('History - signed-in star (#91)', () => {
       return Promise.reject(new Error(`unexpected fetch: ${url}`))
     })
     renderHistory()
-    await screen.findByText('Bo', { selector: '[role="button"]' })
+    await screen.findByRole('button', { name: /^Open round/ })
     await act(async () => { await Promise.resolve() })
   }
 
