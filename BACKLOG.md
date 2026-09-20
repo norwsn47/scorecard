@@ -5,7 +5,7 @@
 > - **Removing:** whoever finishes an item deletes its line in the same commit as the change (the project-manager for large changes, the main session for small ones). Add a `CHANGELOG.md` note only if it was a decision or a reversal.
 > - **Adding:** you ask; the project-manager adds genuine follow-ups from a large change; Critical/High review and audit findings are added. Lower findings stay in the chat report until you triage them.
 > - **Entries are short:** what needs doing, not the history. Nothing here is actioned without explicit instruction.
-> - **IDs are stable and never reused**, even after an item is deleted, so gaps are expected. Next free ID: **#115**.
+> - **IDs are stable and never reused**, even after an item is deleted, so gaps are expected. Next free ID: **#116**.
 
 **Last updated:** 20 September 2026
 
@@ -81,8 +81,12 @@ From the 11 September 2026 UI/UX review. Reported across mobile screens, not con
 - If `online` fires while the user is on Setup for a pending round, before the `_edit` working copy exists, the sync sends the old data and the later edit stays local-only. Same outcome if the server saved the round but the response was lost and the user edits before the next sync (the idempotent 200 keeps the old server data). A real fix needs a `PATCH` or `GET` by `client_round_id`, or Setup writing `_edit` earlier.
 - No sync is triggered when a pending-round edit is saved or abandoned; the round waits for the next app open or `online`.
 
-### 114. Runner can post under the wrong account from a stale tab (Medium, narrow)
-`postRound` sends no user identity, so the server uses whatever cookie the browser holds. Tab 1 still thinks user A is signed in, user B signs in via tab 2, an `online` event in tab 1 then saves A's pending rounds into B's account. Cheap mitigation: confirm `/api/auth/me` returns the same id at the start of a run. Same weakness already exists for Done.
+### 115. Backend hardening follow-ups (Medium/Low, from the 20 Sep 2026 review)
+- Medium: `confirm-email.js` still checks the token then marks it used in two steps; use the same atomic claim as `verify.js` (the UNIQUE constraint makes two clicks benign today).
+- Low: `games` POST and PATCH pass a truthy non-string `course_id` straight to `bind` (Assumed: a D1 type error, so a 500); validate it as a string.
+- Low: a second click on a magic link now shows `?auth=expired` while the first tab is signed in; the expired-banner copy could acknowledge that.
+- Low: the runner checks `/api/auth/me` once per run, so a cookie change mid-run is not caught; re-check per POST if it ever matters.
+- Low: the new `EMAIL_RE` rejects trailing-dot local parts (`john.@x.com`) and underscore domains; an existing user with such an address could not request a link (very unlikely).
 
 ---
 
@@ -140,15 +144,14 @@ From the first `/full-audit`. Contrast ratios and tap sizes are hand-computed es
 `EMAIL_RE` in `functions/_lib/email.js:10` stays exported because tests import it. `README.md` is effectively empty (11 bytes) and needs content, not deletion.
 
 ### 98. Duplicated logic (Medium/Low)
-- Magic-link throttle, TTL, token INSERT and email send duplicated in `auth/request-link.js` and `users/index.js`.
 - `player_data` payload built twice (`Scorecard.jsx` `buildPlayerData`, `Summary.jsx`).
 - `share.js` `winnerLabel` re-implements `tiedNames` and the tie wording from `result.js`.
 - `Home.jsx` and `BruntsfiledCoursePage.jsx` are near-copies (header, info icon, 1/2/3 list, Last round and Sign-in links).
-- Low: session cookie regex x3 and cookie header strings x3; "+ New course" reset handler in `Setup.jsx`; two resend POSTs in `Login.jsx`; external-link SVG inlined ~5 times; hole count `36` in five places; par band 2-7 defined three times; client email regex looser than server `EMAIL_RE`; security-notice email re-inlines the branded shell.
+- Low: "+ New course" reset handler in `Setup.jsx`; two resend POSTs in `Login.jsx`; external-link SVG inlined ~5 times; hole count `36` in five places; par band 2-7 defined three times; client email regex looser than server `EMAIL_RE`; security-notice email re-inlines the branded shell.
 
 ### 100. Inconsistent patterns (Medium/Low)
 - Medium: stale copy in `Settings.jsx:174` ("...not shown on any scorecard yet"); the name is now shown.
-- Low, backend: unhandled 500 on a null or non-string JSON body (`request-link.js`, `courses/index.js`, `games/index.js`); `games` POST does not cap `notes` or validate `client_round_id`; `games/[id].js` DELETE lacks `AND user_id = ?`; `me.js` returns `{ user: null }` with 401; mixed semicolon style.
+- Low, backend: `me.js` returns `{ user: null }` with 401 (the client relies on it); mixed semicolon style.
 - Low, frontend: ErrorBoundary button styling and no logging (`App.jsx`); `useAuth.jsx:30` wipes the history stamp; back labels lack the arrow; empty-score glyph differs from DESIGN.md's em dash; `MAX_STROKES` declared inside `Scorecard`; `createGame`/`buildEditGame` take 6-7 positional args; "Bruntsfiled" filename typo; large `Setup.jsx`, `Scorecard.jsx`, `Summary.jsx`.
 - Content flag: `BruntsfiledCoursePage.jsx:46` says "since 1456" (not in PRD; `Info.jsx` says 1895).
 
@@ -156,7 +159,7 @@ From the first `/full-audit`. Contrast ratios and tap sizes are hand-computed es
 - No security headers (no `public/_headers`: CSP, frame-ancestors, X-Content-Type-Options, Referrer-Policy).
 - Magic and email-confirm links are consumed on GET, so a mail scanner could burn them (Assumed; see #106).
 - Google Fonts on every visit sends IPs to Google, against the "no tracking" copy; self-host the fonts (overlaps #41).
-- Low: token check and mark-used not atomic (`verify.js`); expired `sessions` rows never deleted; personal Gmail hardcoded as `ADMIN_NOTIFY_EMAIL` fallback (`users/index.js:210`); `.dev.vars` not in `.gitignore`; permissive `EMAIL_RE`; full Resend error logged; tokens have no type column.
+- Low: personal Gmail hardcoded as `ADMIN_NOTIFY_EMAIL` fallback (`users/index.js`; decided 20 Sep 2026 to leave as is); tokens have no type column (a confirm-email token also works at `/verify`; needs a migration, so it goes with the schema bundle).
 
 ### 103. Performance smells (flag only; not measured)
 - Medium: blank shell until `/api/auth/me` resolves or 5s abort (`App.jsx:156`, `useAuth.jsx`). Decided 19 Sep 2026: leave the `GET /api/games` `LIMIT 100` cap as it is (History silently stops at 100 rounds); revisit if anyone nears 100.
