@@ -415,7 +415,7 @@ describe('Summary - no round to show', () => {
       </AuthProvider>,
     )
 
-    await waitFor(() => expect(navigate).toHaveBeenCalledWith('home'))
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('home', {}, { replace: true }))
     expect(gamePosts()).toHaveLength(0)
   })
 })

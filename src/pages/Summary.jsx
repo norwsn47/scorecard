@@ -65,7 +65,7 @@ export default function Summary({ navigate, params }) {
   // new object every render.
   const missing = !game
   useEffect(() => {
-    if (missing) navigate('home')
+    if (missing) navigate('home', {}, { replace: true })
   }, [missing]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!game) return null

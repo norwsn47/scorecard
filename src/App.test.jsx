@@ -1,5 +1,7 @@
+import { StrictMode } from 'react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, act } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import App from './App.jsx'
 import { getActiveGame, saveActiveGame } from './utils/storage.js'
 
@@ -96,6 +98,58 @@ describe('App router — SPA navigation', () => {
     // Setup's abandoned-edit guard fires: working copy cleared, routed to History.
     expect(await screen.findByRole('heading', { name: 'History' })).toBeInTheDocument()
     expect(getActiveGame()).toBeNull()
+  })
+
+  it('a redirect replaces the history entry instead of adding one, so Back never loops (#109)', async () => {
+    window.history.replaceState({}, '', '/summary')
+    const before = window.history.length
+
+    render(<App />)
+    expect(await screen.findByRole('button', { name: 'New Game' })).toBeInTheDocument()
+
+    // Same number of entries, and the entry now describes Home (not /summary).
+    expect(window.history.length).toBe(before)
+    expect(window.history.state).toMatchObject({ page: 'home', depth: 0 })
+    expect(window.location.pathname).toBe('/')
+  })
+
+  it('...and stays a single replaced entry under React StrictMode, which runs the redirect effect twice in dev (#109)', async () => {
+    window.history.replaceState({}, '', '/summary')
+    const before = window.history.length
+
+    render(<StrictMode><App /></StrictMode>)
+    expect(await screen.findByRole('button', { name: 'New Game' })).toBeInTheDocument()
+
+    expect(window.history.length).toBe(before)
+    expect(window.history.state).toMatchObject({ page: 'home', depth: 0 })
+  })
+
+  it('the abandoned-edit redirect to History also replaces the bounced Setup entry (#109)', async () => {
+    saveActiveGame({
+      id: 'g1', _edit: { id: 'g1', fromDb: false }, players: ['Ann'],
+      scores: { Ann: [3, 4] }, holes: 2, holePars: [3, 3],
+    })
+    render(<App />)
+    await screen.findByText('Ann')
+
+    browserPopTo('setup')
+    const afterBounce = window.history.length
+    expect(await screen.findByRole('heading', { name: 'History' })).toBeInTheDocument()
+
+    expect(window.history.length).toBe(afterBounce)
+    expect(window.history.state).toMatchObject({ page: 'history' })
+  })
+
+  it('ordinary navigation still pushes a new entry and deepens the history (#109 does not change it)', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+    const newGame = await screen.findByRole('button', { name: 'New Game' })
+    const before = window.history.length
+
+    await user.click(newGame)
+
+    expect(window.history.length).toBe(before + 1)
+    expect(window.history.state).toMatchObject({ page: 'setup', depth: 1 })
   })
 
   it('restores a different page on popstate (#43)', async () => {
