@@ -256,187 +256,190 @@ export default function Summary({ navigate, params }) {
         </div>
       )}
 
-      {/* Read-only scorecard. The vs-par tally (§5.2) lives in the same table
-          as extra rows below the totals so its columns stay locked to the
-          player columns above, even when the grid scrolls sideways. */}
-      <div className="flex-1 overflow-y-auto overflow-x-auto mt-3 pb-2">
-        <table className="w-full min-w-max border-collapse">
-          <thead>
-            <tr className="border-b border-border bg-bg-card">
-              <th scope="col" className="py-2 px-3 text-left font-ui text-xs tracking-[0.12em] uppercase text-muted w-16">
-                Hole
-              </th>
-              {(game.players ?? []).map(player => (
-                <th
-                  key={player}
-                  scope="col"
-                  className={[
-                    'py-2 px-3 text-center font-ui text-xs tracking-[0.12em] uppercase max-w-[90px]',
-                    isWinner(player) ? 'text-accent font-semibold' : 'text-muted',
-                  ].join(' ')}
-                >
-                  <span className="flex items-center justify-center gap-0.5">
-                    <span className="truncate min-w-0">{player}</span>
-                    {isSignedInPlayer(player, user?.name) && <PlayerStar />}
-                  </span>
-                  {isDnf(player) && <span className="block text-muted normal-case tracking-normal font-normal">DNF</span>}
+      <main className="flex-1 flex flex-col min-h-0">
+        {/* Read-only scorecard. The vs-par tally (§5.2) lives in the same table
+            as extra rows below the totals so its columns stay locked to the
+            player columns above, even when the grid scrolls sideways. */}
+        <div className="flex-1 overflow-y-auto overflow-x-auto mt-3 pb-2">
+          <table className="w-full min-w-max border-collapse">
+            <thead>
+              <tr className="border-b border-border bg-bg-card">
+                <th scope="col" className="py-2 px-3 text-left font-ui text-xs tracking-[0.12em] uppercase text-muted w-16">
+                  Hole
                 </th>
-              ))}
-            </tr>
-          </thead>
-
-          <tbody>
-            {Array.from({ length: game.holesPlayed ?? game.holes }, (_, holeIndex) => (
-              <tr key={holeIndex} className="border-b border-border">
-                <td className="py-2 px-3 font-ui text-xs text-muted whitespace-nowrap">
-                  <span className="font-semibold">{holeIndex + 1}</span>
-                  <span className="font-normal ml-0.5">({holePars[holeIndex]})</span>
-                </td>
-                {(game.players ?? []).map(player => {
-                  const score = game.scores[player]?.[holeIndex]
-                  return (
-                    <td
-                      key={player}
-                      className={[
-                        'py-2 px-3 text-center font-ui text-sm',
-                        isWinner(player) ? 'text-accent font-medium' : 'text-text',
-                      ].join(' ')}
-                    >
-                      {score ?? '-'}
-                      {score != null && (
-                        <ParDelta delta={scoreToPar(score, holePars[holeIndex])} />
-                      )}
-                    </td>
-                  )
-                })}
+                {(game.players ?? []).map(player => (
+                  <th
+                    key={player}
+                    scope="col"
+                    className={[
+                      'py-2 px-3 text-center font-ui text-xs tracking-[0.12em] uppercase max-w-[90px]',
+                      isWinner(player) ? 'text-accent font-semibold' : 'text-muted',
+                    ].join(' ')}
+                  >
+                    <span className="flex items-center justify-center gap-0.5">
+                      <span className="truncate min-w-0">{player}</span>
+                      {isSignedInPlayer(player, user?.name) && <PlayerStar />}
+                    </span>
+                    {isDnf(player) && <span className="block text-muted normal-case tracking-normal font-normal">DNF</span>}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
+            </thead>
 
-          {/* Totals row pinned to the bottom of the scroll area (#63) so it
-              stays in view on a long round. bg-bg-card is set on each cell
-              (not the row) because a <tr> background doesn't reliably paint
-              over scrolled content behind it in some mobile browsers (#66). */}
-          <tfoot className="sticky bottom-0 z-10">
-            <tr className="border-t-2 border-border">
-              <th scope="row" className="py-3 px-3 text-left font-ui text-xs font-normal tracking-[0.12em] uppercase text-muted bg-bg-card">Total</th>
-              {(game.players ?? []).map(player => (
-                <td
-                  key={player}
-                  className={[
-                    'py-3 px-3 text-center font-ui text-base font-semibold bg-bg-card',
-                    isWinner(player) ? 'text-accent' : 'text-text',
-                  ].join(' ')}
-                >
-                  {playerTotal(game.scores, player) || '-'}
-                  <ParDelta
-                    delta={roundToPar((game.scores?.[player] ?? []).slice(0, holePars.length), holePars)}
-                    variant="bracket"
-                  />
-                  {/* The "Av. X" sub-line was dropped (#70, flagged as not interesting) —
-                      the bracketed total-to-par above already carries that information. */}
-                  {isDnf(player) && <span className="block font-ui text-xs font-normal text-muted">DNF</span>}
-                </td>
+            <tbody>
+              {Array.from({ length: game.holesPlayed ?? game.holes }, (_, holeIndex) => (
+                <tr key={holeIndex} className="border-b border-border">
+                  <td className="py-2 px-3 font-ui text-xs text-muted whitespace-nowrap">
+                    <span className="font-semibold">{holeIndex + 1}</span>
+                    <span className="font-normal ml-0.5">({holePars[holeIndex]})</span>
+                  </td>
+                  {(game.players ?? []).map(player => {
+                    const score = game.scores[player]?.[holeIndex]
+                    return (
+                      <td
+                        key={player}
+                        className={[
+                          'py-2 px-3 text-center font-ui text-sm',
+                          isWinner(player) ? 'text-accent font-medium' : 'text-text',
+                        ].join(' ')}
+                      >
+                        {score ?? '-'}
+                        {score != null && (
+                          <ParDelta delta={scoreToPar(score, holePars[holeIndex])} />
+                        )}
+                      </td>
+                    )
+                  })}
+                </tr>
               ))}
-            </tr>
-          </tfoot>
-        </table>
-      </div>
+            </tbody>
 
-      {/* Actions */}
-      <div className="px-5 pt-4 pb-6 space-y-3 max-w-sm mx-auto w-full">
-
-        {viewingSaved ? (
-          /* A past round is read-only here — editing happens via the header
-             Edit button, which routes back through Setup. Any saved note is
-             shown as quiet static text; nothing to edit, nothing to submit. */
-          game.notes ? (
-            <div>
-              <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted mb-1.5">Notes</p>
-              <p className="font-ui text-sm text-muted leading-relaxed whitespace-pre-wrap">
-                {game.notes}
-              </p>
-            </div>
-          ) : null
-        ) : (
-          <>
-            {/* Notes — logged-in only. Editable only on the immediate
-                post-finish flow, before the round has been saved. Once a round
-                is saved (game.synced) there is no save path for further edits
-                here — see the matching guard in handleGoHome — so the field
-                goes read-only rather than silently discarding anything typed
-                into it. Hidden entirely for an already-saved round with no
-                note — a read-only "Add a note..." placeholder would be a dead
-                end. */}
-            {user && (!alreadySaved || notes) && (
-              <div>
-                <textarea
-                  value={notes}
-                  onChange={e => setNotes(e.target.value.slice(0, 300))}
-                  placeholder="Add a note about this round..."
-                  rows={2}
-                  readOnly={alreadySaved}
-                  disabled={saving}
-                  className="w-full px-4 py-3 rounded-md border border-border bg-bg-card font-ui text-base text-text placeholder:text-muted resize-none focus:outline-none focus:ring-2 focus:ring-accent/40 read-only:opacity-70"
-                />
-                <p className="font-ui text-xs text-muted mt-1 pl-1">
-                  {alreadySaved ? 'Round notes' : 'Round notes - optional'}
-                </p>
-              </div>
-            )}
-          </>
-        )}
-
-        {/* Edit round / Share scorecard — each gets its own line so full
-            tap-target padding can be applied without the two links
-            overlapping (#34). "Done" for a post-finish round lives in the
-            header (top-right). Edit is dropped in the read-only History view
-            (it lives in the header there). */}
-        <div className="text-center space-y-3">
-          {!viewingSaved && canEdit && (
-            <div>
-              <button
-                onClick={handleEditRound}
-                disabled={saving}
-                className="inline-block py-3.5 -my-3.5 font-ui text-xs text-muted underline underline-offset-2 active:opacity-70 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-              >
-                Edit round
-              </button>
-            </div>
-          )}
-          <div>
-            <button
-              onClick={handleShare}
-              disabled={sharing}
-              className="inline-block py-3.5 -my-3.5 font-ui text-xs text-muted underline underline-offset-2 active:opacity-70 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-            >
-              {sharing ? 'Generating…' : 'Share scorecard'}
-            </button>
-          </div>
-          {!viewingSaved && canEdit && editBlocked && (
-            <p className="font-ui text-xs text-accent tracking-wide leading-relaxed">
-              Finish your current round before editing a past one.
-            </p>
-          )}
+            {/* Totals row pinned to the bottom of the scroll area (#63) so it
+                stays in view on a long round. bg-bg-card is set on each cell
+                (not the row) because a <tr> background doesn't reliably paint
+                over scrolled content behind it in some mobile browsers (#66). */}
+            <tfoot className="sticky bottom-0 z-10">
+              <tr className="border-t-2 border-border">
+                <th scope="row" className="py-3 px-3 text-left font-ui text-xs font-normal tracking-[0.12em] uppercase text-muted bg-bg-card">Total</th>
+                {(game.players ?? []).map(player => (
+                  <td
+                    key={player}
+                    className={[
+                      'py-3 px-3 text-center font-ui text-base font-semibold bg-bg-card',
+                      isWinner(player) ? 'text-accent' : 'text-text',
+                    ].join(' ')}
+                  >
+                    {playerTotal(game.scores, player) || '-'}
+                    <ParDelta
+                      delta={roundToPar((game.scores?.[player] ?? []).slice(0, holePars.length), holePars)}
+                      variant="bracket"
+                    />
+                    {/* The "Av. X" sub-line was dropped (#70, flagged as not interesting) —
+                        the bracketed total-to-par above already carries that information. */}
+                    {isDnf(player) && <span className="block font-ui text-xs font-normal text-muted">DNF</span>}
+                  </td>
+                ))}
+              </tr>
+            </tfoot>
+          </table>
         </div>
 
-        {!user && (
-          <div className="text-center space-y-1 pt-2">
-            <p className="font-ui text-xs text-muted leading-relaxed">
-              Saved in this browser only.
-            </p>
+        {/* Actions */}
+        <div className="px-5 pt-4 pb-6 space-y-3 max-w-sm mx-auto w-full">
+
+          {viewingSaved ? (
+            /* A past round is read-only here — editing happens via the header
+               Edit button, which routes back through Setup. Any saved note is
+               shown as quiet static text; nothing to edit, nothing to submit. */
+            game.notes ? (
+              <div>
+                <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted mb-1.5">Notes</p>
+                <p className="font-ui text-sm text-muted leading-relaxed whitespace-pre-wrap">
+                  {game.notes}
+                </p>
+              </div>
+            ) : null
+          ) : (
+            <>
+              {/* Notes — logged-in only. Editable only on the immediate
+                  post-finish flow, before the round has been saved. Once a round
+                  is saved (game.synced) there is no save path for further edits
+                  here — see the matching guard in handleGoHome — so the field
+                  goes read-only rather than silently discarding anything typed
+                  into it. Hidden entirely for an already-saved round with no
+                  note — a read-only "Add a note..." placeholder would be a dead
+                  end. */}
+              {user && (!alreadySaved || notes) && (
+                <div>
+                  <textarea
+                    aria-label="Round notes"
+                    value={notes}
+                    onChange={e => setNotes(e.target.value.slice(0, 300))}
+                    placeholder="Add a note about this round..."
+                    rows={2}
+                    readOnly={alreadySaved}
+                    disabled={saving}
+                    className="w-full px-4 py-3 rounded-md border border-border bg-bg-card font-ui text-base text-text placeholder:text-muted resize-none focus:outline-none focus:ring-2 focus:ring-accent/40 read-only:opacity-70"
+                  />
+                  <p className="font-ui text-xs text-muted mt-1 pl-1">
+                    {alreadySaved ? 'Round notes' : 'Round notes - optional'}
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Edit round / Share scorecard — each gets its own line so full
+              tap-target padding can be applied without the two links
+              overlapping (#34). "Done" for a post-finish round lives in the
+              header (top-right). Edit is dropped in the read-only History view
+              (it lives in the header there). */}
+          <div className="text-center space-y-3">
+            {!viewingSaved && canEdit && (
+              <div>
+                <button
+                  onClick={handleEditRound}
+                  disabled={saving}
+                  className="inline-block py-3.5 -my-3.5 font-ui text-xs text-muted underline underline-offset-2 active:opacity-70 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                >
+                  Edit round
+                </button>
+              </div>
+            )}
             <div>
               <button
-                onClick={() => navigate('login')}
-                className="inline-block py-3.5 -my-3.5 font-ui text-xs text-accent active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                onClick={handleShare}
+                disabled={sharing}
+                className="inline-block py-3.5 -my-3.5 font-ui text-xs text-muted underline underline-offset-2 active:opacity-70 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
-                To save your rounds, <span className="underline underline-offset-2">create an account</span>
+                {sharing ? 'Generating…' : 'Share scorecard'}
               </button>
             </div>
+            {!viewingSaved && canEdit && editBlocked && (
+              <p className="font-ui text-xs text-accent tracking-wide leading-relaxed">
+                Finish your current round before editing a past one.
+              </p>
+            )}
           </div>
-        )}
 
-      </div>
+          {!user && (
+            <div className="text-center space-y-1 pt-2">
+              <p className="font-ui text-xs text-muted leading-relaxed">
+                Saved in this browser only.
+              </p>
+              <div>
+                <button
+                  onClick={() => navigate('login')}
+                  className="inline-block py-3.5 -my-3.5 font-ui text-xs text-accent active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                >
+                  To save your rounds, <span className="underline underline-offset-2">create an account</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+        </div>
+      </main>
 
     </div>
   )

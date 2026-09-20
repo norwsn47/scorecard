@@ -283,8 +283,10 @@ placeholder:text-muted
 focus:outline-none focus:ring-2 focus:ring-[rgba(26,67,41,0.4)]
 normal border: border-border
 error border: border-accent
-with remove button: pr-10   without: pr-4
+with remove button: pr-12   without: pr-4   (the remove control is a 44px tap target)
 ```
+
+**Every field needs an accessible name** - a placeholder is not one. Use a `<label htmlFor>` tied to the input `id`, or an `aria-label` where the visible caption sits elsewhere (e.g. `aria-label="Player 2 name"`, `"Date played"`, `"Round notes"`). The caption text under a field is decoration for sighted users, not the name.
 
 ### Page header (PageHeader component)
 
@@ -448,6 +450,8 @@ On the Home screen the rule is left-aligned: `ml-0` replaces `mx-auto`.
 ```
 sticky top-0 z-50 bg-accent text-bg text-center font-ui text-xs py-2 px-4 tracking-wide
 ```
+
+**Announce messages.** An error banner or inline error line carries `role="alert"`; a neutral confirmation ("Saved.", "Check the new inbox...") carries `role="status"`. Neither is put on a per-second countdown (e.g. "Resend in 29s") - that would be read out every tick.
 
 ### Outbuild attribution mark
 Footer of home screen only.

@@ -178,6 +178,7 @@ export default function CourseEdit({ navigate, params }) {
             <div className="pb-1">
               <input
                 type="text"
+                aria-label="Course name"
                 value={name}
                 onChange={e => { setName(e.target.value.slice(0, 60)); setSaveError(null) }}
                 placeholder="Course name"
@@ -197,7 +198,7 @@ export default function CourseEdit({ navigate, params }) {
             </div>
 
             {saveError && (
-              <p className="font-ui text-xs text-accent pl-1">{saveError}</p>
+              <p role="alert" className="font-ui text-xs text-accent pl-1">{saveError}</p>
             )}
 
             <div className="pt-3">
@@ -223,7 +224,7 @@ export default function CourseEdit({ navigate, params }) {
                 Delete this course
               </button>
               {deleteError && (
-                <p className="font-ui text-xs text-accent tracking-wide mt-2">{deleteError}</p>
+                <p role="alert" className="font-ui text-xs text-accent tracking-wide mt-2">{deleteError}</p>
               )}
             </div>
           </>

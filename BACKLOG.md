@@ -93,8 +93,8 @@ Findings to carry into the build: `synced` alone cannot mark a failed save (it i
 Minor items logged from the Phase 2 review of `feat/signed-in-identity-gameplay` (PRD §11.15); none block. (The two test-coverage gaps originally listed here - a star render assertion and an explicit `pastRound` pre-fill test - were closed on 19 September 2026 by `chore/test-coverage-gaps`.)
 - **`PlayerStar`'s `aria-label="You"` may fold into the History filter-chip button's accessible name** (e.g. announced as "Alice You" rather than "Alice" with a separate marker), since the star sits inside the `<button>` alongside the plain-text name. Not wrong, but wasn't an explicit accessibility decision — worth a quick screen-reader spot-check.
 
-### 93. Login resend countdown/error text not in an aria-live region
-Flagged in the code review of `feat/magic-link-resend` (PRD §11.4.2, 18 September 2026). The "Resend in Ns" countdown and the 429/generic error box on Login's confirmation screen (`src/pages/Login.jsx`) update visually but aren't announced to screen readers via `aria-live`. Consistent with the pre-existing error banner pattern on the same screen (not a regression), so low priority.
+### 93. Login resend: announce that the link was sent again (Low)
+The error box is now `role="alert"` (#101 batch), but the "Resend in Ns" countdown is deliberately not a live region (it would be read out every second) and a successful resend gives no spoken confirmation. Consider a one-off `role="status"` line ("Link sent again") in `src/pages/Login.jsx`.
 
 ### 94. Map button course-match fix (#1) - code-review housekeeping (CLEAR WITH NOTES, 18 September 2026)
 Minor items logged from the review of `fix/map-button-course-match` (BACKLOG #1); none block.
@@ -165,10 +165,8 @@ From the first `/full-audit`. Contrast ratios and tap sizes are hand-computed es
 - Content flag: `BruntsfiledCoursePage.jsx:46` says "since 1456" (not in PRD; `Info.jsx` says 1895).
 
 ### 101. Accessibility beyond #95/#96 (Medium unless stated)
-- Missing accessible names: `Login.jsx:172` label lacks `htmlFor`; `Setup.jsx` and `CourseEdit.jsx` inputs, select, date and notes.
-- No live regions for errors/status app-wide (only `Home.jsx:63`); #93 covers Login only.
 - `History.jsx:234-296` nests `role="button"` spans inside a `<button>`.
-- Low: no `<main>` on Scorecard, Summary, Login; missing focus-return (see #80).
+- Low: missing focus-return on several sheets (see #80).
 
 ### 102. Security hardening (Medium unless stated; no secrets found)
 - No security headers (no `public/_headers`: CSP, frame-ancestors, X-Content-Type-Options, Referrer-Policy).

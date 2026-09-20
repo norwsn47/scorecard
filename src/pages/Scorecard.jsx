@@ -230,7 +230,7 @@ export default function Scorecard({ navigate, params }) {
     <div className="relative h-full bg-bg flex flex-col">
 
       {saveError && (
-        <div className="bg-accent text-bg text-center font-ui text-xs py-2 px-4 tracking-wide">
+        <div role="alert" className="bg-accent text-bg text-center font-ui text-xs py-2 px-4 tracking-wide">
           {isEdit
             ? "Couldn't save your changes – check your connection and try again"
             : "Couldn't save – storage may be full"}
@@ -267,146 +267,148 @@ export default function Scorecard({ navigate, params }) {
         }
       />
 
-      {/* Scrollable scorecard grid — full width, no horizontal scroll */}
-      <div className="flex-1 overflow-y-auto">
-        <table className="w-full table-fixed border-collapse">
-          <colgroup>
-            <col className="w-14" />
-            {players.map((_, i) => <col key={i} />)}
-          </colgroup>
+      <main className="flex-1 flex flex-col min-h-0">
+        {/* Scrollable scorecard grid — full width, no horizontal scroll */}
+        <div className="flex-1 overflow-y-auto">
+          <table className="w-full table-fixed border-collapse">
+            <colgroup>
+              <col className="w-14" />
+              {players.map((_, i) => <col key={i} />)}
+            </colgroup>
 
-          <thead className="sticky top-0 z-10">
-            <tr className="border-b border-border bg-bg-card">
-              <th className="py-2 px-2 text-center font-ui text-xs tracking-[0.12em] uppercase text-muted">
-                Hole
-              </th>
-              {players.map(player => (
-                <th key={player} className="py-2 px-1 text-center font-ui text-xs tracking-[0.12em] uppercase text-muted">
-                  <span className="flex items-center justify-center gap-0.5 px-1">
-                    <span className="truncate min-w-0">{player}</span>
-                    {isSignedInPlayer(player, user?.name) && <PlayerStar />}
-                  </span>
+            <thead className="sticky top-0 z-10">
+              <tr className="border-b border-border bg-bg-card">
+                <th className="py-2 px-2 text-center font-ui text-xs tracking-[0.12em] uppercase text-muted">
+                  Hole
                 </th>
-              ))}
-            </tr>
-          </thead>
+                {players.map(player => (
+                  <th key={player} className="py-2 px-1 text-center font-ui text-xs tracking-[0.12em] uppercase text-muted">
+                    <span className="flex items-center justify-center gap-0.5 px-1">
+                      <span className="truncate min-w-0">{player}</span>
+                      {isSignedInPlayer(player, user?.name) && <PlayerStar />}
+                    </span>
+                  </th>
+                ))}
+              </tr>
+            </thead>
 
-          <tbody>
-            {Array.from({ length: displayedHoles }, (_, holeIndex) => {
-              const isActiveRow = holeIndex === activeCell.holeIndex
-              return (
-                <tr
-                  key={holeIndex}
-                  ref={isActiveRow ? activeRowRef : null}
-                  className={[
-                    'border-b border-border',
-                    isActiveRow ? 'bg-accent-tint' : '',
-                  ].join(' ')}
-                >
-                  <td className={[
-                    'py-3 px-2 text-center font-ui text-xs whitespace-nowrap',
-                    isActiveRow ? 'text-accent font-semibold' : 'text-muted',
-                  ].join(' ')}>
-                    <span className="font-semibold">{holeIndex + 1}</span>
-                    <span className="font-normal ml-0.5">({holePars[holeIndex]})</span>
-                  </td>
-                  {players.map((player, playerIndex) => {
-                    const score    = (game.scores?.[player] ?? [])[holeIndex] ?? null
-                    const isActive = isActiveRow && playerIndex === activeCell.playerIndex
-                    return (
-                      <td
-                        key={player}
-                        className={[
-                          'p-0 text-center font-ui text-sm select-none transition-colors',
-                          isActive ? 'bg-accent text-white font-semibold' : 'text-text',
-                        ].join(' ')}
-                      >
-                        {/* A real button filling the cell, so a keyboard, switch
-                            or screen-reader user can jump to any hole to correct
-                            a score, not just step forward with Advance (#96). */}
-                        <button
-                          type="button"
-                          onClick={() => moveToCell({ holeIndex, playerIndex })}
-                          aria-label={`Hole ${holeIndex + 1}, par ${holePars[holeIndex]}, ${player}: ${score ?? 'no score yet'}`}
-                          aria-current={isActive ? 'true' : undefined}
+            <tbody>
+              {Array.from({ length: displayedHoles }, (_, holeIndex) => {
+                const isActiveRow = holeIndex === activeCell.holeIndex
+                return (
+                  <tr
+                    key={holeIndex}
+                    ref={isActiveRow ? activeRowRef : null}
+                    className={[
+                      'border-b border-border',
+                      isActiveRow ? 'bg-accent-tint' : '',
+                    ].join(' ')}
+                  >
+                    <td className={[
+                      'py-3 px-2 text-center font-ui text-xs whitespace-nowrap',
+                      isActiveRow ? 'text-accent font-semibold' : 'text-muted',
+                    ].join(' ')}>
+                      <span className="font-semibold">{holeIndex + 1}</span>
+                      <span className="font-normal ml-0.5">({holePars[holeIndex]})</span>
+                    </td>
+                    {players.map((player, playerIndex) => {
+                      const score    = (game.scores?.[player] ?? [])[holeIndex] ?? null
+                      const isActive = isActiveRow && playerIndex === activeCell.playerIndex
+                      return (
+                        <td
+                          key={player}
                           className={[
-                            'block w-full py-3 px-1 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset',
-                            isActive ? 'focus-visible:ring-white/80' : 'focus-visible:ring-accent/40',
+                            'p-0 text-center font-ui text-sm select-none transition-colors',
+                            isActive ? 'bg-accent text-white font-semibold' : 'text-text',
                           ].join(' ')}
                         >
-                          {score ?? '–'}
-                          {score != null && (
-                            <ParDelta delta={scoreToPar(score, holePars[holeIndex])} inverted={isActive} />
-                          )}
-                        </button>
-                      </td>
-                    )
-                  })}
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Totals bar — always visible */}
-      <div className="bg-bg-card border-t-2 border-border flex">
-        <div className="w-14 py-3 px-2 font-ui text-xs tracking-[0.12em] uppercase text-muted flex items-center justify-center">
-          Total
+                          {/* A real button filling the cell, so a keyboard, switch
+                              or screen-reader user can jump to any hole to correct
+                              a score, not just step forward with Advance (#96). */}
+                          <button
+                            type="button"
+                            onClick={() => moveToCell({ holeIndex, playerIndex })}
+                            aria-label={`Hole ${holeIndex + 1}, par ${holePars[holeIndex]}, ${player}: ${score ?? 'no score yet'}`}
+                            aria-current={isActive ? 'true' : undefined}
+                            className={[
+                              'block w-full py-3 px-1 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset',
+                              isActive ? 'focus-visible:ring-white/80' : 'focus-visible:ring-accent/40',
+                            ].join(' ')}
+                          >
+                            {score ?? '–'}
+                            {score != null && (
+                              <ParDelta delta={scoreToPar(score, holePars[holeIndex])} inverted={isActive} />
+                            )}
+                          </button>
+                        </td>
+                      )
+                    })}
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
         </div>
-        {players.map(player => (
-          <div key={player} className="flex-1 py-3 px-1 text-center font-ui text-base font-semibold text-text leading-tight">
-            {playerTotal(game.scores, player) || '–'}
-            <ParDelta
-              delta={roundToPar((game.scores?.[player] ?? []).slice(0, holePars.length), holePars)}
-              variant="bracket"
-              className="text-sm font-normal"
-            />
-          </div>
-        ))}
-      </div>
 
-      {/* Floating control bar */}
-      <div className="bg-bg border-t border-border px-5 py-4">
-        <div className="flex items-center justify-between">
-          {isBruntsfieldCourse ? (
+        {/* Totals bar — always visible */}
+        <div className="bg-bg-card border-t-2 border-border flex">
+          <div className="w-14 py-3 px-2 font-ui text-xs tracking-[0.12em] uppercase text-muted flex items-center justify-center">
+            Total
+          </div>
+          {players.map(player => (
+            <div key={player} className="flex-1 py-3 px-1 text-center font-ui text-base font-semibold text-text leading-tight">
+              {playerTotal(game.scores, player) || '–'}
+              <ParDelta
+                delta={roundToPar((game.scores?.[player] ?? []).slice(0, holePars.length), holePars)}
+                variant="bracket"
+                className="text-sm font-normal"
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* Floating control bar */}
+        <div className="bg-bg border-t border-border px-5 py-4">
+          <div className="flex items-center justify-between">
+            {isBruntsfieldCourse ? (
+              <button
+                onClick={() => setShowMap(true)}
+                aria-label="View course map"
+                className="w-16 h-16 rounded-full border-2 border-control-warm text-control-warm flex items-center justify-center active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.159.69.159 1.006 0z" />
+                </svg>
+              </button>
+            ) : <div className="w-16" />}
             <button
-              onClick={() => setShowMap(true)}
-              aria-label="View course map"
-              className="w-16 h-16 rounded-full border-2 border-control-warm text-control-warm flex items-center justify-center active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              onClick={handleDecrement}
+              disabled={activeScore === null}
+              aria-label="Decrease score"
+              className="w-16 h-16 rounded-full border-2 border-control-warm font-ui text-2xl text-control-warm flex items-center justify-center disabled:opacity-25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.159.69.159 1.006 0z" />
+              −
+            </button>
+            <button
+              onClick={handleIncrement}
+              aria-label="Increase score"
+              className="w-16 h-16 rounded-full bg-accent border-2 border-accent text-bg font-ui text-2xl flex items-center justify-center active:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            >
+              +
+            </button>
+            <button
+              onClick={handleAdvance}
+              disabled={activeCell.holeIndex === displayedHoles - 1 && activeCell.playerIndex === players.length - 1}
+              aria-label="Advance to next player"
+              className="w-16 h-16 rounded-full bg-control-warm border-2 border-control-warm text-bg flex items-center justify-center disabled:opacity-25 active:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-6 h-6">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6" />
               </svg>
             </button>
-          ) : <div className="w-16" />}
-          <button
-            onClick={handleDecrement}
-            disabled={activeScore === null}
-            aria-label="Decrease score"
-            className="w-16 h-16 rounded-full border-2 border-control-warm font-ui text-2xl text-control-warm flex items-center justify-center disabled:opacity-25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-          >
-            −
-          </button>
-          <button
-            onClick={handleIncrement}
-            aria-label="Increase score"
-            className="w-16 h-16 rounded-full bg-accent border-2 border-accent text-bg font-ui text-2xl flex items-center justify-center active:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-          >
-            +
-          </button>
-          <button
-            onClick={handleAdvance}
-            disabled={activeCell.holeIndex === displayedHoles - 1 && activeCell.playerIndex === players.length - 1}
-            aria-label="Advance to next player"
-            className="w-16 h-16 rounded-full bg-control-warm border-2 border-control-warm text-bg flex items-center justify-center disabled:opacity-25 active:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-          >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-6 h-6">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6" />
-            </svg>
-          </button>
+          </div>
         </div>
-      </div>
+      </main>
 
       {isBruntsfieldCourse && showMap && <CourseMapModal onClose={() => setShowMap(false)} />}
 

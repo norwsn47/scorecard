@@ -182,8 +182,8 @@ export default function Settings({ navigate }) {
             aria-label="Your name"
             className={fieldClass}
           />
-          {nameError && <p className="font-ui text-xs text-accent pl-1">{nameError}</p>}
-          {nameSaved && <p className="font-ui text-xs text-muted pl-1">Saved.</p>}
+          {nameError && <p role="alert" className="font-ui text-xs text-accent pl-1">{nameError}</p>}
+          {nameSaved && <p role="status" className="font-ui text-xs text-muted pl-1">Saved.</p>}
           <button
             onClick={handleSaveName}
             disabled={savingName || nameUnchanged}
@@ -241,9 +241,9 @@ export default function Settings({ navigate }) {
                 aria-label="New email address"
                 className={fieldClass}
               />
-              {emailError && <p className="font-ui text-xs text-accent pl-1">{emailError}</p>}
+              {emailError && <p role="alert" className="font-ui text-xs text-accent pl-1">{emailError}</p>}
               {emailSent && (
-                <p className="font-ui text-xs text-muted pl-1 leading-relaxed">
+                <p role="status" className="font-ui text-xs text-muted pl-1 leading-relaxed">
                   Check the new inbox for a confirmation link. Your address only changes once you open it.
                 </p>
               )}
@@ -307,7 +307,7 @@ export default function Settings({ navigate }) {
             </button>
           </div>
           {deleteError && !confirmDelete && (
-            <p className="font-ui text-xs text-accent pl-1">{deleteError}</p>
+            <p role="alert" className="font-ui text-xs text-accent pl-1">{deleteError}</p>
           )}
         </section>
 
@@ -349,7 +349,7 @@ export default function Settings({ navigate }) {
             />
 
             {deleteError && (
-              <p className="font-ui text-xs text-accent mb-3">{deleteError}</p>
+              <p role="alert" className="font-ui text-xs text-accent mb-3">{deleteError}</p>
             )}
 
             <div className="flex gap-3">
