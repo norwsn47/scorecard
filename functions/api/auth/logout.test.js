@@ -61,6 +61,7 @@ describe('POST /api/auth/logout', () => {
 
     for (const res of [withCookie, without]) {
       const setCookie = res.headers.get('Set-Cookie')
+      expect(setCookie).toBe('session=; HttpOnly; Secure; SameSite=Lax; Max-Age=0; Path=/')
       expect(setCookie).toMatch(/^session=;/)
       expect(setCookie).toContain('Max-Age=0')
       expect(setCookie).toContain('HttpOnly')

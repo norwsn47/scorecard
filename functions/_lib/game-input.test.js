@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { validatePlayedAt, validatePlayerData } from './game-input.js'
+import { validatePlayedAt, validatePlayerData, validateNotes, validateClientRoundId } from './game-input.js'
 
 describe('validatePlayedAt (#23)', () => {
   it('accepts an ISO date string', () => {
@@ -67,5 +67,58 @@ describe('validatePlayerData (#23)', () => {
     const r = validatePlayerData(value)
     expect(r.ok).toBe(false)
     expect(r.error).toBeTruthy()
+  })
+})
+
+describe('validateNotes', () => {
+  it.each([
+    [null, 'null'],
+    [undefined, 'undefined'],
+    ['', 'an empty string'],
+    ['Great round', 'a short note'],
+    ['x'.repeat(300), 'exactly 300 characters (the limit)'],
+  ])('accepts %j (%s)', (value) => {
+    expect(validateNotes(value)).toEqual({ ok: true })
+  })
+
+  it('rejects 301 characters with the existing "Notes too long" message', () => {
+    expect(validateNotes('x'.repeat(301))).toEqual({ ok: false, error: 'Notes too long' })
+  })
+
+  it.each([
+    [123, 'a number'],
+    [true, 'a boolean'],
+    [{ a: 1 }, 'an object'],
+    [['a'], 'an array'],
+  ])('rejects %j (%s) as non-text', (value) => {
+    const r = validateNotes(value)
+    expect(r.ok).toBe(false)
+    expect(r.error).toBe('notes must be text')
+  })
+})
+
+describe('validateClientRoundId', () => {
+  it.each([
+    [null, 'null (an old cached frontend omits it)'],
+    [undefined, 'undefined'],
+    ['1758369600000', 'a Date.now() string, what the client sends'],
+    ['a', 'a single character'],
+    ['x'.repeat(64), 'exactly 64 characters (the limit)'],
+  ])('accepts %j (%s)', (value) => {
+    expect(validateClientRoundId(value)).toEqual({ ok: true })
+  })
+
+  it.each([
+    [1758369600000, 'a number'],
+    [0, 'zero'],
+    ['', 'an empty string'],
+    ['x'.repeat(65), '65 characters'],
+    [true, 'a boolean'],
+    [{ id: 'x' }, 'an object'],
+    [['x'], 'an array'],
+  ])('rejects %j (%s)', (value) => {
+    const r = validateClientRoundId(value)
+    expect(r.ok).toBe(false)
+    expect(r.error).toMatch(/client_round_id/)
   })
 })

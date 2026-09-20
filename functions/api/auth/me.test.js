@@ -99,4 +99,18 @@ describe('GET /api/auth/me', () => {
     expect(res.status).toBe(401)
     expect(await res.json()).toEqual({ user: null })
   })
+
+  it('reads the session cookie from among several cookies', async () => {
+    const db = makeDB({ user_id: 'u1', email: 'a@b.co', name: null, pending_email: null })
+    const res = await onRequestGet(ctx(db, { cookie: 'theme=dark; session=sess-7; other=1' }))
+
+    expect(res.status).toBe(200)
+    expect(db.seen.args[0]).toBe('sess-7')
+  })
+
+  it('does not query the database at all without a session cookie', async () => {
+    const db = makeDB(null)
+    await onRequestGet(ctx(db, { cookie: 'theme=dark' }))
+    expect(db.seen.sql).toBeNull()
+  })
 })

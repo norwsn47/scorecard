@@ -1,6 +1,7 @@
 import { getSessionUser } from '../../_lib/session.js'
 import { validateHolePars } from '../../_lib/hole-pars.js'
-import { validatePlayedAt, validatePlayerData } from '../../_lib/game-input.js'
+import { validatePlayedAt, validatePlayerData, validateNotes, validateClientRoundId } from '../../_lib/game-input.js'
+import { readJsonObject } from '../../_lib/request.js'
 
 export async function onRequestGet(context) {
   const { DB } = context.env
@@ -27,12 +28,9 @@ export async function onRequestPost(context) {
   const user = await getSessionUser(context.request, DB)
   if (!user) return Response.json({ error: 'Unauthorised' }, { status: 401 })
 
-  let body
-  try {
-    body = await context.request.json()
-  } catch {
-    return Response.json({ error: 'Invalid request body' }, { status: 400 })
-  }
+  const parsed = await readJsonObject(context.request)
+  if (!parsed.ok) return parsed.response
+  const { body } = parsed
 
   const { course_id, played_at, holes_played, player_data, notes, client_round_id, hole_pars } = body
 
@@ -41,6 +39,14 @@ export async function onRequestPost(context) {
 
   const playerDataCheck = validatePlayerData(player_data)
   if (!playerDataCheck.ok) return Response.json({ error: playerDataCheck.error }, { status: 400 })
+
+  // Bound the two free-form fields: notes (string, 300 max, same as PATCH) and
+  // client_round_id (the idempotency key: a short non-empty string, or absent).
+  const notesCheck = validateNotes(notes)
+  if (!notesCheck.ok) return Response.json({ error: notesCheck.error }, { status: 400 })
+
+  const roundIdCheck = validateClientRoundId(client_round_id)
+  if (!roundIdCheck.ok) return Response.json({ error: roundIdCheck.error }, { status: 400 })
 
   // Match the PATCH handler: holes_played must be an integer 1..36. This one
   // check also covers a missing / zero value (0, null, undefined all fail it),

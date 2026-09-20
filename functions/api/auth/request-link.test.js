@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { onRequestPost } from './request-link.js'
+import { magicLinkEmailHtml } from '../../_lib/email.js'
 
 // Fake D1. Records every statement (INSERT / DELETE / SELECT) with its bound
 // args and answers the one COUNT the handler makes for the per-email throttle
@@ -130,5 +131,164 @@ describe('POST /api/auth/request-link', () => {
 
     expect(res.status).toBe(200)
     expect(errSpy).toHaveBeenCalledWith('magic_tokens cleanup failed', expect.any(Error))
+  })
+})
+
+// ── Parity: the exact observable output of the endpoint ─────────────────────
+// Pinned before the magic-link helper was extracted (functions/_lib/
+// magic-link.js). Every string here is the literal the endpoint has always
+// produced, so any drift in the shared helper shows up as a failure.
+describe('POST /api/auth/request-link - exact output (parity)', () => {
+  const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
+
+  it('inserts the token row with the exact SQL and bind args (15-minute expiry, used = 0)', async () => {
+    const db = makeDB()
+    const before = Date.now()
+    await run(db, 'Player@Example.com')
+    const after = Date.now()
+
+    const insert = db.statements.find(s => /INSERT INTO magic_tokens/.test(s.sql))
+    expect(insert.sql).toBe('INSERT INTO magic_tokens (id, email, token, expires_at, used) VALUES (?, ?, ?, ?, 0)')
+    expect(insert.args).toHaveLength(4)
+    const [id, email, token, expiresAt] = insert.args
+    expect(id).toMatch(UUID)
+    expect(token).toMatch(UUID)
+    expect(id).not.toBe(token)
+    expect(email).toBe('player@example.com')
+    const expiry = new Date(expiresAt).getTime()
+    expect(expiry).toBeGreaterThanOrEqual(before + 15 * 60 * 1000)
+    expect(expiry).toBeLessThanOrEqual(after + 15 * 60 * 1000)
+    expect(expiresAt).toBe(new Date(expiry).toISOString())
+  })
+
+  it('counts fresh links with the exact SQL', async () => {
+    const db = makeDB()
+    await run(db, 'player@example.com')
+    const countStmt = db.statements.find(s => /SELECT COUNT\(\*\)/.test(s.sql))
+    expect(countStmt.sql).toBe(
+      'SELECT COUNT(*) AS count FROM magic_tokens WHERE email = ? AND used = 0 AND expires_at > ?'
+    )
+  })
+
+  it('sends the exact Resend payload: subject, html and text', async () => {
+    const db = makeDB()
+    await run(db, 'Player@Example.com')
+
+    const token = db.statements.find(s => /INSERT INTO magic_tokens/.test(s.sql)).args[2]
+    const link = `https://app.test/api/auth/verify?token=${token}`
+
+    expect(global.fetch).toHaveBeenCalledOnce()
+    const [url, init] = global.fetch.mock.calls[0]
+    expect(url).toBe('https://api.resend.com/emails')
+    expect(init.headers.Authorization).toBe('Bearer test-key')
+    expect(JSON.parse(init.body)).toEqual({
+      from: 'Scorecard <hi@test>',
+      to: 'player@example.com',
+      subject: 'Sign in to Scorecard by Outbuild',
+      html: magicLinkEmailHtml({
+        heading: 'Sign in to your account',
+        intro: 'Click the button below to sign in. This link expires in 15 minutes.',
+        ctaLabel: 'Sign in to Scorecard',
+        link,
+      }),
+      text: `Sign in to Scorecard by Outbuild:\n${link}\n\nThis link expires in 15 minutes.\n\nIf you didn't request this, you can safely ignore this email.`,
+    })
+  })
+
+  it('429 body and message are exact when the address is at the cap', async () => {
+    const db = makeDB({ recentCount: 5 })
+    const res = await run(db, 'player@example.com')
+    expect(res.status).toBe(429)
+    expect(await res.json()).toEqual({
+      error: 'Too many sign-in requests. Check your inbox, or wait a few minutes and try again.',
+    })
+  })
+
+  it('429 also applies above the cap (6)', async () => {
+    const res = await run(makeDB({ recentCount: 6 }), 'player@example.com')
+    expect(res.status).toBe(429)
+  })
+
+  it('500 with the exact message when Resend fails, after the token is stored', async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 422, json: async () => ({}) })
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    const db = makeDB()
+    const res = await run(db, 'player@example.com')
+    expect(res.status).toBe(500)
+    expect(await res.json()).toEqual({ error: 'Failed to send email - please try again' })
+    expect(db.statements.some(s => /INSERT INTO magic_tokens/.test(s.sql))).toBe(true)
+  })
+
+  it('200 body is { ok: true }', async () => {
+    const res = await run(makeDB(), 'player@example.com')
+    expect(await res.json()).toEqual({ ok: true })
+  })
+
+  it('400 Invalid email address for a malformed address', async () => {
+    const res = await run(makeDB(), 'nope')
+    expect(await res.json()).toEqual({ error: 'Invalid email address' })
+  })
+})
+
+// ── Bad request bodies -> a clean 400, never a 500 ─────────────────────────
+describe('POST /api/auth/request-link - malformed bodies', () => {
+  function rawCtx(db, rawBody) {
+    return {
+      waited: [],
+      env: { ...env, DB: db },
+      waitUntil() {},
+      request: new Request('https://app.test/api/auth/request-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: rawBody,
+      }),
+    }
+  }
+
+  it.each([
+    ['null', 'null'],
+    ['an array', '[]'],
+    ['a string', '"str"'],
+    ['a number', '42'],
+    ['true', 'true'],
+    ['unparseable JSON', 'not json'],
+    ['an empty body', ''],
+  ])('%s -> 400 Invalid request body, DB and Resend untouched', async (_label, raw) => {
+    const db = makeDB()
+    const res = await onRequestPost(rawCtx(db, raw))
+    expect(res.status).toBe(400)
+    expect(await res.json()).toEqual({ error: 'Invalid request body' })
+    expect(db.statements).toHaveLength(0)
+    expect(global.fetch).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    [123, 'a number'],
+    [true, 'true'],
+    [false, 'false'],
+    [['a@b.co'], 'an array'],
+    [{ address: 'a@b.co' }, 'an object'],
+  ])('a non-string email (%j, %s) -> 400 Invalid email address, not a 500', async (value) => {
+    const db = makeDB()
+    const res = await onRequestPost(rawCtx(db, JSON.stringify({ email: value })))
+    expect(res.status).toBe(400)
+    expect(await res.json()).toEqual({ error: 'Invalid email address' })
+    expect(db.statements).toHaveLength(0)
+    expect(global.fetch).not.toHaveBeenCalled()
+  })
+
+  it('a missing or null email -> 400 Invalid email address', async () => {
+    for (const body of [{}, { email: null }, { email: '' }, { email: '   ' }]) {
+      const res = await onRequestPost(rawCtx(makeDB(), JSON.stringify(body)))
+      expect(res.status).toBe(400)
+      expect(await res.json()).toEqual({ error: 'Invalid email address' })
+    }
+  })
+
+  it('rejects addresses the tightened format check refuses', async () => {
+    for (const email of ['a,b@example.com', 'a b@example.com', '<a@example.com>', 'a@@example.com', '.a@example.com']) {
+      const res = await onRequestPost(rawCtx(makeDB(), JSON.stringify({ email })))
+      expect(res.status).toBe(400)
+    }
   })
 })

@@ -253,3 +253,60 @@ describe('onRequestGet /api/courses', () => {
     expect(json.courses[1].round_count).toBe(0)
   })
 })
+
+describe('onRequestPost /api/courses - malformed bodies and name type', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+  })
+
+  function postRaw(rawBody) {
+    const request = new Request('http://localhost/api/courses', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: rawBody,
+    })
+    return { env: { DB: null }, params: {}, request }
+  }
+
+  it.each([
+    ['null', 'null'],
+    ['an array', '[]'],
+    ['a string', '"str"'],
+    ['a number', '42'],
+    ['unparseable JSON', 'not json'],
+  ])('%s -> 400 Invalid request body, nothing inserted', async (_label, raw) => {
+    const ctx = postRaw(raw)
+    const db = makeDB()
+    ctx.env.DB = db
+    const res = await onRequestPost(ctx)
+    expect(res.status).toBe(400)
+    expect(await res.json()).toEqual({ error: 'Invalid request body' })
+    expect(db.inserted).toHaveLength(0)
+  })
+
+  it.each([
+    [123, 'a number'],
+    [true, 'true'],
+    [['x'], 'an array'],
+    [{ n: 'x' }, 'an object'],
+  ])('a non-string name (%j, %s) -> 400, not a 500', async (name) => {
+    const ctx = post({ name, holes: 9 })
+    const db = makeDB()
+    ctx.env.DB = db
+    const res = await onRequestPost(ctx)
+    expect(res.status).toBe(400)
+    expect((await res.json()).error).toBe('Course name is required')
+    expect(db.inserted).toHaveLength(0)
+  })
+
+  it('a null or blank name is still 400 Course name is required', async () => {
+    for (const name of [null, '', '   ']) {
+      const ctx = post({ name, holes: 9 })
+      ctx.env.DB = makeDB()
+      const res = await onRequestPost(ctx)
+      expect(res.status).toBe(400)
+      expect((await res.json()).error).toBe('Course name is required')
+    }
+  })
+})

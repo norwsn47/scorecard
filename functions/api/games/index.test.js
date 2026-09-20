@@ -275,3 +275,194 @@ describe('onRequestGet /api/games - client_round_id (#95)', () => {
     expect(body.games.map((g) => g.client_round_id)).toEqual(['local-round-1', null])
   })
 })
+
+// ── Bad request bodies -> a clean 400 ──────────────────────────────────────
+describe('onRequestPost /api/games - malformed bodies', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+  })
+
+  it.each([
+    ['null', 'null'],
+    ['an array', '[]'],
+    ['a string', '"str"'],
+    ['a number', '42'],
+    ['unparseable JSON', 'not json'],
+  ])('%s -> 400 Invalid request body, nothing inserted', async (_label, raw) => {
+    const db = makeDB()
+    const request = new Request('http://localhost/api/games', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: raw,
+    })
+    const res = await onRequestPost({ env: { DB: db }, params: {}, request })
+    expect(res.status).toBe(400)
+    expect(await res.json()).toEqual({ error: 'Invalid request body' })
+    expect(db.inserted).toHaveLength(0)
+  })
+})
+
+// ── notes ──────────────────────────────────────────────────────────────────
+describe('onRequestPost /api/games - notes validation', () => {
+  // INSERT column order: id, user_id, course_id, played_at, holes_played,
+  // player_data, hole_pars, notes, client_round_id, created_at
+  const NOTES_ARG = 7
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+  })
+
+  async function postNotes(notes, extra = {}) {
+    const ctx = post({ ...validBody, ...extra, ...(notes === undefined ? {} : { notes }) })
+    const db = makeDB()
+    ctx.env.DB = db
+    return { res: await onRequestPost(ctx), db }
+  }
+
+  it('accepts exactly 300 characters and stores them', async () => {
+    const { res, db } = await postNotes('x'.repeat(300))
+    expect(res.status).toBe(201)
+    expect(db.inserted[0][NOTES_ARG]).toBe('x'.repeat(300))
+  })
+
+  it('rejects 301 characters with "Notes too long", nothing inserted', async () => {
+    const { res, db } = await postNotes('x'.repeat(301))
+    expect(res.status).toBe(400)
+    expect((await res.json()).error).toBe('Notes too long')
+    expect(db.inserted).toHaveLength(0)
+  })
+
+  it.each([
+    [123, 'a number'],
+    [true, 'a boolean'],
+    [['a'], 'an array'],
+    [{ text: 'a' }, 'an object'],
+  ])('rejects non-string notes (%j, %s)', async (value) => {
+    const { res, db } = await postNotes(value)
+    expect(res.status).toBe(400)
+    expect(db.inserted).toHaveLength(0)
+  })
+
+  it('stores null for absent, null and empty notes, as before', async () => {
+    for (const notes of [undefined, null, '']) {
+      const { res, db } = await postNotes(notes)
+      expect(res.status).toBe(201)
+      expect(db.inserted[0][NOTES_ARG]).toBeNull()
+    }
+  })
+})
+
+// ── client_round_id: validation, idempotency, the unique-index race ────────
+describe('onRequestPost /api/games - client_round_id', () => {
+  const ROUND_ID_ARG = 8
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+  })
+
+  // A fake D1 where the games table can already hold a row for a round, and the
+  // INSERT can be made to fail the way the UNIQUE(user_id, client_round_id)
+  // index does when a concurrent request wins the race.
+  function makeRoundDB({ existing = null, insertError = null, seenAfterRace = null } = {}) {
+    const db = {
+      inserted: [],
+      selects: 0,
+      prepare(sql) {
+        return {
+          sql,
+          args: [],
+          bind(...args) { this.args = args; return this },
+          async first() {
+            if (/SELECT id FROM games WHERE user_id = \? AND client_round_id = \?/.test(this.sql)) {
+              db.selects += 1
+              // first lookup: `existing`; after a lost race: `seenAfterRace`
+              return db.selects === 1 ? existing : (seenAfterRace ?? existing)
+            }
+            return null
+          },
+          async run() {
+            if (/^\s*INSERT INTO games/.test(this.sql)) {
+              if (insertError) throw insertError
+              db.inserted.push(this.args)
+            }
+            return { success: true }
+          },
+        }
+      },
+    }
+    return db
+  }
+
+  async function postId(client_round_id, db = makeRoundDB(), omit = false) {
+    const body = omit ? { ...validBody } : { ...validBody, client_round_id }
+    const ctx = post(body)
+    ctx.env.DB = db
+    return { res: await onRequestPost(ctx), db }
+  }
+
+  it('accepts a Date.now() style string and stores it', async () => {
+    const { res, db } = await postId('1758369600000')
+    expect(res.status).toBe(201)
+    expect(db.inserted[0][ROUND_ID_ARG]).toBe('1758369600000')
+  })
+
+  it('accepts exactly 64 characters', async () => {
+    const { res, db } = await postId('a'.repeat(64))
+    expect(res.status).toBe(201)
+    expect(db.inserted[0][ROUND_ID_ARG]).toBe('a'.repeat(64))
+  })
+
+  it('accepts an absent client_round_id (old cached frontend) and inserts with NULL, without an idempotency lookup', async () => {
+    const { res, db } = await postId(undefined, makeRoundDB(), true)
+    expect(res.status).toBe(201)
+    expect(db.inserted[0][ROUND_ID_ARG]).toBeNull()
+    expect(db.selects).toBe(0)
+  })
+
+  it('accepts a null client_round_id', async () => {
+    const { res, db } = await postId(null)
+    expect(res.status).toBe(201)
+    expect(db.inserted[0][ROUND_ID_ARG]).toBeNull()
+  })
+
+  it.each([
+    [1758369600000, 'a number'],
+    ['', 'an empty string'],
+    ['a'.repeat(65), '65 characters'],
+    [true, 'a boolean'],
+    [{ id: 'x' }, 'an object'],
+    [['x'], 'an array'],
+  ])('rejects %j (%s) with 400, nothing inserted', async (value) => {
+    const { res, db } = await postId(value)
+    expect(res.status).toBe(400)
+    expect((await res.json()).error).toMatch(/client_round_id/)
+    expect(db.inserted).toHaveLength(0)
+  })
+
+  it('idempotent: returns 200 and the existing id, without inserting, when the round was already saved', async () => {
+    const { res, db } = await postId('round-1', makeRoundDB({ existing: { id: 'game-existing' } }))
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ id: 'game-existing' })
+    expect(db.inserted).toHaveLength(0)
+  })
+
+  it('unique-index race: a UNIQUE failure on INSERT returns 200 and the row the other request created', async () => {
+    const db = makeRoundDB({
+      insertError: new Error('D1_ERROR: UNIQUE constraint failed: games.user_id, games.client_round_id'),
+      seenAfterRace: { id: 'game-from-winner' },
+    })
+    // first lookup finds nothing (the race), the retry after the failure finds the winner
+    const { res } = await postId('round-1', db)
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ id: 'game-from-winner' })
+    expect(db.selects).toBe(2)
+  })
+
+  it('a non-UNIQUE insert failure is still thrown, not swallowed', async () => {
+    const db = makeRoundDB({ insertError: new Error('D1_ERROR: disk I/O error') })
+    await expect(postId('round-1', db)).rejects.toThrow('disk I/O error')
+  })
+})
