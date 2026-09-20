@@ -13,6 +13,7 @@ import Summary              from './pages/Summary.jsx'
 import BruntsfiledCoursePage from './pages/BruntsfiledCoursePage.jsx'
 import { getActiveGame, isStorageAvailable } from './utils/storage.js'
 import { AuthProvider, useAuth } from './hooks/useAuth.jsx'
+import { useSyncPendingRounds } from './hooks/useSyncPendingRounds.js'
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -77,6 +78,8 @@ function pageFromPath() {
 
 function AppContent() {
   const { loading } = useAuth()
+  // Quietly saves rounds kept on this device after a failed save (#95). No UI.
+  useSyncPendingRounds()
 
   const [page, setPage] = useState(() => {
     // Active game always takes priority

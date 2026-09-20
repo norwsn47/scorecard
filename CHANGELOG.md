@@ -5,9 +5,29 @@
 > Git history is the full record; this file is for context and decision rationale that commit messages don't carry.
 > Update the date below whenever you add an entry.
 
-**Last updated:** 19 September 2026
+**Last updated:** 20 September 2026
 
 ---
+
+## 20 September 2026 (failed signed-in saves are kept and re-synced, #95)
+
+- **Decision: a narrow, marker-gated exception to "the two histories are
+  strictly separate" (PRD §11.9).** A signed-in round whose save to D1 fails
+  used to vanish silently (empty catch, then home). It now stays on Summary
+  with Retry / "Keep on this device and go home"; a kept round is marked
+  `pendingSyncUserId` (not `synced`, which is undefined on every quick-play
+  round) and shown in that user's signed-in History as "Not yet saved". Nothing
+  else from localStorage is ever merged. Background re-sync runs on app open
+  and on `online`, using `client_round_id` idempotency; a 400 flags the round
+  as rejected and a 401 waits for sign-in, and no outcome deletes a round.
+  BACKLOG #8 (quick-play import) stays separate and can reuse the marker.
+- **Correction:** PRD §11.8 claimed a failed POST "can be retried on the next
+  Summary visit". No path ever reached that Summary again, so no retry existed.
+- **Scope change from the plan:** `GET /api/games` now also returns
+  `client_round_id` (additive) so History can dedupe a pending round against
+  its D1 row. The 19 September plan said no backend change was needed.
+- **Side effect worth knowing:** a signed-out local edit now keeps the round's
+  "Quick Play" / "Bruntsfield" course label; it was previously blanked.
 
 ## 19 September 2026 (simplified agent workflow)
 

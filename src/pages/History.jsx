@@ -5,15 +5,39 @@ import PlayerStar from '../components/PlayerStar.jsx'
 import { formatShortDate } from '../utils/format.js'
 import { isSignedInPlayer } from '../utils/game.js'
 import { playerTotal, roundToPar } from '../utils/scores.js'
-import { deleteCompletedGame, getCompletedGames } from '../utils/storage.js'
-import { normalizeDbGame, normalizeLocalGame } from '../utils/history.js'
+import { deleteCompletedGame, getCompletedGames, getPendingCompletedGames } from '../utils/storage.js'
+import { mergePendingGames, normalizeDbGame, normalizeLocalGame, normalizePendingGame } from '../utils/history.js'
 import { historyResultLabel } from '../utils/result.js'
+import { isSyncing, subscribeToSync } from '../utils/sync.js'
 import { useAuth } from '../hooks/useAuth.jsx'
+
+// Shown in the delete sheet (and by Summary's Edit) when a background save of
+// the same round is in flight, so a delete or edit cannot diverge from what the
+// server just received (PRD §11.8).
+const SAVING_MESSAGE = 'Saving this round - try again in a moment.'
+
+// The signed-in user's rounds that are still waiting to be saved to D1
+// (marker-gated, PRD §11.9): only records tagged with this user's id, never an
+// unmarked quick-play round and never another user's. A record that cannot be
+// read is skipped rather than blanking the list.
+function readPending(userId) {
+  const list = []
+  try {
+    for (const record of getPendingCompletedGames(userId)) {
+      try { list.push(normalizePendingGame(record)) } catch { /* skip one bad round */ }
+    }
+  } catch { /* storage unreadable: show nothing pending */ }
+  return list
+}
 
 export default function History({ navigate }) {
   const { user } = useAuth()
 
+  // Signed in: the D1 rounds (at most 100, per GET /api/games). Signed out: every
+  // local round. A signed-in user's pending local rounds live in `pending` and are
+  // merged in below, in addition to whatever `games` holds.
   const [games, setGames]             = useState(() => user ? [] : getCompletedGames().map(normalizeLocalGame))
+  const [pending, setPending]         = useState(() => user ? readPending(user.id) : [])
   const [loading, setLoading]         = useState(!!user)
   const [filter, setFilter]           = useState(null)
   const [courseFilter, setCourseFilter] = useState(null)
@@ -63,17 +87,31 @@ export default function History({ navigate }) {
     return () => document.removeEventListener('keydown', onKey)
   }, [confirmDeleteId, deleting])
 
+  // A background sync that saved (or newly rejected) a round while this screen
+  // is open: reload, so a just-saved round shows as its D1 row rather than as a
+  // pending one. Unsubscribes on unmount.
   useEffect(() => {
-    if (!user) return
+    if (!user) return undefined
+    return subscribeToSync(() => setReloadKey(k => k + 1))
+  }, [user])
+
+  useEffect(() => {
+    if (!user) return undefined
+    // A stale response (a newer reload started, or the screen closed) must not
+    // overwrite the newer one.
+    let cancelled = false
     setLoading(true)
     setLoadError(null)
+    // Pending rounds are local, so they show whether or not the D1 load works.
+    setPending(readPending(user.id))
     fetch('/api/games', { credentials: 'include' })
       .then(r => {
-        if (r.status === 401) { setLoadError('signedOut'); return null }
+        if (r.status === 401) { if (!cancelled) setLoadError('signedOut'); return null }
         if (!r.ok) throw new Error('games fetch failed')
         return r.json()
       })
       .then(data => {
+        if (cancelled) return
         if (!data) { setGames([]); return }
         // Normalise row by row so one unreadable round is skipped, not fatal.
         const list = []
@@ -84,23 +122,34 @@ export default function History({ navigate }) {
         setGames(list)
         setSkipped(bad)
       })
-      .catch(() => { setGames([]); setLoadError('failed') })
-      .finally(() => setLoading(false))
+      .catch(() => { if (!cancelled) { setGames([]); setLoadError('failed') } })
+      .finally(() => {
+        if (cancelled) return
+        // Re-read once the list is in, in case a sync finished in the meantime.
+        setPending(readPending(user.id))
+        setLoading(false)
+      })
+    return () => { cancelled = true }
   }, [user, reloadKey])
 
+  // Signed in: the D1 rounds plus this user's pending local rounds (PRD §11.9),
+  // newest first, with a pending round the server already holds dropped. Signed
+  // out: every local round, exactly as before.
+  const allGames = user ? mergePendingGames(games, pending) : games
+
   const courses = user
-    ? [...new Set(games.map(g => g.courseName).filter(Boolean))]
+    ? [...new Set(allGames.map(g => g.courseName).filter(Boolean))]
     : []
 
-  const playerRoundCounts = games.reduce((counts, g) => {
+  const playerRoundCounts = allGames.reduce((counts, g) => {
     for (const p of g.players ?? []) counts[p] = (counts[p] ?? 0) + 1
     return counts
   }, {})
 
-  const players = [...new Set(games.flatMap(g => g.players ?? []))]
+  const players = [...new Set(allGames.flatMap(g => g.players ?? []))]
     .sort((a, b) => playerRoundCounts[b] - playerRoundCounts[a] || a.localeCompare(b))
 
-  const displayed = games
+  const displayed = allGames
     .filter(g => !courseFilter || g.courseName === courseFilter)
     .filter(g => !filter || g.players?.includes(filter))
 
@@ -109,7 +158,7 @@ export default function History({ navigate }) {
   }
 
   async function executeDelete(id) {
-    const game = games.find(g => g.id === id)
+    const game = allGames.find(g => g.id === id)
     if (!game) return
     if (game._fromDb) {
       setDeleting(true)
@@ -125,10 +174,23 @@ export default function History({ navigate }) {
         return
       }
       setDeleting(false)
+      // The server saved this round but the local copy is still marked pending
+      // (the marker was not cleared yet). Drop that copy too, or the next
+      // background sync would send the round back to the account.
+      if (game.clientRoundId && pending.some(p => p.id === game.clientRoundId)) {
+        deleteCompletedGame(game.clientRoundId)
+      }
     } else {
+      // A pending round is local only: no server call, no waiting. The one
+      // exception is a save of this very round in flight right now.
+      if (game._pending && isSyncing(game.id)) {
+        setDeleteError(SAVING_MESSAGE)
+        return
+      }
       deleteCompletedGame(game.id)
     }
     setGames(prev => prev.filter(g => g.id !== id))
+    if (user) setPending(readPending(user.id))
     setDeleteError(null)
     setConfirmDeleteId(null)
   }
@@ -238,7 +300,7 @@ export default function History({ navigate }) {
         )}
 
         {!loading && loadError && (
-          <div role="alert" className="text-center pt-16">
+          <div role="alert" className={['text-center', allGames.length > 0 ? 'pt-4 pb-2' : 'pt-16'].join(' ')}>
             <p className="font-display italic text-xl text-text mb-2">
               {loadError === 'signedOut' ? "You've been signed out" : "Couldn't load your rounds"}
             </p>
@@ -308,13 +370,28 @@ export default function History({ navigate }) {
             <button
               type="button"
               onClick={() => navigate('summary', { game, fromHistory: true })}
-              aria-label={`Open round: ${formatShortDate(game.completedAt)}, ${(game.players ?? []).join(', ')}`}
+              aria-label={`Open round: ${formatShortDate(game.completedAt)}, ${(game.players ?? []).join(', ')}${game._rejected ? ", can't be saved, kept on this device only" : game._pending ? ', not yet saved' : ''}`}
               className="absolute inset-0 w-full h-full rounded-md active:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             />
 
             {/* Card content sits above the open button; clicks pass through to it
                 except on the player-name buttons. */}
             <div className="relative pointer-events-none text-left px-4 pt-4 pb-4 pr-12">
+              {/* A round whose save to the account is still outstanding. Quiet
+                  accent pill (the app's "attention" treatment, no new colour);
+                  real text, so a screen reader reads it with the card. A round
+                  the server refused says so, and where it is kept. */}
+              {game._pending && (
+                <div className="mb-2">
+                  <span className="inline-block rounded-full border border-accent py-0.5 px-2 font-ui text-xs font-medium text-accent">
+                    {game._rejected ? "Can't be saved" : 'Not yet saved'}
+                  </span>
+                  {game._rejected && (
+                    <p className="font-ui text-xs text-muted mt-1">Kept on this device only.</p>
+                  )}
+                </div>
+              )}
+
               {/* Course name */}
               {game.courseName && (
                 <p className="font-ui text-xs tracking-[0.08em] uppercase text-accent mb-1">{game.courseName}</p>

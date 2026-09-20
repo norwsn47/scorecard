@@ -11,7 +11,7 @@ export async function onRequestGet(context) {
   // the client parses it, same as `player_data`.
   const { results } = await DB.prepare(
     `SELECT g.id, g.course_id, c.name AS course_name, c.holes AS course_holes,
-            g.played_at, g.holes_played, g.player_data, g.hole_pars, g.notes, g.created_at
+            g.played_at, g.holes_played, g.player_data, g.hole_pars, g.notes, g.client_round_id, g.created_at
      FROM games g
      LEFT JOIN courses c ON g.course_id = c.id
      WHERE g.user_id = ?

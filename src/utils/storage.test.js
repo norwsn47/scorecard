@@ -3,8 +3,11 @@ import {
   clearActiveGame,
   getActiveGame,
   getCompletedGames,
+  getPendingCompletedGames,
   getPlayers,
   isStorageAvailable,
+  markCompletedGamePending,
+  markCompletedGameRejected,
   markCompletedGameSynced,
   saveActiveGame,
   saveCompletedGame,
@@ -205,6 +208,148 @@ describe('markCompletedGameSynced', () => {
   it('returns true on success', () => {
     saveCompletedGame(COMPLETED_A)
     expect(markCompletedGameSynced(COMPLETED_A.id)).toBe(true)
+  })
+
+  it('clears the pending and rejected markers on the matching game', () => {
+    saveCompletedGame({ ...COMPLETED_A, pendingSyncUserId: 'u1', syncRejected: true })
+    markCompletedGameSynced(COMPLETED_A.id)
+    const [game] = getCompletedGames()
+    expect(game.synced).toBe(true)
+    expect('pendingSyncUserId' in game).toBe(false)
+    expect('syncRejected' in game).toBe(false)
+  })
+
+  it('leaves another game\'s markers alone', () => {
+    saveCompletedGame({ ...COMPLETED_A, pendingSyncUserId: 'u1' })
+    saveCompletedGame({ ...COMPLETED_B, pendingSyncUserId: 'u2', syncRejected: true })
+    markCompletedGameSynced(COMPLETED_A.id)
+    const b = getCompletedGames().find(g => g.id === COMPLETED_B.id)
+    expect(b.pendingSyncUserId).toBe('u2')
+    expect(b.syncRejected).toBe(true)
+    expect(b.synced).toBeUndefined()
+  })
+
+  it('does not throw on corrupt storage', () => {
+    localStorage.setItem('gt_completed_games', '!!bad')
+    expect(() => markCompletedGameSynced('done-1')).not.toThrow()
+    localStorage.setItem('gt_completed_games', JSON.stringify([null, COMPLETED_A]))
+    expect(() => markCompletedGameSynced(COMPLETED_A.id)).not.toThrow()
+  })
+})
+
+describe('markCompletedGamePending', () => {
+  it('tags the matching game with the user id and stores the trimmed notes', () => {
+    saveCompletedGame(COMPLETED_A)
+    saveCompletedGame(COMPLETED_B)
+    expect(markCompletedGamePending(COMPLETED_A.id, 'u1', '  Windy  ')).toBe(true)
+    const games = getCompletedGames()
+    const a = games.find(g => g.id === COMPLETED_A.id)
+    expect(a.pendingSyncUserId).toBe('u1')
+    expect(a.notes).toBe('Windy')
+    // The other round is untouched.
+    expect(games.find(g => g.id === COMPLETED_B.id)).toEqual(COMPLETED_B)
+  })
+
+  it('leaves synced alone (never sets it, never clears it)', () => {
+    saveCompletedGame(COMPLETED_A)
+    markCompletedGamePending(COMPLETED_A.id, 'u1', '')
+    expect(getCompletedGames()[0].synced).toBeUndefined()
+  })
+
+  it('stores null for blank notes', () => {
+    saveCompletedGame({ ...COMPLETED_A, notes: 'old' })
+    markCompletedGamePending(COMPLETED_A.id, 'u1', '   ')
+    expect(getCompletedGames()[0].notes).toBeNull()
+    markCompletedGamePending(COMPLETED_A.id, 'u1', undefined)
+    expect(getCompletedGames()[0].notes).toBeNull()
+  })
+
+  it('is a no-op that returns false when no game matches the id', () => {
+    saveCompletedGame(COMPLETED_A)
+    expect(markCompletedGamePending('does-not-exist', 'u1', 'x')).toBe(false)
+    expect(getCompletedGames()).toEqual([COMPLETED_A])
+  })
+
+  it('refuses to write a marker with no owner', () => {
+    saveCompletedGame(COMPLETED_A)
+    expect(markCompletedGamePending(COMPLETED_A.id, undefined, '')).toBe(false)
+    expect(markCompletedGamePending(COMPLETED_A.id, '', '')).toBe(false)
+    expect(getCompletedGames()).toEqual([COMPLETED_A])
+  })
+
+  it('does not throw on corrupt storage', () => {
+    localStorage.setItem('gt_completed_games', '!!bad')
+    expect(markCompletedGamePending('done-1', 'u1', '')).toBe(false)
+    localStorage.setItem('gt_completed_games', JSON.stringify([null, COMPLETED_A]))
+    expect(() => markCompletedGamePending(COMPLETED_A.id, 'u1', '')).not.toThrow()
+  })
+})
+
+describe('markCompletedGameRejected', () => {
+  it('sets syncRejected on the matching game and keeps its pending marker', () => {
+    saveCompletedGame({ ...COMPLETED_A, pendingSyncUserId: 'u1' })
+    saveCompletedGame(COMPLETED_B)
+    expect(markCompletedGameRejected(COMPLETED_A.id)).toBe(true)
+    const games = getCompletedGames()
+    const a = games.find(g => g.id === COMPLETED_A.id)
+    expect(a.syncRejected).toBe(true)
+    expect(a.pendingSyncUserId).toBe('u1')
+    expect(games.find(g => g.id === COMPLETED_B.id)).toEqual(COMPLETED_B)
+  })
+
+  it('is a no-op that returns false when no game matches the id', () => {
+    saveCompletedGame(COMPLETED_A)
+    expect(markCompletedGameRejected('does-not-exist')).toBe(false)
+    expect(getCompletedGames()).toEqual([COMPLETED_A])
+  })
+
+  it('does not throw on corrupt storage', () => {
+    localStorage.setItem('gt_completed_games', '!!bad')
+    expect(markCompletedGameRejected('done-1')).toBe(false)
+    localStorage.setItem('gt_completed_games', JSON.stringify([null, COMPLETED_A]))
+    expect(() => markCompletedGameRejected(COMPLETED_A.id)).not.toThrow()
+  })
+})
+
+describe('getPendingCompletedGames', () => {
+  it('returns only rounds tagged with the given user id', () => {
+    saveCompletedGame({ ...COMPLETED_A, pendingSyncUserId: 'u1' })
+    saveCompletedGame(COMPLETED_B)
+    expect(getPendingCompletedGames('u1').map(g => g.id)).toEqual([COMPLETED_A.id])
+  })
+
+  it('never returns a round with no marker, or another user\'s round (shared device)', () => {
+    saveCompletedGame(COMPLETED_A) // quick-play, no marker
+    saveCompletedGame({ ...COMPLETED_B, pendingSyncUserId: 'u2' })
+    expect(getPendingCompletedGames('u1')).toEqual([])
+    expect(getPendingCompletedGames('u2').map(g => g.id)).toEqual([COMPLETED_B.id])
+  })
+
+  it('a synced round is not pending', () => {
+    saveCompletedGame({ ...COMPLETED_A, pendingSyncUserId: 'u1' })
+    markCompletedGameSynced(COMPLETED_A.id)
+    expect(getPendingCompletedGames('u1')).toEqual([])
+  })
+
+  it('includes rejected rounds, so callers can tell them apart', () => {
+    saveCompletedGame({ ...COMPLETED_A, pendingSyncUserId: 'u1', syncRejected: true })
+    expect(getPendingCompletedGames('u1')).toHaveLength(1)
+    expect(getPendingCompletedGames('u1')[0].syncRejected).toBe(true)
+  })
+
+  it('returns [] for a missing user id, even when rounds carry markers', () => {
+    saveCompletedGame({ ...COMPLETED_A, pendingSyncUserId: 'u1' })
+    expect(getPendingCompletedGames(undefined)).toEqual([])
+    expect(getPendingCompletedGames(null)).toEqual([])
+    expect(getPendingCompletedGames('')).toEqual([])
+  })
+
+  it('returns [] on empty or corrupt storage, and skips junk entries', () => {
+    expect(getPendingCompletedGames('u1')).toEqual([])
+    localStorage.setItem('gt_completed_games', '!!bad')
+    expect(getPendingCompletedGames('u1')).toEqual([])
+    localStorage.setItem('gt_completed_games', JSON.stringify([null, { ...COMPLETED_A, pendingSyncUserId: 'u1' }]))
+    expect(getPendingCompletedGames('u1')).toHaveLength(1)
   })
 })
 

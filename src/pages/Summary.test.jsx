@@ -3,19 +3,17 @@ import { act, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import Summary from './Summary.jsx'
 import { AuthProvider } from '../hooks/useAuth.jsx'
-import { getCompletedGames, saveCompletedGame } from '../utils/storage.js'
+import { getCompletedGames, markCompletedGameSynced, saveActiveGame, saveCompletedGame } from '../utils/storage.js'
+import { buildGamePayload, syncPendingRounds } from '../utils/sync.js'
 
-// First render coverage for Summary (BACKLOG #104, #95, #91). Two areas:
+// First render coverage for Summary (BACKLOG #104, #95, #91). Three areas:
 // - the D1 save in handleGoHome ("Done") for a signed-in user: what is POSTed,
 //   when the round is marked synced, the re-entrance guard, and the signed-out
 //   path that never POSTs.
+// - what happens when that save fails (#95): the user stays on Summary with an
+//   alert and a choice of Retry or "Keep on this device and go home" - a round
+//   is never silently lost, and never leaves the screen without a decision.
 // - the signed-in star (PlayerStar) and the result / DNF rendering.
-//
-// Deliberately NOT asserted: what happens on a failed save. Today a non-OK
-// response or a network error is swallowed and the user is still sent home
-// (BACKLOG #95). The failure tests below only pin the part that is
-// unambiguously right - the round is not marked synced - and leave the
-// navigation outcome open until #95 decides the intended behaviour.
 
 const SIGNED_IN = { id: 'u1', email: 'ann@example.com', name: 'Ann', pending_email: null }
 
@@ -171,35 +169,8 @@ describe('Summary - saving on Done, signed in (#95)', () => {
 
     await waitFor(() => expect(navigate).toHaveBeenCalledWith('home'))
     expect(getCompletedGames()[0].synced).toBe(true)
-  })
-
-  it('does not mark the round synced when the server answers with a non-OK status', async () => {
-    mockFetch({
-      user: SIGNED_IN,
-      postGames: () => Promise.resolve({ ok: false, status: 500, json: async () => ({ error: 'boom' }) }),
-    })
-    const user = userEvent.setup()
-    await renderSummary(baseGame())
-
-    await user.click(screen.getByRole('button', { name: 'Done' }))
-
-    // Navigation is not asserted here on purpose - see the file header (#95).
-    // Wait for the save to settle (button back to "Done") instead.
-    await screen.findByRole('button', { name: 'Done' })
-    expect(gamePosts()).toHaveLength(1)
-    expect(getCompletedGames()[0].synced).toBeUndefined()
-  })
-
-  it('does not mark the round synced when the request fails outright', async () => {
-    mockFetch({ user: SIGNED_IN, postGames: () => Promise.reject(new TypeError('Failed to fetch')) })
-    const user = userEvent.setup()
-    await renderSummary(baseGame())
-
-    await user.click(screen.getByRole('button', { name: 'Done' }))
-
-    await screen.findByRole('button', { name: 'Done' })
-    expect(gamePosts()).toHaveLength(1)
-    expect(getCompletedGames()[0].synced).toBeUndefined()
+    expect(getCompletedGames()[0].pendingSyncUserId).toBeUndefined()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
   it('ignores a second tap while the POST is in flight, and locks the button and the note', async () => {
@@ -228,11 +199,262 @@ describe('Summary - saving on Done, signed in (#95)', () => {
   })
 })
 
+describe('Summary - when the save fails (#95)', () => {
+  const failWith = status => () => Promise.resolve({ ok: false, status, json: async () => ({ error: 'nope' }) })
+  const keepButton = () => screen.getByRole('button', { name: 'Keep on this device and go home' })
+
+  it('a non-OK response keeps the user on Summary with an alert and both choices', async () => {
+    mockFetch({ user: SIGNED_IN, postGames: failWith(500) })
+    const user = userEvent.setup()
+    const { navigate } = await renderSummary(baseGame())
+
+    await user.click(screen.getByRole('button', { name: 'Done' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent("Couldn't save this round")
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeEnabled()
+    expect(keepButton()).toBeEnabled()
+    expect(navigate).not.toHaveBeenCalled()
+    expect(gamePosts()).toHaveLength(1)
+    // Nothing is decided yet: neither synced nor pending.
+    expect(getCompletedGames()[0].synced).toBeUndefined()
+    expect(getCompletedGames()[0].pendingSyncUserId).toBeUndefined()
+    // The header Done is back, so the screen is not stuck in "Saving…".
+    expect(screen.getByRole('button', { name: 'Done' })).toBeEnabled()
+  })
+
+  it('a network error is treated the same way', async () => {
+    mockFetch({ user: SIGNED_IN, postGames: () => Promise.reject(new TypeError('Failed to fetch')) })
+    const user = userEvent.setup()
+    const { navigate } = await renderSummary(baseGame())
+
+    await user.click(screen.getByRole('button', { name: 'Done' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent("Couldn't save this round")
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
+    expect(keepButton()).toBeInTheDocument()
+    expect(navigate).not.toHaveBeenCalled()
+    expect(getCompletedGames()[0].synced).toBeUndefined()
+  })
+
+  it('a stalled save times out into the same error instead of hanging on "Saving…"', async () => {
+    mockFetch({ user: SIGNED_IN, postGames: () => new Promise(() => {}) })
+    const { navigate } = await renderSummary(baseGame())
+
+    // Fake timers only after the session check has settled, so the click and
+    // the 15 s timeout are the only clocks in play.
+    vi.useFakeTimers()
+    try {
+      act(() => { screen.getByRole('button', { name: 'Done' }).click() })
+      expect(screen.getByRole('button', { name: 'Saving…' })).toBeDisabled()
+      await act(async () => { await vi.advanceTimersByTimeAsync(15000) })
+    } finally {
+      vi.useRealTimers()
+    }
+
+    expect(screen.getByRole('alert')).toHaveTextContent("Couldn't save this round")
+    expect(screen.getByRole('button', { name: 'Done' })).toBeEnabled()
+    expect(navigate).not.toHaveBeenCalled()
+    expect(getCompletedGames()[0].synced).toBeUndefined()
+  })
+
+  it('a 401 says the user was signed out and still offers both choices', async () => {
+    mockFetch({ user: SIGNED_IN, postGames: failWith(401) })
+    const user = userEvent.setup()
+    const { navigate } = await renderSummary(baseGame())
+
+    await user.click(screen.getByRole('button', { name: 'Done' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent("You've been signed out")
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
+    expect(keepButton()).toBeInTheDocument()
+    expect(navigate).not.toHaveBeenCalled()
+    expect(getCompletedGames()[0].synced).toBeUndefined()
+  })
+
+  it('a 400 keeps the round on Summary with both choices and its own wording', async () => {
+    mockFetch({ user: SIGNED_IN, postGames: failWith(400) })
+    const user = userEvent.setup()
+    const { navigate } = await renderSummary(baseGame())
+
+    await user.click(screen.getByRole('button', { name: 'Done' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent("Your account couldn't take this round")
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeInTheDocument()
+    expect(keepButton()).toBeInTheDocument()
+    expect(navigate).not.toHaveBeenCalled()
+  })
+
+  it('Retry re-sends the same body, then marks the round synced and goes home on success', async () => {
+    let call = 0
+    mockFetch({
+      user: SIGNED_IN,
+      postGames: () => (++call === 1
+        ? failWith(500)()
+        : Promise.resolve({ ok: true, status: 200, json: async () => ({ id: 'srv-1' }) })),
+    })
+    const user = userEvent.setup()
+    const { navigate } = await renderSummary(baseGame())
+
+    await user.type(screen.getByPlaceholderText('Add a note about this round...'), 'Windy')
+    await user.click(screen.getByRole('button', { name: 'Done' }))
+    await screen.findByRole('alert')
+    expect(navigate).not.toHaveBeenCalled()
+
+    await user.click(screen.getByRole('button', { name: 'Retry' }))
+
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('home'))
+    const posts = gamePosts()
+    expect(posts).toHaveLength(2)
+    expect(posts[1][1].body).toBe(posts[0][1].body)
+    expect(JSON.parse(posts[1][1].body)).toMatchObject({ client_round_id: 'round-1', notes: 'Windy' })
+    expect(getCompletedGames()[0].synced).toBe(true)
+    expect(getCompletedGames()[0].pendingSyncUserId).toBeUndefined()
+  })
+
+  it('Retry that fails again stays on Summary with the alert still showing', async () => {
+    mockFetch({ user: SIGNED_IN, postGames: failWith(503) })
+    const user = userEvent.setup()
+    const { navigate } = await renderSummary(baseGame())
+
+    await user.click(screen.getByRole('button', { name: 'Done' }))
+    await screen.findByRole('alert')
+    await user.click(screen.getByRole('button', { name: 'Retry' }))
+
+    await waitFor(() => expect(gamePosts()).toHaveLength(2))
+    expect(await screen.findByRole('alert')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeEnabled()
+    expect(navigate).not.toHaveBeenCalled()
+  })
+
+  it('Retry is disabled and relabelled while in flight, and a second tap cannot fire a second POST', async () => {
+    let call = 0
+    let release
+    mockFetch({
+      user: SIGNED_IN,
+      postGames: () => (++call === 1
+        ? failWith(500)()
+        : new Promise(resolve => { release = () => resolve({ ok: true, status: 200, json: async () => ({}) }) })),
+    })
+    const user = userEvent.setup()
+    const { navigate } = await renderSummary(baseGame())
+
+    await user.click(screen.getByRole('button', { name: 'Done' }))
+    await screen.findByRole('alert')
+
+    await user.click(screen.getByRole('button', { name: 'Retry' }))
+
+    const retrying = await screen.findByRole('button', { name: 'Retrying…' })
+    expect(retrying).toBeDisabled()
+    // Keep is locked too, and so is the note: nothing can race the request.
+    expect(keepButton()).toBeDisabled()
+    expect(screen.getByPlaceholderText('Add a note about this round...')).toBeDisabled()
+    await user.click(retrying)
+    await user.click(keepButton())
+    expect(gamePosts()).toHaveLength(2) // the failed first try + one retry
+    expect(navigate).not.toHaveBeenCalled()
+    expect(getCompletedGames()[0].pendingSyncUserId).toBeUndefined()
+
+    await act(async () => { release() })
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('home'))
+    expect(gamePosts()).toHaveLength(2)
+  })
+
+  it('"Keep on this device and go home" tags the round with the user id and stores the trimmed note, without touching synced', async () => {
+    mockFetch({ user: SIGNED_IN, postGames: failWith(500) })
+    const user = userEvent.setup()
+    const { navigate } = await renderSummary(baseGame())
+
+    await user.type(screen.getByPlaceholderText('Add a note about this round...'), '  Windy on the 2nd  ')
+    await user.click(screen.getByRole('button', { name: 'Done' }))
+    await screen.findByRole('alert')
+    await user.click(keepButton())
+
+    expect(navigate).toHaveBeenCalledWith('home')
+    const [stored] = getCompletedGames()
+    expect(stored.pendingSyncUserId).toBe('u1')
+    expect(stored.notes).toBe('Windy on the 2nd')
+    expect(stored.synced).toBeUndefined()
+    expect(stored.syncRejected).toBeUndefined()
+    // Keeping is a local decision: no further request goes out.
+    expect(gamePosts()).toHaveLength(1)
+  })
+
+  it('a 401 can be kept on the device too, tagged with the user id', async () => {
+    mockFetch({ user: SIGNED_IN, postGames: failWith(401) })
+    const user = userEvent.setup()
+    const { navigate } = await renderSummary(baseGame())
+
+    await user.click(screen.getByRole('button', { name: 'Done' }))
+    await screen.findByRole('alert')
+    await user.click(keepButton())
+
+    expect(navigate).toHaveBeenCalledWith('home')
+    expect(getCompletedGames()[0].pendingSyncUserId).toBe('u1')
+    expect(getCompletedGames()[0].synced).toBeUndefined()
+  })
+
+  it('keeping a round with a blank note stores no note', async () => {
+    mockFetch({ user: SIGNED_IN, postGames: failWith(500) })
+    const user = userEvent.setup()
+    await renderSummary(baseGame())
+
+    await user.type(screen.getByPlaceholderText('Add a note about this round...'), '   ')
+    await user.click(screen.getByRole('button', { name: 'Done' }))
+    await screen.findByRole('alert')
+    await user.click(keepButton())
+
+    expect(getCompletedGames()[0].notes).toBeNull()
+  })
+
+  it('if the round is not in local storage either, staying put is the only honest answer: no Keep, and no navigation', async () => {
+    mockFetch({ user: SIGNED_IN, postGames: failWith(500) })
+    const user = userEvent.setup()
+    const { navigate } = await renderSummary(baseGame())
+    await user.click(screen.getByRole('button', { name: 'Done' }))
+    await screen.findByRole('alert')
+
+    // Simulate the local copy being gone (e.g. Scorecard's storage write failed).
+    localStorage.clear()
+    await user.click(keepButton())
+
+    expect(await screen.findByRole('alert')).toHaveTextContent("couldn't store the round either")
+    expect(screen.queryByRole('button', { name: 'Keep on this device and go home' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeEnabled()
+    expect(navigate).not.toHaveBeenCalled()
+  })
+
+  it('a signed-out user never sees the error block or a Retry', async () => {
+    mockFetch({ user: null })
+    const user = userEvent.setup()
+    await renderSummary(baseGame())
+
+    await user.click(screen.getByRole('button', { name: 'Done' }))
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument()
+    expect(gamePosts()).toHaveLength(0)
+  })
+})
+
+describe('buildGamePayload matches what Summary POSTs', () => {
+  it('sends exactly the body the shared builder produces for the stored round', async () => {
+    mockFetch({ user: SIGNED_IN })
+    const user = userEvent.setup()
+    const game = baseGame()
+    await renderSummary(game)
+
+    await user.type(screen.getByPlaceholderText('Add a note about this round...'), 'Breezy')
+    await user.click(screen.getByRole('button', { name: 'Done' }))
+
+    expect(JSON.parse(gamePosts()[0][1].body)).toEqual(buildGamePayload(game, 'Breezy'))
+  })
+})
+
 describe('Summary - rounds that are already saved (#95)', () => {
-  // `alreadySaved` (_fromDb or synced) puts the screen in viewingSaved mode,
-  // which swaps the header "Done" for "Edit" - so the re-POST guard in
-  // handleGoHome is never reachable by a tap. These pin the outcome the guard
-  // exists for: viewing a saved round never creates a duplicate row.
+  // A round that is _fromDb or synced puts the screen in viewingSaved mode,
+  // which swaps the header "Done" for "Edit" - so there is no save handler to
+  // tap at all. These pin the outcome that matters: viewing a saved round
+  // never creates a duplicate row.
   it('a D1 round opened from History has no Done button and never POSTs', async () => {
     mockFetch({ user: SIGNED_IN })
     const game = baseGame({ _fromDb: true, id: 'db-row-9', notes: 'Lovely evening' })
@@ -272,6 +494,155 @@ describe('Summary - rounds that are already saved (#95)', () => {
   })
 })
 
+// A round whose save to D1 is still outstanding (pendingSyncUserId, BACKLOG #95,
+// PRD §11.8). Reached from History, after a browser bounce, or handed back after
+// an edit, it is always read-only here: the background sync saves it, never Done.
+describe('Summary - a pending round (#95)', () => {
+  const STATUS = 'Not yet saved to your account. It will save automatically when you have signal.'
+  const REJECTED = "This round can't be saved to your account. It is kept on this device only."
+  const pendingGame = (overrides = {}) => baseGame({ pendingSyncUserId: 'u1', ...overrides })
+
+  it('is read-only for its owner: no Done, no notes field, no POST, and a static status line', async () => {
+    mockFetch({ user: SIGNED_IN })
+    await renderSummary(pendingGame(), { fromHistory: true })
+
+    expect(screen.queryByRole('button', { name: 'Done' })).not.toBeInTheDocument()
+    expect(screen.queryByPlaceholderText('Add a note about this round...')).not.toBeInTheDocument()
+    expect(screen.getByText(STATUS)).toBeInTheDocument()
+    expect(gamePosts()).toHaveLength(0)
+  })
+
+  it('is read-only without the fromHistory flag too (a bounce, or handed back after an edit)', async () => {
+    mockFetch({ user: SIGNED_IN })
+    await renderSummary(pendingGame())
+
+    expect(screen.queryByRole('button', { name: 'Done' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument()
+    expect(screen.getByText(STATUS)).toBeInTheDocument()
+    expect(gamePosts()).toHaveLength(0)
+  })
+
+  it('says a refused round cannot be saved and is kept on this device, in place of the pending line', async () => {
+    mockFetch({ user: SIGNED_IN })
+    await renderSummary(pendingGame({ syncRejected: true }), { fromHistory: true })
+
+    expect(screen.getByText(REJECTED)).toBeInTheDocument()
+    expect(screen.queryByText(STATUS)).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument()
+  })
+
+  it('shows no status line on a saved round', async () => {
+    mockFetch({ user: SIGNED_IN })
+    await renderSummary(baseGame({ _fromDb: true }), { fromHistory: true })
+
+    expect(screen.queryByText(STATUS)).not.toBeInTheDocument()
+    expect(screen.queryByText(REJECTED)).not.toBeInTheDocument()
+  })
+
+  it('offers Edit to the signed-in owner, and Edit goes to Setup with the round', async () => {
+    mockFetch({ user: SIGNED_IN })
+    const user = userEvent.setup()
+    const { navigate } = await renderSummary(pendingGame(), { fromHistory: true })
+
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+
+    expect(navigate).toHaveBeenCalledWith('setup', { editRound: true, game: expect.objectContaining({ id: 'round-1', pendingSyncUserId: 'u1' }) })
+  })
+
+  it('does not offer Edit, Done or a status line to a different signed-in user, and never POSTs their round', async () => {
+    mockFetch({ user: { ...SIGNED_IN, id: 'u2' } })
+    await renderSummary(pendingGame(), { fromHistory: true })
+
+    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Done' })).not.toBeInTheDocument()
+    expect(screen.queryByText(STATUS)).not.toBeInTheDocument()
+    expect(gamePosts()).toHaveLength(0)
+  })
+
+  it('does not let a different signed-in user save it from a bounce (no Done to send it under their account)', async () => {
+    mockFetch({ user: { ...SIGNED_IN, id: 'u2' } })
+    await renderSummary(pendingGame()) // no fromHistory
+
+    expect(screen.queryByRole('button', { name: 'Done' })).not.toBeInTheDocument()
+    expect(gamePosts()).toHaveLength(0)
+  })
+
+  it('matches the owner whether the id came back as a number or a string', async () => {
+    mockFetch({ user: { ...SIGNED_IN, id: 7 } })
+    await renderSummary(pendingGame({ pendingSyncUserId: '7' }), { fromHistory: true })
+
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument()
+    expect(screen.getByText(STATUS)).toBeInTheDocument()
+  })
+
+  it('signed out, a still-pending round opens like any local round: Edit, no Done, no status line', async () => {
+    mockFetch({ user: null })
+    await renderSummary(pendingGame(), { fromHistory: true })
+
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Done' })).not.toBeInTheDocument()
+    expect(screen.queryByText(STATUS)).not.toBeInTheDocument()
+    expect(gamePosts()).toHaveLength(0)
+  })
+
+  it('refuses Edit with a short message while a save of this round is in flight, and works afterwards', async () => {
+    let release
+    mockFetch({
+      user: SIGNED_IN,
+      postGames: () => new Promise(resolve => { release = () => resolve({ ok: false, status: 503, json: async () => ({}) }) }),
+    })
+    const user = userEvent.setup()
+    const { navigate } = await renderSummary(pendingGame(), { fromHistory: true })
+
+    const run = syncPendingRounds('u1')
+    await act(async () => { await new Promise(resolve => setTimeout(resolve, 0)) }) // POST in flight
+
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    expect(screen.getByRole('alert')).toHaveTextContent('Saving this round - try again in a moment.')
+    expect(navigate).not.toHaveBeenCalled()
+
+    await act(async () => { release(); await run })
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    expect(navigate).toHaveBeenCalledWith('setup', expect.any(Object))
+  })
+
+  it('still refuses Edit while another game is in progress, with the existing message', async () => {
+    mockFetch({ user: SIGNED_IN })
+    saveActiveGame({ id: 'live', players: ['Ann'], holes: 2, scores: { Ann: [null, null] } })
+    const user = userEvent.setup()
+    const { navigate } = await renderSummary(pendingGame(), { fromHistory: true })
+
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Finish your current round before editing a past one.')
+    expect(navigate).not.toHaveBeenCalled()
+  })
+
+  it('does not edit a stale local copy when the round has been saved since this screen opened', async () => {
+    mockFetch({ user: SIGNED_IN })
+    const user = userEvent.setup()
+    const { navigate } = await renderSummary(pendingGame(), { fromHistory: true })
+    markCompletedGameSynced('round-1') // a background sync finished meanwhile
+
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+
+    expect(screen.getByRole('alert')).toHaveTextContent('This round has just been saved. Open it from History to edit it.')
+    expect(navigate).not.toHaveBeenCalled()
+  })
+
+  it('a saved D1 round is still editable, and an unmarked signed-in local round still is not', async () => {
+    mockFetch({ user: SIGNED_IN })
+    await renderSummary(baseGame({ _fromDb: true }), { fromHistory: true })
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument()
+  })
+
+  it('an unmarked local round is still not editable by a signed-in user', async () => {
+    mockFetch({ user: SIGNED_IN })
+    await renderSummary(baseGame(), { fromHistory: true })
+    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument()
+  })
+})
+
 describe('Summary - signed out', () => {
   it('goes home on Done without POSTing or touching the synced flag', async () => {
     mockFetch({ user: null })
@@ -283,6 +654,9 @@ describe('Summary - signed out', () => {
     expect(navigate).toHaveBeenCalledWith('home')
     expect(gamePosts()).toHaveLength(0)
     expect(getCompletedGames()[0].synced).toBeUndefined()
+    expect(getCompletedGames()[0].pendingSyncUserId).toBeUndefined()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument()
   })
 
   it('offers no notes field and points to account creation instead', async () => {

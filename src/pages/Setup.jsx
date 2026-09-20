@@ -259,10 +259,14 @@ export default function Setup({ navigate, goBack, params }) {
     savePlayers(merged)
 
     if (editRound && editGame) {
-      const startId   = isDbEdit ? (selectedCourseId ?? null) : null
+      // A DB edit follows the course selector. A local edit has no selector,
+      // so the round keeps its own course: a pending round (BACKLOG #95) carries
+      // a D1 course id that its later sync needs, and a quick-play round keeps
+      // its course label. An edit changes only what the user edited.
+      const startId   = isDbEdit ? (selectedCourseId ?? null) : (editGame.courseId ?? null)
       const startName = isDbEdit
         ? (courses.find(c => c.id === startId)?.name ?? editGame.courseName ?? null)
-        : null
+        : (editGame.courseName ?? null)
       const resolved = await resolveCourse(startId, startName)
       if (!resolved) return
 
