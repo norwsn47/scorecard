@@ -454,6 +454,8 @@ On the Home screen the rule is left-aligned: `ml-0` replaces `mx-auto`.
 sticky top-0 z-50 bg-accent text-bg text-center font-ui text-xs py-2 px-4 tracking-wide
 ```
 
+**Load-failure states.** When a list or selector cannot load, show that, never an empty state. History uses a centred block (`font-display italic text-xl` heading, `font-ui text-sm text-muted` sentence, a full accent button: **Try again**, or **Sign in** for a 401) with `role="alert"`; Setup's course area uses the dashed empty-state box with the same wording and a small outline button. An empty state ("No rounds yet", "No courses yet") is only for a load that succeeded and returned nothing.
+
 **Announce messages.** An error banner or inline error line carries `role="alert"`; a neutral confirmation ("Saved.", "Check the new inbox...") carries `role="status"`. Neither is put on a per-second countdown (e.g. "Resend in 29s") - that would be read out every tick.
 
 ### Outbuild attribution mark

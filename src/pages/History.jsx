@@ -19,6 +19,14 @@ export default function History({ navigate }) {
   const [courseFilter, setCourseFilter] = useState(null)
   const [confirmDeleteId, setConfirmDeleteId] = useState(null)
   const cancelButtonRef = useRef(null)
+  // Load state for the signed-in list: null | 'failed' | 'signedOut'. A failed
+  // load must not read as "No rounds yet" (#99). `skipped` counts stored rounds
+  // that couldn't be read, so one bad row no longer blanks the whole list.
+  const [loadError, setLoadError]     = useState(null)
+  const [skipped, setSkipped]         = useState(0)
+  const [reloadKey, setReloadKey]     = useState(0)
+  const [deleting, setDeleting]       = useState(false)
+  const [deleteError, setDeleteError] = useState(null)
 
   // A reload, deep link, or restored tab always resets history state to depth
   // 0 — there's nothing in-app to step back to, and no in-page back button any
@@ -28,6 +36,8 @@ export default function History({ navigate }) {
   const [showHomeLink] = useState(() => (window.history.state?.depth ?? 0) === 0)
 
   function closeDeleteConfirm() {
+    if (deleting) return
+    setDeleteError(null)
     setConfirmDeleteId(null)
   }
 
@@ -39,24 +49,44 @@ export default function History({ navigate }) {
     if (!confirmDeleteId) return
     const opener = document.activeElement
     cancelButtonRef.current?.focus()
+    return () => opener?.focus?.()
+  }, [confirmDeleteId])
+  useEffect(() => {
+    if (!confirmDeleteId || deleting) return
     function onKey(e) {
-      if (e.key === 'Escape') setConfirmDeleteId(null)
+      if (e.key === 'Escape') {
+        setDeleteError(null)
+        setConfirmDeleteId(null)
+      }
     }
     document.addEventListener('keydown', onKey)
-    return () => {
-      document.removeEventListener('keydown', onKey)
-      opener?.focus?.()
-    }
-  }, [confirmDeleteId])
+    return () => document.removeEventListener('keydown', onKey)
+  }, [confirmDeleteId, deleting])
 
   useEffect(() => {
     if (!user) return
+    setLoading(true)
+    setLoadError(null)
     fetch('/api/games', { credentials: 'include' })
-      .then(r => r.json())
-      .then(data => setGames((data.games ?? []).map(normalizeDbGame)))
-      .catch(() => setGames([]))
+      .then(r => {
+        if (r.status === 401) { setLoadError('signedOut'); return null }
+        if (!r.ok) throw new Error('games fetch failed')
+        return r.json()
+      })
+      .then(data => {
+        if (!data) { setGames([]); return }
+        // Normalise row by row so one unreadable round is skipped, not fatal.
+        const list = []
+        let bad = 0
+        for (const row of data.games ?? []) {
+          try { list.push(normalizeDbGame(row)) } catch { bad += 1 }
+        }
+        setGames(list)
+        setSkipped(bad)
+      })
+      .catch(() => { setGames([]); setLoadError('failed') })
       .finally(() => setLoading(false))
-  }, [user])
+  }, [user, reloadKey])
 
   const courses = user
     ? [...new Set(games.map(g => g.courseName).filter(Boolean))]
@@ -82,12 +112,24 @@ export default function History({ navigate }) {
     const game = games.find(g => g.id === id)
     if (!game) return
     if (game._fromDb) {
-      await fetch(`/api/games/${game.id}`, { method: 'DELETE', credentials: 'include' })
-        .catch(() => {})
+      setDeleting(true)
+      setDeleteError(null)
+      try {
+        const res = await fetch(`/api/games/${game.id}`, { method: 'DELETE', credentials: 'include' })
+        // 404: already gone (deleted on another device) - the round is not there, which is the goal.
+        if (!res.ok && res.status !== 404) throw new Error('delete failed')
+      } catch {
+        // Keep the round in the list: it is still saved, so do not pretend otherwise.
+        setDeleteError("Couldn't delete this round - check your connection and try again.")
+        setDeleting(false)
+        return
+      }
+      setDeleting(false)
     } else {
       deleteCompletedGame(game.id)
     }
     setGames(prev => prev.filter(g => g.id !== id))
+    setDeleteError(null)
     setConfirmDeleteId(null)
   }
 
@@ -195,7 +237,32 @@ export default function History({ navigate }) {
           </div>
         )}
 
-        {!loading && displayed.length === 0 && (
+        {!loading && loadError && (
+          <div role="alert" className="text-center pt-16">
+            <p className="font-display italic text-xl text-text mb-2">
+              {loadError === 'signedOut' ? "You've been signed out" : "Couldn't load your rounds"}
+            </p>
+            <p className="font-ui text-sm text-muted mb-6">
+              {loadError === 'signedOut'
+                ? 'Sign in again to see your rounds.'
+                : 'Check your connection and try again.'}
+            </p>
+            <button
+              onClick={() => (loadError === 'signedOut' ? navigate('login') : setReloadKey(k => k + 1))}
+              className="py-3 px-6 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            >
+              {loadError === 'signedOut' ? 'Sign in' : 'Try again'}
+            </button>
+          </div>
+        )}
+
+        {!loading && !loadError && skipped > 0 && (
+          <p role="status" className="font-ui text-xs text-muted text-center">
+            {skipped === 1 ? "1 round couldn't be shown." : `${skipped} rounds couldn't be shown.`}
+          </p>
+        )}
+
+        {!loading && !loadError && displayed.length === 0 && (
           <div className="text-center pt-16">
             {filter ? (
               <>
@@ -342,19 +409,24 @@ export default function History({ navigate }) {
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-6" />
             <h2 id="delete-round-heading" className="font-display italic text-2xl text-text mb-1">Delete this round?</h2>
             <p className="font-ui text-xs text-muted tracking-wide mb-8">This cannot be undone.</p>
+            {deleteError && (
+              <p role="alert" className="font-ui text-xs text-accent mb-3">{deleteError}</p>
+            )}
             <div className="flex gap-3">
               <button
                 ref={cancelButtonRef}
                 onClick={closeDeleteConfirm}
+                disabled={deleting}
                 className="flex-1 py-3 rounded-sm border border-border font-ui text-sm tracking-[0.08em] uppercase text-text active:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 Cancel
               </button>
               <button
                 onClick={() => executeDelete(confirmDeleteId)}
-                className="flex-1 py-3 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.08em] uppercase font-semibold active:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                disabled={deleting}
+                className="flex-1 py-3 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.08em] uppercase font-semibold active:opacity-80 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
-                Delete
+                {deleting ? 'Deleting…' : 'Delete'}
               </button>
             </div>
           </div>
