@@ -32,7 +32,7 @@ describe('Setup — abandoned-edit recovery on a bounce', () => {
 
     // Forwards bruntsfield context (false here, since params carries none) so
     // History's back button doesn't mislabel itself after this redirect (#72).
-    await waitFor(() => expect(navigate).toHaveBeenCalledWith('history', { bruntsfield: false }))
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('history', { bruntsfield: false }, { replace: true }))
     expect(getActiveGame()).toBeNull()
   })
 
@@ -52,7 +52,7 @@ describe('Setup — abandoned-edit recovery on a bounce', () => {
       </AuthProvider>,
     )
 
-    await waitFor(() => expect(navigate).toHaveBeenCalledWith('history', { bruntsfield: true }))
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('history', { bruntsfield: true }, { replace: true }))
   })
 
   it('leaves a normal in-progress game alone (no _edit marker)', async () => {

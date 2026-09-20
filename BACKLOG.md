@@ -66,7 +66,7 @@ Add the club's official logo (likely Home or the course info section) once permi
 
 ### 43b. Back-nav polish - still open (follow-ups from the #43 build)
 - **D1-round gap:** the `gameId` re-resolution only covers local/quick-play rounds (looked up in `localStorage`). A browser back/forward bounce, or Setup's edit-cancel, landing back on a signed-in D1-only round opened from History (never saved locally) still falls back to the most recently completed *local* game, same as before this build — there's no `GET /api/games/:id` to re-fetch a single D1 round by id. Low priority (narrow path: sign in, open a past round from History, tap Edit, cancel before starting the scorecard, or a raw browser bounce) — would need a new API endpoint if it's worth closing.
-- `pastRound` isn't persisted in history state, so a browser back/forward bounce onto the "Add Past Round" Setup screen re-renders it titled "New Game" with no date field (cosmetic; the past round is already saved by then; no worse than pre-#43 behaviour). Add `pastRound` to the `navigate` allowlist in `App.jsx` if that path is worth polishing.
+- `pastRound` isn't persisted in history state, so a browser back/forward bounce onto the "Add Past Round" Setup screen re-renders it titled "New Game" with no date field (cosmetic; the past round is already saved by then). **Left unpersisted on purpose (20 Sep 2026):** Setup's abandoned-edit guard skips itself when `pastRound` is set, so restoring it on a bounce could leave a stranded `_edit` working copy undiscarded; the cosmetic gain does not justify that.
 - `Setup.edit-recovery.test.jsx` covers the abandoned-edit guard directly; `App.test.jsx` now also drives it through a real `popstate` bounce, and `Login.test.jsx` covers the "← Home" label. Still no render test for the `goBack()` fix itself.
 
 
@@ -134,7 +134,7 @@ Two narrow wrinkles in `functions/api/users/index.js` / `confirm-email.js`, both
 
 ---
 
-### Full-codebase audit, 19 September 2026 (#97, #98, #100, #102-#103, #106-#109, #111) - lower findings, short form
+### Full-codebase audit, 19 September 2026 (#97, #98, #100, #102-#103, #106-#108, #111) - lower findings, short form
 From the first `/full-audit`. Contrast ratios and tap sizes are hand-computed estimates, not browser measurements; nothing was screen-reader tested; `npm audit` was not run. The High findings are #95 and #96 above.
 
 ### 97. Dead code - remainder (Low)
@@ -171,9 +171,6 @@ App-start auth gating, bundle and font loading (LCP on a throttled mobile profil
 
 ### 108. Input and outline-button border contrast (design decision)
 `border` `#D9D0C4` is ~1.39:1 on the page background, below the 3:1 WCAG expects for control boundaries (estimate). **Decided 19 Sep 2026:** darken borders on inputs only, via a new stronger border token for form fields; decorative hairlines stay light. Design-director proposes the value, then a localhost check.
-
-### 109. Redirect-to-Home uses pushState (Low)
-The no-data redirects in `Summary.jsx`, `Scorecard.jsx` and `Settings.jsx` push history, so Back from Home returns to the page that bounced (a Back loop); StrictMode also pushes twice in dev. Needs a `replace` option on `navigate` in `App.jsx`; affects three pages and the popstate tests. Related: #43b.
 
 ### 111. Smaller findings from the #104 tests (Low)
 - `Summary.jsx:117-125` `alreadySaved` re-POST guard is unreachable and its comment stale; tidy when #95 reworks it.

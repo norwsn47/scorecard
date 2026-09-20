@@ -68,7 +68,7 @@ export default function Scorecard({ navigate, params }) {
   // Bounce home from an effect, not an inline navigate() during render -
   // navigate() sets state on the parent, which React rejects mid-render.
   useEffect(() => {
-    if (!game) navigate('home')
+    if (!game) navigate('home', {}, { replace: true })
   }, [game]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // While the finish/save sheet is open: pull focus onto the non-destructive

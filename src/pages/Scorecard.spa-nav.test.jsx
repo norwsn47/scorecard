@@ -31,7 +31,7 @@ describe('Scorecard — no active game (#17)', () => {
       </AuthProvider>,
     )
 
-    await waitFor(() => expect(navigate).toHaveBeenCalledWith('home'))
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('home', {}, { replace: true }))
     expect(navigate).toHaveBeenCalledTimes(1)
     expect(container).toBeEmptyDOMElement()
   })

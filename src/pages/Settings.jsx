@@ -25,7 +25,7 @@ export default function Settings({ navigate }) {
   // (navigate() sets state on the parent). Deleting the account also drops
   // the context user, so this same effect carries the post-delete return Home.
   useEffect(() => {
-    if (!loading && !user) navigate('home')
+    if (!loading && !user) navigate('home', {}, { replace: true })
   }, [loading, user]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // A reload, deep link, or restored tab always resets history state to depth

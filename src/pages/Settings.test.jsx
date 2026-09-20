@@ -89,7 +89,7 @@ describe('Settings (#4)', () => {
   it('bounces to Home when there is no signed-in user', async () => {
     mountFetch({ user: null })
     const { navigate } = renderSettings()
-    await waitFor(() => expect(navigate).toHaveBeenCalledWith('home'))
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('home', {}, { replace: true }))
     expect(screen.queryByRole('heading', { name: 'Settings' })).not.toBeInTheDocument()
   })
 
@@ -257,6 +257,6 @@ describe('Settings (#4)', () => {
       expect(del).toHaveBeenCalled()
       expect(del.mock.calls[0][0].method).toBe('DELETE')
     })
-    await waitFor(() => expect(navigate).toHaveBeenCalledWith('home'))
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('home', {}, { replace: true }))
   })
 })

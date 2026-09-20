@@ -117,10 +117,16 @@ function AppContent() {
     return () => window.removeEventListener('popstate', handlePopState)
   }, [])
 
-  function navigate(to, nextParams = {}) {
+  // `replace: true` swaps the current history entry instead of adding one. Use
+  // it for a redirect away from a screen that has nothing to show (a deep link
+  // or back-bounce onto /summary with no round, a signed-out /settings): a
+  // pushed redirect leaves the dead page one Back press behind Home, and that
+  // Back then bounces straight to Home again (#109).
+  function navigate(to, nextParams = {}, { replace = false } = {}) {
     setPage(to)
     setParams(nextParams)
-    const depth = (window.history.state?.depth ?? 0) + 1
+    const current = window.history.state?.depth ?? 0
+    const depth = replace ? current : current + 1
     // Only stable page context survives a browser back/forward bounce. The
     // mutable `game` is never persisted (a frozen snapshot would go stale and
     // clobber storage); nor are the edit-flow flags (editRound / editContext /
@@ -137,7 +143,9 @@ function AppContent() {
     // the right round from storage instead of guessing (#43b fix). Harmless on
     // pages that don't read it.
     if (nextParams.game?.id != null) context.gameId = nextParams.game.id
-    window.history.pushState({ page: to, depth, params: context }, '', pathForPage(to))
+    const state = { page: to, depth, params: context }
+    if (replace) window.history.replaceState(state, '', pathForPage(to))
+    else window.history.pushState(state, '', pathForPage(to))
   }
 
   // Back one step in the actual in-app history (#43). window.history.back()
