@@ -2,7 +2,7 @@
 ## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
 **Version:** 2.0
-**Last updated:** 19 September 2026
+**Last updated:** 20 September 2026
 
 > The rationale and section-by-section history of past updates lives in `CHANGELOG.md`, not here. This line is just a date.
 
@@ -580,7 +580,9 @@ When a user is authenticated, the game save behaviour changes:
 - Logged-in history screen shows: course name, date, player names, holes played, and the result label (Winner / Tied / No winner), consistent with §4.5. (Game naming was removed from the UI, so no game-name column is shown.)
 - Tapping a game shows the full scorecard (read-only, same layout as the existing summary screen), including the per-hole vs-par indicator (§5.3.1) and the round total-to-par (§5.3.2)
 - Tapping a player name filters to games that player appeared in
-- Empty state if no games saved yet
+- Empty state if no games saved yet - shown only when the load actually succeeded. A failed load shows "Couldn't load your rounds" with a **Try again** button, and a 401 shows "You've been signed out" with **Sign in**; neither is ever presented as "No rounds yet" (BACKLOG #99)
+- A single round whose stored data cannot be read is skipped with a quiet note ("1 round couldn't be shown."); it does not blank the rest of the list
+- **Deleting a saved round** waits for the server: the buttons disable while it is in flight, and a failure keeps the round in the list and says so in the sheet. A 404 (already deleted elsewhere) counts as deleted
 
 ---
 

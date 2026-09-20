@@ -43,7 +43,10 @@ export function AuthProvider({ children }) {
   }, [])
 
   const logout = useCallback(async () => {
-    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+    // Only drop the local user once the server has actually ended the session;
+    // a failed request rejects (or throws here) so the caller can say so (#99).
+    const res = await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+    if (!res.ok) throw new Error('logout failed')
     setUser(null)
   }, [])
 

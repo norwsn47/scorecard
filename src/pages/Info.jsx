@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import PageHeader from '../components/PageHeader.jsx'
 import { useAuth } from '../hooks/useAuth.jsx'
 
 export default function Info({ navigate, goBack, params }) {
   const { user, logout } = useAuth()
+  const [logoutError, setLogoutError] = useState(false)
   const fromBruntsfield  = params?.bruntsfield ?? false
   // Opened from the Settings "About" row (#83) - step back to Settings.
   const fromSettings     = params?.from === 'settings'
@@ -124,11 +126,25 @@ export default function Info({ navigate, goBack, params }) {
             </div>
             <div>
               <button
-                onClick={async () => { await logout(); navigate('home') }}
+                onClick={async () => {
+                  setLogoutError(false)
+                  try {
+                    await logout()
+                    navigate('home')
+                  } catch {
+                    // The server did not confirm the sign-out, so stay signed in and say so.
+                    setLogoutError(true)
+                  }
+                }}
                 className="inline-block py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 Sign out
               </button>
+              {logoutError && (
+                <p role="alert" className="font-ui text-xs text-accent mt-3">
+                  Couldn't sign out - check your connection and try again.
+                </p>
+              )}
             </div>
           </section>
         ) : (

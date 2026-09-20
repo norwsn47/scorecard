@@ -121,7 +121,6 @@ The tap-target growth shipped 8 September 2026 - all three foot-of-page links ("
 Minor items logged from the Phase 2 review of `feat/user-profile-foundation`; none block. All low priority.
 - **No dialog has a focus trap** (Settings, History, Scorecard, CourseEdit, map modal). `aria-modal="true"` makes assistive tech treat the background as inert, but Tab can still leave the dialog (focus does return to the opener on close). Acceptable at this app's scope; revisit if a keyboard-heavy flow lands.
 - **DESIGN.md's dialog-semantics "no exceptions" wording doesn't fully match Settings.jsx.** (From the 11 Sep 2026 dialog-parity review.) The new pattern block states the close handler "lives in one named function... so the three paths can never drift apart", but Settings.jsx's pre-existing "Keep my account" button calls `() => setConfirmDelete(false)` inline rather than the file's own `closeDelete()`. Harmless (the button is disabled while `deleting`), but either tighten Settings.jsx to call `closeDelete()` or soften the DESIGN.md wording.
-- **`History.jsx`'s Delete button has no in-flight guard.** (From the 11 Sep 2026 dialog-parity review.) `executeDelete` awaits a fetch for DB-backed games but the button isn't disabled and shows no "Deleting…" state meanwhile, unlike Settings.jsx's `deleting`-gated equivalent. Pre-existing, low risk (a rapid double-tap could in theory fire two DELETE calls), but now sits next to a DESIGN.md section citing Settings.jsx as the reference pattern for this exact sheet.
 - **No render test for `History.jsx`'s delete-sheet dialog semantics.** (From the 11 Sep 2026 dialog-parity review.) Settings.jsx has a dedicated test covering labelled-dialog role, autofocus and Escape/backdrop close (`Settings.test.jsx:185`); `History.jsx` now has the identical behaviour but no equivalent test — only the player-filter feature is covered in `History.test.jsx`.
 - **Stacked accent banners.** An active `!storageOk` banner (`App.jsx:162`) plus the `?email=` notice banner (`Home.jsx:63`) would render two full-width accent bars at once. Very unlikely combo, cosmetic.
 - **`replaceState` on a recognised `?auth=` / `?email=` param strips the whole query string** (`useAuth.jsx:30`), including any unrelated params. Pre-existing behaviour, no impact today (the app uses no other query params).
@@ -135,7 +134,7 @@ Two narrow wrinkles in `functions/api/users/index.js` / `confirm-email.js`, both
 
 ---
 
-### Full-codebase audit, 19 September 2026 (#97-#100, #102-#103, #106-#109, #111) - lower findings, short form
+### Full-codebase audit, 19 September 2026 (#97, #98, #100, #102-#103, #106-#109, #111) - lower findings, short form
 From the first `/full-audit`. Contrast ratios and tap sizes are hand-computed estimates, not browser measurements; nothing was screen-reader tested; `npm audit` was not run. The High findings are #95 and #96 above.
 
 ### 97. Dead code - remainder (Low)
@@ -147,12 +146,6 @@ From the first `/full-audit`. Contrast ratios and tap sizes are hand-computed es
 - `share.js` `winnerLabel` re-implements `tiedNames` and the tie wording from `result.js`.
 - `Home.jsx` and `BruntsfiledCoursePage.jsx` are near-copies (header, info icon, 1/2/3 list, Last round and Sign-in links).
 - Low: session cookie regex x3 and cookie header strings x3; "+ New course" reset handler in `Setup.jsx`; two resend POSTs in `Login.jsx`; external-link SVG inlined ~5 times; hole count `36` in five places; par band 2-7 defined three times; client email regex looser than server `EMAIL_RE`; security-notice email re-inlines the branded shell.
-
-### 99. Error handling that shows false success or a misleading state (Medium)
-- `History.jsx`: delete ignores `res.ok`; games fetch has no `res.ok` check (a 401/500 shows "No rounds yet"; one bad `player_data` row blanks the list).
-- `Setup.jsx`: courses fetch has no 401 handling (expired session shows "No courses yet"); clearing the date field throws a RangeError so "Enter scores" silently does nothing; date defaults use the UTC date (wrong 00:00-01:00 BST).
-- `Scorecard.jsx:222-224`: ignores a failed `saveCompletedGame` (quota/blocked storage) then clears the active game.
-- Low: `logout()` has no try/catch (`Info.jsx`, `useAuth.jsx`).
 
 ### 100. Inconsistent patterns (Medium/Low)
 - Medium: stale copy in `Settings.jsx:174` ("...not shown on any scorecard yet"); the name is now shown.

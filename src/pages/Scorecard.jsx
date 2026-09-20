@@ -239,7 +239,18 @@ export default function Scorecard({ navigate, params }) {
     }
 
     // ── Normal finish flow ──
-    saveCompletedGame(completed)
+    const saved = saveCompletedGame(completed)
+    if (!saved && !user) {
+      // A signed-out round lives only in this browser's storage. If that write
+      // failed, keep the active game (it is still autosaved) and say so, rather
+      // than clearing it and losing the round (#99). Signed in, the round still
+      // reaches D1 from Summary, so carry on.
+      setSaveError(true)
+      setFinishing(false)
+      finishingRef.current = false
+      setShowConfirm(false)
+      return
+    }
     clearActiveGame()
     clearActiveCell()
     track('Game Completed', { players: players.length, holes: completed.holesPlayed })

@@ -3,6 +3,7 @@ import PageHeader from '../components/PageHeader.jsx'
 import ParStepperGrid, { stepPar as stepParArray } from '../components/ParStepperGrid.jsx'
 import { BRUNTSFIELD_COURSE_NAME, BRUNTSFIELD_HOLE_COUNT, BRUNTSFIELD_HOLE_PARS, QUICK_PLAY_COURSE_NAME } from '../constants.js'
 import { buildEditGame, canStartGame, createGame, findDuplicateIndices } from '../utils/game.js'
+import { localDateString } from '../utils/format.js'
 import { deriveHolePars } from '../utils/scores.js'
 import { clearActiveCell, clearActiveGame, getActiveGame, getPlayers, saveActiveGame, savePlayers } from '../utils/storage.js'
 import { useAuth } from '../hooks/useAuth.jsx'
@@ -38,6 +39,11 @@ export default function Setup({ navigate, goBack, params }) {
   const [autoFocusIndex, setAutoFocusIndex] = useState(() => (editRound ? null : names.length - 1))
   const [savedNames]                      = useState(() => getPlayers())
   const [courses, setCourses]             = useState([])
+  // 'loading' | 'ready' | 'failed' | 'signedOut'. An empty list only means "no
+  // courses yet" once the fetch has actually succeeded - a failed or expired
+  // session must not read as an empty account (#99).
+  const [coursesStatus, setCoursesStatus] = useState('loading')
+  const [coursesReloadKey, setCoursesReloadKey] = useState(0)
   const [selectedCourseId, setSelectedCourseId] = useState(() => editGame?.courseId ?? null)
   const [creatingCourse, setCreatingCourse]     = useState(false)
   const [newCourseName, setNewCourseName]       = useState('')
@@ -47,8 +53,8 @@ export default function Setup({ navigate, goBack, params }) {
   const [notes, setNotes]                       = useState(() => editGame?.notes ?? '')
   const [pastDate, setPastDate]                 = useState(() =>
     editGame?.completedAt
-      ? String(editGame.completedAt).slice(0, 10)
-      : new Date().toISOString().slice(0, 10)
+      ? localDateString(new Date(editGame.completedAt))
+      : localDateString()
   )
 
   // Round-level par correction (§11.13) — a separate, distinct capability
@@ -83,7 +89,10 @@ export default function Setup({ navigate, goBack, params }) {
   const newCourseDefaultHoles = editRound && canCreateCourse ? roundHoleCount : 9
   const dupeIndices = findDuplicateIndices(names)
   const courseReady = !showCourse || !creatingCourse || newCourseName.trim().length > 0
-  const ready       = canStartGame(names, names.length) && courseReady
+  // A cleared date field is '' - new Date('T12:00:00') is invalid and
+  // toISOString() would throw, so the start button stays off until it is set.
+  const dateValid   = !showDate || (pastDate !== '' && !Number.isNaN(new Date(pastDate + 'T12:00:00').getTime()))
+  const ready       = canStartGame(names, names.length) && courseReady && dateValid
 
   // Pre-fill the first player slot with the signed-in user's own name (§4.2,
   // §11.15) — a genuinely new round only, never an edit (renaming an existing
@@ -122,14 +131,21 @@ export default function Setup({ navigate, goBack, params }) {
 
   useEffect(() => {
     if (!user) return
+    setCoursesStatus('loading')
     fetch('/api/courses', { credentials: 'include' })
-      .then(r => r.json())
+      .then(r => {
+        if (r.status === 401) return { signedOut: true }
+        if (!r.ok) throw new Error('courses fetch failed')
+        return r.json()
+      })
       .then(data => {
+        if (data.signedOut) { setCoursesStatus('signedOut'); return }
         // Always set the list — including an empty one, so the selector can
-        // correctly render the "no courses yet" empty state (#54/#71)
-        // rather than reading an empty array as "not loaded yet".
+        // correctly render the "no courses yet" empty state (#54/#71); the
+        // status says the fetch succeeded, so empty really means empty.
         const list = data.courses ?? []
         setCourses(list)
+        setCoursesStatus('ready')
         // When editing, keep the round's own course selection untouched
         // (including "no course") rather than snapping to a default.
         if (!editRound && list.length) {
@@ -137,8 +153,8 @@ export default function Setup({ navigate, goBack, params }) {
           setSelectedCourseId(def.id)
         }
       })
-      .catch(() => {})
-  }, [user, editRound])
+      .catch(() => setCoursesStatus('failed'))
+  }, [user, editRound, coursesReloadKey])
 
   // Reset the round-par stepper to the newly-selected course's own par
   // whenever the course selection actually changes mid-edit (§11.13) — a
@@ -325,7 +341,37 @@ export default function Setup({ navigate, goBack, params }) {
         {showCourse && (
           <div className="pb-1">
             {!creatingCourse ? (
-              selectableCourses.length === 0 ? (
+              coursesStatus !== 'ready' ? (
+                // Not loaded, or the load failed / the session expired. Never
+                // shown as "No courses yet": that would read as an empty
+                // account (#99). Starting without a course stays possible so a
+                // dead signal on the course doesn't block a round.
+                <div className="py-4 px-4 rounded-md border border-dashed border-border bg-bg-card text-center">
+                  {coursesStatus === 'loading' ? (
+                    <p className="font-ui text-sm text-muted">Loading your courses…</p>
+                  ) : (
+                    <>
+                      <p role="alert" className="font-ui text-sm text-muted mb-3">
+                        {coursesStatus === 'signedOut'
+                          ? "You've been signed out, so your courses can't be loaded."
+                          : "Couldn't load your courses - check your connection."}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => (coursesStatus === 'signedOut' ? navigate('login') : setCoursesReloadKey(k => k + 1))}
+                        className="py-2 px-4 rounded-sm border border-accent text-accent font-ui text-xs tracking-[0.1em] uppercase font-semibold active:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                      >
+                        {coursesStatus === 'signedOut' ? 'Sign in' : 'Try again'}
+                      </button>
+                      <p className="font-ui text-xs text-muted mt-3">
+                        {editRound
+                          ? 'You can still change the other details.'
+                          : 'Or start below without one - Quick Play, 36 holes, all par 3.'}
+                      </p>
+                    </>
+                  )}
+                </div>
+              ) : selectableCourses.length === 0 ? (
                 // Zero courses — e.g. after deleting the only one (#54/#71).
                 // A <select> with nothing but "+ New course" in it reads as
                 // an accidentally-blank dropdown, so this degrades to an
@@ -513,11 +559,15 @@ export default function Setup({ navigate, goBack, params }) {
               type="date"
               aria-label="Date played"
               value={pastDate}
-              max={new Date().toISOString().slice(0, 10)}
+              max={localDateString()}
               onChange={e => setPastDate(e.target.value)}
               className="w-full py-3 pl-4 pr-4 rounded-md border border-border font-ui text-base bg-bg-card text-text focus:outline-none focus:ring-2 focus:ring-accent/40"
             />
-            <p className="font-ui text-xs text-muted mt-1.5 pl-1">Date played</p>
+            {pastDate === '' ? (
+              <p role="alert" className="font-ui text-xs text-accent mt-1.5 pl-1">Choose the date the round was played</p>
+            ) : (
+              <p className="font-ui text-xs text-muted mt-1.5 pl-1">Date played</p>
+            )}
           </div>
         )}
 
