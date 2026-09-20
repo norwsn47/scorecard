@@ -71,6 +71,26 @@ export default function Scorecard({ navigate, params }) {
     if (!game) navigate('home')
   }, [game]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // While the finish/save sheet is open: pull focus onto the non-destructive
+  // "Cancel", hand focus back to whatever opened it when it closes, and let
+  // Escape dismiss it - except mid-save, when it must not (#100, DESIGN.md
+  // "Dialog semantics").
+  const cancelFinishRef = useRef(null)
+  useEffect(() => {
+    if (!showConfirm) return
+    const opener = document.activeElement
+    cancelFinishRef.current?.focus()
+    return () => opener?.focus?.()
+  }, [showConfirm])
+  useEffect(() => {
+    if (!showConfirm || finishing) return
+    function onKey(e) {
+      if (e.key === 'Escape') setShowConfirm(false)
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [showConfirm, finishing])
+
   if (!game) return null
 
   const players       = Array.isArray(game.players) ? game.players : []
@@ -415,10 +435,20 @@ export default function Scorecard({ navigate, params }) {
 
       {/* Confirmation dialog */}
       {showConfirm && (
-        <div className="absolute inset-0 flex items-end justify-center z-50" style={{ background: 'var(--overlay-backdrop)' }}>
-          <div className="bg-bg rounded-t-2xl w-full max-w-[430px] px-6 pt-6 pb-10 shadow-card">
+        <div
+          className="absolute inset-0 flex items-end justify-center z-50"
+          style={{ background: 'var(--overlay-backdrop)' }}
+          onClick={() => { if (!finishing) setShowConfirm(false) }}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="finish-heading"
+            onClick={e => e.stopPropagation()}
+            className="bg-bg rounded-t-2xl w-full max-w-[430px] px-6 pt-6 pb-10 shadow-card"
+          >
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-6" />
-            <h2 className="font-display italic text-2xl text-text mb-1">
+            <h2 id="finish-heading" className="font-display italic text-2xl text-text mb-1">
               {isEdit ? 'Save changes?' : 'Finish Game?'}
             </h2>
             <p className="font-ui text-xs text-muted tracking-wide mb-6">
@@ -440,6 +470,7 @@ export default function Scorecard({ navigate, params }) {
             </div>
             <div className="flex gap-3">
               <button
+                ref={cancelFinishRef}
                 onClick={() => setShowConfirm(false)}
                 disabled={finishing}
                 className="flex-1 py-3 rounded-sm border border-border font-ui text-sm tracking-[0.08em] uppercase text-text disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"

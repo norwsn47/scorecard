@@ -32,17 +32,21 @@ export default function History({ navigate }) {
   }
 
   // While the delete sheet is open: pull focus onto the non-destructive
-  // "Cancel" action and let Escape dismiss it, matching Settings.jsx's
-  // delete-account sheet (#80). Backdrop click is wired on the overlay
-  // element itself below.
+  // "Cancel" action, hand focus back to the delete control that opened it on
+  // close, and let Escape dismiss it, matching Settings.jsx's delete-account
+  // sheet (#80). Backdrop click is wired on the overlay element itself below.
   useEffect(() => {
     if (!confirmDeleteId) return
+    const opener = document.activeElement
     cancelButtonRef.current?.focus()
     function onKey(e) {
       if (e.key === 'Escape') setConfirmDeleteId(null)
     }
     document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      opener?.focus?.()
+    }
   }, [confirmDeleteId])
 
   useEffect(() => {
@@ -231,10 +235,19 @@ export default function History({ navigate }) {
             key={game.id}
             className="relative bg-bg-card rounded-md border border-border shadow-card"
           >
+            {/* Opens the round. A real button behind the card content (rather
+                the card being one big button) so the player names inside can be
+                real buttons of their own without nesting one button in another. */}
             <button
+              type="button"
               onClick={() => navigate('summary', { game, fromHistory: true })}
-              className="w-full text-left px-4 pt-4 pb-4 pr-10 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-            >
+              aria-label={`Open round: ${formatShortDate(game.completedAt)}, ${(game.players ?? []).join(', ')}`}
+              className="absolute inset-0 w-full h-full rounded-md active:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            />
+
+            {/* Card content sits above the open button; clicks pass through to it
+                except on the player-name buttons. */}
+            <div className="relative pointer-events-none text-left px-4 pt-4 pb-4 pr-12">
               {/* Course name */}
               {game.courseName && (
                 <p className="font-ui text-xs tracking-[0.08em] uppercase text-accent mb-1">{game.courseName}</p>
@@ -259,20 +272,19 @@ export default function History({ navigate }) {
                   const toPar     = roundToPar((game.scores?.[name] ?? []).slice(0, game.holePars.length), game.holePars)
                   return (
                     <div key={name} className="flex items-center justify-between">
-                      <span
-                        role="button"
-                        tabIndex={0}
-                        onClick={e => { e.stopPropagation(); toggleFilter(name) }}
-                        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); toggleFilter(name) } }}
+                      <button
+                        type="button"
+                        onClick={() => toggleFilter(name)}
+                        aria-pressed={filter === name}
                         className={[
-                          'font-ui text-sm',
+                          'pointer-events-auto text-left font-ui text-sm rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
                           isWinner ? 'text-accent font-semibold' : 'text-text',
                         ].join(' ')}
                       >
                         {name}
                         {isSignedInPlayer(name, user?.name) && <PlayerStar className="ml-0.5" />}
                         {isDnf && <span className="text-muted font-normal"> (DNF)</span>}
-                      </span>
+                      </button>
                       {/* Total-to-par, matching Summary's totals row (#70) — was
                           "(Av. X)", the two screens now show the same stat. */}
                       <span className="font-ui text-xs text-muted">
@@ -293,7 +305,7 @@ export default function History({ navigate }) {
               {game.notes && (
                 <p className="font-ui text-xs text-muted mt-2 italic leading-relaxed line-clamp-2">{game.notes}</p>
               )}
-            </button>
+            </div>
 
             {/* Delete button */}
             <button

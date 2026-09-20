@@ -7,7 +7,7 @@
 > - **Entries are short:** what needs doing, not the history. Nothing here is actioned without explicit instruction.
 > - **IDs are stable and never reused**, even after an item is deleted, so gaps are expected. Next free ID: **#112**.
 
-**Last updated:** 19 September 2026
+**Last updated:** 20 September 2026
 
 ---
 
@@ -119,17 +119,14 @@ The tap-target growth shipped 8 September 2026 - all three foot-of-page links ("
 
 ### 80. Settings panel (#4) - code-review housekeeping (CLEAR WITH NOTES, 8 Sep 2026)
 Minor items logged from the Phase 2 review of `feat/user-profile-foundation`; none block. All low priority.
-- **Neither sheet has a focus trap or focus-return.** `aria-modal="true"` makes assistive tech treat the background as inert, but Tab can still leave the dialog, and closing it does not return focus to the trigger. Acceptable at this app's scope; revisit if a keyboard-heavy flow lands.
+- **No dialog has a focus trap** (Settings, History, Scorecard, CourseEdit, map modal). `aria-modal="true"` makes assistive tech treat the background as inert, but Tab can still leave the dialog (focus does return to the opener on close). Acceptable at this app's scope; revisit if a keyboard-heavy flow lands.
 - **DESIGN.md's dialog-semantics "no exceptions" wording doesn't fully match Settings.jsx.** (From the 11 Sep 2026 dialog-parity review.) The new pattern block states the close handler "lives in one named function... so the three paths can never drift apart", but Settings.jsx's pre-existing "Keep my account" button calls `() => setConfirmDelete(false)` inline rather than the file's own `closeDelete()`. Harmless (the button is disabled while `deleting`), but either tighten Settings.jsx to call `closeDelete()` or soften the DESIGN.md wording.
 - **`History.jsx`'s Delete button has no in-flight guard.** (From the 11 Sep 2026 dialog-parity review.) `executeDelete` awaits a fetch for DB-backed games but the button isn't disabled and shows no "Deleting…" state meanwhile, unlike Settings.jsx's `deleting`-gated equivalent. Pre-existing, low risk (a rapid double-tap could in theory fire two DELETE calls), but now sits next to a DESIGN.md section citing Settings.jsx as the reference pattern for this exact sheet.
 - **No render test for `History.jsx`'s delete-sheet dialog semantics.** (From the 11 Sep 2026 dialog-parity review.) Settings.jsx has a dedicated test covering labelled-dialog role, autofocus and Escape/backdrop close (`Settings.test.jsx:185`); `History.jsx` now has the identical behaviour but no equivalent test — only the player-filter feature is covered in `History.test.jsx`.
-- **Settings delete-sheet focus effect re-pulls focus when `deleting` flips true** (`Settings.jsx` ~86-94, deps `[confirmDelete, deleting]`). Harmless since the input stays mounted, but focus jumps back to it mid-delete. Gate the `.focus()` on the open transition only if it ever annoys.
 - **Stacked accent banners.** An active `!storageOk` banner (`App.jsx:162`) plus the `?email=` notice banner (`Home.jsx:63`) would render two full-width accent bars at once. Very unlikely combo, cosmetic.
 - **`replaceState` on a recognised `?auth=` / `?email=` param strips the whole query string** (`useAuth.jsx:30`), including any unrelated params. Pre-existing behaviour, no impact today (the app uses no other query params).
 - **`AuthContext` value is a fresh object literal every render** (`useAuth.jsx:100`). Every consumer re-renders on any auth state change. The new Home capture effect is safe regardless because it keys on the referentially-stable `useState` setter, but the context value could be wrapped in `useMemo` if a perf pass ever wants it. Trivial at current scale, not worth a perf pass on its own.
 
-From the #84 review (email-disclosure, CLEAR WITH NOTES, 9 Sep 2026), same low-priority tier:
-- **No focus-return when the "Change email address" form collapses.** Tapping "Keep my current email" unmounts the form and focus falls to `<body>` — should return to the "Change email address" trigger. Same class as the focus-return gap above; the disclosure adds a second instance.
 
 ### 82. Email-change / account-deletion edge cases (from the #3 backend review)
 Two narrow wrinkles in `functions/api/users/index.js` / `confirm-email.js`, both low priority, logged so they aren't lost:
@@ -138,7 +135,7 @@ Two narrow wrinkles in `functions/api/users/index.js` / `confirm-email.js`, both
 
 ---
 
-### Full-codebase audit, 19 September 2026 (#97-#103, #106-#109, #111) - lower findings, short form
+### Full-codebase audit, 19 September 2026 (#97-#100, #102-#103, #106-#109, #111) - lower findings, short form
 From the first `/full-audit`. Contrast ratios and tap sizes are hand-computed estimates, not browser measurements; nothing was screen-reader tested; `npm audit` was not run. The High findings are #95 and #96 above.
 
 ### 97. Dead code - remainder (Low)
@@ -158,15 +155,10 @@ From the first `/full-audit`. Contrast ratios and tap sizes are hand-computed es
 - Low: `logout()` has no try/catch (`Info.jsx`, `useAuth.jsx`).
 
 ### 100. Inconsistent patterns (Medium/Low)
-- Medium: no dialog semantics on the Finish sheet (`Scorecard.jsx:403`), delete-course sheet (`CourseEdit.jsx:238`) and `CourseMapModal.jsx` (no role, `aria-modal`, Escape, focus).
 - Medium: stale copy in `Settings.jsx:174` ("...not shown on any scorecard yet"); the name is now shown.
 - Low, backend: unhandled 500 on a null or non-string JSON body (`request-link.js`, `courses/index.js`, `games/index.js`); `games` POST does not cap `notes` or validate `client_round_id`; `games/[id].js` DELETE lacks `AND user_id = ?`; `me.js` returns `{ user: null }` with 401; mixed semicolon style.
 - Low, frontend: ErrorBoundary button styling and no logging (`App.jsx`); `useAuth.jsx:30` wipes the history stamp; back labels lack the arrow; empty-score glyph differs from DESIGN.md's em dash; `MAX_STROKES` declared inside `Scorecard`; `createGame`/`buildEditGame` take 6-7 positional args; "Bruntsfiled" filename typo; large `Setup.jsx`, `Scorecard.jsx`, `Summary.jsx`.
 - Content flag: `BruntsfiledCoursePage.jsx:46` says "since 1456" (not in PRD; `Info.jsx` says 1895).
-
-### 101. Accessibility beyond #95/#96 (Medium unless stated)
-- `History.jsx:234-296` nests `role="button"` spans inside a `<button>`.
-- Low: missing focus-return on several sheets (see #80).
 
 ### 102. Security hardening (Medium unless stated; no secrets found)
 - No security headers (no `public/_headers`: CSP, frame-ancestors, X-Content-Type-Options, Referrer-Policy).

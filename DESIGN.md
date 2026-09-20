@@ -1,7 +1,7 @@
 # Design
 ## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
-Last updated: 19 September 2026
+Last updated: 20 September 2026
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
 ---
@@ -391,9 +391,12 @@ Subtext:   font-ui text-xs text-muted tracking-wide
 - **Autofocus on open** — a `useEffect` keyed on the sheet's open state moves focus onto the sheet's most useful control the moment it mounts: the confirmation text input if the sheet has one (Settings' delete-account sheet, which gates on a typed "DELETE"), otherwise the non-destructive button (History's delete-round sheet focuses "Cancel", not "Delete" — a stray Enter keypress should never confirm a destructive action).
 - **Escape dismisses** — the same effect adds a `keydown` listener while the sheet is open (removed on cleanup) that closes it on `Escape`, equivalent to tapping the non-destructive action. Skip this while a destructive action is genuinely in flight (Settings' sheet checks its own `deleting` flag) so an in-progress delete can't be abandoned mid-request; a sheet with no async gap (History's) doesn't need the guard.
 - **Backdrop click dismisses** — `onClick` on the backdrop `div` closes the sheet; the sheet itself carries `onClick={e => e.stopPropagation()}` so a tap inside it doesn't bubble up and immediately close it.
+- **Focus returns to the opener on close** - the open effect captures `document.activeElement` before moving focus in and restores it in its cleanup. The focus effect is keyed on the open state only (never on a `deleting`/`finishing` flag, which would re-pull focus mid-action); the Escape listener is a second effect that also depends on that flag and is skipped while an action is in flight.
 - Close logic lives in one named function (`closeDelete`, `closeDeleteConfirm`, etc.) reused by the backdrop click, the Escape handler, and the sheet's own Cancel/dismiss button, so the three paths can never drift apart.
 
-Shipped in `Settings.jsx` (delete-account) and `History.jsx` (delete-round, brought up to parity in #80).
+Shipped in `Settings.jsx` (delete-account), `History.jsx` (delete-round, brought up to parity in #80), `Scorecard.jsx` (Finish/Save sheet) and `CourseEdit.jsx` (delete-course sheet). `CourseMapModal.jsx` is a centred modal, not a sheet, but follows the same rules: `role="dialog"`, `aria-labelledby` its course heading, focus on the Close button, Escape and backdrop dismiss, focus returned to the Map control (it reads `onClose` through a ref so a parent re-render never re-grabs focus).
+
+**A card that is tappable and also holds tappable parts** (History rounds) is never a button containing buttons. The card is a `div`; the "open this round" action is a real `<button>` stretched behind the content (`absolute inset-0`), the content sits above it with `pointer-events-none`, and each inner control (a player-name toggle with `aria-pressed`, the delete control) is its own real button with `pointer-events-auto`.
 
 ### Scorecard table
 ```
