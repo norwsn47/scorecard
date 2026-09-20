@@ -8,8 +8,20 @@ import PageHeader from '../components/PageHeader.jsx'
 import ParDelta from '../components/ParDelta.jsx'
 import PlayerStar from '../components/PlayerStar.jsx'
 import { shareScorecard } from '../utils/share.js'
-import { getActiveGame, getCompletedGames, markCompletedGameSynced } from '../utils/storage.js'
+import { getActiveGame, getCompletedGames, markCompletedGamePending, markCompletedGameSynced } from '../utils/storage.js'
+import { isSyncing, postRound } from '../utils/sync.js'
 import { useAuth } from '../hooks/useAuth.jsx'
+
+// What the user reads when a signed-in save does not go through (#95). Calm,
+// says what happened and what they can do; never blames them.
+const SAVING_MESSAGE = 'Saving this round - try again in a moment.'
+
+const SAVE_ERROR_COPY = {
+  failed: "Couldn't save this round. Check your signal and try again, or keep it on this device for now.",
+  signedOut: "You've been signed out. Keep this round on this device and it will save when you sign in again.",
+  rejected: "Your account couldn't take this round. You can keep it on this device.",
+  deviceFull: "This device couldn't store the round either. Stay on this screen and try again once you have signal.",
+}
 
 export default function Summary({ navigate, params }) {
   const { user }          = useAuth()
@@ -45,8 +57,15 @@ export default function Summary({ navigate, params }) {
   const [sharing, setSharing]       = useState(false)
   const [notes, setNotes]           = useState(() => game?.notes ?? '')
   const [saving, setSaving]         = useState(false)
-  const [editBlocked, setEditBlocked] = useState(false)
+  // Why Edit did nothing, or null: another round is in progress, or a save of
+  // this very round is in flight (PRD §11.8, §11.13).
+  const [editNotice, setEditNotice] = useState(null)
+  // Why the last save on this screen did not go through, or null. `kind` picks
+  // the wording; `n` counts failures so the alert remounts and is announced
+  // again when a Retry fails the same way twice (BACKLOG #95).
+  const [saveError, setSaveError]   = useState(null)
   const savingRef                   = useRef(false)
+  const failuresRef                 = useRef(0)
 
   // A reload, deep link, or restored tab always resets history state to depth
   // 0 — there's nothing in-app to step back to, and no in-page back button any
@@ -83,11 +102,20 @@ export default function Summary({ navigate, params }) {
   const resultName = 'mx-1.5 font-display italic text-sm text-accent normal-case tracking-normal'
   const resultStrokes = 'font-ui text-xs text-muted normal-case tracking-normal'
 
-  // True once this round can no longer be (re-)saved here: either it's a
-  // past round opened from History (_fromDb), or it was already POSTed on
-  // this screen (synced). Drives both the save guard below and the notes
-  // field going read-only, so the two never disagree with each other.
+  // True when this round already lives somewhere permanent: a past round
+  // opened from History (_fromDb), or one already POSTed to D1 (synced).
+  // Feeds viewingSaved below and nothing else - the post-finish branch, where
+  // Done / Retry and the notes field live, is by definition the branch where
+  // this is false.
   const alreadySaved = game._fromDb || game.synced
+
+  // A round a signed-in user played whose save to D1 is still outstanding
+  // (BACKLOG #95, PRD §11.8): it carries pendingSyncUserId. Whoever it belongs
+  // to, it is never re-posted from this screen (Done would send it as whoever
+  // is signed in now), so it is always shown read-only. `ownsPending` is the
+  // signed-in owner, who alone gets the status line and Edit.
+  const isPending    = !!game.pendingSyncUserId
+  const ownsPending  = isPending && !!user && game.pendingSyncUserId === String(user.id)
 
   // Two modes share this screen. `viewingSaved` is the "opened from History"
   // mode: a round that already lives somewhere permanent, here to be read
@@ -95,70 +123,100 @@ export default function Summary({ navigate, params }) {
   // History list and survives a back/forward bounce; `_fromDb` / `synced` are
   // the backstop when the `game` param was dropped on the bounce and we're
   // rendering the storage fallback. When false we're on the immediate
-  // post-finish flow, where "Done" still owns the save.
-  const viewingSaved = params?.fromHistory || alreadySaved
+  // post-finish flow, where "Done" owns the save. A round kept on the device
+  // after a failed save (pendingSyncUserId, #95) is read-only here too: it is
+  // opened from History, reached again after a bounce, or handed back after an
+  // edit, and none of those can save it (the background sync does).
+  const viewingSaved = params?.fromHistory || alreadySaved || isPending
 
   // The Edit button is offered on a round that's actually stored somewhere we
-  // can write back to: a D1 round opened from History (_fromDb) for a
+  // can write back to: a D1 round opened from History (_fromDb) or the
+  // signed-in user's own pending round (a local edit, PRD §11.13) for a
   // logged-in user, or any local completed round for a logged-out user.
-  const canEdit = user ? !!game._fromDb : true
+  const canEdit = user ? (!!game._fromDb || ownsPending) : true
 
   function handleEditRound() {
+    // A save of this round is in flight: an edit now could diverge from what
+    // the server just received (PRD §11.8).
+    if (isPending && isSyncing(game.id)) {
+      setEditNotice(SAVING_MESSAGE)
+      return
+    }
     // One round at a time. A game in progress must be finished before a past
     // round can be edited — editing swaps the active-game slot for a working
     // copy, which would strand the in-progress round.
     if (getActiveGame()) {
-      setEditBlocked(true)
+      setEditNotice('Finish your current round before editing a past one.')
+      return
+    }
+    // This screen can be showing a pending round that has since been saved (a
+    // background sync finished while it was open). Its local copy is then no
+    // longer the round to edit, so say so rather than edit a copy that would
+    // never reach the account.
+    if (ownsPending && !getCompletedGames().some(g => g.id === game.id && g.pendingSyncUserId)) {
+      setEditNotice('This round has just been saved. Open it from History to edit it.')
       return
     }
     navigate('setup', { editRound: true, game })
   }
 
+  function reportSaveFailure(kind) {
+    failuresRef.current += 1
+    setSaveError({ kind, n: failuresRef.current })
+  }
+
+  // "Done" on the post-finish flow, and "Retry" after a failed save (same
+  // handler, same body). Signed in: POST the round; only a 2xx (including the
+  // server's idempotent 200 for a round it already holds) marks it synced and
+  // goes home. Anything else - a non-OK status or a network error - stays on
+  // this screen with the error block, so a round is never silently lost
+  // (BACKLOG #95, PRD §11.8). Signed out: nothing to save, just go home.
+  // This handler is only reachable on the post-finish flow (a saved or
+  // History round shows Edit instead of Done), so it never re-POSTs a round
+  // that is already in D1.
   async function handleGoHome() {
-    // Only ever save on the immediate post-finish flow. A round already
-    // persisted in D1 (_fromDb — opened from History) must never be
-    // re-POSTed here: "Done" is this screen's only way back, so without this
-    // guard, simply viewing a past round and tapping Done would silently
-    // create a fresh duplicate row every time (its `game.id` is the DB row's
-    // own id, not the original client_round_id, so the server dedup check
-    // wouldn't catch it either).
-    if (user && game && !alreadySaved) {
-      // Synchronous re-entrance guard: protects against a double-tap firing
-      // two handler invocations before React has re-rendered the disabled
-      // button, which `saving` state alone can't guarantee.
-      if (savingRef.current) return
-      savingRef.current = true
-      setSaving(true)
-      try {
-        const playerData = game.players.map(p => ({
-          name: p,
-          scores: (game.scores[p] ?? []).slice(0, game.holesPlayed),
-          total: playerTotal(game.scores, p) || 0,
-          dnf: game.dnf?.includes(p) ?? false,
-        }))
-        const res = await fetch('/api/games', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            course_id: game.courseId || null,
-            played_at: game.completedAt,
-            holes_played: game.holesPlayed,
-            player_data: playerData,
-            hole_pars: game.holePars ?? null,
-            notes: notes.trim() || null,
-            client_round_id: game.id,
-          }),
-        })
-        if (res.ok) markCompletedGameSynced(game.id)
-      } catch {
-        // Save failed silently — game is still in localStorage
-      } finally {
-        setSaving(false)
-        savingRef.current = false
-      }
+    if (!user) {
+      navigate('home')
+      return
     }
-    navigate('home')
+    // Synchronous re-entrance guard: protects against a double-tap firing
+    // two handler invocations before React has re-rendered the disabled
+    // button, which `saving` state alone can't guarantee.
+    if (savingRef.current) return
+    savingRef.current = true
+    setSaving(true)
+    let saved = false
+    try {
+      // postRound never throws and gives up after its own timeout, so a
+      // stalled connection ends in the error block instead of "Saving..."
+      // forever.
+      const result = await postRound(game, notes)
+      if (result.ok) {
+        markCompletedGameSynced(game.id)
+        saved = true
+      } else {
+        reportSaveFailure(result.kind === 'unauthorised' ? 'signedOut' : result.kind === 'rejected' ? 'rejected' : 'failed')
+      }
+    } catch {
+      reportSaveFailure('failed')
+    } finally {
+      setSaving(false)
+      savingRef.current = false
+    }
+    if (saved) navigate('home')
+  }
+
+  // "Keep on this device and go home": the round stays in localStorage tagged
+  // with the signed-in user's id, and the background sync (#95) saves it later.
+  // If even the local write fails there is nothing to keep, so stay put rather
+  // than navigate away from the only copy.
+  function handleKeepOnDevice() {
+    if (savingRef.current || !user) return
+    if (markCompletedGamePending(game.id, user.id, notes)) {
+      navigate('home')
+    } else {
+      reportSaveFailure('deviceFull')
+    }
   }
 
   async function handleShare() {
@@ -217,9 +275,23 @@ export default function Summary({ navigate, params }) {
         }
       />
 
-      {viewingSaved && editBlocked && (
-        <p className="font-ui text-xs text-accent tracking-wide mt-2 px-5 text-center leading-relaxed shrink-0">
-          Finish your current round before editing a past one.
+      {/* A round still waiting to be saved to the account, or one the server
+          refused. Static text; sits above the scrolling table so it never
+          crowds the pinned totals row. */}
+      {ownsPending && (
+        <p className={[
+          'font-ui text-xs tracking-wide mt-2 px-5 text-center leading-relaxed shrink-0',
+          game.syncRejected ? 'text-accent' : 'text-muted',
+        ].join(' ')}>
+          {game.syncRejected
+            ? "This round can't be saved to your account. It is kept on this device only."
+            : 'Not yet saved to your account. It will save automatically when you have signal.'}
+        </p>
+      )}
+
+      {viewingSaved && editNotice && (
+        <p role="alert" className="font-ui text-xs text-accent tracking-wide mt-2 px-5 text-center leading-relaxed shrink-0">
+          {editNotice}
         </p>
       )}
 
@@ -361,15 +433,10 @@ export default function Summary({ navigate, params }) {
             ) : null
           ) : (
             <>
-              {/* Notes — logged-in only. Editable only on the immediate
-                  post-finish flow, before the round has been saved. Once a round
-                  is saved (game.synced) there is no save path for further edits
-                  here — see the matching guard in handleGoHome — so the field
-                  goes read-only rather than silently discarding anything typed
-                  into it. Hidden entirely for an already-saved round with no
-                  note — a read-only "Add a note..." placeholder would be a dead
-                  end. */}
-              {user && (!alreadySaved || notes) && (
+              {/* Notes - signed in only. Editable until Done saves the round; a
+                  saved round is never in this branch (it shows read-only notes
+                  above instead). Locked while a save is in flight. */}
+              {user && (
                 <div>
                   <textarea
                     aria-label="Round notes"
@@ -377,13 +444,43 @@ export default function Summary({ navigate, params }) {
                     onChange={e => setNotes(e.target.value.slice(0, 300))}
                     placeholder="Add a note about this round..."
                     rows={2}
-                    readOnly={alreadySaved}
                     disabled={saving}
-                    className="w-full px-4 py-3 rounded-md border border-border bg-bg-card font-ui text-base text-text placeholder:text-muted resize-none focus:outline-none focus:ring-2 focus:ring-accent/40 read-only:opacity-70"
+                    className="w-full px-4 py-3 rounded-md border border-border bg-bg-card font-ui text-base text-text placeholder:text-muted resize-none focus:outline-none focus:ring-2 focus:ring-accent/40"
                   />
                   <p className="font-ui text-xs text-muted mt-1 pl-1">
-                    {alreadySaved ? 'Round notes' : 'Round notes - optional'}
+                    Round notes - optional
                   </p>
+                </div>
+              )}
+
+              {/* A save that did not go through (#95). The message is the live
+                  region; the buttons sit outside it so a screen reader reads
+                  the problem, not the controls. The round is safe in this
+                  browser either way. Keep is not offered when the device
+                  itself could not hold the round. */}
+              {user && saveError && (
+                <div className="rounded-md border border-accent px-4 py-4 space-y-3">
+                  <p key={saveError.n} role="alert" className="font-ui text-sm text-text leading-relaxed">
+                    {SAVE_ERROR_COPY[saveError.kind]}
+                  </p>
+                  <button
+                    onClick={handleGoHome}
+                    disabled={saving}
+                    className="w-full py-3 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.08em] uppercase font-semibold active:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  >
+                    {saving ? 'Retrying…' : 'Retry'}
+                  </button>
+                  {saveError.kind !== 'deviceFull' && (
+                    <div className="text-center">
+                      <button
+                        onClick={handleKeepOnDevice}
+                        disabled={saving}
+                        className="inline-block py-3 -my-3 font-ui text-sm text-text underline underline-offset-2 active:opacity-70 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                      >
+                        Keep on this device and go home
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </>
@@ -415,9 +512,9 @@ export default function Summary({ navigate, params }) {
                 {sharing ? 'Generating…' : 'Share scorecard'}
               </button>
             </div>
-            {!viewingSaved && canEdit && editBlocked && (
-              <p className="font-ui text-xs text-accent tracking-wide leading-relaxed">
-                Finish your current round before editing a past one.
+            {!viewingSaved && canEdit && editNotice && (
+              <p role="alert" className="font-ui text-xs text-accent tracking-wide leading-relaxed">
+                {editNotice}
               </p>
             )}
           </div>

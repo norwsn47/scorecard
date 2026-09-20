@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { onRequestPost } from './index.js'
+import { onRequestGet, onRequestPost } from './index.js'
 import { getSessionUser } from '../../_lib/session.js'
 
 vi.mock('../../_lib/session.js', () => ({ getSessionUser: vi.fn() }))
@@ -231,5 +231,47 @@ describe('onRequestPost /api/games — played_at / player_data validation (#23)'
     const ctx = post({ ...validBody, player_data: [{ name: 'Ann', scores: [3, null] }] })
     ctx.env.DB = makeDB()
     expect((await onRequestPost(ctx)).status).toBe(201)
+  })
+})
+
+describe('onRequestGet /api/games - client_round_id (#95)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+  })
+
+  // Fake D1 that records the SQL and returns canned rows from .all().
+  function makeListDB(rows) {
+    const db = {
+      sqls: [],
+      prepare(sql) {
+        db.sqls.push(sql)
+        return {
+          bind() {
+            return this
+          },
+          async all() {
+            return { results: rows }
+          },
+        }
+      },
+    }
+    return db
+  }
+
+  it('selects client_round_id and passes it through in the response rows', async () => {
+    const rows = [
+      { id: 'g1', client_round_id: 'local-round-1', played_at: '2026-08-01T10:00:00.000Z' },
+      { id: 'g2', client_round_id: null, played_at: '2026-07-01T10:00:00.000Z' },
+    ]
+    const db = makeListDB(rows)
+    const request = new Request('http://localhost/api/games')
+
+    const res = await onRequestGet({ env: { DB: db }, params: {}, request })
+
+    expect(res.status).toBe(200)
+    expect(db.sqls[0]).toMatch(/g\.client_round_id/)
+    const body = await res.json()
+    expect(body.games.map((g) => g.client_round_id)).toEqual(['local-round-1', null])
   })
 })

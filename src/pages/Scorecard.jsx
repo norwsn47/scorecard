@@ -7,7 +7,7 @@ import { BRUNTSFIELD_COURSE_NAME } from '../constants.js'
 import { track } from '../utils/analytics.js'
 import { computeDisplayedHoles, finishGame, isSignedInPlayer } from '../utils/game.js'
 import { deriveHolePars, playerTotal, roundToPar, scoreToPar } from '../utils/scores.js'
-import { clearActiveCell, clearActiveGame, getActiveCell, getActiveGame, saveActiveCell, saveActiveGame, saveCompletedGame, updateCompletedGame } from '../utils/storage.js'
+import { clearActiveCell, clearActiveGame, getActiveCell, getActiveGame, getCompletedGames, saveActiveCell, saveActiveGame, saveCompletedGame, updateCompletedGame } from '../utils/storage.js'
 import { useAuth } from '../hooks/useAuth.jsx'
 
 function initialCellFor(g) {
@@ -230,9 +230,16 @@ export default function Scorecard({ navigate, params }) {
       track('Game Edited', { players: completed.players.length, holes: completed.holesPlayed })
       // Hand a read-only round to Summary. The _fromDb / synced flags stop
       // that screen re-saving it (see the alreadySaved guard in Summary).
+      // A pending round (its save to the account is still outstanding, PRD
+      // §11.8) is different: it was edited locally only and stays pending, so
+      // Summary gets the stored record itself, marker included, and never
+      // `synced: true`, which would claim the server has this edit.
+      const stored = editContext.fromDb ? null : getCompletedGames().find(g => g.id === editContext.id)
       const summaryGame = editContext.fromDb
         ? { ...completed, _fromDb: true }
-        : { ...completed, synced: true }
+        : stored?.pendingSyncUserId
+          ? { ...stored }
+          : { ...completed, synced: true }
       delete summaryGame._edit
       navigate('summary', { game: summaryGame })
       return

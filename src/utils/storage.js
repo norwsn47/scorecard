@@ -130,7 +130,7 @@ export function updateCompletedGame(id, updated) {
   const games = getCompletedGames()
   let matched = false
   const next = games.map(g => {
-    if (g.id !== id) return g
+    if (g?.id !== id) return g
     matched = true
     return { ...g, ...updated, id }
   })
@@ -143,9 +143,78 @@ export function updateCompletedGame(id, updated) {
  * revisited Summary screen (e.g. after browser back-navigation) from
  * silently re-submitting a round that was already saved — see
  * markCompletedGameSynced usage in Summary.jsx.
+ *
+ * Also clears the pending-sync markers (pendingSyncUserId, syncRejected): once
+ * the server has the round there is nothing outstanding and nothing rejected.
  */
 export function markCompletedGameSynced(id) {
   const games = getCompletedGames()
-  const next = games.map(g => (g.id === id ? { ...g, synced: true } : g))
+  const next = games.map(g => {
+    if (g?.id !== id) return g
+    const updated = { ...g, synced: true }
+    delete updated.pendingSyncUserId
+    delete updated.syncRejected
+    return updated
+  })
   return safeWrite(KEYS.COMPLETED_GAMES, next)
+}
+
+// ── Pending sync (BACKLOG #95, PRD §11.8) ──────────────────────────────────
+// Marker design. A completed round that a signed-in user played but whose save
+// to D1 has not (yet) succeeded carries `pendingSyncUserId`: the id of the user
+// who played it, as a string. `syncRejected: true` alongside it means the
+// server permanently rejected the round (a 400), so it is not retried. The
+// existing `synced` flag is deliberately NOT the marker: it is undefined on
+// every quick-play round, so it cannot tell a failed signed-in save from a
+// round played before signing in. The marker is generic on purpose so a later
+// quick-play import (BACKLOG #8) can reuse it.
+
+/**
+ * Marks a completed game as played by `userId` with its save to D1
+ * outstanding. Stores the trimmed `notes` on the record (null when blank) so a
+ * later background sync sends what the player typed. Leaves `synced` alone.
+ * Returns false when no record matched the id, when `userId` is missing (a
+ * marker with no owner would be meaningless), or when the write fails.
+ */
+export function markCompletedGamePending(id, userId, notes) {
+  if (userId === undefined || userId === null || userId === '') return false
+  const games = getCompletedGames()
+  let matched = false
+  const next = games.map(g => {
+    if (g?.id !== id) return g
+    matched = true
+    return { ...g, pendingSyncUserId: String(userId), notes: (notes ?? '').trim() || null }
+  })
+  if (!matched) return false
+  return safeWrite(KEYS.COMPLETED_GAMES, next)
+}
+
+/**
+ * Flags a pending round as permanently rejected by the server (a 400). The
+ * round stays on the device and keeps its pendingSyncUserId. No-op (false) when
+ * no record matched the id.
+ */
+export function markCompletedGameRejected(id) {
+  const games = getCompletedGames()
+  let matched = false
+  const next = games.map(g => {
+    if (g?.id !== id) return g
+    matched = true
+    return { ...g, syncRejected: true }
+  })
+  if (!matched) return false
+  return safeWrite(KEYS.COMPLETED_GAMES, next)
+}
+
+/**
+ * Local rounds still waiting to be saved to D1 for this user: records whose
+ * pendingSyncUserId equals `userId`. A record with no marker, or another
+ * user's marker, is never returned (shared-device rule, PRD §11.8). Includes
+ * rejected rounds (syncRejected) - callers that only want the ones worth
+ * retrying filter on `!g.syncRejected`. Returns [] for a missing userId.
+ */
+export function getPendingCompletedGames(userId) {
+  if (userId === undefined || userId === null || userId === '') return []
+  const uid = String(userId)
+  return getCompletedGames().filter(g => g && g.pendingSyncUserId === uid)
 }

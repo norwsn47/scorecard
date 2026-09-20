@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import App from './App.jsx'
-import { getActiveGame, saveActiveGame } from './utils/storage.js'
+import { getActiveGame, getCompletedGames, markCompletedGamePending, saveActiveGame, saveCompletedGame } from './utils/storage.js'
 
 // Integration coverage for the state-machine router in App.jsx — the pieces
 // that only misbehave when several parts interact: booting on a deep-linked
@@ -159,5 +159,47 @@ describe('App router — SPA navigation', () => {
     browserPopTo('info')
 
     expect(await screen.findByRole('heading', { name: 'Information' })).toBeInTheDocument()
+  })
+})
+
+describe('App - background sync of pending rounds (#95)', () => {
+  function seedPendingRound() {
+    saveCompletedGame({
+      id: 'pending-1',
+      courseId: 'course-1',
+      completedAt: '2026-08-01T12:00:00.000Z',
+      holes: 2,
+      holesPlayed: 2,
+      holePars: [3, 3],
+      players: ['Ann'],
+      scores: { Ann: [3, 3] },
+    })
+    markCompletedGamePending('pending-1', 'u1', '')
+  }
+  const posts = () => global.fetch.mock.calls.filter(([url, o]) => url === '/api/games' && o?.method === 'POST')
+
+  it('sends a pending round on app open for the signed-in user, once, under StrictMode', async () => {
+    seedPendingRound()
+    global.fetch = vi.fn((url) => {
+      if (url.includes('/api/auth/me')) {
+        return Promise.resolve({ ok: true, json: async () => ({ user: { id: 'u1', email: 'a@b.c', name: 'Ann', pending_email: null } }) })
+      }
+      return Promise.resolve({ ok: true, status: 201, json: async () => ({}) })
+    })
+
+    render(<StrictMode><App /></StrictMode>)
+
+    await screen.findByRole('button', { name: 'New Game' })
+    await act(async () => { await new Promise(resolve => setTimeout(resolve, 0)) })
+    expect(posts()).toHaveLength(1)
+    expect(getCompletedGames().find(g => g.id === 'pending-1').synced).toBe(true)
+  })
+
+  it('never posts a round when signed out', async () => {
+    seedPendingRound()
+    render(<App />)
+    await screen.findByRole('button', { name: 'New Game' })
+    await act(async () => { await new Promise(resolve => setTimeout(resolve, 0)) })
+    expect(posts()).toHaveLength(0)
   })
 })

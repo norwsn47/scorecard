@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { normalizeDbGame, normalizeLocalGame } from './history.js'
+import { mergePendingGames, normalizeDbGame, normalizeLocalGame, normalizePendingGame } from './history.js'
 
 describe('normalizeDbGame', () => {
   const row = {
@@ -37,6 +37,12 @@ describe('normalizeDbGame', () => {
 
   it('falls back to holes_played for the hole count when course_holes is absent', () => {
     expect(normalizeDbGame(row).holes).toBe(3)
+  })
+
+  it('carries client_round_id through as clientRoundId, or null when the row has none', () => {
+    expect(normalizeDbGame({ ...row, client_round_id: 'local-1' }).clientRoundId).toBe('local-1')
+    expect(normalizeDbGame(row).clientRoundId).toBeNull()
+    expect(normalizeDbGame({ ...row, client_round_id: null }).clientRoundId).toBeNull()
   })
 
   it('reads a null hole_pars (pre-003 round) as par 3 per hole', () => {
@@ -84,5 +90,73 @@ describe('normalizeLocalGame', () => {
       scores: { Ann: [3, 3], Bo: [4, 4] },
     }
     expect(normalizeLocalGame(local).holePars).toEqual([3, 3])
+  })
+})
+
+describe('normalizePendingGame', () => {
+  const local = {
+    id: 'p1',
+    players: ['Ann'],
+    holesPlayed: 2,
+    scores: { Ann: [3, 3] },
+    pendingSyncUserId: 'u1',
+  }
+
+  it('tags a pending round _pending and keeps the local shape (no _fromDb)', () => {
+    const g = normalizePendingGame(local)
+    expect(g).toMatchObject({ id: 'p1', _pending: true, _rejected: false, pendingSyncUserId: 'u1' })
+    expect(g._fromDb).toBeUndefined()
+    expect(g.holePars).toEqual([3, 3])
+  })
+
+  it('tags a permanently refused round _rejected', () => {
+    expect(normalizePendingGame({ ...local, syncRejected: true })).toMatchObject({ _pending: true, _rejected: true })
+  })
+})
+
+describe('mergePendingGames', () => {
+  const db = (id, completedAt, clientRoundId = null) => ({ id, completedAt, clientRoundId, _fromDb: true })
+  const pend = (id, completedAt) => ({ id, completedAt, _pending: true })
+
+  it('orders the two lists together by played date, newest first', () => {
+    const merged = mergePendingGames(
+      [db('d1', '2026-08-03T10:00:00Z'), db('d2', '2026-08-01T10:00:00Z')],
+      [pend('p1', '2026-08-02T10:00:00Z'), pend('p2', '2026-08-04T10:00:00Z')],
+    )
+    expect(merged.map(g => g.id)).toEqual(['p2', 'd1', 'p1', 'd2'])
+  })
+
+  it('drops a pending round whose id is a D1 row\'s clientRoundId, keeping the D1 row', () => {
+    const merged = mergePendingGames(
+      [db('d1', '2026-08-03T10:00:00Z', 'p1')],
+      [pend('p1', '2026-08-03T10:00:00Z'), pend('p2', '2026-08-02T10:00:00Z')],
+    )
+    expect(merged.map(g => g.id)).toEqual(['d1', 'p2'])
+  })
+
+  it('keeps every pending round alongside a full 100-row D1 list, however old', () => {
+    const rows = Array.from({ length: 100 }, (_, i) => db(`d${i}`, new Date(Date.UTC(2026, 7, 20, 10, 0, 0) - i * 3600000).toISOString()))
+    const merged = mergePendingGames(rows, [pend('p1', '2025-01-01T10:00:00Z'), pend('p2', '2025-01-02T10:00:00Z')])
+    expect(merged).toHaveLength(102)
+    expect(merged.slice(-2).map(g => g.id)).toEqual(['p2', 'p1'])
+  })
+
+  it('is stable: equal dates keep D1 rows first, then pending, each in their own order', () => {
+    const t = '2026-08-01T10:00:00Z'
+    const merged = mergePendingGames([db('d1', t), db('d2', t)], [pend('p1', t), pend('p2', t)])
+    expect(merged.map(g => g.id)).toEqual(['d1', 'd2', 'p1', 'p2'])
+  })
+
+  it('sinks a round with an unreadable date to the bottom instead of throwing', () => {
+    const merged = mergePendingGames([db('d1', '2026-08-01T10:00:00Z')], [pend('p1', 'not a date'), pend('p2', undefined)])
+    expect(merged.map(g => g.id)).toEqual(['d1', 'p1', 'p2'])
+  })
+
+  it('does not mutate its inputs', () => {
+    const rows = [db('d1', '2026-08-01T10:00:00Z')]
+    const pending = [pend('p1', '2026-08-02T10:00:00Z')]
+    mergePendingGames(rows, pending)
+    expect(rows.map(g => g.id)).toEqual(['d1'])
+    expect(pending.map(g => g.id)).toEqual(['p1'])
   })
 })

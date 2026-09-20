@@ -5,7 +5,7 @@
 > - **Removing:** whoever finishes an item deletes its line in the same commit as the change (the project-manager for large changes, the main session for small ones). Add a `CHANGELOG.md` note only if it was a decision or a reversal.
 > - **Adding:** you ask; the project-manager adds genuine follow-ups from a large change; Critical/High review and audit findings are added. Lower findings stay in the chat report until you triage them.
 > - **Entries are short:** what needs doing, not the history. Nothing here is actioned without explicit instruction.
-> - **IDs are stable and never reused**, even after an item is deleted, so gaps are expected. Next free ID: **#112**.
+> - **IDs are stable and never reused**, even after an item is deleted, so gaps are expected. Next free ID: **#115**.
 
 **Last updated:** 20 September 2026
 
@@ -20,7 +20,7 @@ The email copy/wordmark now read "Scorecard by Outbuild" (shipped 1 Sep). Remain
 A screen that picks a course and shows the best (lowest) rounds recorded on it. Drawn **only from signed-in users' D1 entries** — quick-play localStorage rounds never feed it. Scope to settle when built: which courses are selectable (the user's own courses, the seeded Bruntsfield, or any course with entries), whether it ranks whole-round totals or per-player rounds within a game, how ties and DNF rounds are treated, and how many rows to show. Requires the database, so signed-in only. Post-MVP. **PRD §8 update needed** — it currently frames this as an "all-time personal leaderboard per user" (lowest round, most wins); the new shape is per-course, not per-user.
 
 ### 8. Quick-play history import after sign-in
-Offer a one-time prompt after first sign-in to migrate localStorage game history into the new account (`POST` each local game with a migrated flag). Deferred because the two histories are deliberately separate in v2.0 (PRD §11.9) and this adds complexity without blocking the core Plus experience.
+Offer a one-time prompt after first sign-in to migrate localStorage game history into the new account (`POST` each local game with a migrated flag). Deferred because the two histories are deliberately separate in v2.0 (PRD §11.9) and this adds complexity without blocking the core Plus experience. Can reuse the `pendingSyncUserId` marker and sync runner built in #95 (`src/utils/sync.js`).
 
 ### 10. Full onboarding journey (name + home course + par)
 A proper sign-up flow capturing name and home course together, with editable per-hole par. Introduces par as a first-class concept — currently explicitly out of scope for MVP and v2.0 (PRD §7). Materially bigger than the lightweight name capture in #5; needs a decision on how par interacts with the raw-stroke scoring model (PRD §5) before any code.
@@ -73,17 +73,16 @@ Add the club's official logo (likely Home or the course info section) once permi
 ### 90. Header top padding on mobile — reduced, needs on-device confirmation
 From the 11 September 2026 UI/UX review. Reported across mobile screens, not confirmed at pixel level via desktop emulation (doesn't render iOS status bar/notch chrome). Fixed 11 September 2026: `PageHeader.jsx`'s top padding reduced `pt-10` → `pt-6` (an existing DESIGN.md spacing token, not an invented value). Still needs a quick on-device visual check to confirm it reads right with real iOS status-bar/notch chrome. Low priority.
 
-### 95. Signed-in "Done" silently loses the round if the save to D1 fails (HIGH - full audit, 19 Sep 2026)
-`Summary.jsx:132-153`: for a signed-in user, "Done" POSTs the round to `/api/games`. A non-OK response or network error is ignored (empty catch, `res.ok` never checked) and `navigate('home')` runs regardless. The round then exists only in localStorage. Signed-in History reads D1 only (`History.jsx:16,50`), Home's "Last round" shows for signed-out users only (`Home.jsx:126`), and nothing retries the sync, so the round is invisible to the user with no message. Realistic on a golf course with patchy signal. There is no recovery path because #8 (history import) is not built. Needs a product/scope call (show an error and stay on Summary, retry, or queue for later sync) - likely project-manager scoping. Not actioned. (PRD §11.)
+### 112. Failed-save gaps left by #95 (Medium - needs a product call and a PRD §11.8 tweak)
+- A failed round is only marked pending when the user taps "Keep on this device". If they use the phone's back gesture or close the app on the error screen, it stays an unmarked local round: never synced, invisible in signed-in History. Consider marking it pending on the first failure (Keep then only navigates).
+- No sync fires after "Keep", and a 5xx or timeout never fires `online`, so a kept round can wait for the next full app open (days, in an installed PWA). Consider one `syncPendingRounds` call after Keep and/or a `visibilitychange` trigger.
 
-**Scoped and decided 19 September 2026 (project-manager plan + user decisions; not yet built, needs a PRD update first).** Size: Large. Chosen approach: project-manager's "B + C" - mark a failed round as pending locally, re-sync automatically, and show pending rounds in History. Rough effort (Estimated) about 3 days. No backend change needed: `POST /api/games` is already idempotent on `client_round_id` (UNIQUE(user_id, client_round_id), migration 002) and Summary already sends it.
-1. **On failure the user chooses:** Retry, or "Keep on this device and go home" (never trapped with no signal).
-2. **Visibility:** unsaved rounds appear in signed-in History with a "Not yet saved" badge. This needs a narrow, marker-gated exception to PRD §11.9 ("strictly separate, no merging"); delete, edit and dedupe-on-sync of a pending round are new cases, and the 100-row D1 cap interacts with the merged ordering.
-3. **Retry:** automatic on app open and when signal returns (`online` event), guarded against double-firing. No user action needed.
-4. **Rejections:** a permanent 400 (e.g. course deleted) or a 401 (session expired) keeps the round locally and flags it, never deletes it. 401 waits for the user to sign in again.
-5. **Shared device:** a pending round is tagged with the user who played it and only syncs when that user signs in.
-6. **#8 stays separate**, but the pending marker should be designed so #8 can reuse it later.
-Findings to carry into the build: `synced` alone cannot mark a failed save (it is undefined on every quick-play round, so signed-in failures would look identical to pre-sign-in quick-play rounds - a new marker such as `pendingSyncUserId` is needed); PRD §11.8 says a failed POST "can be retried on the next Summary visit" but no path reaches that Summary again (PRD to be corrected); `Scorecard.jsx:215` `synced: true` oddity is logged in #111. Build sequence: product-owner updates PRD §11.8 and §11.9 first; frontend-developer builds in pieces (marker + Summary error handling, then the sync runner, then History visibility); code-reviewer; human localhost review with `/api/games` blocked or offline; PRD alignment check; CHANGELOG and BACKLOG. Suggested branch: `fix/summary-save-failure-retry`.
+### 113. Pending-round edit races (Medium)
+- If `online` fires while the user is on Setup for a pending round, before the `_edit` working copy exists, the sync sends the old data and the later edit stays local-only. Same outcome if the server saved the round but the response was lost and the user edits before the next sync (the idempotent 200 keeps the old server data). A real fix needs a `PATCH` or `GET` by `client_round_id`, or Setup writing `_edit` earlier.
+- No sync is triggered when a pending-round edit is saved or abandoned; the round waits for the next app open or `online`.
+
+### 114. Runner can post under the wrong account from a stale tab (Medium, narrow)
+`postRound` sends no user identity, so the server uses whatever cookie the browser holds. Tab 1 still thinks user A is signed in, user B signs in via tab 2, an `online` event in tab 1 then saves A's pending rounds into B's account. Cheap mitigation: confirm `/api/auth/me` returns the same id at the start of a run. Same weakness already exists for Done.
 
 ---
 
@@ -135,7 +134,7 @@ Two narrow wrinkles in `functions/api/users/index.js` / `confirm-email.js`, both
 ---
 
 ### Full-codebase audit, 19 September 2026 (#97, #98, #100, #102-#103, #106-#108, #111) - lower findings, short form
-From the first `/full-audit`. Contrast ratios and tap sizes are hand-computed estimates, not browser measurements; nothing was screen-reader tested; `npm audit` was not run. The High findings are #95 and #96 above.
+From the first `/full-audit`. Contrast ratios and tap sizes are hand-computed estimates, not browser measurements; nothing was screen-reader tested; `npm audit` was not run. The two High findings (#95, #96) are done.
 
 ### 97. Dead code - remainder (Low)
 `EMAIL_RE` in `functions/_lib/email.js:10` stays exported because tests import it. `README.md` is effectively empty (11 bytes) and needs content, not deletion.
@@ -173,8 +172,7 @@ App-start auth gating, bundle and font loading (LCP on a throttled mobile profil
 `border` `#D9D0C4` is ~1.39:1 on the page background, below the 3:1 WCAG expects for control boundaries (estimate). **Decided 19 Sep 2026:** darken borders on inputs only, via a new stronger border token for form fields; decorative hairlines stay light. Design-director proposes the value, then a localhost check.
 
 ### 111. Smaller findings from the #104 tests (Low)
-- `Summary.jsx:117-125` `alreadySaved` re-POST guard is unreachable and its comment stale; tidy when #95 reworks it.
 - Share failures give no feedback (`Summary.jsx:167-172`); needs an intended-behaviour decision.
 - `share.js` `winnerLabel` says "1 strokes" for a winning total of 1.
-- `Scorecard.jsx:215` sets `synced: true` on a locally edited round without POSTing it (unreachable for signed-in users today), so `synced` is not a trustworthy "on the server" flag; matters for #8 and #95.
-- Possible race, Assumed and probably unreachable: Done tapped before `/api/auth/me` resolves skips the save (`Summary.jsx:125`).
+- `Scorecard.jsx` still sets `synced: true` on a locally edited round without POSTing it (now only for signed-out rounds; a pending round keeps its marker instead, #95), so `synced` is not a trustworthy "on the server" flag; matters for #8.
+- Possible race, Assumed and probably unreachable: Done tapped before `/api/auth/me` resolves skips the save (`handleGoHome` in `Summary.jsx`).
