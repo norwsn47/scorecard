@@ -1,5 +1,6 @@
 import { getSessionUser } from '../../_lib/session.js'
 import { validateHolePars } from '../../_lib/hole-pars.js'
+import { readJsonObject } from '../../_lib/request.js'
 
 export async function onRequestPatch(context) {
   const { DB } = context.env
@@ -16,15 +17,9 @@ export async function onRequestPatch(context) {
   const course = await DB.prepare('SELECT id, holes FROM courses WHERE id = ? AND user_id = ?').bind(id, user.id).first()
   if (!course) return Response.json({ error: 'Not found' }, { status: 404 })
 
-  let body
-  try {
-    body = await context.request.json()
-  } catch {
-    return Response.json({ error: 'Invalid request body' }, { status: 400 })
-  }
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return Response.json({ error: 'Invalid request body' }, { status: 400 })
-  }
+  const parsed = await readJsonObject(context.request)
+  if (!parsed.ok) return parsed.response
+  const { body } = parsed
 
   // Hole count is fixed for the life of the course (§11.7) — reject any
   // attempt to change it, rather than silently ignoring it.
@@ -40,6 +35,10 @@ export async function onRequestPatch(context) {
   const values = []
 
   if ('name' in body) {
+    // A non-string name (e.g. 123) is a 400, not a TypeError on .trim().
+    if (name != null && typeof name !== 'string') {
+      return Response.json({ error: 'Course name is required' }, { status: 400 })
+    }
     const trimmed = (name || '').trim()
     if (!trimmed) return Response.json({ error: 'Course name is required' }, { status: 400 })
     if (trimmed.length > 60) return Response.json({ error: 'Course name must be 60 characters or fewer' }, { status: 400 })

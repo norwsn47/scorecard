@@ -1,6 +1,7 @@
 import { getSessionUser } from '../../_lib/session.js'
 import { validateHolePars } from '../../_lib/hole-pars.js'
-import { validatePlayedAt, validatePlayerData } from '../../_lib/game-input.js'
+import { validatePlayedAt, validatePlayerData, validateNotes } from '../../_lib/game-input.js'
+import { readJsonObject } from '../../_lib/request.js'
 
 export async function onRequestDelete(context) {
   const { DB } = context.env
@@ -11,7 +12,7 @@ export async function onRequestDelete(context) {
   const game = await DB.prepare('SELECT id FROM games WHERE id = ? AND user_id = ?').bind(id, user.id).first()
   if (!game) return Response.json({ error: 'Not found' }, { status: 404 })
 
-  await DB.prepare('DELETE FROM games WHERE id = ?').bind(id).run()
+  await DB.prepare('DELETE FROM games WHERE id = ? AND user_id = ?').bind(id, user.id).run()
   return Response.json({ ok: true })
 }
 
@@ -29,15 +30,9 @@ export async function onRequestPatch(context) {
   const game = await DB.prepare('SELECT id, holes_played FROM games WHERE id = ? AND user_id = ?').bind(id, user.id).first()
   if (!game) return Response.json({ error: 'Not found' }, { status: 404 })
 
-  let body
-  try {
-    body = await context.request.json()
-  } catch {
-    return Response.json({ error: 'Invalid request body' }, { status: 400 })
-  }
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return Response.json({ error: 'Invalid request body' }, { status: 400 })
-  }
+  const parsed = await readJsonObject(context.request)
+  if (!parsed.ok) return parsed.response
+  const { body } = parsed
 
   const { course_id, played_at, holes_played, player_data, notes, hole_pars } = body
 
@@ -82,9 +77,8 @@ export async function onRequestPatch(context) {
     values.push(typeof player_data === 'string' ? player_data : JSON.stringify(player_data))
   }
   if ('notes' in body) {
-    if (notes != null && String(notes).length > 300) {
-      return Response.json({ error: 'Notes too long' }, { status: 400 })
-    }
+    const check = validateNotes(notes)
+    if (!check.ok) return Response.json({ error: check.error }, { status: 400 })
     columns.push('notes = ?')
     values.push(notes || null)
   }

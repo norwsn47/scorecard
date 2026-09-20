@@ -1,3 +1,5 @@
+import { getSessionCookie, CLEAR_SESSION_COOKIE } from '../../_lib/session.js';
+
 export async function onRequestPost(context) {
   const { DB } = context.env;
 
@@ -10,12 +12,7 @@ export async function onRequestPost(context) {
     status: 200,
     headers: {
       'Content-Type': 'application/json',
-      'Set-Cookie': 'session=; HttpOnly; Secure; SameSite=Lax; Max-Age=0; Path=/',
+      'Set-Cookie': CLEAR_SESSION_COOKIE,
     },
   });
-}
-
-function getSessionCookie(request) {
-  const cookie = request.headers.get('Cookie') || '';
-  return cookie.match(/(?:^|;\s*)session=([^;]+)/)?.[1] ?? null;
 }

@@ -197,8 +197,48 @@ export function syncPendingRounds(userId) {
   return run
 }
 
+/** How long the who-am-I check may take before the run gives up (a later
+ *  trigger tries again). Shorter than a save: it is a tiny GET. */
+export const ME_TIMEOUT_MS = 8000
+
+/**
+ * True only if the browser's session cookie belongs to `userId` right now.
+ * `postRound` sends no identity of its own, so the server saves under whatever
+ * cookie the browser holds; a stale tab that still believes user A is signed
+ * in must not file A's rounds into B's account after B signed in elsewhere
+ * (BACKLOG #114). Any doubt (401, error, timeout, no user) is "no": the rounds
+ * stay pending and a later trigger tries again. Never throws.
+ */
+async function sessionBelongsTo(userId) {
+  const controller = new AbortController()
+  let timer
+  const timedOut = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      controller.abort()
+      reject(new Error('timeout'))
+    }, ME_TIMEOUT_MS)
+  })
+  try {
+    const res = await Promise.race([
+      fetch('/api/auth/me', { credentials: 'include', signal: controller.signal }),
+      timedOut,
+    ])
+    if (!res.ok) return false
+    const data = await Promise.race([res.json(), timedOut])
+    const id = data?.user?.id
+    return id != null && String(id) === String(userId)
+  } catch {
+    return false
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
 async function runBatch(userId) {
   const summary = { synced: 0, rejected: 0, remaining: 0 }
+  // The session check runs once per run, just before the first real POST, so a
+  // run with nothing to send (or only rounds under edit) makes no request.
+  let sessionConfirmed = false
   try {
     const waiting = () => getPendingCompletedGames(userId).filter(g => !g.syncRejected)
     const order = waiting().sort((a, b) => completedTime(a) - completedTime(b) || 0).map(g => g.id)
@@ -210,6 +250,11 @@ async function runBatch(userId) {
       const record = waiting().find(g => g.id === id)
       if (!record) continue
       if (isBeingEdited(id)) continue
+
+      if (!sessionConfirmed) {
+        if (!(await sessionBelongsTo(userId))) break
+        sessionConfirmed = true
+      }
 
       syncingIds.add(id)
       let result

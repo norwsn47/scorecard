@@ -1,17 +1,24 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { onRequestPatch, onRequestDelete } from './index.js'
 import { getSessionUser } from '../../_lib/session.js'
+import { magicLinkEmailHtml } from '../../_lib/email.js'
 
-vi.mock('../../_lib/session.js', () => ({ getSessionUser: vi.fn() }))
+// Keep the real cookie helpers (this endpoint clears the session cookie on
+// DELETE); only the DB-backed getSessionUser is stubbed.
+vi.mock('../../_lib/session.js', async (importOriginal) => ({
+  ...(await importOriginal()),
+  getSessionUser: vi.fn(),
+}))
 
 // Stateful fake D1. Holds rows for the tables the handlers touch and evaluates
 // just the specific statements they issue (SELECT / UPDATE / INSERT / DELETE),
 // via prepare(sql).bind(...).first() / .run() and DB.batch([...]).
 function makeDB({ users = [], magicTokens = [], games = [], courses = [], sessions = [] } = {}) {
-  const db = { users, magicTokens, games, courses, sessions, batchCalls: 0 }
+  const db = { users, magicTokens, games, courses, sessions, batchCalls: 0, sqlLog: [] }
 
   function statement(sql, args) {
     const s = sql.replace(/\s+/g, ' ').trim()
+    db.sqlLog.push({ sql: s, args })
     return {
       sql: s,
       args,
@@ -164,6 +171,28 @@ describe('PATCH /api/users', () => {
     getSessionUser.mockResolvedValue(null)
     const { res } = await runPatch(makeDB(), { name: 'Fiona' })
     expect(res.status).toBe(401)
+    expect(global.fetch).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ['null', 'null'],
+    ['an array', '[]'],
+    ['a string', '"str"'],
+    ['a number', '42'],
+    ['unparseable JSON', 'not json'],
+  ])('400 Invalid request body for %s, nothing written or sent', async (_label, raw) => {
+    getSessionUser.mockResolvedValue(ME)
+    const db = makeDB({ users: [{ ...ME }] })
+    const c = patchCtx(db, {})
+    c.request = new Request('https://app.test/api/users', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Cookie: 'session=s1' },
+      body: raw,
+    })
+    const res = await onRequestPatch(c)
+    expect(res.status).toBe(400)
+    expect(await res.json()).toEqual({ error: 'Invalid request body' })
+    expect(db.sqlLog).toHaveLength(0)
     expect(global.fetch).not.toHaveBeenCalled()
   })
 
@@ -356,6 +385,132 @@ describe('PATCH /api/users', () => {
     const { res } = await runPatch(db, { email: 'second@example.com' })
     expect(res.status).toBe(200)
     expect(db.users[0].pending_email).toBe('second@example.com')
+  })
+})
+
+// ── Parity: the exact observable output of the email-change path ───────────
+// Pinned before the magic-link helper was extracted (functions/_lib/
+// magic-link.js). Every string is the literal the endpoint has always
+// produced, so any drift in the shared helper shows up as a failure.
+describe('PATCH /api/users - exact email-change output (parity)', () => {
+  const ME = { id: 'u1', email: 'me@example.com' }
+  const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
+
+  it('inserts the token row with the exact SQL and bind args (15-minute expiry, used = 0)', async () => {
+    getSessionUser.mockResolvedValue(ME)
+    const db = makeDB({ users: [{ ...ME }] })
+    const before = Date.now()
+    await runPatch(db, { email: 'New@Example.com' })
+    const after = Date.now()
+
+    const insert = db.sqlLog.find(e => /^INSERT INTO magic_tokens/.test(e.sql))
+    expect(insert.sql).toBe('INSERT INTO magic_tokens (id, email, token, expires_at, used) VALUES (?, ?, ?, ?, 0)')
+    expect(insert.args).toHaveLength(4)
+    const [id, email, token, expiresAt] = insert.args
+    expect(id).toMatch(UUID)
+    expect(token).toMatch(UUID)
+    expect(id).not.toBe(token)
+    expect(email).toBe('new@example.com')
+    const expiry = new Date(expiresAt).getTime()
+    expect(expiry).toBeGreaterThanOrEqual(before + 15 * 60 * 1000)
+    expect(expiry).toBeLessThanOrEqual(after + 15 * 60 * 1000)
+    expect(expiresAt).toBe(new Date(expiry).toISOString())
+  })
+
+  it('counts fresh links for the NEW address with the exact SQL and a current-time bound', async () => {
+    getSessionUser.mockResolvedValue(ME)
+    const db = makeDB({ users: [{ ...ME }] })
+    await runPatch(db, { email: 'new@example.com' })
+
+    const count = db.sqlLog.find(e => /SELECT COUNT/.test(e.sql))
+    expect(count.sql).toBe(
+      'SELECT COUNT(*) AS count FROM magic_tokens WHERE email = ? AND used = 0 AND expires_at > ?'
+    )
+    expect(count.args[0]).toBe('new@example.com')
+    expect(Math.abs(new Date(count.args[1]).getTime() - Date.now())).toBeLessThan(60 * 1000)
+  })
+
+  it('sends the exact confirmation payload to the NEW address: subject, html and text', async () => {
+    getSessionUser.mockResolvedValue(ME)
+    const db = makeDB({ users: [{ ...ME }] })
+    await runPatch(db, { email: 'New@Example.com' })
+
+    const token = db.magicTokens[0].token
+    const link = `https://app.test/api/auth/confirm-email?token=${token}`
+
+    const [url, init] = global.fetch.mock.calls[0]
+    expect(url).toBe('https://api.resend.com/emails')
+    expect(init.headers.Authorization).toBe('Bearer test-key')
+    expect(JSON.parse(init.body)).toEqual({
+      from: 'Scorecard <hi@test>',
+      to: 'new@example.com',
+      subject: 'Confirm your email for Scorecard by Outbuild',
+      html: magicLinkEmailHtml({
+        heading: 'Confirm your email',
+        intro: 'Click the button below to confirm this email address for your Scorecard account. This link expires in 15 minutes.',
+        ctaLabel: 'Confirm your email',
+        link,
+      }),
+      text: `Confirm your email for Scorecard by Outbuild:\n${link}\n\nThis link expires in 15 minutes.\n\nIf you didn't request this, you can safely ignore this email.`,
+    })
+  })
+
+  it('429 body and message are exact, before anything is written or sent', async () => {
+    getSessionUser.mockResolvedValue(ME)
+    const future = new Date(Date.now() + 9 * 60 * 1000).toISOString()
+    const magicTokens = Array.from({ length: 5 }, (_, i) => ({
+      id: `t${i}`, email: 'new@example.com', token: `tok${i}`, expires_at: future, used: 0,
+    }))
+    const db = makeDB({ users: [{ ...ME }], magicTokens })
+    const { res } = await runPatch(db, { email: 'new@example.com' })
+
+    expect(res.status).toBe(429)
+    expect(await res.json()).toEqual({
+      error: 'Too many email-change requests. Check that inbox, or wait a few minutes and try again.',
+    })
+    expect(db.batchCalls).toBe(0)
+    expect(db.users[0].pending_email).toBeUndefined()
+  })
+
+  it('allows the request at 4 unclaimed links (just under the cap)', async () => {
+    getSessionUser.mockResolvedValue(ME)
+    const future = new Date(Date.now() + 9 * 60 * 1000).toISOString()
+    const magicTokens = Array.from({ length: 4 }, (_, i) => ({
+      id: `t${i}`, email: 'new@example.com', token: `tok${i}`, expires_at: future, used: 0,
+    }))
+    const db = makeDB({ users: [{ ...ME }], magicTokens })
+    const { res } = await runPatch(db, { email: 'new@example.com' })
+    expect(res.status).toBe(200)
+  })
+
+  it('500 with the exact message when the confirmation email fails', async () => {
+    getSessionUser.mockResolvedValue(ME)
+    global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 500, json: async () => ({}) })
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    const db = makeDB({ users: [{ ...ME }] })
+    const { res } = await runPatch(db, { email: 'new@example.com' })
+    expect(res.status).toBe(500)
+    expect(await res.json()).toEqual({ error: 'Could not send the confirmation email - please try again' })
+  })
+
+  it('sends the exact security-notice payload to the OLD address', async () => {
+    getSessionUser.mockResolvedValue(ME)
+    const db = makeDB({ users: [{ ...ME }] })
+    await runPatch(db, { email: 'new@example.com' })
+
+    const notice = global.fetch.mock.calls
+      .map(([, init]) => JSON.parse(init.body))
+      .find(b => b.to === 'me@example.com')
+    expect(notice.subject).toBe('Email change requested on your Scorecard account')
+    expect(notice.text).toBe([
+      'A request was made to change the email address on your Scorecard by Outbuild account.',
+      '',
+      "If this was you, follow the link in the email we've just sent to your new address to confirm the change. Your current address stays active until you do.",
+      '',
+      "If this wasn't you, contact scorecard@outbuild.uk.",
+      '',
+      'Built by Outbuild.',
+    ].join('\n'))
   })
 })
 

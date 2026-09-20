@@ -84,6 +84,15 @@ function patch(body, { id = 'c1' } = {}) {
   return { env: { DB: null }, params: { id }, request }
 }
 
+function patchRaw(rawBody, { id = 'c1' } = {}) {
+  const request = new Request(`http://localhost/api/courses/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: rawBody,
+  })
+  return { env: { DB: null }, params: { id }, request }
+}
+
 function del({ id = 'c1' } = {}) {
   const request = new Request(`http://localhost/api/courses/${id}`, { method: 'DELETE' })
   return { env: { DB: null }, params: { id }, request }
@@ -248,6 +257,62 @@ describe('onRequestPatch /api/courses/[id]', () => {
 
     expect(res.status).toBe(200)
     expect(json).toEqual({ ok: true, id: 'c1' })
+  })
+})
+
+describe('onRequestPatch /api/courses/[id] - malformed bodies and name type', () => {
+  let courses
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+    courses = [
+      { id: 'c1', user_id: 'u1', name: 'Braid Hills', holes: 9, hole_pars: JSON.stringify(Array(9).fill(3)), is_default: 0 },
+    ]
+  })
+
+  it.each([
+    ['null', 'null'],
+    ['an array', '[]'],
+    ['a string', '"str"'],
+    ['a number', '42'],
+    ['unparseable JSON', 'not json'],
+  ])('%s -> 400 Invalid request body, nothing written', async (_label, raw) => {
+    const ctx = patchRaw(raw)
+    ctx.env.DB = makeDB(courses)
+    const res = await onRequestPatch(ctx)
+    expect(res.status).toBe(400)
+    expect(await res.json()).toEqual({ error: 'Invalid request body' })
+    expect(courses[0].name).toBe('Braid Hills')
+  })
+
+  it("keeps the ownership check ahead of the body parse: another user's course with a bad body is a 404", async () => {
+    getSessionUser.mockResolvedValue({ id: 'u2', email: 'other@example.com' })
+    const ctx = patchRaw('null')
+    ctx.env.DB = makeDB(courses)
+    expect((await onRequestPatch(ctx)).status).toBe(404)
+  })
+
+  it.each([
+    [123, 'a number'],
+    [true, 'true'],
+    [['x'], 'an array'],
+    [{ n: 'x' }, 'an object'],
+  ])('a non-string name (%j, %s) -> 400, not a 500', async (name) => {
+    const ctx = patch({ name })
+    ctx.env.DB = makeDB(courses)
+    const res = await onRequestPatch(ctx)
+    expect(res.status).toBe(400)
+    expect((await res.json()).error).toBe('Course name is required')
+    expect(courses[0].name).toBe('Braid Hills')
+  })
+
+  it('a null name is still 400 Course name is required', async () => {
+    const ctx = patch({ name: null })
+    ctx.env.DB = makeDB(courses)
+    const res = await onRequestPatch(ctx)
+    expect(res.status).toBe(400)
+    expect((await res.json()).error).toBe('Course name is required')
   })
 })
 

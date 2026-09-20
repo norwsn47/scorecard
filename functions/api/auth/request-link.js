@@ -1,15 +1,18 @@
-import { sendEmail, magicLinkEmailHtml, isValidEmail } from '../../_lib/email.js';
+import { isValidEmail } from '../../_lib/email.js';
+import { readJsonObject } from '../../_lib/request.js';
+import { isOverLinkLimit, prepareTokenInsert, sendMagicLinkEmail } from '../../_lib/magic-link.js';
 
 export async function onRequestPost(context) {
   const { DB, RESEND_API_KEY, RESEND_FROM_EMAIL, APP_URL } = context.env;
 
-  let body;
-  try {
-    body = await context.request.json();
-  } catch {
-    return Response.json({ error: 'Invalid request body' }, { status: 400 });
-  }
+  const parsed = await readJsonObject(context.request);
+  if (!parsed.ok) return parsed.response;
+  const { body } = parsed;
 
+  // A non-string email (e.g. 123) is a 400, not a TypeError on .trim().
+  if (body.email != null && typeof body.email !== 'string') {
+    return Response.json({ error: 'Invalid email address' }, { status: 400 });
+  }
   const email = (body.email || '').trim().toLowerCase();
   if (!email || !isValidEmail(email)) {
     return Response.json({ error: 'Invalid email address' }, { status: 400 });
@@ -17,29 +20,18 @@ export async function onRequestPost(context) {
 
   const now = Date.now();
 
-  // #14 — per-email throttle. magic_tokens has no created_at column, but every
-  // unused row's expires_at is exactly issued-time + 15 min, so "used = 0 AND
-  // expires_at > now" means "an unclaimed link issued in the last 15 minutes".
-  // Cap those per address so a target inbox can't be flooded with sign-in
-  // emails. Used tokens are excluded so signing in on several devices, or
-  // resending then clicking, doesn't count against the cap.
-  const MAX_FRESH_LINKS = 5;
-  const { count: freshLinks } = await DB.prepare(
-    'SELECT COUNT(*) AS count FROM magic_tokens WHERE email = ? AND used = 0 AND expires_at > ?'
-  ).bind(email, new Date(now).toISOString()).first();
-  if (freshLinks >= MAX_FRESH_LINKS) {
+  // #14 - per-email throttle (see functions/_lib/magic-link.js): cap the
+  // unclaimed links per address so a target inbox can't be flooded with
+  // sign-in emails.
+  if (await isOverLinkLimit(DB, email, now)) {
     return Response.json(
       { error: 'Too many sign-in requests. Check your inbox, or wait a few minutes and try again.' },
       { status: 429 }
     );
   }
 
-  const token = crypto.randomUUID();
-  const expiresAt = new Date(now + 15 * 60 * 1000).toISOString();
-
-  await DB.prepare(
-    'INSERT INTO magic_tokens (id, email, token, expires_at, used) VALUES (?, ?, ?, ?, 0)'
-  ).bind(crypto.randomUUID(), email, token, expiresAt).run();
+  const { token, statement } = prepareTokenInsert(DB, email, now);
+  await statement.run();
 
   // #15 — opportunistic cleanup. Every magic token is single-use and expires
   // 15 minutes after it is issued, so anything whose expiry is more than 24h
@@ -58,18 +50,15 @@ export async function onRequestPost(context) {
 
   const magicLink = `${APP_URL}/api/auth/verify?token=${token}`;
 
-  const sent = await sendEmail({
-    apiKey: RESEND_API_KEY,
-    from: RESEND_FROM_EMAIL,
+  const sent = await sendMagicLinkEmail({
+    env: { RESEND_API_KEY, RESEND_FROM_EMAIL },
     to: email,
     subject: 'Sign in to Scorecard by Outbuild',
-    html: magicLinkEmailHtml({
-      heading: 'Sign in to your account',
-      intro: 'Click the button below to sign in. This link expires in 15 minutes.',
-      ctaLabel: 'Sign in to Scorecard',
-      link: magicLink,
-    }),
-    text: `Sign in to Scorecard by Outbuild:\n${magicLink}\n\nThis link expires in 15 minutes.\n\nIf you didn't request this, you can safely ignore this email.`,
+    heading: 'Sign in to your account',
+    intro: 'Click the button below to sign in. This link expires in 15 minutes.',
+    ctaLabel: 'Sign in to Scorecard',
+    textLead: 'Sign in to Scorecard by Outbuild:',
+    link: magicLink,
   });
 
   if (!sent.ok) {

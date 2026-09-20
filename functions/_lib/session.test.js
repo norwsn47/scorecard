@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getSessionUser } from './session.js'
+import { getSessionUser, getSessionCookie, buildSessionCookie, CLEAR_SESSION_COOKIE } from './session.js'
 
 // Fake D1 for the single session/user JOIN. `row` is what `.first()` returns
 // (null = no valid, unexpired session); the SQL and bound args are captured.
@@ -57,5 +57,34 @@ describe('getSessionUser', () => {
     expect(sessionId).toBe('sess-9')
     expect(now >= before && now <= after).toBe(true)
     expect(db.seen.sql).toMatch(/expires_at\s*>\s*\?/)
+  })
+})
+
+describe('session cookie helpers', () => {
+  it('buildSessionCookie is byte-for-byte the sign-in Set-Cookie value (30 days)', () => {
+    expect(buildSessionCookie('abc-123')).toBe(
+      'session=abc-123; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000; Path=/'
+    )
+  })
+
+  it('CLEAR_SESSION_COOKIE is byte-for-byte the logout / account-delete Set-Cookie value', () => {
+    expect(CLEAR_SESSION_COOKIE).toBe('session=; HttpOnly; Secure; SameSite=Lax; Max-Age=0; Path=/')
+  })
+
+  it('getSessionCookie reads the session id, alone or among other cookies', () => {
+    expect(getSessionCookie(req('session=sess-1'))).toBe('sess-1')
+    expect(getSessionCookie(req('theme=dark; session=sess-2; other=1'))).toBe('sess-2')
+    expect(getSessionCookie(req('session=sess-3; theme=dark'))).toBe('sess-3')
+  })
+
+  it('getSessionCookie returns null with no cookie, another cookie, or an empty value', () => {
+    expect(getSessionCookie(req())).toBeNull()
+    expect(getSessionCookie(req('theme=dark'))).toBeNull()
+    expect(getSessionCookie(req('session='))).toBeNull()
+  })
+
+  it('getSessionCookie does not match a cookie that merely ends in "session"', () => {
+    expect(getSessionCookie(req('mysession=nope'))).toBeNull()
+    expect(getSessionCookie(req('x_session=nope; session=yes'))).toBe('yes')
   })
 })

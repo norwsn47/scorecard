@@ -1,5 +1,6 @@
 import { getSessionUser } from '../../_lib/session.js'
 import { defaultHoleParsJson, validateHolePars } from '../../_lib/hole-pars.js'
+import { readJsonObject } from '../../_lib/request.js'
 
 // User-created courses are 9 or 18 holes only (§11.7). 36 is reserved for
 // quick-play Bruntsfield and the seeded default course, which are not created
@@ -30,13 +31,14 @@ export async function onRequestPost(context) {
   const user = await getSessionUser(context.request, DB)
   if (!user) return Response.json({ error: 'Unauthorised' }, { status: 401 })
 
-  let body
-  try {
-    body = await context.request.json()
-  } catch {
-    return Response.json({ error: 'Invalid request body' }, { status: 400 })
-  }
+  const parsed = await readJsonObject(context.request)
+  if (!parsed.ok) return parsed.response
+  const { body } = parsed
 
+  // A non-string name (e.g. 123) is a 400, not a TypeError on .trim().
+  if (body.name != null && typeof body.name !== 'string') {
+    return Response.json({ error: 'Course name is required' }, { status: 400 })
+  }
   const name = (body.name || '').trim()
   if (!name) return Response.json({ error: 'Course name is required' }, { status: 400 })
   if (name.length > 60) return Response.json({ error: 'Course name must be 60 characters or fewer' }, { status: 400 })

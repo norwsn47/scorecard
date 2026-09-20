@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   buildGamePayload,
   isSyncing,
+  ME_TIMEOUT_MS,
   POST_TIMEOUT_MS,
   postRound,
   subscribeToSync,
@@ -189,6 +190,37 @@ function seed(id, { userId = 'u1', completedAt, ...rest } = {}) {
   if (userId !== null) markCompletedGamePending(id, userId, '')
 }
 
+// The runner confirms /api/auth/me matches the round's owner before its first
+// POST (#114). Every fetch mock a test assigns is wrapped here so /api/auth/me
+// is answered separately and never reaches (or is counted by) the test's mock.
+// meIds is consumed one per /me call; meDefault answers once it is empty.
+let meIds = []
+let meDefault = 'u1'
+const meCalls = () => global.fetch.mock.calls.filter(([url]) => url === '/api/auth/me')
+
+function installMeWrapper() {
+  let current
+  Object.defineProperty(globalThis, 'fetch', {
+    configurable: true,
+    get: () => current,
+    set(fn) {
+      current = vi.fn((url, o) => (
+        url === '/api/auth/me'
+          ? resp(200, { user: { id: meIds.length ? meIds.shift() : meDefault } })
+          : fn(url, o)
+      ))
+    },
+  })
+}
+
+beforeEach(() => { meIds = []; meDefault = 'u1'; installMeWrapper() })
+afterEach(() => {
+  Object.defineProperty(globalThis, 'fetch', { configurable: true, writable: true, value: undefined })
+})
+
+// Lets pending promises (the /api/auth/me check, then the POST) settle.
+const tick = () => new Promise(r => setTimeout(r, 0))
+
 function deferred() {
   let resolve
   const promise = new Promise(r => { resolve = r })
@@ -234,7 +266,7 @@ describe('syncPendingRounds', () => {
     global.fetch = vi.fn(async () => {
       inFlight += 1
       maxInFlight = Math.max(maxInFlight, inFlight)
-      await Promise.resolve()
+      await tick()
       inFlight -= 1
       return resp(201)
     })
@@ -307,7 +339,7 @@ describe('syncPendingRounds', () => {
 
     global.fetch = vi.fn(() => resp(201))
     expect(await syncPendingRounds('u1')).toEqual({ synced: 1, rejected: 0, remaining: 0 })
-    expect(global.fetch).toHaveBeenCalledTimes(1)
+    expect(posts()).toHaveLength(1)
   })
 
   it('keeps working when a subscriber throws', async () => {
@@ -326,7 +358,7 @@ describe('syncPendingRounds', () => {
     markCompletedGameRejected('a')
     global.fetch = vi.fn(() => resp(201))
     expect(await syncPendingRounds('u1')).toEqual({ synced: 0, rejected: 0, remaining: 0 })
-    expect(global.fetch).not.toHaveBeenCalled()
+    expect(posts()).toHaveLength(0)
     expect(byId('a').syncRejected).toBe(true)
   })
 
@@ -345,6 +377,7 @@ describe('syncPendingRounds', () => {
 
   it('matches the user id whether it is a number or a string', async () => {
     seed('a', { userId: 7 })
+    meDefault = '7'
     global.fetch = vi.fn(() => resp(201))
     await syncPendingRounds(7)
     expect(postedIds()).toEqual(['a'])
@@ -354,7 +387,7 @@ describe('syncPendingRounds', () => {
     saveCompletedGame(round())
     global.fetch = vi.fn(() => resp(201))
     expect(await syncPendingRounds('u1')).toEqual({ synced: 0, rejected: 0, remaining: 0 })
-    expect(global.fetch).not.toHaveBeenCalled()
+    expect(posts()).toHaveLength(0)
   })
 
   it('sends each round once when two runs overlap', async () => {
@@ -387,9 +420,10 @@ describe('syncPendingRounds', () => {
       if (JSON.parse(o.body).client_round_id === 'mine') await gate.promise
       return resp(201)
     })
+    meIds = ['u1', 'u2']
     const first = syncPendingRounds('u1')
     const second = syncPendingRounds('u2')
-    await Promise.resolve()
+    await tick()
     expect(postedIds()).toEqual(['mine'])
     gate.resolve()
     await Promise.all([first, second])
@@ -401,7 +435,7 @@ describe('syncPendingRounds', () => {
     const gate = deferred()
     global.fetch = vi.fn(async () => { await gate.promise; return resp(201) })
     const run = syncPendingRounds('u1')
-    await Promise.resolve()
+    await tick()
     expect(isSyncing('a')).toBe(true)
     expect(isSyncing('other')).toBe(false)
     gate.resolve()
@@ -455,6 +489,62 @@ describe('syncPendingRounds', () => {
 // `_edit: { id, fromDb }` by Setup. The runner must not send it: the copy in
 // the completed list is about to be overwritten, and a save that succeeds with
 // the old data mid-edit would clear the marker and strand the edit.
+describe('syncPendingRounds - session check (#114)', () => {
+  beforeEach(() => { localStorage.clear() })
+  afterEach(() => { vi.useRealTimers(); vi.restoreAllMocks() })
+
+  it('checks /api/auth/me once per run, before the first POST', async () => {
+    seed('a')
+    seed('b', { completedAt: '2026-08-02T12:00:00.000Z' })
+    global.fetch = vi.fn(() => resp(201))
+    await syncPendingRounds('u1')
+    expect(global.fetch.mock.calls.map(([url]) => url)).toEqual(['/api/auth/me', '/api/games', '/api/games'])
+    expect(postedIds()).toEqual(['a', 'b'])
+  })
+
+  it('posts nothing and keeps the round pending when the session belongs to someone else', async () => {
+    seed('a')
+    meDefault = 'someone-else'
+    global.fetch = vi.fn(() => resp(201))
+    expect(await syncPendingRounds('u1')).toEqual({ synced: 0, rejected: 0, remaining: 1 })
+    expect(posts()).toHaveLength(0)
+    expect(byId('a').pendingSyncUserId).toBe('u1')
+    expect(byId('a').synced).toBeUndefined()
+  })
+
+  it('posts nothing when /api/auth/me says the session has expired', async () => {
+    seed('a')
+    Object.defineProperty(globalThis, 'fetch', { configurable: true, writable: true, value: vi.fn((url) => (url === '/api/auth/me' ? resp(401) : resp(201))) })
+    expect(await syncPendingRounds('u1')).toMatchObject({ synced: 0, remaining: 1 })
+    expect(global.fetch.mock.calls.filter(([u]) => u === '/api/games')).toHaveLength(0)
+  })
+
+  it('posts nothing when /api/auth/me fails or returns no user', async () => {
+    seed('a')
+    Object.defineProperty(globalThis, 'fetch', { configurable: true, writable: true, value: vi.fn((url) => (url === '/api/auth/me' ? Promise.reject(new TypeError('offline')) : resp(201))) })
+    expect(await syncPendingRounds('u1')).toMatchObject({ synced: 0, remaining: 1 })
+    Object.defineProperty(globalThis, 'fetch', { configurable: true, writable: true, value: vi.fn((url) => (url === '/api/auth/me' ? resp(200, { user: null }) : resp(201))) })
+    expect(await syncPendingRounds('u1')).toMatchObject({ synced: 0, remaining: 1 })
+    expect(global.fetch.mock.calls.filter(([u]) => u === '/api/games')).toHaveLength(0)
+  })
+
+  it('gives up after the timeout when /api/auth/me hangs, and can run again later', async () => {
+    vi.useFakeTimers()
+    seed('a')
+    Object.defineProperty(globalThis, 'fetch', { configurable: true, writable: true, value: vi.fn((url) => (url === '/api/auth/me' ? new Promise(() => {}) : resp(201))) })
+    const run = syncPendingRounds('u1')
+    await vi.advanceTimersByTimeAsync(ME_TIMEOUT_MS + 10)
+    expect(await run).toMatchObject({ synced: 0, remaining: 1 })
+    expect(global.fetch.mock.calls.filter(([u]) => u === '/api/games')).toHaveLength(0)
+  })
+
+  it('makes no /api/auth/me request when nothing is waiting', async () => {
+    global.fetch = vi.fn(() => resp(201))
+    await syncPendingRounds('u1')
+    expect(meCalls()).toHaveLength(0)
+  })
+})
+
 describe('syncPendingRounds - a round under edit', () => {
   const editing = (id, extra = {}) => saveActiveGame({ ...round({ id }), _edit: { id, fromDb: false }, ...extra })
 
@@ -479,7 +569,7 @@ describe('syncPendingRounds - a round under edit', () => {
     editing('a')
     global.fetch = vi.fn(() => resp(201))
     expect(await syncPendingRounds('u1')).toEqual({ synced: 0, rejected: 0, remaining: 1 })
-    expect(global.fetch).not.toHaveBeenCalled()
+    expect(posts()).toHaveLength(0)
   })
 
   it('picks the round up on the next run once the edit is abandoned', async () => {
@@ -487,7 +577,7 @@ describe('syncPendingRounds - a round under edit', () => {
     editing('a')
     global.fetch = vi.fn(() => resp(201))
     await syncPendingRounds('u1')
-    expect(global.fetch).not.toHaveBeenCalled()
+    expect(posts()).toHaveLength(0)
 
     clearActiveGame()
     expect(await syncPendingRounds('u1')).toEqual({ synced: 1, rejected: 0, remaining: 0 })

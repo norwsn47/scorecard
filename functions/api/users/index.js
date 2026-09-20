@@ -1,17 +1,11 @@
-import { getSessionUser } from '../../_lib/session.js'
-import { sendEmail, magicLinkEmailHtml, isValidEmail } from '../../_lib/email.js'
+import { getSessionUser, CLEAR_SESSION_COOKIE } from '../../_lib/session.js'
+import { sendEmail, isValidEmail } from '../../_lib/email.js'
+import { readJsonObject } from '../../_lib/request.js'
+import { isOverLinkLimit, prepareTokenInsert, sendMagicLinkEmail } from '../../_lib/magic-link.js'
 
 // `users.name` shares the 1–60 char band a player name uses in
 // `functions/_lib/game-input.js` (§11.3, §11.14).
 const NAME_MAX = 60
-
-// §11.4.1 / BACKLOG #14 — the same per-address cap `request-link.js` applies,
-// here measured against the NEW address so `PATCH /api/users` can't be used to
-// flood an inbox. magic_tokens has no created_at, but every unused row's
-// expires_at is issued-time + 15 min, so "used = 0 AND expires_at > now" counts
-// unclaimed links from the last 15 minutes.
-const MAX_FRESH_LINKS = 5
-const TOKEN_TTL_MS = 15 * 60 * 1000
 
 /**
  * PATCH /api/users — updates the current session's user (§11.14). No id in the
@@ -31,15 +25,9 @@ export async function onRequestPatch(context) {
   const user = await getSessionUser(context.request, DB)
   if (!user) return Response.json({ error: 'Unauthorised' }, { status: 401 })
 
-  let body
-  try {
-    body = await context.request.json()
-  } catch {
-    return Response.json({ error: 'Invalid request body' }, { status: 400 })
-  }
-  if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return Response.json({ error: 'Invalid request body' }, { status: 400 })
-  }
+  const parsed = await readJsonObject(context.request)
+  if (!parsed.ok) return parsed.response
+  const { body } = parsed
 
   const hasName = 'name' in body
   const hasEmail = 'email' in body
@@ -91,10 +79,10 @@ export async function onRequestPatch(context) {
       return Response.json({ error: 'That email address is already in use' }, { status: 409 })
     }
 
-    const { count: freshLinks } = await DB.prepare(
-      'SELECT COUNT(*) AS count FROM magic_tokens WHERE email = ? AND used = 0 AND expires_at > ?'
-    ).bind(newEmail, new Date().toISOString()).first()
-    if (freshLinks >= MAX_FRESH_LINKS) {
+    // §11.4.1 / BACKLOG #14 - the same per-address cap request-link.js
+    // applies, measured against the NEW address so this endpoint can't be used
+    // to flood an inbox.
+    if (await isOverLinkLimit(DB, newEmail, Date.now())) {
       return Response.json(
         { error: 'Too many email-change requests. Check that inbox, or wait a few minutes and try again.' },
         { status: 429 }
@@ -109,8 +97,7 @@ export async function onRequestPatch(context) {
   }
 
   // ---- Email change (§11.4.1) ----
-  const token = crypto.randomUUID()
-  const expiresAt = new Date(Date.now() + TOKEN_TTL_MS).toISOString()
+  const { token, statement: insertToken } = prepareTokenInsert(DB, newEmail, Date.now())
 
   // Stage pending_email (and the name, if supplied — it is applied immediately
   // "regardless", §11.14) and issue the token, atomically. A prior outstanding
@@ -125,27 +112,22 @@ export async function onRequestPatch(context) {
 
   await DB.batch([
     DB.prepare(`UPDATE users SET ${setCols.join(', ')} WHERE id = ?`).bind(...setVals, user.id),
-    DB.prepare(
-      'INSERT INTO magic_tokens (id, email, token, expires_at, used) VALUES (?, ?, ?, ?, 0)'
-    ).bind(crypto.randomUUID(), newEmail, token, expiresAt),
+    insertToken,
   ])
 
   // Confirmation email to the NEW address. On failure: 500, `users.email`
   // untouched (it always is until the link is clicked), pending_email left set
   // (harmless — nothing acts on it until confirmed) so the user just retries.
   const confirmLink = `${APP_URL}/api/auth/confirm-email?token=${token}`
-  const sent = await sendEmail({
-    apiKey: RESEND_API_KEY,
-    from: RESEND_FROM_EMAIL,
+  const sent = await sendMagicLinkEmail({
+    env: { RESEND_API_KEY, RESEND_FROM_EMAIL },
     to: newEmail,
     subject: 'Confirm your email for Scorecard by Outbuild',
-    html: magicLinkEmailHtml({
-      heading: 'Confirm your email',
-      intro: 'Click the button below to confirm this email address for your Scorecard account. This link expires in 15 minutes.',
-      ctaLabel: 'Confirm your email',
-      link: confirmLink,
-    }),
-    text: `Confirm your email for Scorecard by Outbuild:\n${confirmLink}\n\nThis link expires in 15 minutes.\n\nIf you didn't request this, you can safely ignore this email.`,
+    heading: 'Confirm your email',
+    intro: 'Click the button below to confirm this email address for your Scorecard account. This link expires in 15 minutes.',
+    ctaLabel: 'Confirm your email',
+    textLead: 'Confirm your email for Scorecard by Outbuild:',
+    link: confirmLink,
   })
 
   if (!sent.ok) {
@@ -225,7 +207,7 @@ export async function onRequestDelete(context) {
     status: 200,
     headers: {
       'Content-Type': 'application/json',
-      'Set-Cookie': 'session=; HttpOnly; Secure; SameSite=Lax; Max-Age=0; Path=/',
+      'Set-Cookie': CLEAR_SESSION_COOKIE,
     },
   })
 }

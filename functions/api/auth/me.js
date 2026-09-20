@@ -1,3 +1,5 @@
+import { getSessionCookie } from '../../_lib/session.js';
+
 export async function onRequestGet(context) {
   const { DB } = context.env;
 
@@ -26,9 +28,4 @@ export async function onRequestGet(context) {
       pending_email: session.pending_email ?? null,
     },
   }, { status: 200 });
-}
-
-function getSessionCookie(request) {
-  const cookie = request.headers.get('Cookie') || '';
-  return cookie.match(/(?:^|;\s*)session=([^;]+)/)?.[1] ?? null;
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { onRequestPatch } from './[id].js'
+import { onRequestPatch, onRequestDelete } from './[id].js'
 import { getSessionUser } from '../../_lib/session.js'
 
 vi.mock('../../_lib/session.js', () => ({ getSessionUser: vi.fn() }))
@@ -8,15 +8,23 @@ vi.mock('../../_lib/session.js', () => ({ getSessionUser: vi.fn() }))
 // prepare(sql).bind(...args).first() / .run()
 function makeDB(games, courses = []) {
   return {
+    sqlLog: [],
     prepare(sql) {
+      const db = this
       return {
         sql,
         args: [],
         bind(...args) {
           this.args = args
+          db.sqlLog.push({ sql, args })
           return this
         },
         async first() {
+          if (/SELECT id FROM games WHERE id = \? AND user_id = \?/.test(this.sql)) {
+            const [id, userId] = this.args
+            const g = games.find((x) => x.id === id && x.user_id === userId)
+            return g ? { id: g.id } : null
+          }
           if (/SELECT id, holes_played FROM games WHERE id = \? AND user_id = \?/.test(this.sql)) {
             const [id, userId] = this.args
             const g = games.find((x) => x.id === id && x.user_id === userId)
@@ -30,6 +38,17 @@ function makeDB(games, courses = []) {
           return null
         },
         async run() {
+          // Evaluates a DELETE the way SQLite would: only rows matching every
+          // condition in the WHERE clause. A DELETE with no user_id condition
+          // (`WHERE id = ?`) has one bound arg and removes the row regardless
+          // of owner - exactly what the tests below must be able to tell apart.
+          const del = this.sql.trim().match(/^DELETE FROM games WHERE id = \?( AND user_id = \?)?$/)
+          if (del) {
+            const [id, userId] = this.args
+            const idx = games.findIndex((x) => x.id === id && (del[1] ? x.user_id === userId : true))
+            if (idx !== -1) games.splice(idx, 1)
+            return { success: true }
+          }
           const m = this.sql.trim().match(/^UPDATE games SET (.+) WHERE id = \? AND user_id = \?$/s)
           if (m) {
             const setCols = m[1].split(',').map((s) => s.trim().split(' = ')[0])
@@ -43,6 +62,20 @@ function makeDB(games, courses = []) {
       }
     },
   }
+}
+
+function del({ id = 'g1' } = {}) {
+  const request = new Request(`http://localhost/api/games/${id}`, { method: 'DELETE' })
+  return { env: { DB: null }, params: { id }, request }
+}
+
+function patchRaw(rawBody, { id = 'g1' } = {}) {
+  const request = new Request(`http://localhost/api/games/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: rawBody,
+  })
+  return { env: { DB: null }, params: { id }, request }
 }
 
 function patch(body, { id = 'g1' } = {}) {
@@ -304,5 +337,168 @@ describe('onRequestPatch /api/games/[id]', () => {
 
     expect(res.status).toBe(200)
     expect(json).toEqual({ ok: true, id: 'g1' })
+  })
+})
+
+describe('onRequestPatch /api/games/[id] - malformed bodies and notes type', () => {
+  let games
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+    games = [
+      { id: 'g1', user_id: 'u1', course_id: null, played_at: '2026-08-01T10:00:00.000Z', holes_played: 18, notes: null },
+    ]
+  })
+
+  it.each([
+    ['null', 'null'],
+    ['an array', '[]'],
+    ['a string', '"str"'],
+    ['a number', '42'],
+    ['unparseable JSON', 'not json'],
+  ])('%s -> 400 Invalid request body, nothing written', async (_label, raw) => {
+    const ctx = patchRaw(raw)
+    const db = makeDB(games)
+    ctx.env.DB = db
+    const res = await onRequestPatch(ctx)
+    expect(res.status).toBe(400)
+    expect(await res.json()).toEqual({ error: 'Invalid request body' })
+    expect(db.sqlLog.some((e) => /^\s*UPDATE/.test(e.sql))).toBe(false)
+  })
+
+  it("keeps the ownership check ahead of the body parse: another user's game with a bad body is a 404", async () => {
+    getSessionUser.mockResolvedValue({ id: 'u2', email: 'other@example.com' })
+    const ctx = patchRaw('null')
+    ctx.env.DB = makeDB(games)
+    expect((await onRequestPatch(ctx)).status).toBe(404)
+  })
+
+  it.each([
+    [123, 'a number'],
+    [true, 'a boolean'],
+    [['a'], 'an array'],
+    [{ text: 'a' }, 'an object'],
+  ])('rejects non-string notes (%j, %s) instead of coercing them', async (value) => {
+    const ctx = patch({ notes: value })
+    ctx.env.DB = makeDB(games)
+    const res = await onRequestPatch(ctx)
+    expect(res.status).toBe(400)
+    expect(games[0].notes).toBeNull()
+  })
+
+  it('accepts exactly 300 characters of notes, rejects 301 with "Notes too long"', async () => {
+    const ok = patch({ notes: 'x'.repeat(300) })
+    ok.env.DB = makeDB(games)
+    expect((await onRequestPatch(ok)).status).toBe(200)
+    expect(games[0].notes).toBe('x'.repeat(300))
+
+    const tooLong = patch({ notes: 'y'.repeat(301) })
+    tooLong.env.DB = makeDB(games)
+    const res = await onRequestPatch(tooLong)
+    expect(res.status).toBe(400)
+    expect((await res.json()).error).toBe('Notes too long')
+    expect(games[0].notes).toBe('x'.repeat(300))
+  })
+
+  it('still clears notes with null or an empty string', async () => {
+    for (const notes of [null, '']) {
+      games[0].notes = 'old'
+      const ctx = patch({ notes })
+      ctx.env.DB = makeDB(games)
+      expect((await onRequestPatch(ctx)).status).toBe(200)
+      expect(games[0].notes).toBeNull()
+    }
+  })
+})
+
+describe('onRequestDelete /api/games/[id]', () => {
+  let games
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    games = [
+      { id: 'g1', user_id: 'u1' },
+      { id: 'g2', user_id: 'u1' },
+      { id: 'g3', user_id: 'u2' },
+    ]
+  })
+
+  it('returns 401 when unauthenticated', async () => {
+    getSessionUser.mockResolvedValue(null)
+    const ctx = del()
+    ctx.env.DB = makeDB(games)
+    expect((await onRequestDelete(ctx)).status).toBe(401)
+    expect(games).toHaveLength(3)
+  })
+
+  it('deletes the caller\'s own game and returns { ok: true }', async () => {
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+    const ctx = del({ id: 'g1' })
+    ctx.env.DB = makeDB(games)
+
+    const res = await onRequestDelete(ctx)
+
+    expect(res.status).toBe(200)
+    expect(await res.json()).toEqual({ ok: true })
+    expect(games.map((g) => g.id)).toEqual(['g2', 'g3'])
+  })
+
+  it("returns 404 for another user's game id and leaves it untouched", async () => {
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+    const ctx = del({ id: 'g3' })
+    const db = makeDB(games)
+    ctx.env.DB = db
+
+    const res = await onRequestDelete(ctx)
+
+    expect(res.status).toBe(404)
+    expect(games.map((g) => g.id)).toEqual(['g1', 'g2', 'g3'])
+    expect(db.sqlLog.some((e) => /^\s*DELETE/.test(e.sql))).toBe(false)
+  })
+
+  it('returns 404 for a nonexistent game id', async () => {
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+    const ctx = del({ id: 'nope' })
+    ctx.env.DB = makeDB(games)
+    expect((await onRequestDelete(ctx)).status).toBe(404)
+  })
+
+  it('scopes the DELETE itself by user_id (defence in depth), binding the id and the user id', async () => {
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+    const ctx = del({ id: 'g1' })
+    const db = makeDB(games)
+    ctx.env.DB = db
+
+    await onRequestDelete(ctx)
+
+    const deleteStmt = db.sqlLog.find((e) => /^\s*DELETE FROM games/.test(e.sql))
+    expect(deleteStmt.sql).toContain('user_id = ?')
+    expect(deleteStmt.sql).toBe('DELETE FROM games WHERE id = ? AND user_id = ?')
+    expect(deleteStmt.args).toEqual(['g1', 'u1'])
+  })
+
+  it('an ownership-check miss after the SELECT (row reassigned) cannot delete another user\'s row', async () => {
+    // Simulate the ownership SELECT passing while the row belongs to someone
+    // else by the time the DELETE runs: the user_id condition must stop it.
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+    const ctx = del({ id: 'g1' })
+    const db = makeDB(games)
+    const realPrepare = db.prepare.bind(db)
+    db.prepare = (sql) => {
+      const stmt = realPrepare(sql)
+      if (/^SELECT id FROM games/.test(sql)) {
+        const realBind = stmt.bind.bind(stmt)
+        stmt.bind = (...args) => { games[0].user_id = 'u2'; return realBind(...args) } // reassigned after the check reads it
+        stmt.first = async () => ({ id: 'g1' })
+      }
+      return stmt
+    }
+    ctx.env.DB = db
+
+    const res = await onRequestDelete(ctx)
+
+    expect(res.status).toBe(200)
+    expect(games.find((g) => g.id === 'g1')).toBeTruthy() // the DELETE matched no row
   })
 })

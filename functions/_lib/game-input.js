@@ -1,7 +1,8 @@
 // Shared validation for client-supplied game fields on POST /api/games and
 // PATCH /api/games/[id] (#23). Both endpoints previously accepted any
 // non-empty string for `played_at` (no date check) and, on POST, any truthy
-// value for `player_data` (element shape unchecked). Storage is unchanged —
+// value for `player_data` (element shape unchecked); `notes` and
+// `client_round_id` are bounded here too. Storage is unchanged —
 // these functions only gate the request; the handlers still store a string
 // verbatim and stringify an array, exactly as before.
 
@@ -11,6 +12,14 @@
 const MAX_PLAYERS = 12
 const MAX_HOLES = 36
 const MAX_NAME_LEN = 60
+
+// `notes` is capped at 300 characters by the client (Summary.jsx and Setup.jsx
+// slice to 300) and by the original PATCH check; POST now agrees.
+const MAX_NOTES_LEN = 300
+
+// `client_round_id` is the local game's id, `Date.now().toString()` (13 digits).
+// 64 is a generous ceiling that still bounds what lands in the unique index.
+const MAX_CLIENT_ROUND_ID_LEN = 64
 
 // The client only ever sends a full ISO timestamp (`new Date().toISOString()`)
 // or a `YYYY-MM-DD` past-round date, so a real value always starts with an ISO
@@ -73,6 +82,38 @@ export function validatePlayerData(value) {
     }
     if (p.dnf != null && typeof p.dnf !== 'boolean') {
       return { ok: false, error: 'player dnf must be true or false' }
+    }
+  }
+  return { ok: true }
+}
+
+/**
+ * `notes` is optional free text. null / undefined mean "no notes" (stored as
+ * null); anything else must be a string of at most 300 characters. Returns
+ * `{ ok: true }` or `{ ok: false, error }` for a 400.
+ */
+export function validateNotes(value) {
+  if (value == null) return { ok: true }
+  if (typeof value !== 'string') {
+    return { ok: false, error: 'notes must be text' }
+  }
+  if (value.length > MAX_NOTES_LEN) {
+    return { ok: false, error: 'Notes too long' }
+  }
+  return { ok: true }
+}
+
+/**
+ * `client_round_id` is the idempotency key the client sends with a save. null /
+ * undefined are allowed (an old cached frontend omits it); anything else must be
+ * a non-empty string of at most 64 characters.
+ */
+export function validateClientRoundId(value) {
+  if (value == null) return { ok: true }
+  if (typeof value !== 'string' || value.length === 0 || value.length > MAX_CLIENT_ROUND_ID_LEN) {
+    return {
+      ok: false,
+      error: `client_round_id must be a text id of 1 to ${MAX_CLIENT_ROUND_ID_LEN} characters`,
     }
   }
   return { ok: true }

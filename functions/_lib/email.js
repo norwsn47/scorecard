@@ -1,13 +1,34 @@
 // Shared email helpers for the magic-link machinery (§11.4, §11.4.1, §11.14).
 //
-// The Resend send call and the email-address format regex were duplicated
-// across `request-link.js` and the new profile endpoints; both live here now.
-// `request-link.js`'s observable behaviour is unchanged — same single POST to
-// Resend, same "Resend error <status> <body>" log line on failure, same 500.
+// The Resend send call and the email-address format check are shared by
+// `request-link.js` and the profile endpoints; both live here. On a Resend
+// failure `sendEmail` logs only the HTTP status and, at most, the string `name`
+// of Resend's error body (e.g. "validation_error"), truncated to 64 characters
+// - never the response body, the API key, headers, recipient, subject or
+// content. A network failure logs only the error's `name`.
 
-// Same regex the sign-in flow has always used: one "@", at least one "." in the
-// domain, no whitespace. Deliberately permissive — Resend is the real check.
-export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+// Email address format check. Stricter than the old "anything@anything.tld"
+// regex, but still permissive: Resend is the real check on deliverability.
+//
+//   - total length 1..254 and local part 1..64 characters (RFC 5321 limits)
+//   - exactly one "@"
+//   - local part: dot-atom - letters, digits, marks and the RFC 5322 atom
+//     specials !#$%&'*+/=?^_`{|}~- , with dots only BETWEEN atoms (no leading,
+//     trailing or consecutive dots). \p{L}\p{N}\p{M} admit non-ASCII letters
+//     so internationalised addresses are not rejected.
+//   - domain: at least two dot-separated labels; each label is 1..63 letters,
+//     digits or marks, with hyphens only between them (no leading or trailing
+//     hyphen).
+//
+// Whitespace, commas, semicolons, angle brackets, quotes, parentheses, colons
+// and a second "@" are outside every character class, so they are rejected.
+// Quoted local parts ("a b"@x.com) and IP-literal domains are rejected too.
+const ATOM = "[\\p{L}\\p{N}\\p{M}!#$%&'*+/=?^_`{|}~-]"
+const LABEL = '(?![^.]{64})[\\p{L}\\p{N}\\p{M}]+(?:-+[\\p{L}\\p{N}\\p{M}]+)*'
+export const EMAIL_RE = new RegExp(
+  `^(?=.{1,254}$)(?=[^@]{1,64}@)${ATOM}+(?:\\.${ATOM}+)*@${LABEL}(?:\\.${LABEL})+$`,
+  'u'
+)
 
 export function isValidEmail(value) {
   return typeof value === 'string' && EMAIL_RE.test(value)
@@ -33,17 +54,32 @@ export async function sendEmail({ apiKey, from, to, subject, html, text }) {
       body: JSON.stringify({ from, to, subject, html, text }),
     })
   } catch (err) {
-    console.error('Resend error', 'network', String(err))
+    // Only the error's name (e.g. "TypeError"): String(err) can carry the
+    // request URL or other detail.
+    console.error('Resend error', 'network', safeLogText(err?.name))
     return { ok: false, status: 0 }
   }
 
   if (!res.ok) {
-    const body = await res.json().catch(() => ({}))
-    console.error('Resend error', res.status, JSON.stringify(body))
+    const body = await res.json().catch(() => null)
+    const errName = safeLogText(body?.name)
+    if (errName) {
+      console.error('Resend error', res.status, errName)
+    } else {
+      console.error('Resend error', res.status)
+    }
     return { ok: false, status: res.status }
   }
 
   return { ok: true, status: res.status }
+}
+
+const LOG_TEXT_MAX = 64
+
+// A value that is safe to log: only a string, truncated. Anything else (an
+// object, a number, undefined) becomes '' so nothing unexpected is ever logged.
+function safeLogText(value) {
+  return typeof value === 'string' ? value.slice(0, LOG_TEXT_MAX) : ''
 }
 
 /**
