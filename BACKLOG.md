@@ -5,7 +5,7 @@
 > - **Removing:** whoever finishes an item deletes its line in the same commit as the change (the project-manager for large changes, the main session for small ones). Add a `CHANGELOG.md` note only if it was a decision or a reversal.
 > - **Adding:** you ask; the project-manager adds genuine follow-ups from a large change; Critical/High review and audit findings are added. Lower findings stay in the chat report until you triage them.
 > - **Entries are short:** what needs doing, not the history. Nothing here is actioned without explicit instruction.
-> - **IDs are stable and never reused**, even after an item is deleted, so gaps are expected. Next free ID: **#118**.
+> - **IDs are stable and never reused**, even after an item is deleted, so gaps are expected. Next free ID: **#121**.
 
 **Last updated:** 21 September 2026
 
@@ -70,6 +70,20 @@ Add the club's official logo (likely Home or the course info section) once permi
 - `Setup.edit-recovery.test.jsx` covers the abandoned-edit guard directly; `App.test.jsx` now also drives it through a real `popstate` bounce, and `Login.test.jsx` covers the "← Home" label. Still no render test for the `goBack()` fix itself.
 
 
+### 118. Apply migration 005 (indexes) to production D1 (manual, yours)
+`migrations/005_add_indexes.sql` is merged but NOT applied. Index-only, safe to re-run, and the app works the same without it. Run in the project folder: `npx wrangler d1 execute scorecard-plus --file=migrations/005_add_indexes.sql --remote`. Claude's attempts were blocked by the permission classifier; either run it yourself or add a Bash permission rule for that command.
+
+### 119. Turn off Cloudflare Web Analytics, then enforce the CSP (manual, then Claude)
+Confirmed 21 Sep 2026: the live HTML carries an injected `static.cloudflareinsights.com/beacon.min.js` tag, which contradicts the "no analytics" copy and would be blocked by an enforced CSP. Decided: turn it off (Cloudflare dashboard, Workers & Pages, the project, Metrics / Web Analytics, or Analytics & Logs, Web Analytics, delete the site). Then: tell Claude, who re-checks the live HTML for the beacon; browse production with DevTools open and confirm no "Content Security Policy" console violations; then Claude renames the header in `public/_headers` to `Content-Security-Policy` (see #102).
+
+### 120. Production checks owed after the 20-21 Sep merges (yours, signed in)
+Nothing below has been seen in a real browser or against the real backend; all were test-verified only.
+- **Sign-in still works** (confirmed once on 20 Sep after the atomic-claim change; recheck a double-click on a link lands on the expired state).
+- **Failed save (#95, #112, #113):** block `/api/games` in DevTools Network, finish a round, tap Done: error card with Retry / Keep. Back gesture or close: round shows in History as "Not yet saved". Unblock and refocus: it syncs, the badge goes, no duplicate. Edit a pending round and check the note and score reach D1.
+- **Field borders (#108):** Settings name, new-email and delete-word fields, and the course edit name field show the stronger outline.
+- **Settings copy:** the name field sentence reads "It fills in your name at the start of a new round and marks you with a small star on the scorecard. Leave it blank if you would rather not."
+- **Earlier, still unchecked (from the audit bundles):** Edit-round course list (#56), header gear and Settings About row (#83), Settings and CourseEdit dialogs, signed-in History and Setup error states, screen-reader output.
+
 ### 90. Header top padding on mobile — reduced, needs on-device confirmation
 From the 11 September 2026 UI/UX review. Reported across mobile screens, not confirmed at pixel level via desktop emulation (doesn't render iOS status bar/notch chrome). Fixed 11 September 2026: `PageHeader.jsx`'s top padding reduced `pt-10` → `pt-6` (an existing DESIGN.md spacing token, not an invented value). Still needs a quick on-device visual check to confirm it reads right with real iOS status-bar/notch chrome. Low priority.
 
@@ -77,7 +91,7 @@ From the 11 September 2026 UI/UX review. Reported across mobile screens, not con
 If the server saved a round but the response was lost, and the user then edits the still-pending round locally (or changes its notes on the failed-save screen and retries) before the next sync, the idempotent 200 keeps the old data on the server and the edit stays local-only. Needs `PATCH` or `GET` by `client_round_id`. Documented as a known limit in PRD §11.8.
 
 ### 115. Backend hardening follow-ups (Medium/Low, from the 20 Sep 2026 review)
-- Medium: `confirm-email.js` still checks the token then marks it used in two steps; use the same atomic claim as `verify.js` (the UNIQUE constraint makes two clicks benign today).
+- Medium: `confirm-email.js` still checks the token then marks it used in two steps; use the same atomic claim as `verify.js` (the UNIQUE constraint makes two clicks benign today). Touches sign-in token code, so needs your go-ahead.
 - Low: a second click on a magic link now shows `?auth=expired` while the first tab is signed in; the expired-banner copy could acknowledge that.
 - Low: the runner checks `/api/auth/me` once per run, so a cookie change mid-run is not caught; re-check per POST if it ever matters.
 - Low: the new `EMAIL_RE` rejects trailing-dot local parts (`john.@x.com`) and underscore domains; an existing user with such an address could not request a link (very unlikely).
@@ -150,7 +164,7 @@ From the first `/full-audit`. Contrast ratios and tap sizes are hand-computed es
 - Content flag: `BruntsfieldCoursePage.jsx:46` says "since 1456" (not in PRD; `Info.jsx` says 1895).
 
 ### 102. Security hardening (Medium unless stated; no secrets found)
-- The CSP in `public/_headers` is Report-Only (shipped 21 Sep 2026; nosniff, X-Frame-Options and Referrer-Policy are enforced). After browsing production with no console violations, rename it to `Content-Security-Policy` to enforce it. Also check the Cloudflare Pages dashboard: if Web Analytics auto-injection is on, its beacon would violate script-src once enforced.
+- The CSP in `public/_headers` is Report-Only (shipped 21 Sep 2026; nosniff, X-Frame-Options and Referrer-Policy are enforced, verified live). Enforcing it waits on #119 (turn off Web Analytics, browse production for violations).
 - Magic and email-confirm links are consumed on GET, so a mail scanner could burn them (Assumed; see #106).
 - Low: personal Gmail hardcoded as `ADMIN_NOTIFY_EMAIL` fallback (`users/index.js`; decided 20 Sep 2026 to leave as is); tokens have no type column (a confirm-email token also works at `/verify`; needs a migration, so it goes with the schema bundle).
 
@@ -165,6 +179,6 @@ Check whether mail-security scanners burn the single-use link (`verify.js:14-22`
 App-start auth gating, bundle and font loading (LCP on a throttled mobile profile, fits #41), and D1 timings for `GET /api/games` and `GET /api/courses` at realistic row counts.
 
 ### 111. Smaller findings from the #104 tests (Low)
-- Share failures give no feedback (`Summary.jsx:167-172`); needs an intended-behaviour decision.
+- Share failures give no feedback (`Summary.jsx:167-172`); needs your decision: show a "Couldn't share - try again" message, or stay silent.
 - `Scorecard.jsx` still sets `synced: true` on a locally edited round without POSTing it (now only for signed-out rounds; a pending round keeps its marker instead, #95), so `synced` is not a trustworthy "on the server" flag; matters for #8.
 - Possible race, Assumed and probably unreachable: Done tapped before `/api/auth/me` resolves skips the save (`handleGoHome` in `Summary.jsx`).
