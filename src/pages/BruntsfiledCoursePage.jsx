@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import CourseMapModal from '../components/CourseMapModal.jsx'
+import CourseMapModal from '../components/CourseMapModal.lazy.jsx'
 import { track } from '../utils/analytics.js'
 import { formatShortDate } from '../utils/format.js'
 import { getActiveGame, getCompletedGames } from '../utils/storage.js'

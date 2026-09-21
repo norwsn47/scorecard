@@ -1,0 +1,19 @@
+# Cloudflare Pages response headers for the static app (the /api/* Functions are
+# not affected by this file).
+#
+# The Content-Security-Policy is Report-Only for now: a violation shows in the
+# browser console but nothing is blocked. Once production has been browsed with
+# no violations, rename it to Content-Security-Policy to enforce it.
+# If analytics is ever switched on (Plausible script in index.html), add its
+# origin to script-src and connect-src first.
+# 'unsafe-inline' in style-src is needed: React style props are used widely and
+# react-zoom-pan-pinch (the map) adds a <style> element at runtime.
+/*
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+
+# Font files never change under the same name; cache them for a year.
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
