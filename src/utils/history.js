@@ -1,3 +1,4 @@
+import { MAX_HOLES } from '../constants.js'
 import { deriveResult } from './game.js'
 import { deriveHolePars } from './scores.js'
 
@@ -43,7 +44,7 @@ export function normalizeDbGame(row) {
 
 /** Re-derives the result and normalises the par array for a local record. */
 export function normalizeLocalGame(game) {
-  const holeCount = game.holesPlayed ?? game.holes ?? 36
+  const holeCount = game.holesPlayed ?? game.holes ?? MAX_HOLES
   return {
     ...game,
     holePars: deriveHolePars(game.holePars, holeCount),

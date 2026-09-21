@@ -5,7 +5,7 @@ import { formatShortDate } from '../utils/format.js'
 import { getActiveGame, getCompletedGames } from '../utils/storage.js'
 import { useAuth } from '../hooks/useAuth.jsx'
 
-export default function BruntsfiledCoursePage({ navigate }) {
+export default function BruntsfieldCoursePage({ navigate }) {
   const { user }                    = useAuth()
   const [activeGame, setActiveGame] = useState(null)
   const [lastGame, setLastGame]     = useState(null)

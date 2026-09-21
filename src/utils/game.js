@@ -1,6 +1,5 @@
+import { MAX_HOLES } from '../constants.js'
 import { deriveHolePars } from './scores.js'
-
-const MAX_HOLES = 36
 
 /**
  * Returns the indices of duplicate names (case-insensitive).

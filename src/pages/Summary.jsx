@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { MAX_HOLES } from '../constants.js'
 import { track } from '../utils/analytics.js'
 import { formatDateOnly } from '../utils/format.js'
 import { deriveResult, isSignedInPlayer } from '../utils/game.js'
@@ -135,7 +136,7 @@ export default function Summary({ navigate, params }) {
 
   // Per-hole par for the read-only table — small bracketed reference next to
   // each hole number, matching the live Scorecard grid (§5.1, item 37).
-  const holePars = deriveHolePars(game.holePars, game.holesPlayed ?? game.holes ?? 36)
+  const holePars = deriveHolePars(game.holePars, game.holesPlayed ?? game.holes ?? MAX_HOLES)
 
   const resultBase = 'font-ui text-xs tracking-[0.12em] uppercase text-muted text-center'
   const resultName = 'mx-1.5 font-display italic text-sm text-accent normal-case tracking-normal'

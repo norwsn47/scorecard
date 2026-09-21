@@ -28,6 +28,20 @@ import {
  * Summary's already-derived record this gives the identical answer.
  */
 export function buildGamePayload(game, notes = game?.notes) {
+  return { ...buildGameFields(game, notes), client_round_id: game.id }
+}
+
+/**
+ * The body for `PATCH /api/games/:id`: the same round fields as the POST body,
+ * without `client_round_id` (an existing row's idempotency key is never
+ * changed). Scorecard's edit-in-place of a database round uses it, so the two
+ * request bodies cannot drift apart.
+ */
+export function buildGamePatch(game, notes = game?.notes) {
+  return buildGameFields(game, notes)
+}
+
+function buildGameFields(game, notes) {
   const { dnf } = deriveResult(game)
   return {
     course_id: game.courseId || null,
@@ -41,7 +55,6 @@ export function buildGamePayload(game, notes = game?.notes) {
     })),
     hole_pars: game.holePars ?? null,
     notes: (notes ?? '').trim() || null,
-    client_round_id: game.id,
   }
 }
 

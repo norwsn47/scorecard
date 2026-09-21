@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import BruntsfiledCoursePage from './BruntsfiledCoursePage.jsx'
+import BruntsfieldCoursePage from './BruntsfieldCoursePage.jsx'
 import { AuthProvider } from '../hooks/useAuth.jsx'
 
 // Covers #78: the three conditional foot-of-page links (active game /
@@ -16,7 +16,7 @@ function renderPage(props = {}) {
   const navigate = vi.fn()
   render(
     <AuthProvider>
-      <BruntsfiledCoursePage navigate={navigate} {...props} />
+      <BruntsfieldCoursePage navigate={navigate} {...props} />
     </AuthProvider>,
   )
   return { navigate }
@@ -34,7 +34,7 @@ beforeEach(() => {
   localStorage.clear()
 })
 
-describe('BruntsfiledCoursePage (#78)', () => {
+describe('BruntsfieldCoursePage (#78)', () => {
   it('signed out, no active game, no last round: shows New Game and the sign-in prompt, not Resume/Last round', async () => {
     mountFetch(null)
     renderPage()

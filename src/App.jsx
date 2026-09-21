@@ -10,7 +10,7 @@ import Home                 from './pages/Home.jsx'
 import Scorecard            from './pages/Scorecard.jsx'
 import Setup                from './pages/Setup.jsx'
 import Summary              from './pages/Summary.jsx'
-import BruntsfiledCoursePage from './pages/BruntsfiledCoursePage.jsx'
+import BruntsfieldCoursePage from './pages/BruntsfieldCoursePage.jsx'
 import { getActiveGame, isStorageAvailable } from './utils/storage.js'
 import { AuthProvider, useAuth } from './hooks/useAuth.jsx'
 import { useSyncPendingRounds } from './hooks/useSyncPendingRounds.js'
@@ -22,6 +22,9 @@ class ErrorBoundary extends Component {
   }
   static getDerivedStateFromError(error) {
     return { error }
+  }
+  componentDidCatch(error, info) {
+    console.error(error, info)
   }
   render() {
     if (this.state.error) {
@@ -53,7 +56,7 @@ const PAGES = {
   summary:     Summary,
   history:     History,
   settings:    Settings,
-  bruntsfield: BruntsfiledCoursePage,
+  bruntsfield: BruntsfieldCoursePage,
   courseEdit:  CourseEdit,
 }
 

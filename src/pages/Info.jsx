@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import ExternalArrow from '../components/ExternalArrow.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import { useAuth } from '../hooks/useAuth.jsx'
 
@@ -45,9 +46,7 @@ export default function Info({ navigate, goBack, params }) {
                   className="inline-flex items-center gap-1 py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2"
                 >
                   bruntsfieldshortholegolfclub.co.uk
-                  <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5 relative top-px">
-                    <path d="M2 8L8 2M8 2H4M8 2V6" />
-                  </svg>
+                  <ExternalArrow />
                 </a>
               </div>
             </section>
@@ -65,9 +64,7 @@ export default function Info({ navigate, goBack, params }) {
                   className="inline-flex items-center gap-1 py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                 >
                   View full course rules
-                  <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5 relative top-px">
-                    <path d="M2 8L8 2M8 2H4M8 2V6" />
-                  </svg>
+                  <ExternalArrow />
                 </button>
               </div>
             </section>
@@ -90,9 +87,7 @@ export default function Info({ navigate, goBack, params }) {
               className="inline-flex items-center gap-1 py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               outbuild.uk
-              <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5 relative top-px">
-                <path d="M2 8L8 2M8 2H4M8 2V6" />
-              </svg>
+              <ExternalArrow />
             </a>
           </div>
           <p className="font-ui text-sm text-muted leading-relaxed">
