@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   clearActiveGame,
   getActiveGame,
@@ -13,6 +13,7 @@ import {
   saveCompletedGame,
   savePlayers,
   updateCompletedGame,
+  updatePendingNotes,
 } from './storage.js'
 
 beforeEach(() => {
@@ -282,6 +283,93 @@ describe('markCompletedGamePending', () => {
     expect(markCompletedGamePending('done-1', 'u1', '')).toBe(false)
     localStorage.setItem('gt_completed_games', JSON.stringify([null, COMPLETED_A]))
     expect(() => markCompletedGamePending(COMPLETED_A.id, 'u1', '')).not.toThrow()
+  })
+})
+
+describe('updatePendingNotes', () => {
+  afterEach(() => { vi.restoreAllMocks() })
+
+  it('writes the trimmed notes onto a round pending for that user, and nothing else changes', () => {
+    saveCompletedGame({ ...COMPLETED_A, pendingSyncUserId: 'u1', notes: 'old' })
+    saveCompletedGame(COMPLETED_B)
+    expect(updatePendingNotes(COMPLETED_A.id, 'u1', '  Windy on the 2nd  ')).toBe(true)
+    const games = getCompletedGames()
+    const a = games.find(g => g.id === COMPLETED_A.id)
+    expect(a.notes).toBe('Windy on the 2nd')
+    expect(a.pendingSyncUserId).toBe('u1')
+    expect(a.synced).toBeUndefined()
+    expect(games.find(g => g.id === COMPLETED_B.id)).toEqual(COMPLETED_B)
+  })
+
+  it('stores null for blank notes', () => {
+    saveCompletedGame({ ...COMPLETED_A, pendingSyncUserId: 'u1', notes: 'old' })
+    expect(updatePendingNotes(COMPLETED_A.id, 'u1', '   ')).toBe(true)
+    expect(getCompletedGames()[0].notes).toBeNull()
+    updatePendingNotes(COMPLETED_A.id, 'u1', undefined)
+    expect(getCompletedGames()[0].notes).toBeNull()
+  })
+
+  it('matches the user id whether it is a number or a string', () => {
+    saveCompletedGame({ ...COMPLETED_A, pendingSyncUserId: '7' })
+    expect(updatePendingNotes(COMPLETED_A.id, 7, 'x')).toBe(true)
+    expect(getCompletedGames()[0].notes).toBe('x')
+  })
+
+  it('refuses a round with no marker (never adds one)', () => {
+    saveCompletedGame(COMPLETED_A)
+    expect(updatePendingNotes(COMPLETED_A.id, 'u1', 'x')).toBe(false)
+    expect(getCompletedGames()).toEqual([COMPLETED_A])
+  })
+
+  it('refuses a round that has been synced (never re-marks it)', () => {
+    saveCompletedGame({ ...COMPLETED_A, pendingSyncUserId: 'u1' })
+    markCompletedGameSynced(COMPLETED_A.id)
+    const before = getCompletedGames()
+    expect(updatePendingNotes(COMPLETED_A.id, 'u1', 'x')).toBe(false)
+    expect(getCompletedGames()).toEqual(before)
+    expect(getCompletedGames()[0].pendingSyncUserId).toBeUndefined()
+  })
+
+  it('refuses another user\'s pending round', () => {
+    saveCompletedGame({ ...COMPLETED_A, pendingSyncUserId: 'u2', notes: 'theirs' })
+    expect(updatePendingNotes(COMPLETED_A.id, 'u1', 'mine')).toBe(false)
+    expect(getCompletedGames()[0].notes).toBe('theirs')
+  })
+
+  it('returns false when no game matches the id', () => {
+    saveCompletedGame({ ...COMPLETED_A, pendingSyncUserId: 'u1' })
+    expect(updatePendingNotes('does-not-exist', 'u1', 'x')).toBe(false)
+  })
+
+  it('returns false for a missing user id, even when the round carries a marker', () => {
+    saveCompletedGame({ ...COMPLETED_A, pendingSyncUserId: 'u1', notes: 'kept' })
+    expect(updatePendingNotes(COMPLETED_A.id, undefined, 'x')).toBe(false)
+    expect(updatePendingNotes(COMPLETED_A.id, null, 'x')).toBe(false)
+    expect(updatePendingNotes(COMPLETED_A.id, '', 'x')).toBe(false)
+    expect(getCompletedGames()[0].notes).toBe('kept')
+  })
+
+  it('a missing user id never matches a record whose marker happens to read like one', () => {
+    saveCompletedGame({ ...COMPLETED_A, pendingSyncUserId: 'undefined', notes: 'kept' })
+    expect(updatePendingNotes(COMPLETED_A.id, undefined, 'x')).toBe(false)
+    saveCompletedGame({ ...COMPLETED_B, pendingSyncUserId: 'null', notes: 'kept' })
+    expect(updatePendingNotes(COMPLETED_B.id, null, 'x')).toBe(false)
+    expect(getCompletedGames().map(g => g.notes)).toEqual(['kept', 'kept'])
+  })
+
+  it('returns false when the write fails, and does not throw', () => {
+    saveCompletedGame({ ...COMPLETED_A, pendingSyncUserId: 'u1', notes: 'kept' })
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('QuotaExceededError') })
+    expect(updatePendingNotes(COMPLETED_A.id, 'u1', 'x')).toBe(false)
+    vi.restoreAllMocks()
+    expect(getCompletedGames()[0].notes).toBe('kept')
+  })
+
+  it('does not throw on corrupt storage', () => {
+    localStorage.setItem('gt_completed_games', '!!bad')
+    expect(updatePendingNotes('done-1', 'u1', '')).toBe(false)
+    localStorage.setItem('gt_completed_games', JSON.stringify([null, COMPLETED_A]))
+    expect(() => updatePendingNotes(COMPLETED_A.id, 'u1', '')).not.toThrow()
   })
 })
 

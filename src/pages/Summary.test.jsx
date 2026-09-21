@@ -68,6 +68,10 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  // Leaving Summary with a failed save pending triggers a background run (#112).
+  // RTL unmounts after this hook, so make any such run fail fast now instead of
+  // hanging on a test's unresolved fetch and leaking its guard into later tests.
+  global.fetch = vi.fn(() => Promise.reject(new TypeError('offline')))
   vi.restoreAllMocks()
 })
 
@@ -215,9 +219,9 @@ describe('Summary - when the save fails (#95)', () => {
     expect(keepButton()).toBeEnabled()
     expect(navigate).not.toHaveBeenCalled()
     expect(gamePosts()).toHaveLength(1)
-    // Nothing is decided yet: neither synced nor pending.
+    // The round is marked pending at the first failure (#112), never synced.
     expect(getCompletedGames()[0].synced).toBeUndefined()
-    expect(getCompletedGames()[0].pendingSyncUserId).toBeUndefined()
+    expect(getCompletedGames()[0].pendingSyncUserId).toBe('u1')
     // The header Done is back, so the screen is not stuck in "Saving…".
     expect(screen.getByRole('button', { name: 'Done' })).toBeEnabled()
   })
@@ -352,14 +356,15 @@ describe('Summary - when the save fails (#95)', () => {
     await user.click(keepButton())
     expect(gamePosts()).toHaveLength(2) // the failed first try + one retry
     expect(navigate).not.toHaveBeenCalled()
-    expect(getCompletedGames()[0].pendingSyncUserId).toBeUndefined()
+    // Marked at the first failure; the in-flight Retry does not change that.
+    expect(getCompletedGames()[0].pendingSyncUserId).toBe('u1')
 
     await act(async () => { release() })
     await waitFor(() => expect(navigate).toHaveBeenCalledWith('home'))
     expect(gamePosts()).toHaveLength(2)
   })
 
-  it('"Keep on this device and go home" tags the round with the user id and stores the trimmed note, without touching synced', async () => {
+  it('"Keep on this device and go home" leaves the round pending with the user id and the trimmed note, without touching synced', async () => {
     mockFetch({ user: SIGNED_IN, postGames: failWith(500) })
     const user = userEvent.setup()
     const { navigate } = await renderSummary(baseGame())
@@ -375,8 +380,9 @@ describe('Summary - when the save fails (#95)', () => {
     expect(stored.notes).toBe('Windy on the 2nd')
     expect(stored.synced).toBeUndefined()
     expect(stored.syncRejected).toBeUndefined()
-    // Keeping is a local decision: no further request goes out.
-    expect(gamePosts()).toHaveLength(1)
+    // Leaving triggers one background run (#112), which is the only further request.
+    await waitFor(() => expect(gamePosts()).toHaveLength(2))
+    expect(getCompletedGames()[0].pendingSyncUserId).toBe('u1')
   })
 
   it('a 401 can be kept on the device too, tagged with the user id', async () => {
@@ -406,16 +412,14 @@ describe('Summary - when the save fails (#95)', () => {
     expect(getCompletedGames()[0].notes).toBeNull()
   })
 
-  it('if the round is not in local storage either, staying put is the only honest answer: no Keep, and no navigation', async () => {
+  it('if the round is not in local storage either, the mark fails: the device-full wording, no Keep, and no navigation', async () => {
     mockFetch({ user: SIGNED_IN, postGames: failWith(500) })
     const user = userEvent.setup()
     const { navigate } = await renderSummary(baseGame())
-    await user.click(screen.getByRole('button', { name: 'Done' }))
-    await screen.findByRole('alert')
 
     // Simulate the local copy being gone (e.g. Scorecard's storage write failed).
     localStorage.clear()
-    await user.click(keepButton())
+    await user.click(screen.getByRole('button', { name: 'Done' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent("couldn't store the round either")
     expect(screen.queryByRole('button', { name: 'Keep on this device and go home' })).not.toBeInTheDocument()

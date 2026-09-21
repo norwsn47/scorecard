@@ -8,8 +8,8 @@ import PageHeader from '../components/PageHeader.jsx'
 import ParDelta from '../components/ParDelta.jsx'
 import PlayerStar from '../components/PlayerStar.jsx'
 import { shareScorecard } from '../utils/share.js'
-import { getActiveGame, getCompletedGames, markCompletedGamePending, markCompletedGameSynced } from '../utils/storage.js'
-import { isSyncing, postRound } from '../utils/sync.js'
+import { getActiveGame, getCompletedGames, markCompletedGamePending, markCompletedGameSynced, updatePendingNotes } from '../utils/storage.js'
+import { holdRound, isSyncing, postRound, syncPendingRounds } from '../utils/sync.js'
 import { useAuth } from '../hooks/useAuth.jsx'
 
 // What the user reads when a signed-in save does not go through (#95). Calm,
@@ -67,6 +67,45 @@ export default function Summary({ navigate, params }) {
   const savingRef                   = useRef(false)
   const failuresRef                 = useRef(0)
 
+  // The failed-save bookkeeping (BACKLOG #112, PRD §11.8). The round is marked
+  // pending at the first failed save, and held so the background runner leaves
+  // it alone while this screen shows the error (Retry is then the only sender).
+  // - markedRef: the round already carries this user's pending marker.
+  // - holdRef: the release function for the hold this screen took, or null. It
+  //   is nulled by whoever releases it, so only one of Keep / the unmount
+  //   cleanup acts on it.
+  // - mountedRef: false once this screen has gone (a save that lands after that
+  //   must not touch state or take a hold). Set in the effect body so React
+  //   StrictMode's dev-only unmount/remount restores it.
+  // - userIdRef: the latest signed-in id, so the unmount cleanup is never stale.
+  const markedRef                   = useRef(false)
+  const holdRef                     = useRef(null)
+  const mountedRef                  = useRef(false)
+  const userIdRef                   = useRef(null)
+
+  useEffect(() => { userIdRef.current = user?.id ?? null }, [user?.id])
+
+  // Leaving by any route other than Keep or a successful save (the back
+  // gesture, an unmount for any reason): release the hold and, if this screen
+  // still owned a pending round, trigger a sync so it is not left waiting for a
+  // distant trigger. With nothing held (StrictMode's first cleanup, or after
+  // Keep / a successful save already released it) this does nothing. While a
+  // Retry POST is still in flight no sync is started here: the handler's
+  // after-unmount branch marks and syncs on failure, and success needs none.
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+      const release = holdRef.current
+      holdRef.current = null
+      if (!release) return
+      release()
+      if (savingRef.current) return
+      const uid = userIdRef.current
+      if (uid !== null && uid !== undefined) syncPendingRounds(uid)
+    }
+  }, [])
+
   // A reload, deep link, or restored tab always resets history state to depth
   // 0 — there's nothing in-app to step back to, and no in-page back button any
   // more (#89) for the case where there is. Only relevant to the viewingSaved
@@ -114,7 +153,15 @@ export default function Summary({ navigate, params }) {
   // to, it is never re-posted from this screen (Done would send it as whoever
   // is signed in now), so it is always shown read-only. `ownsPending` is the
   // signed-in owner, who alone gets the status line and Edit.
-  const isPending    = !!game.pendingSyncUserId
+  // `&& !saveError`: this screen marks the round pending itself at the first
+  // failed save (#112). On the params.game path `game` is the param object and
+  // never sees that marker; on the storage paths (params.gameId, or no game
+  // param) the next render re-reads the record and would find it. Either way
+  // the round is not "arrived pending": Done, Retry, Keep and the notes field
+  // must stay, and the "will save automatically" line would be untrue while our
+  // hold is on. saveError stays set until the screen is left, so a round that
+  // was already pending on arrival (no Done here, so no saveError) is unaffected.
+  const isPending    = !!game.pendingSyncUserId && !saveError
   const ownsPending  = isPending && !!user && game.pendingSyncUserId === String(user.id)
 
   // Two modes share this screen. `viewingSaved` is the "opened from History"
@@ -165,12 +212,58 @@ export default function Summary({ navigate, params }) {
     setSaveError({ kind, n: failuresRef.current })
   }
 
+  // Drops this screen's hold on the round, if it has one. Idempotent, and the
+  // one place the hold is released on the way out (Keep, a successful save),
+  // so the unmount cleanup and Keep never both act.
+  function leave() {
+    const release = holdRef.current
+    holdRef.current = null
+    if (release) release()
+  }
+
+  // A Done / Retry save did not go through (BACKLOG #112, PRD §11.8). The round
+  // is marked pending for its owner at the FIRST failure, so a back gesture or
+  // closing the app on the error screen can never leave an unmarked, unsynced
+  // round. The hold is taken before the mark, in the same tick, so the runner
+  // can never pick the round up in between. If even the local write fails the
+  // round is not marked, the hold is dropped, and the user is told to stay and
+  // retry. `ownerId` is the signed-in user's id captured when the save began; a
+  // marker or hold is never created without one.
+  function handleSaveFailure(kind, ownerId, roundNotes) {
+    const hasOwner = ownerId !== undefined && ownerId !== null && ownerId !== ''
+
+    // The screen went away while the save was in flight: no hold, no state.
+    // Make sure the round is pending and ask for a sync so it is neither
+    // unmarked nor left waiting for a distant trigger.
+    if (!mountedRef.current) {
+      if (!hasOwner) return
+      if (markedRef.current || markCompletedGamePending(game.id, ownerId, roundNotes)) {
+        syncPendingRounds(ownerId)
+      }
+      return
+    }
+
+    if (hasOwner && !markedRef.current) {
+      const release = holdRound(game.id)
+      if (markCompletedGamePending(game.id, ownerId, roundNotes)) {
+        holdRef.current = release
+        markedRef.current = true
+      } else {
+        release()
+        reportSaveFailure('deviceFull')
+        return
+      }
+    }
+    reportSaveFailure(kind)
+  }
+
   // "Done" on the post-finish flow, and "Retry" after a failed save (same
   // handler, same body). Signed in: POST the round; only a 2xx (including the
   // server's idempotent 200 for a round it already holds) marks it synced and
-  // goes home. Anything else - a non-OK status or a network error - stays on
-  // this screen with the error block, so a round is never silently lost
-  // (BACKLOG #95, PRD §11.8). Signed out: nothing to save, just go home.
+  // goes home. Anything else - a non-OK status or a network error - marks the
+  // round pending, holds it, and stays on this screen with the error block, so
+  // a round is never silently lost (BACKLOG #95, #112, PRD §11.8). Signed out:
+  // nothing to save, just go home (no marker, no hold, no request).
   // This handler is only reachable on the post-finish flow (a saved or
   // History round shows Edit instead of Done), so it never re-POSTs a round
   // that is already in D1.
@@ -185,6 +278,7 @@ export default function Summary({ navigate, params }) {
     if (savingRef.current) return
     savingRef.current = true
     setSaving(true)
+    const ownerId = user.id
     let saved = false
     try {
       // postRound never throws and gives up after its own timeout, so a
@@ -193,12 +287,16 @@ export default function Summary({ navigate, params }) {
       const result = await postRound(game, notes)
       if (result.ok) {
         markCompletedGameSynced(game.id)
+        // Nothing is pending any more: drop the hold and the marker flag. No
+        // sync is triggered for this round.
+        leave()
+        markedRef.current = false
         saved = true
       } else {
-        reportSaveFailure(result.kind === 'unauthorised' ? 'signedOut' : result.kind === 'rejected' ? 'rejected' : 'failed')
+        handleSaveFailure(result.kind === 'unauthorised' ? 'signedOut' : result.kind === 'rejected' ? 'rejected' : 'failed', ownerId, notes)
       }
     } catch {
-      reportSaveFailure('failed')
+      handleSaveFailure('failed', ownerId, notes)
     } finally {
       setSaving(false)
       savingRef.current = false
@@ -206,17 +304,24 @@ export default function Summary({ navigate, params }) {
     if (saved) navigate('home')
   }
 
-  // "Keep on this device and go home": the round stays in localStorage tagged
-  // with the signed-in user's id, and the background sync (#95) saves it later.
-  // If even the local write fails there is nothing to keep, so stay put rather
-  // than navigate away from the only copy.
+  // "Keep on this device and go home". The round is already pending (marked at
+  // the first failed save), so this only leaves: release the hold, ask for a
+  // sync (fire and forget; the runner's guard makes a duplicate harmless) and
+  // go home. Defensive only: if the round somehow is not marked, mark it now,
+  // and if even that write fails stay put rather than navigate away from the
+  // only copy.
   function handleKeepOnDevice() {
     if (savingRef.current || !user) return
-    if (markCompletedGamePending(game.id, user.id, notes)) {
-      navigate('home')
-    } else {
-      reportSaveFailure('deviceFull')
+    if (!markedRef.current) {
+      if (!markCompletedGamePending(game.id, user.id, notes)) {
+        reportSaveFailure('deviceFull')
+        return
+      }
+      markedRef.current = true
     }
+    leave()
+    syncPendingRounds(user.id)
+    navigate('home')
   }
 
   async function handleShare() {
@@ -441,7 +546,13 @@ export default function Summary({ navigate, params }) {
                   <textarea
                     aria-label="Round notes"
                     value={notes}
-                    onChange={e => setNotes(e.target.value.slice(0, 300))}
+                    onChange={e => {
+                      const value = e.target.value.slice(0, 300)
+                      setNotes(value)
+                      // Once the round is pending, keep its stored notes in step
+                      // with the field, so a later background sync sends them.
+                      if (markedRef.current) updatePendingNotes(game.id, user.id, value)
+                    }}
                     placeholder="Add a note about this round..."
                     rows={2}
                     disabled={saving}
