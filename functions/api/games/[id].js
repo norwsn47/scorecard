@@ -1,6 +1,6 @@
 import { getSessionUser } from '../../_lib/session.js'
 import { validateHolePars } from '../../_lib/hole-pars.js'
-import { validatePlayedAt, validatePlayerData, validateNotes } from '../../_lib/game-input.js'
+import { validatePlayedAt, validatePlayerData, validateNotes, validateCourseId } from '../../_lib/game-input.js'
 import { readJsonObject } from '../../_lib/request.js'
 
 export async function onRequestDelete(context) {
@@ -43,6 +43,8 @@ export async function onRequestPatch(context) {
   const values = []
 
   if ('course_id' in body) {
+    const courseIdCheck = validateCourseId(course_id)
+    if (!courseIdCheck.ok) return Response.json({ error: courseIdCheck.error }, { status: 400 })
     // A non-null course must be one of this user's own courses — otherwise a
     // caller could attach an arbitrary (or another user's) course id, which the
     // History LEFT JOIN would then surface as a foreign course name.

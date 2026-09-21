@@ -78,7 +78,6 @@ If the server saved a round but the response was lost, and the user then edits t
 
 ### 115. Backend hardening follow-ups (Medium/Low, from the 20 Sep 2026 review)
 - Medium: `confirm-email.js` still checks the token then marks it used in two steps; use the same atomic claim as `verify.js` (the UNIQUE constraint makes two clicks benign today).
-- Low: `games` POST and PATCH pass a truthy non-string `course_id` straight to `bind` (Assumed: a D1 type error, so a 500); validate it as a string.
 - Low: a second click on a magic link now shows `?auth=expired` while the first tab is signed in; the expired-banner copy could acknowledge that.
 - Low: the runner checks `/api/auth/me` once per run, so a cookie change mid-run is not caught; re-check per POST if it ever matters.
 - Low: the new `EMAIL_RE` rejects trailing-dot local parts (`john.@x.com`) and underscore domains; an existing user with such an address could not request a link (very unlikely).
@@ -167,6 +166,5 @@ App-start auth gating, bundle and font loading (LCP on a throttled mobile profil
 
 ### 111. Smaller findings from the #104 tests (Low)
 - Share failures give no feedback (`Summary.jsx:167-172`); needs an intended-behaviour decision.
-- `share.js` `winnerLabel` says "1 strokes" for a winning total of 1.
 - `Scorecard.jsx` still sets `synced: true` on a locally edited round without POSTing it (now only for signed-out rounds; a pending round keeps its marker instead, #95), so `synced` is not a trustworthy "on the server" flag; matters for #8.
 - Possible race, Assumed and probably unreachable: Done tapped before `/api/auth/me` resolves skips the save (`handleGoHome` in `Summary.jsx`).

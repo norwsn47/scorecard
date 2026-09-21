@@ -1,6 +1,6 @@
 import { getSessionUser } from '../../_lib/session.js'
 import { validateHolePars } from '../../_lib/hole-pars.js'
-import { validatePlayedAt, validatePlayerData, validateNotes, validateClientRoundId } from '../../_lib/game-input.js'
+import { validatePlayedAt, validatePlayerData, validateNotes, validateClientRoundId, validateCourseId } from '../../_lib/game-input.js'
 import { readJsonObject } from '../../_lib/request.js'
 
 export async function onRequestGet(context) {
@@ -44,6 +44,9 @@ export async function onRequestPost(context) {
   // client_round_id (the idempotency key: a short non-empty string, or absent).
   const notesCheck = validateNotes(notes)
   if (!notesCheck.ok) return Response.json({ error: notesCheck.error }, { status: 400 })
+
+  const courseIdCheck = validateCourseId(course_id)
+  if (!courseIdCheck.ok) return Response.json({ error: courseIdCheck.error }, { status: 400 })
 
   const roundIdCheck = validateClientRoundId(client_round_id)
   if (!roundIdCheck.ok) return Response.json({ error: roundIdCheck.error }, { status: 400 })

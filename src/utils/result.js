@@ -16,6 +16,9 @@ export function tiedNames(names) {
   return `${names.slice(0, -1).join(', ')} & ${names[names.length - 1]}`
 }
 
+/** "1 stroke" / "5 strokes". */
+export const strokesLabel = n => `${n} ${n === 1 ? 'stroke' : 'strokes'}`
+
 /**
  * One-line result label for a History card. Returns null for a solo round
  * (fewer than two players) — a solo round carries no result.
@@ -26,7 +29,7 @@ export function tiedNames(names) {
 export function historyResultLabel({ players = [], winners = [], isDraw = false, winningTotal = null } = {}) {
   if (players.length < 2) return null
   if (winners.length === 0) return 'No winner'
-  if (!isDraw) return `Winner: ${winners[0]} - ${winningTotal} strokes`
-  if (winners.length <= 3) return `Tied: ${tiedNames(winners)} - ${winningTotal} strokes`
-  return `Tied: ${winners.length} players level on ${winningTotal} strokes`
+  if (!isDraw) return `Winner: ${winners[0]} - ${strokesLabel(winningTotal)}`
+  if (winners.length <= 3) return `Tied: ${tiedNames(winners)} - ${strokesLabel(winningTotal)}`
+  return `Tied: ${winners.length} players level on ${strokesLabel(winningTotal)}`
 }

@@ -104,6 +104,17 @@ export function validateNotes(value) {
 }
 
 /**
+ * `course_id` is a course's text id. null / undefined / '' / false mean "no
+ * course" (the handlers store those as NULL); any other value must be a string,
+ * so an object or number can never reach the database as a bound parameter.
+ */
+export function validateCourseId(value) {
+  if (!value) return { ok: true }
+  if (typeof value !== 'string') return { ok: false, error: 'course_id must be text' }
+  return { ok: true }
+}
+
+/**
  * `client_round_id` is the idempotency key the client sends with a save. null /
  * undefined are allowed (an old cached frontend omits it); anything else must be
  * a non-empty string of at most 64 characters.
