@@ -135,7 +135,7 @@ One narrow wrinkle in `functions/api/users/index.js`, low priority, logged so it
 
 ---
 
-### Full-codebase audit, 19 September 2026 (#97, #98, #100, #102-#103, #106-#108, #111) - lower findings, short form
+### Full-codebase audit, 19 September 2026 (#97, #98, #100, #102-#103, #106-#107, #111) - lower findings, short form
 From the first `/full-audit`. Contrast ratios and tap sizes are hand-computed estimates, not browser measurements; nothing was screen-reader tested; `npm audit` was not run. The two High findings (#95, #96) are done.
 
 ### 97. Dead code - remainder (Low)
@@ -167,9 +167,6 @@ Check whether mail-security scanners burn the single-use link (`verify.js:14-22`
 
 ### 107. Measure performance (not yet run)
 App-start auth gating, bundle and font loading (LCP on a throttled mobile profile, fits #41), and D1 timings for `GET /api/games` and `GET /api/courses` at realistic row counts.
-
-### 108. Input and outline-button border contrast (design decision)
-`border` `#D9D0C4` is ~1.39:1 on the page background, below the 3:1 WCAG expects for control boundaries (estimate). **Decided 19 Sep 2026:** darken borders on inputs only, via a new stronger border token for form fields; decorative hairlines stay light. Design-director proposes the value, then a localhost check.
 
 ### 111. Smaller findings from the #104 tests (Low)
 - Share failures give no feedback (`Summary.jsx:167-172`); needs an intended-behaviour decision.
