@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import ExternalArrow from '../components/ExternalArrow.jsx'
 import { BRUNTSFIELD_COURSE_NAME } from '../constants.js'
 import { track } from '../utils/analytics.js'
 import { formatShortDate } from '../utils/format.js'
@@ -206,9 +207,7 @@ export default function Home({ navigate }) {
           <span className="text-xs text-muted font-normal"> by </span>
           <a href="https://outbuild.uk" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 py-3 -my-3 text-xs text-muted font-normal underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40">
             Outbuild
-            <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-2.5 h-2.5 relative top-px">
-              <path d="M2 8L8 2M8 2H4M8 2V6" />
-            </svg>
+            <ExternalArrow />
           </a>
         </p>
       </footer>

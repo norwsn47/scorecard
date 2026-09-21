@@ -13,6 +13,16 @@ import { useAuth } from '../hooks/useAuth.jsx'
 
 const RESEND_COOLDOWN_SECONDS = 30
 
+// The one request behind both the first "Send me a link" submit and the
+// confirmation screen's resend. Each caller reads the response its own way.
+function requestLink(email) {
+  return fetch('/api/auth/request-link', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  })
+}
+
 export default function Login({ navigate, goBack }) {
   const { authError, setAuthError } = useAuth()
   const [email, setEmail]           = useState('')
@@ -50,11 +60,7 @@ export default function Login({ navigate, goBack }) {
     setSending(true)
     setError(null)
     try {
-      const res = await fetch('/api/auth/request-link', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      })
+      const res = await requestLink(email)
       const data = await res.json()
       if (!res.ok) {
         setError(data.error || 'Something went wrong. Try again.')
@@ -77,11 +83,7 @@ export default function Login({ navigate, goBack }) {
     setResendError(null)
     setCooldown(RESEND_COOLDOWN_SECONDS)
     try {
-      const res = await fetch('/api/auth/request-link', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      })
+      const res = await requestLink(email)
       if (!res.ok) {
         setResendError(
           res.status === 429

@@ -1,6 +1,7 @@
 import { deriveResult } from './game.js'
 import { deriveHolePars, formatToPar, playerTotal, roundToPar, scoreToPar } from './scores.js'
 import { formatDateOnly } from './format.js'
+import { historyResultLabel } from './result.js'
 
 const C = {
   bg:     '#F7F4EE',
@@ -51,16 +52,12 @@ function drawWithTrail(ctx, cx, baseline, main, trail, opts) {
 }
 
 // "Tied" is the shared term across the Summary, History and this image
-// (PRD §4.7 / item 36). `result` is a deriveResult() output.
-function winnerLabel({ winners, winningTotal }) {
-  if (winners.length === 0) return 'No winner - all players DNF'
-  const strokes = `${winningTotal} strokes`
-  if (winners.length === 1) return `Winner: ${winners[0]} - ${strokes}`
-  if (winners.length >= 4) return `Tied: ${winners.length} players level on ${strokes}`
-  const names = winners.length === 2
-    ? `${winners[0]} & ${winners[1]}`
-    : `${winners.slice(0, -1).join(', ')} & ${winners.at(-1)}`
-  return `Tied: ${names} - ${strokes}`
+// (PRD §4.7 / item 36). `result` is a deriveResult() output; the wording lives
+// in result.js and is shared with History. Only the no-winner sentence is the
+// image's own. Only called for rounds of two or more players.
+function winnerLabel(result, players) {
+  if (result.winners.length === 0) return 'No winner - all players DNF'
+  return historyResultLabel({ ...result, players })
 }
 
 async function buildCanvas(game) {
@@ -156,7 +153,7 @@ async function buildCanvas(game) {
     ctx.fillStyle = C.card
     ctx.fillRect(PAD, y, W - PAD * 2, WIN_H)
 
-    const label   = winnerLabel(result)
+    const label   = winnerLabel(result, players)
     const noWin   = winners.length === 0
     ctx.fillStyle = noWin ? C.muted : C.accent
     ctx.font      = noWin

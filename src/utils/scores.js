@@ -1,3 +1,5 @@
+import { PAR_MAX, PAR_MIN } from '../constants.js'
+
 export function playerTotal(scores, player) {
   return (scores?.[player] ?? [])
     .filter(s => s !== null)
@@ -83,9 +85,9 @@ export function deriveHolePars(raw, holeCount) {
   const out = []
   for (let i = 0; i < holeCount; i++) {
     const v = arr[i]
-    // Same 2..7 band the backend validator enforces on write; a corrupted
+    // Same band (PAR_MIN..PAR_MAX, 2..7) the backend validator enforces on write; a corrupted
     // stored value outside it falls back to par 3 rather than rendering junk.
-    out.push(Number.isInteger(v) && v >= 2 && v <= 7 ? v : DEFAULT_PAR)
+    out.push(Number.isInteger(v) && v >= PAR_MIN && v <= PAR_MAX ? v : DEFAULT_PAR)
   }
   return out
 }

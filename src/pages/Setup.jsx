@@ -157,7 +157,7 @@ export default function Setup({ navigate, goBack, params }) {
       if (user?.id !== null && user?.id !== undefined) syncPendingRounds(user.id)
       // Forward bruntsfield context so History's back button (#72) doesn't
       // mislabel itself "<- Home" when this recovery redirect was reached via
-      // Bruntsfield's "New Game" (BruntsfiledCoursePage.jsx).
+      // Bruntsfield's "New Game" (BruntsfieldCoursePage.jsx).
       navigate('history', { bruntsfield: fromBruntsfield }, { replace: true })
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -223,6 +223,26 @@ export default function Setup({ navigate, goBack, params }) {
   function handleNewCourseHoleCount(count) {
     setNewCourseHoleCount(count)
     setNewCoursePars(Array(count).fill(3))
+  }
+
+  // The "+ New course" form always opens, and closes, on the same defaults:
+  // the round's own hole count while editing (else 9) and par 3 throughout.
+  function resetNewCourseDefaults() {
+    setNewCourseHoleCount(newCourseDefaultHoles)
+    setNewCoursePars(Array(newCourseDefaultHoles).fill(3))
+  }
+
+  function startNewCourse() {
+    setCreatingCourse(true)
+    setSelectedCourseId(null)
+    resetNewCourseDefaults()
+  }
+
+  function cancelNewCourse() {
+    setCreatingCourse(false)
+    setNewCourseName('')
+    setCourseError(null)
+    resetNewCourseDefaults()
   }
 
   function stepCoursePar(i, delta) {
@@ -427,12 +447,7 @@ export default function Setup({ navigate, goBack, params }) {
                   {canCreateCourse && (
                     <button
                       type="button"
-                      onClick={() => {
-                        setCreatingCourse(true)
-                        setSelectedCourseId(null)
-                        setNewCourseHoleCount(newCourseDefaultHoles)
-                        setNewCoursePars(Array(newCourseDefaultHoles).fill(3))
-                      }}
+                      onClick={startNewCourse}
                       className="py-2 px-4 rounded-sm border border-accent text-accent font-ui text-xs tracking-[0.1em] uppercase font-semibold active:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                     >
                       + New course
@@ -489,12 +504,7 @@ export default function Setup({ navigate, goBack, params }) {
                   {canCreateCourse && (
                     <button
                       type="button"
-                      onClick={() => {
-                        setCreatingCourse(true)
-                        setSelectedCourseId(null)
-                        setNewCourseHoleCount(newCourseDefaultHoles)
-                        setNewCoursePars(Array(newCourseDefaultHoles).fill(3))
-                      }}
+                      onClick={startNewCourse}
                       className="shrink-0 py-2 px-4 rounded-sm border border-accent text-accent font-ui text-xs tracking-[0.1em] uppercase font-semibold active:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                     >
                       + New course
@@ -516,7 +526,7 @@ export default function Setup({ navigate, goBack, params }) {
                       className="flex-1 min-w-0 py-3 pl-4 pr-4 rounded-md border border-field font-ui text-base bg-bg-card text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40"
                     />
                     <button
-                      onClick={() => { setCreatingCourse(false); setNewCourseName(''); setCourseError(null); setNewCourseHoleCount(newCourseDefaultHoles); setNewCoursePars(Array(newCourseDefaultHoles).fill(3)) }}
+                      onClick={cancelNewCourse}
                       className="px-4 py-3 rounded-sm border border-border text-muted font-ui text-sm active:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                     >
                       Cancel

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
+  buildGamePatch,
   buildGamePayload,
   holdRound,
   isHeld,
@@ -35,6 +36,23 @@ function round(overrides = {}) {
     ...overrides,
   }
 }
+
+describe('buildGamePatch', () => {
+  it('is the POST body without client_round_id, field for field', () => {
+    const { client_round_id, ...rest } = buildGamePayload(round({ notes: 'Kept' }))
+    expect(client_round_id).toBe('round-1')
+    expect(buildGamePatch(round({ notes: 'Kept' }))).toEqual(rest)
+    expect(Object.keys(buildGamePatch(round()))).toEqual([
+      'course_id', 'played_at', 'holes_played', 'player_data', 'hole_pars', 'notes',
+    ])
+  })
+
+  it('flags an unfinished player as DNF and trims notes, like the POST body', () => {
+    const patch = buildGamePatch(round({ scores: { Ann: [3, 3], Bo: [4, null] } }), '  Rain  ')
+    expect(patch.player_data[1]).toEqual({ name: 'Bo', scores: [4, null], total: 4, dnf: true })
+    expect(patch.notes).toBe('Rain')
+  })
+})
 
 describe('buildGamePayload', () => {
   it('builds exactly the POST /api/games body from a stored round', () => {

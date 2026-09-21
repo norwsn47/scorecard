@@ -184,7 +184,7 @@ export default function Settings({ navigate }) {
         <section className="space-y-3">
           <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted">Your name</p>
           <p className="font-ui text-sm text-muted leading-relaxed">
-            Just for you for now - it is not shown on any scorecard yet. Leave it blank if you would rather not.
+            It fills in your name at the start of a new round and marks you with a small star on the scorecard. Leave it blank if you would rather not.
           </p>
           <input
             type="text"

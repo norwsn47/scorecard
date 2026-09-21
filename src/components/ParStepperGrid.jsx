@@ -6,8 +6,7 @@
 // drift apart. Callers own the heading above the grid — the wording differs
 // by context ("Par for each hole" vs "Par for this round").
 
-const PAR_MIN = 2
-const PAR_MAX = 7
+import { PAR_MAX, PAR_MIN } from '../constants.js'
 
 /**
  * Applies a bounded +/-1 step to one hole in a par array, clamped to the

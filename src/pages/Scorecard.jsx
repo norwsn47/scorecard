@@ -3,12 +3,12 @@ import CourseMapModal from '../components/CourseMapModal.lazy.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import ParDelta from '../components/ParDelta.jsx'
 import PlayerStar from '../components/PlayerStar.jsx'
-import { BRUNTSFIELD_COURSE_NAME } from '../constants.js'
+import { BRUNTSFIELD_COURSE_NAME, MAX_HOLES, MAX_STROKES } from '../constants.js'
 import { track } from '../utils/analytics.js'
 import { computeDisplayedHoles, finishGame, isSignedInPlayer } from '../utils/game.js'
 import { deriveHolePars, playerTotal, roundToPar, scoreToPar } from '../utils/scores.js'
 import { clearActiveCell, clearActiveGame, getActiveCell, getActiveGame, getCompletedGames, saveActiveCell, saveActiveGame, saveCompletedGame, updateCompletedGame } from '../utils/storage.js'
-import { syncPendingRounds } from '../utils/sync.js'
+import { buildGamePatch, syncPendingRounds } from '../utils/sync.js'
 import { useAuth } from '../hooks/useAuth.jsx'
 
 function initialCellFor(g) {
@@ -96,7 +96,7 @@ export default function Scorecard({ navigate, params }) {
 
   const players       = Array.isArray(game.players) ? game.players : []
   const displayedHoles = computeDisplayedHoles(players, game.scores ?? {}, game.holes)
-  const holePars      = deriveHolePars(game.holePars, game.holes ?? 36)
+  const holePars      = deriveHolePars(game.holePars, game.holes ?? MAX_HOLES)
 
   // Whether the active game's course is actually Bruntsfield — matched by
   // the game itself, not by which route it was started from (#1, reverses
@@ -134,8 +134,6 @@ export default function Scorecard({ navigate, params }) {
     setSaveError(!saved)
   }
 
-  const MAX_STROKES = 14
-
   function handleIncrement() {
     if (!activePlayer) return
     if (activeScore !== null && activeScore >= MAX_STROKES) return
@@ -164,15 +162,6 @@ export default function Scorecard({ navigate, params }) {
     }
   }
 
-  function buildPlayerData(completed) {
-    return completed.players.map(p => ({
-      name: p,
-      scores: (completed.scores[p] ?? []).slice(0, completed.holesPlayed),
-      total: playerTotal(completed.scores, p) || 0,
-      dnf: completed.dnf?.includes(p) ?? false,
-    }))
-  }
-
   async function handleConfirmFinish() {
     if (finishingRef.current) return
     const completed = finishGame(game)
@@ -188,14 +177,7 @@ export default function Scorecard({ navigate, params }) {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify({
-              course_id: completed.courseId || null,
-              played_at: completed.completedAt,
-              holes_played: completed.holesPlayed,
-              player_data: buildPlayerData(completed),
-              hole_pars: completed.holePars ?? null,
-              notes: (completed.notes ?? '').trim() || null,
-            }),
+            body: JSON.stringify(buildGamePatch(completed)),
           })
           if (!res.ok) throw new Error('patch failed')
         } else {
