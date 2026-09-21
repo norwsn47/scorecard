@@ -2,6 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Self-hosted fonts (latin subset), so visitors' IPs never go to Google.
+   Cormorant Garamond and Inter are variable files: one file covers the weights
+   the app uses. Characters outside the latin range fall back to the system
+   font. Files live in public/fonts/ (all OFL-licensed, from Google Fonts). */
+@font-face {
+  font-family: 'Caveat';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/caveat-600.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('/fonts/cormorant-garamond-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Cormorant Garamond';
+  font-style: italic;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('/fonts/cormorant-garamond-italic.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('/fonts/inter.woff2') format('woff2');
+}
+
 @layer utilities {
   /* iOS zoom prevention — inputs must be at least 16px */
   input,

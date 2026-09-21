@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import CourseMapModal from '../components/CourseMapModal.jsx'
+import CourseMapModal from '../components/CourseMapModal.lazy.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import ParDelta from '../components/ParDelta.jsx'
 import PlayerStar from '../components/PlayerStar.jsx'
