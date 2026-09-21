@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { validatePlayedAt, validatePlayerData, validateNotes, validateClientRoundId } from './game-input.js'
+import { validatePlayedAt, validatePlayerData, validateNotes, validateClientRoundId, validateCourseId } from './game-input.js'
 
 describe('validatePlayedAt (#23)', () => {
   it('accepts an ISO date string', () => {
@@ -120,5 +120,26 @@ describe('validateClientRoundId', () => {
     const r = validateClientRoundId(value)
     expect(r.ok).toBe(false)
     expect(r.error).toMatch(/client_round_id/)
+  })
+})
+
+describe('validateCourseId', () => {
+  it.each([
+    [null, 'null'],
+    [undefined, 'undefined'],
+    ['', 'an empty string'],
+    [false, 'false'],
+    ['course-1', 'a text id'],
+  ])('accepts %j (%s)', (value) => {
+    expect(validateCourseId(value)).toEqual({ ok: true })
+  })
+
+  it.each([
+    [123, 'a number'],
+    [true, 'true'],
+    [['c1'], 'an array'],
+    [{ id: 'c1' }, 'an object'],
+  ])('rejects %j (%s)', (value) => {
+    expect(validateCourseId(value)).toEqual({ ok: false, error: 'course_id must be text' })
   })
 })

@@ -257,6 +257,23 @@ describe('onRequestPatch /api/games/[id]', () => {
     expect(games[0].course_id).toBeNull()
   })
 
+  it.each([
+    [123, 'a number'],
+    [true, 'true'],
+    [['course-u1'], 'an array'],
+    [{ id: 'course-u1' }, 'an object'],
+  ])('rejects a non-string course_id (%j, %s) with 400 and changes nothing', async (value) => {
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+    const ctx = patch({ course_id: value })
+    ctx.env.DB = makeDB(games, [{ id: 'course-u1', user_id: 'u1' }])
+
+    const res = await onRequestPatch(ctx)
+
+    expect(res.status).toBe(400)
+    expect((await res.json()).error).toBe('course_id must be text')
+    expect(games[0].course_id).toBeNull()
+  })
+
   it('rejects notes longer than 300 characters', async () => {
     getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
     const ctx = patch({ notes: 'x'.repeat(301) })

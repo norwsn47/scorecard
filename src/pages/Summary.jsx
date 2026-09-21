@@ -3,7 +3,7 @@ import { MAX_HOLES } from '../constants.js'
 import { track } from '../utils/analytics.js'
 import { formatDateOnly } from '../utils/format.js'
 import { deriveResult, isSignedInPlayer } from '../utils/game.js'
-import { tiedNames } from '../utils/result.js'
+import { tiedNames, strokesLabel } from '../utils/result.js'
 import { deriveHolePars, playerTotal, roundToPar, scoreToPar } from '../utils/scores.js'
 import PageHeader from '../components/PageHeader.jsx'
 import ParDelta from '../components/ParDelta.jsx'
@@ -408,7 +408,7 @@ export default function Summary({ navigate, params }) {
         <div className="px-5 pt-3 pb-1">
           {winners.length >= 4 ? (
             <p className={`${resultBase} block text-center leading-relaxed`}>
-              Tied <span className={resultStrokes}>- {winners.length} players level on {game.winningTotal} strokes</span>
+              Tied <span className={resultStrokes}>- {winners.length} players level on {strokesLabel(game.winningTotal)}</span>
             </p>
           ) : (
             <div className="flex items-center gap-3">
@@ -419,13 +419,13 @@ export default function Summary({ navigate, params }) {
                 <p className={`${resultBase} min-w-0 leading-relaxed`}>
                   <span>Winner -</span>
                   <span className={resultName}>{winners[0]}</span>
-                  <span className={resultStrokes}>- {game.winningTotal} strokes</span>
+                  <span className={resultStrokes}>- {strokesLabel(game.winningTotal)}</span>
                 </p>
               ) : (
                 <p className={`${resultBase} min-w-0 leading-relaxed`}>
                   <span>Tied -</span>
                   <span className={resultName}>{tiedNames(winners)}</span>
-                  <span className={resultStrokes}>- {game.winningTotal} strokes</span>
+                  <span className={resultStrokes}>- {strokesLabel(game.winningTotal)}</span>
                 </p>
               )}
               <div className="flex-1 h-px bg-border" />

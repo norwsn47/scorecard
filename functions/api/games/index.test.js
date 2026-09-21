@@ -354,6 +354,37 @@ describe('onRequestPost /api/games - notes validation', () => {
   })
 })
 
+// ── course_id ──────────────────────────────────────────────────────────────
+describe('onRequestPost /api/games - course_id type', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+  })
+
+  it.each([
+    [123, 'a number'],
+    [true, 'true'],
+    [['c1'], 'an array'],
+    [{ id: 'c1' }, 'an object'],
+  ])('rejects a non-string course_id (%j, %s) with 400 and inserts nothing', async (value) => {
+    const ctx = post({ ...validBody, course_id: value })
+    const db = makeDB()
+    ctx.env.DB = db
+    const res = await onRequestPost(ctx)
+    expect(res.status).toBe(400)
+    expect((await res.json()).error).toBe('course_id must be text')
+    expect(db.inserted).toHaveLength(0)
+  })
+
+  it('still accepts an absent or null course_id', async () => {
+    for (const extra of [{}, { course_id: null }]) {
+      const ctx = post({ ...validBody, ...extra })
+      ctx.env.DB = makeDB()
+      expect((await onRequestPost(ctx)).status).toBe(201)
+    }
+  })
+})
+
 // ── client_round_id: validation, idempotency, the unique-index race ────────
 describe('onRequestPost /api/games - client_round_id', () => {
   const ROUND_ID_ARG = 8

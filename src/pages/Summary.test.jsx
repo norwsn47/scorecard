@@ -731,6 +731,14 @@ describe('Summary - result and DNF rendering', () => {
     expect(callout).toHaveTextContent('Winner -Ann- 6 strokes')
   })
 
+  it('says "1 stroke" (singular) for a winning total of one, in all three wordings', async () => {
+    mockFetch({ user: null })
+    const { unmount } = await renderSummary(baseGame({ holes: 1, holesPlayed: 1, holePars: [3], scores: { Ann: [1], Bo: [2] } }))
+    expect(screen.getByText('Winner -').closest('p')).toHaveTextContent('Winner -Ann- 1 stroke')
+    expect(screen.getByText('Winner -').closest('p')).not.toHaveTextContent('1 strokes')
+    unmount?.()
+  })
+
   it('reads "Tied" with both names when two players are level', async () => {
     mockFetch({ user: null })
     await renderSummary(baseGame({ scores: { Ann: [3, 4], Bo: [4, 3] } }))

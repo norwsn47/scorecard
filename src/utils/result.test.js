@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { historyResultLabel, tiedNames } from './result.js'
+import { historyResultLabel, strokesLabel, tiedNames } from './result.js'
 
 describe('tiedNames', () => {
   it('returns an empty string for no names', () => {
@@ -60,5 +60,20 @@ describe('historyResultLabel', () => {
 
   it('tolerates a missing/empty argument', () => {
     expect(historyResultLabel()).toBeNull()
+  })
+})
+
+describe('strokesLabel', () => {
+  it('is singular for exactly one stroke and plural otherwise', () => {
+    expect(strokesLabel(1)).toBe('1 stroke')
+    expect(strokesLabel(0)).toBe('0 strokes')
+    expect(strokesLabel(2)).toBe('2 strokes')
+    expect(strokesLabel(42)).toBe('42 strokes')
+  })
+
+  it('is used in every History result wording', () => {
+    expect(historyResultLabel({ players: ['A', 'B'], winners: ['A'], isDraw: false, winningTotal: 1 })).toBe('Winner: A - 1 stroke')
+    expect(historyResultLabel({ players: ['A', 'B'], winners: ['A', 'B'], isDraw: true, winningTotal: 1 })).toBe('Tied: A & B - 1 stroke')
+    expect(historyResultLabel({ players: ['A', 'B', 'C', 'D'], winners: ['A', 'B', 'C', 'D'], isDraw: true, winningTotal: 1 })).toBe('Tied: 4 players level on 1 stroke')
   })
 })
