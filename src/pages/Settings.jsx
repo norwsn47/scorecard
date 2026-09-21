@@ -167,7 +167,7 @@ export default function Settings({ navigate }) {
   }
 
   const fieldClass =
-    'w-full py-3 pl-4 pr-4 rounded-md border border-border font-ui text-base bg-bg-card text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40'
+    'w-full py-3 pl-4 pr-4 rounded-md border border-field font-ui text-base bg-bg-card text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40'
 
   return (
     <div className="h-full bg-bg flex flex-col">
@@ -359,7 +359,7 @@ export default function Settings({ navigate }) {
               onChange={e => setDeleteWord(e.target.value)}
               autoComplete="off"
               autoCapitalize="characters"
-              className="w-full py-3 pl-4 pr-4 rounded-md border border-border font-ui text-base bg-bg-card text-text focus:outline-none focus:ring-2 focus:ring-accent/40 mb-3"
+              className="w-full py-3 pl-4 pr-4 rounded-md border border-field font-ui text-base bg-bg-card text-text focus:outline-none focus:ring-2 focus:ring-accent/40 mb-3"
             />
 
             {deleteError && (

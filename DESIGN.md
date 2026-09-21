@@ -1,7 +1,7 @@
 # Design
 ## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
-Last updated: 20 September 2026
+Last updated: 21 September 2026
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
 ---
@@ -30,13 +30,25 @@ All tokens are defined as CSS custom properties in `src/styles/index.css` and al
 | `muted` | `--color-text-muted` | `#6B6560` | Muted text — warm grey |
 | `accent` | `--color-accent` | `#1A4329` | Brand colour — deep historic Scottish green; all interactive highlights, active cell, winner |
 | `accent-hover` | `--color-accent-hover` | `#142f1e` | Accent on press |
-| `border` | `--color-border` | `#D9D0C4` | All borders — warm light |
+| `border` | `--color-border` | `#D9D0C4` | Hairlines, dividers, card and outline-button edges — warm light, decorative (1.39:1 on `bg`, deliberately below the 3:1 graphics floor) |
+| `field` | `--color-border-field` | `#827970` | Boundary of **form fields only** — text inputs, textareas, selects. Used as `border-field`. Warm mid-grey, ~3.7:1 on `bg-card` (see "Sunlight contrast") |
 | `control-warm` | `--color-control-warm` | `#7D746C` | Warm grey for secondary game controls: Map and Decrement outline and glyph, Advance fill |
 | `under-par` | `--color-under-par` | `#2C6B3C` | Score-vs-par **delta** when under par (`-1`, `-2` …). Deltas only — never chrome, never interactive |
 | `over-par` | `--color-over-par` | `#9B3A24` | Score-vs-par **delta** when over par (`+1`, `+5` …). Deltas only — never chrome, never interactive |
 | *(desktop only)* | — | `#E8E2D6` | Background behind phone frame on desktop |
 
 `tailwind.config.js` carries matching aliases for these two tokens: `'under-par': 'var(--color-under-par)'`, `'over-par': 'var(--color-over-par)'`.
+
+### `border` vs `field` — which edge to use
+
+Two border tokens, split by **job**, not by size or importance:
+
+- **`border-field`** - the edge of something you type or choose into: `<input>`, `<textarea>`, `<select>` (including the date input). That edge is the only thing telling a golfer where the field is, so it is a control boundary and must clear 3:1 (WCAG 1.4.11). Nothing else takes it.
+- **`border-border`** - everything decorative: header and table rules, list dividers, card edges, the dashed empty-state and add-player boxes, and (for now) outline buttons, chips, the 9/18 toggle and par stepper cells. If removing the line would not stop someone finding a control, it is a hairline and stays light.
+
+Why not darken `border` itself: it draws every rule on every screen. Darkening it would turn the scorecard's quiet printed-rule feel into a grid of grey lines (flatness and restraint, `OUTBUILD-DESIGN-LANGUAGE.md` §4 and §9). A field earns a firmer edge; a divider does not.
+
+Not a state colour. `field` is the *resting* edge of a field. Error / duplicate stays `border-accent` (about 10:1, unmistakable against a grey edge); the focus ring stays `ring-accent/40`. There is no dark theme, so there is a single value. The Tailwind key is `field` (not `border-field`) so the class reads `border-field` rather than `border-border-field`; do not use it for `bg-` or `text-`.
 
 ### The two score-vs-par colours are a scoped exception
 
@@ -60,7 +72,7 @@ This keeps within the Outbuild allowance of "no more than two accents beyond the
 
 ### Sunlight contrast — the score-vs-par colours
 
-**Rule:** Anything a golfer reads or taps outdoors: text at least 4.5:1, icons, rings and fills at least 3:1 (aim for 4:1). `muted` is the lightest permitted text colour. Only disabled states and decorative hairlines (`border`) may fall below.
+**Rule:** Anything a golfer reads or taps outdoors: text at least 4.5:1, icons, rings and fills at least 3:1 (aim for 4:1). `muted` is the lightest permitted text colour. Only disabled states and decorative hairlines (`border`) may fall below. The edge of a form field is not a hairline: it takes `field`.
 
 The app is used outdoors on a phone in bright light, so both delta colours were chosen to clear **WCAG AA for small text (4.5:1)** against every surface a delta can sit on, with headroom for glare. Ratios:
 
@@ -72,6 +84,12 @@ The app is used outdoors on a phone in bright light, so both delta colours were 
 | `accent` `#1A4329` (winner column text) | 10.2 : 1 ✓ | 9.8 : 1 ✓ | — |
 | `control-warm` `#7D746C` (Map / Decrement outline and glyph, Advance fill) | 4.2 : 1 ✓ | 4.0 : 1 ✓ | — |
 | `muted` `#6B6560` (secondary text, inactive hole numbers, placeholders) | 5.2 : 1 ✓ | 5.0 : 1 ✓ | — |
+| `field` `#827970` (text input, textarea, select edge) | 3.9 : 1 ✓ | 3.7 : 1 ✓ | — |
+| `border` `#D9D0C4` (decorative hairlines only) | 1.39 : 1 (exempt) | 1.33 : 1 (exempt) | — |
+
+The `field` and `border` rows are **hand-computed from WCAG relative luminance** (sRGB channels linearised, ratio = `(L1 + 0.05) / (L2 + 0.05)`), not measured in a browser. Relative luminance: `bg` 0.906, `bg-card` 0.867, `field` 0.196, `border` 0.638.
+
+**Why `field` sits at 3.7:1, not 4:1.** Inputs are filled `bg-bg-card` and sit on `bg` (or on a `bg` sheet), so the edge borders two surfaces. The card fill is the lighter-contrast, worse case: 3.7:1 there, 3.9:1 against `bg`. That clears the 3:1 floor with about 25% headroom for glare and 1px anti-aliasing. A flat 4:1 would need `#7D746C` (the `control-warm` value), which on a 1px line around every field reads as a heavy pencil box rather than a ruled line. 3.7 is the point where the edge is plainly a control boundary without looking heavy. If outdoor testing shows fields still washing out, move it darker toward `#7D746C`; that is the ceiling.
 
 `control-warm` is a graphics colour (icons, rings, fills), held to the 3:1 floor with a 4:1 aim, so it clears the rule at about 4:1. `muted` is text and clears 4.5:1.
 
@@ -281,10 +299,12 @@ These are physical game controls, not text buttons, which is why they keep their
 w-full py-3 pl-4 rounded-md border font-ui text-base bg-bg-card text-text
 placeholder:text-muted
 focus:outline-none focus:ring-2 focus:ring-[rgba(26,67,41,0.4)]
-normal border: border-border
+normal border: border-field   (NOT border-border - see "border vs field")
 error border: border-accent
 with remove button: pr-12   without: pr-4   (the remove control is a 44px tap target)
 ```
+
+The same `border-field` edge applies to the other two native field types, with the same fill, radius and focus ring: `<textarea>` (Setup and Summary round notes, `resize-none`, `px-4 py-3`) and `<select>` (Setup course picker). The date input (`type="date"`) counts as a text input here. A field's **fill** stays `bg-bg-card`; only the resting edge changes.
 
 **Every field needs an accessible name** - a placeholder is not one. Use a `<label htmlFor>` tied to the input `id`, or an `aria-label` where the visible caption sits elsewhere (e.g. `aria-label="Player 2 name"`, `"Date played"`, `"Round notes"`). The caption text under a field is decoration for sighted users, not the name.
 
@@ -583,4 +603,8 @@ Inline SVGs throughout — no icon library dependency.
 
 **Intended state:** the advance-button fill is the `control-warm` token, the active-row tint is `accent-tint` (`--color-accent-tint`), and every focus ring is `ring-accent/40`. All are now fully implemented — `src/pages/Login.jsx:111`'s hardcoded `focus:ring-[rgba(26,67,41,0.4)]` was swapped for the token on 5 September 2026, and `Home.jsx`'s inline `rgba(26,67,41,0.1)` decorative circle became `bg-accent/10` on 8 September 2026 (#65). This section describes the intended, shipped state.
 
-**No outstanding divergences.** The four items found in the #44 button-size pass are all fixed in code: dialog and submit buttons use `disabled:opacity-40`, the History "+ Add" header action matches the Header action tier, and every button carries the `focus-visible` ring.
+**Field edges (#108, decided 19 September 2026).** Intended state: every text input, textarea and select uses `border-field` (`#827970`, about 3.7:1 on `bg-card`, computed), fixing the 1.39:1 resting edge that sat below WCAG 1.4.11's 3:1 for a control boundary. The decision was scoped to form fields only, so hairlines and dividers did not move. The token, its Tailwind alias and this documentation landed on 21 September 2026; the classes on the inputs are applied in the same branch (`fix/input-border-contrast`).
+
+**Known gap, accepted (scoped out 19 September 2026).** Non-field controls still draw their edge in `border-border` (1.39:1): the outline buttons (Full CTA outline, paired Dialog "Cancel", Setup's small Cancel), the inactive 9/18 toggle, inactive filter chips and the par stepper cells. Their text labels carry the affordance (`text` / `muted`, 4.5:1 or better), so a golfer can still find and read them, but the boundary itself is below 3:1. Revisit as its own decision. The lever would be `border-field` on outline buttons, which darkens every secondary button on Home and the Bruntsfield page, so it is a visible change to weigh, not a token tweak.
+
+**No other outstanding divergences.** The four items found in the #44 button-size pass are all fixed in code: dialog and submit buttons use `disabled:opacity-40`, the History "+ Add" header action matches the Header action tier, and every button carries the `focus-visible` ring.

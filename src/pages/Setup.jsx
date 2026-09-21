@@ -455,7 +455,7 @@ export default function Setup({ navigate, goBack, params }) {
                     aria-label="Course"
                     value={selectedCourseId ?? ''}
                     onChange={e => setSelectedCourseId(e.target.value)}
-                    className="flex-1 min-w-0 py-3 pl-4 pr-4 rounded-md border border-border font-ui text-base bg-bg-card text-text focus:outline-none focus:ring-2 focus:ring-accent/40"
+                    className="flex-1 min-w-0 py-3 pl-4 pr-4 rounded-md border border-field font-ui text-base bg-bg-card text-text focus:outline-none focus:ring-2 focus:ring-accent/40"
                   >
                     {selectableCourses.map(c => (
                       <option key={c.id} value={c.id}>{c.name}</option>
@@ -513,7 +513,7 @@ export default function Setup({ navigate, goBack, params }) {
                       onChange={e => { setNewCourseName(e.target.value.slice(0, 60)); setCourseError(null) }}
                       placeholder="Course name"
                       autoFocus
-                      className="flex-1 min-w-0 py-3 pl-4 pr-4 rounded-md border border-border font-ui text-base bg-bg-card text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40"
+                      className="flex-1 min-w-0 py-3 pl-4 pr-4 rounded-md border border-field font-ui text-base bg-bg-card text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40"
                     />
                     <button
                       onClick={() => { setCreatingCourse(false); setNewCourseName(''); setCourseError(null); setNewCourseHoleCount(newCourseDefaultHoles); setNewCoursePars(Array(newCourseDefaultHoles).fill(3)) }}
@@ -598,7 +598,7 @@ export default function Setup({ navigate, goBack, params }) {
               value={pastDate}
               max={localDateString()}
               onChange={e => setPastDate(e.target.value)}
-              className="w-full py-3 pl-4 pr-4 rounded-md border border-border font-ui text-base bg-bg-card text-text focus:outline-none focus:ring-2 focus:ring-accent/40"
+              className="w-full py-3 pl-4 pr-4 rounded-md border border-field font-ui text-base bg-bg-card text-text focus:outline-none focus:ring-2 focus:ring-accent/40"
             />
             {pastDate === '' ? (
               <p role="alert" className="font-ui text-xs text-accent mt-1.5 pl-1">Choose the date the round was played</p>
@@ -633,7 +633,7 @@ export default function Setup({ navigate, goBack, params }) {
                     'w-full py-3 pl-4 rounded-md border font-ui text-base bg-bg-card text-text',
                     'placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40',
                     canRemove ? 'pr-12' : 'pr-4',
-                    isDupe ? 'border-accent' : 'border-border',
+                    isDupe ? 'border-accent' : 'border-field',
                   ].join(' ')}
                 />
                 {canRemove && (
@@ -680,7 +680,7 @@ export default function Setup({ navigate, goBack, params }) {
               onChange={e => setNotes(e.target.value.slice(0, 300))}
               placeholder="Add a note about this round..."
               rows={2}
-              className="w-full px-4 py-3 rounded-md border border-border bg-bg-card font-ui text-base text-text placeholder:text-muted resize-none focus:outline-none focus:ring-2 focus:ring-accent/40"
+              className="w-full px-4 py-3 rounded-md border border-field bg-bg-card font-ui text-base text-text placeholder:text-muted resize-none focus:outline-none focus:ring-2 focus:ring-accent/40"
             />
             <p className="font-ui text-xs text-muted mt-1.5 pl-1">Round notes - optional</p>
           </div>

@@ -17,6 +17,10 @@ export default {
         accent:      'rgb(var(--color-accent) / <alpha-value>)',
         'accent-hover':  'var(--color-accent-hover)',
         border:          'var(--color-border)',
+        // Form-field boundary only (text input, textarea, select). Used as
+        // `border-field` (keyed `field`, not `border-field`, to avoid the
+        // stuttering `border-border-field` class). Never for hairlines.
+        field:           'var(--color-border-field)',
         'control-warm':  'var(--color-control-warm)',
         'accent-tint':   'var(--color-accent-tint)',
         'under-par':      'var(--color-under-par)',

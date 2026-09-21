@@ -71,6 +71,7 @@
     --color-accent:    26 67 41;
     --color-accent-hover: #142f1e;
     --color-border:    #D9D0C4;
+    --color-border-field: #827970;   /* boundary of text inputs, textareas and selects only (#108). ~3.9:1 on bg, ~3.7:1 on bg-card (computed). Decorative hairlines stay --color-border. */
     --color-control-warm: #7D746C;   /* warm grey for secondary game controls - Map, Decrement, Advance */
     --color-accent-tint:  rgba(26,67,41,0.05); /* active row background */
     --color-under-par:    #2C6B3C;   /* score-vs-par delta — under par; deltas only, never chrome (DESIGN.md "Score vs par") */
