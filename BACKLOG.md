@@ -7,7 +7,7 @@
 > - **Entries are short:** what needs doing, not the history. Nothing here is actioned without explicit instruction.
 > - **IDs are stable and never reused**, even after an item is deleted, so gaps are expected. Next free ID: **#116**.
 
-**Last updated:** 20 September 2026
+**Last updated:** 21 September 2026
 
 ---
 
@@ -109,7 +109,7 @@ Minor items logged from the review of `fix/map-button-course-match` (BACKLOG #1)
 `public/course_map_v2.png` is only 443×600px (~444 KB). `CourseMapModal.jsx` displays it at ~320px wide and zooms to 4× (~1300px effective demand), so it is inherently soft on any retina screen — the modal code itself is fine. The fix is purely a better asset: a higher-resolution scan/export (ideally ≥1600px on the long edge) or an SVG/vector from the club. Nothing to do in code until that exists. Overlaps with #13 (official logo) and #1 as things to request from Bruntsfield in one go. (Distinct from #1, which is about when the map appears and its loading state.)
 
 ### 41. Page load performance pass
-Measure and tune actual load performance — Core Web Vitals (LCP, CLS, INP), bundle size (currently ~282 kB / ~82 kB gzip as of 19 September 2026), font loading (three families via Google Fonts with `display=swap`), image weight (`course_map_v2.png` is ~455 kB), and Cloudflare Pages caching headers. Establish a baseline, fix the obvious wins, re-measure. Assistance requested.
+Measure and tune actual load performance — Core Web Vitals (LCP, CLS, INP), bundle size (main JS ~260 kB / ~74 kB gzip as of 21 September 2026, after the map went lazy; fonts are now self-hosted), image weight (`course_map_v2.png` is ~455 kB), and Cloudflare Pages caching headers. Establish a baseline, fix the obvious wins, re-measure. Assistance requested.
 
 
 
@@ -155,14 +155,13 @@ From the first `/full-audit`. Contrast ratios and tap sizes are hand-computed es
 - Content flag: `BruntsfiledCoursePage.jsx:46` says "since 1456" (not in PRD; `Info.jsx` says 1895).
 
 ### 102. Security hardening (Medium unless stated; no secrets found)
-- No security headers (no `public/_headers`: CSP, frame-ancestors, X-Content-Type-Options, Referrer-Policy).
+- The CSP in `public/_headers` is Report-Only (shipped 21 Sep 2026; nosniff, X-Frame-Options and Referrer-Policy are enforced). After browsing production with no console violations, rename it to `Content-Security-Policy` to enforce it. Also check the Cloudflare Pages dashboard: if Web Analytics auto-injection is on, its beacon would violate script-src once enforced.
 - Magic and email-confirm links are consumed on GET, so a mail scanner could burn them (Assumed; see #106).
-- Google Fonts on every visit sends IPs to Google, against the "no tracking" copy; self-host the fonts (overlaps #41).
 - Low: personal Gmail hardcoded as `ADMIN_NOTIFY_EMAIL` fallback (`users/index.js`; decided 20 Sep 2026 to leave as is); tokens have no type column (a confirm-email token also works at `/verify`; needs a migration, so it goes with the schema bundle).
 
 ### 103. Performance smells (flag only; not measured)
 - Medium: blank shell until `/api/auth/me` resolves or 5s abort (`App.jsx:156`, `useAuth.jsx`). Decided 19 Sep 2026: leave the `GET /api/games` `LIMIT 100` cap as it is (History silently stops at 100 rounds); revisit if anyone nears 100.
-- Low: pan-zoom library statically bundled; render-blocking Google Fonts CSS; History aggregations every render.
+- Low: History aggregations every render.
 
 ### 106. Magic-link prefetch investigation (not yet run)
 Check whether mail-security scanners burn the single-use link (`verify.js:14-22`, `confirm-email.js:24-26`), leaving the user on "expired". Needs a real mail client or scanner. Links to #102.
