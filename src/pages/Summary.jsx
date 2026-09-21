@@ -556,7 +556,7 @@ export default function Summary({ navigate, params }) {
                     placeholder="Add a note about this round..."
                     rows={2}
                     disabled={saving}
-                    className="w-full px-4 py-3 rounded-md border border-border bg-bg-card font-ui text-base text-text placeholder:text-muted resize-none focus:outline-none focus:ring-2 focus:ring-accent/40"
+                    className="w-full px-4 py-3 rounded-md border border-field bg-bg-card font-ui text-base text-text placeholder:text-muted resize-none focus:outline-none focus:ring-2 focus:ring-accent/40"
                   />
                   <p className="font-ui text-xs text-muted mt-1 pl-1">
                     Round notes - optional

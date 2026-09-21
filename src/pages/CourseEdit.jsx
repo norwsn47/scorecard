@@ -202,7 +202,7 @@ export default function CourseEdit({ navigate, params }) {
                 onChange={e => { setName(e.target.value.slice(0, 60)); setSaveError(null) }}
                 placeholder="Course name"
                 maxLength={60}
-                className="w-full py-3 pl-4 pr-4 rounded-md border border-border font-ui text-base bg-bg-card text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40"
+                className="w-full py-3 pl-4 pr-4 rounded-md border border-field font-ui text-base bg-bg-card text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40"
               />
               <p className="font-ui text-xs text-muted mt-1.5 pl-1">Course name</p>
             </div>
