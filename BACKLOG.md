@@ -5,7 +5,7 @@
 > - **Removing:** whoever finishes an item deletes its line in the same commit as the change (the project-manager for large changes, the main session for small ones). Add a `CHANGELOG.md` note only if it was a decision or a reversal.
 > - **Adding:** you ask; the project-manager adds genuine follow-ups from a large change; Critical/High review and audit findings are added. Lower findings stay in the chat report until you triage them.
 > - **Entries are short:** what needs doing, not the history. Nothing here is actioned without explicit instruction.
-> - **IDs are stable and never reused**, even after an item is deleted, so gaps are expected. Next free ID: **#116**.
+> - **IDs are stable and never reused**, even after an item is deleted, so gaps are expected. Next free ID: **#118**.
 
 **Last updated:** 21 September 2026
 
@@ -73,13 +73,8 @@ Add the club's official logo (likely Home or the course info section) once permi
 ### 90. Header top padding on mobile — reduced, needs on-device confirmation
 From the 11 September 2026 UI/UX review. Reported across mobile screens, not confirmed at pixel level via desktop emulation (doesn't render iOS status bar/notch chrome). Fixed 11 September 2026: `PageHeader.jsx`'s top padding reduced `pt-10` → `pt-6` (an existing DESIGN.md spacing token, not an invented value). Still needs a quick on-device visual check to confirm it reads right with real iOS status-bar/notch chrome. Low priority.
 
-### 112. Failed-save gaps left by #95 (Medium - needs a product call and a PRD §11.8 tweak)
-- A failed round is only marked pending when the user taps "Keep on this device". If they use the phone's back gesture or close the app on the error screen, it stays an unmarked local round: never synced, invisible in signed-in History. Consider marking it pending on the first failure (Keep then only navigates).
-- No sync fires after "Keep", and a 5xx or timeout never fires `online`, so a kept round can wait for the next full app open (days, in an installed PWA). Consider one `syncPendingRounds` call after Keep and/or a `visibilitychange` trigger.
-
-### 113. Pending-round edit races (Medium)
-- If `online` fires while the user is on Setup for a pending round, before the `_edit` working copy exists, the sync sends the old data and the later edit stays local-only. Same outcome if the server saved the round but the response was lost and the user edits before the next sync (the idempotent 200 keeps the old server data). A real fix needs a `PATCH` or `GET` by `client_round_id`, or Setup writing `_edit` earlier.
-- No sync is triggered when a pending-round edit is saved or abandoned; the round waits for the next app open or `online`.
+### 116. Lost-response then local edit keeps old server data (Medium, needs a backend change)
+If the server saved a round but the response was lost, and the user then edits the still-pending round locally (or changes its notes on the failed-save screen and retries) before the next sync, the idempotent 200 keeps the old data on the server and the edit stays local-only. Needs `PATCH` or `GET` by `client_round_id`. Documented as a known limit in PRD §11.8.
 
 ### 115. Backend hardening follow-ups (Medium/Low, from the 20 Sep 2026 review)
 - Medium: `confirm-email.js` still checks the token then marks it used in two steps; use the same atomic claim as `verify.js` (the UNIQUE constraint makes two clicks benign today).
@@ -87,6 +82,10 @@ From the 11 September 2026 UI/UX review. Reported across mobile screens, not con
 - Low: a second click on a magic link now shows `?auth=expired` while the first tab is signed in; the expired-banner copy could acknowledge that.
 - Low: the runner checks `/api/auth/me` once per run, so a cookie change mid-run is not caught; re-check per POST if it ever matters.
 - Low: the new `EMAIL_RE` rejects trailing-dot local parts (`john.@x.com`) and underscore domains; an existing user with such an address could not request a link (very unlikely).
+
+### 117. Failed-save edge cases (Low, from the 21 Sep 2026 review of #112/#113)
+- Summary's Retry (and Done before it) has no `/api/auth/me` session check like the background runner's (#114), so with two tabs where user B signs in, user A's round could be filed under B. Pre-existing; two tabs only.
+- `Setup.handleStart` ignores a failed `saveActiveGame`; on a full device the unmount looks like an abandon and the runner could send the old data.
 
 ---
 

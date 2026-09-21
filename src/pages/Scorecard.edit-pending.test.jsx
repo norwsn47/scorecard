@@ -11,6 +11,14 @@ import { AuthProvider } from '../hooks/useAuth.jsx'
 // PRD §11.8 / §11.13) is local only and the round stays pending: the marker is
 // kept, `synced` is never set, and Summary afterwards still treats it as pending.
 
+// Saving the edit now asks for a background sync run (BACKLOG #113; covered in
+// Scorecard.edit-sync.test.jsx). Neutralised here so these tests stay about the
+// edit itself: what is written locally, and that the edit makes no request.
+vi.mock('../utils/sync.js', async importOriginal => {
+  const actual = await importOriginal()
+  return { ...actual, syncPendingRounds: vi.fn(() => Promise.resolve({ synced: 0, rejected: 0, remaining: 0 })) }
+})
+
 const SIGNED_IN = { id: 'u1', email: 'ann@example.com', name: 'Ann', pending_email: null }
 
 const record = {

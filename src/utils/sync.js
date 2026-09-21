@@ -146,6 +146,35 @@ function isBeingEdited(id) {
   return getActiveGame()?._edit?.id === id
 }
 
+// Rounds a screen currently owns. Summary holds the round for as long as its
+// failed-save error is showing (Retry is then the only sender), and the Edit
+// Round setup screen can hold one too. The runner leaves a held round alone
+// exactly as it does a round under edit. Counted per id, so two overlapping
+// holds on the same round cannot release each other.
+const holds = new Map()
+
+/**
+ * Takes a hold on the round with this id so the runner will not send it.
+ * Returns an idempotent `release()`: calling it more than once releases the
+ * hold only once. The round stays pending and counts in `remaining` while held.
+ */
+export function holdRound(id) {
+  holds.set(id, (holds.get(id) ?? 0) + 1)
+  let released = false
+  return function release() {
+    if (released) return
+    released = true
+    const left = (holds.get(id) ?? 0) - 1
+    if (left > 0) holds.set(id, left)
+    else holds.delete(id)
+  }
+}
+
+/** True while at least one hold on the round with this id is outstanding. */
+export function isHeld(id) {
+  return holds.has(id)
+}
+
 function completedTime(g) {
   const t = Date.parse(g.completedAt)
   return Number.isNaN(t) ? Infinity : t
@@ -168,9 +197,11 @@ let runningUserId = null
  * rounds already flagged rejected are skipped (they are not retried). A round
  * that is being edited right now (the active-game slot holds an `_edit` working
  * copy for its id) is skipped too, so a background save can never succeed with
- * the old data mid-edit and strand the edit; it stays pending, counts in
+ * the old data mid-edit and strand the edit. So is a round that is held (see
+ * holdRound: a screen owns it, e.g. Summary while its failed-save error is
+ * showing and Retry is the only sender). Either way it stays pending, counts in
  * `remaining`, and goes out on a later trigger once the edit is saved or
- * abandoned.
+ * abandoned, or the hold is released.
  *
  * Per round: 2xx clears the marker and marks it synced; a 400 flags it
  * rejected and carries on to the next; a 401, a network error / timeout or a
@@ -243,17 +274,27 @@ async function runBatch(userId) {
     const waiting = () => getPendingCompletedGames(userId).filter(g => !g.syncRejected)
     const order = waiting().sort((a, b) => completedTime(a) - completedTime(b) || 0).map(g => g.id)
 
+    // A round the runner must not send right now: under edit, or held by a
+    // screen that owns it.
+    const leaveAlone = id => isBeingEdited(id) || isHeld(id)
+
     for (const id of order) {
       // Re-read each round just before sending: it may have been edited,
       // deleted or synced since the batch began, and the freshest copy is the
       // one to send.
-      const record = waiting().find(g => g.id === id)
+      let record = waiting().find(g => g.id === id)
       if (!record) continue
-      if (isBeingEdited(id)) continue
+      if (leaveAlone(id)) continue
 
       if (!sessionConfirmed) {
         if (!(await sessionBelongsTo(userId))) break
         sessionConfirmed = true
+        // The await above can take a while: a hold may have been taken, the
+        // round edited, deleted or synced meanwhile. Check again, and re-read,
+        // immediately before sending.
+        record = waiting().find(g => g.id === id)
+        if (!record) continue
+        if (leaveAlone(id)) continue
       }
 
       syncingIds.add(id)

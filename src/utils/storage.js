@@ -190,6 +190,31 @@ export function markCompletedGamePending(id, userId, notes) {
 }
 
 /**
+ * Updates the stored notes on a round that is already pending for `userId`:
+ * the trimmed text, or null when blank. Used while Summary's failed-save error
+ * is showing, so the pending record carries what the player types and a later
+ * background sync sends it. Writes only when the record currently carries
+ * pendingSyncUserId === String(userId): it never adds a marker, never re-marks
+ * a synced round, and never touches an unmarked or another user's round.
+ * Returns true on a successful write; false when no record matched, the
+ * record has no marker or another user's, `userId` is missing, or the write
+ * fails.
+ */
+export function updatePendingNotes(id, userId, notes) {
+  if (userId === undefined || userId === null || userId === '') return false
+  const uid = String(userId)
+  const games = getCompletedGames()
+  let matched = false
+  const next = games.map(g => {
+    if (g?.id !== id || g.pendingSyncUserId !== uid) return g
+    matched = true
+    return { ...g, notes: (notes ?? '').trim() || null }
+  })
+  if (!matched) return false
+  return safeWrite(KEYS.COMPLETED_GAMES, next)
+}
+
+/**
  * Flags a pending round as permanently rejected by the server (a 400). The
  * round stays on the device and keeps its pendingSyncUserId. No-op (false) when
  * no record matched the id.

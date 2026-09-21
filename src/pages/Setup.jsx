@@ -7,6 +7,7 @@ import { localDateString } from '../utils/format.js'
 import { deriveHolePars } from '../utils/scores.js'
 import { clearActiveCell, clearActiveGame, getActiveGame, getPlayers, saveActiveGame, savePlayers } from '../utils/storage.js'
 import { useAuth } from '../hooks/useAuth.jsx'
+import { holdRound, syncPendingRounds } from '../utils/sync.js'
 
 const MAX_PLAYERS = 6
 const NEW_COURSE_HOLE_OPTIONS = [9, 18]
@@ -112,6 +113,34 @@ export default function Setup({ navigate, goBack, params }) {
     })
   }, [user, editRound])
 
+  // The latest signed-in id, so the unmount cleanup below is never stale.
+  const userIdRef = useRef(null)
+  useEffect(() => { userIdRef.current = user?.id ?? null }, [user?.id])
+
+  // While the Edit Round screen is open for a local round, the background sync
+  // leaves that round alone (BACKLOG #113, PRD §11.8): the `_edit` working copy
+  // does not exist yet, so without a hold an `online` or app-open run could send
+  // the old data and strand the edit. Holding a round that is not pending is a
+  // no-op for the runner. The hold is released on unmount only: handleStart has
+  // already saved `_edit` by then (the slot then protects the round), so there is
+  // no window across its awaits. A DB edit has no local record to protect.
+  // If the edit was abandoned (no `_edit` for this round in the active slot) the
+  // round was the only thing this screen was keeping from syncing, so trigger a
+  // run; if the edit was started, Scorecard now owns the round and a run would
+  // only skip it. Written for StrictMode's dev-only mount / cleanup / mount: a
+  // hold released and retaken is fine (the runner re-checks after its await).
+  useEffect(() => {
+    if (!editRound || !editGame?.id || isDbEdit) return
+    const id = editGame.id
+    const release = holdRound(id)
+    return () => {
+      release()
+      if (getActiveGame()?._edit?.id === id) return
+      const uid = userIdRef.current
+      if (uid !== null && uid !== undefined) syncPendingRounds(uid)
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
   // Browser Back out of an in-progress edit lands here with the edit-flow
   // params gone (App.jsx never persists editRound / game in history state), so
   // this screen would otherwise render as a mislabelled "New Game" while the
@@ -122,6 +151,10 @@ export default function Setup({ navigate, goBack, params }) {
     if (editRound || pastRound) return
     if (getActiveGame()?._edit) {
       clearActiveGame()
+      // That stranded edit was the only thing keeping its round from syncing
+      // (#113), so ask for a run now. `user` is already set here when auth has
+      // resolved; if it has not, the app-open trigger covers it once it does.
+      if (user?.id !== null && user?.id !== undefined) syncPendingRounds(user.id)
       // Forward bruntsfield context so History's back button (#72) doesn't
       // mislabel itself "<- Home" when this recovery redirect was reached via
       // Bruntsfield's "New Game" (BruntsfiledCoursePage.jsx).

@@ -8,6 +8,7 @@ import { track } from '../utils/analytics.js'
 import { computeDisplayedHoles, finishGame, isSignedInPlayer } from '../utils/game.js'
 import { deriveHolePars, playerTotal, roundToPar, scoreToPar } from '../utils/scores.js'
 import { clearActiveCell, clearActiveGame, getActiveCell, getActiveGame, getCompletedGames, saveActiveCell, saveActiveGame, saveCompletedGame, updateCompletedGame } from '../utils/storage.js'
+import { syncPendingRounds } from '../utils/sync.js'
 import { useAuth } from '../hooks/useAuth.jsx'
 
 function initialCellFor(g) {
@@ -242,6 +243,11 @@ export default function Scorecard({ navigate, params }) {
           : { ...completed, synced: true }
       delete summaryGame._edit
       navigate('summary', { game: summaryGame })
+      // A pending round's edit is saved: the edit slot no longer protects it, so
+      // ask for a sync run now and the edited data goes out (#113). After the
+      // navigate, and not awaited, so it never delays it. A DB edit was PATCHed
+      // and needs none.
+      if (user?.id && stored?.pendingSyncUserId) syncPendingRounds(user.id)
       return
     }
 
@@ -291,6 +297,9 @@ export default function Scorecard({ navigate, params }) {
             clearActiveGame()
             clearActiveCell()
             navigate('history')
+            // The abandoned edit was all that kept a pending round from syncing
+            // (#113); History reloads if the run changes anything.
+            if (user?.id && !editContext.fromDb) syncPendingRounds(user.id)
           } else {
             navigate('home')
           }
