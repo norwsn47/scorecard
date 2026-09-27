@@ -6,7 +6,7 @@ import { deriveHolePars } from './scores.js'
  * Maps a D1 `games` row (as returned by `GET /api/games`) into the shape the
  * app's read surfaces expect. The result (winner / Tied / No winner, DNF) and
  * the par array are both re-derived on read — the stored winner/dnf on a saved
- * round are legacy and not authoritative (PRD §4.4), and `hole_pars` arrives
+ * round are legacy and not authoritative, and `hole_pars` arrives
  * as raw JSON TEXT (or null for a pre-003 round).
  */
 export function normalizeDbGame(row) {
@@ -32,7 +32,7 @@ export function normalizeDbGame(row) {
     notes:       row.notes || null,
     // The local round's own id when the round was saved from this app (the
     // server's idempotency key). History matches a pending local round to its
-    // D1 row through this so the round never shows twice (PRD §11.9).
+    // D1 row through this so the round never shows twice.
     clientRoundId: row.client_round_id ?? null,
     players,
     scores,
@@ -53,7 +53,7 @@ export function normalizeLocalGame(game) {
 }
 
 /**
- * A local round still waiting to be saved to D1 (BACKLOG #95, PRD §11.9), as
+ * A local round still waiting to be saved to D1 (BACKLOG #95), as
  * History lists it: the normal local shape, tagged `_pending` and, when the
  * server permanently refused it, `_rejected`. The tags are display hints only;
  * the marker on the stored record (`pendingSyncUserId`) stays the source of truth.
@@ -69,7 +69,7 @@ function playedTime(g) {
 
 /**
  * Merges the signed-in user's pending local rounds into their D1 rounds for
- * History (PRD §11.9): newest played date first, ties keeping D1 rows ahead of
+ * History: newest played date first, ties keeping D1 rows ahead of
  * pending ones and each list's own order. A pending round whose id equals the
  * `clientRoundId` of a D1 row is dropped, because the server already holds it
  * (saved, but the marker is not cleared yet), so a round never appears twice.

@@ -7,7 +7,7 @@ import { getCompletedGames } from '../utils/storage.js'
 import { AuthProvider } from '../hooks/useAuth.jsx'
 
 // Editing a saved round must OVERWRITE it, never create a second row — the
-// regression class behind the 24 August duplicate-save hotfix (#22 / PRD §11.13).
+// regression class behind the 24 August duplicate-save hotfix (#22).
 
 const savedRound = {
   id: 'g1',

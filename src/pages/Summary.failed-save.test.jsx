@@ -8,7 +8,7 @@ import { getCompletedGames, markCompletedGamePending, saveCompletedGame } from '
 import { isHeld, postRound, syncPendingRounds } from '../utils/sync.js'
 
 // Marking a round pending at the FIRST failed save, holding it while the error
-// shows, and syncing when the user leaves (BACKLOG #112, PRD §11.8). The rest
+// shows, and syncing when the user leaves (BACKLOG #112). The rest
 // of Summary's failed-save behaviour (copy, Retry, Keep wording) is covered in
 // Summary.test.jsx; these tests are about what is written, held and triggered.
 
@@ -72,7 +72,7 @@ async function renderSummary(game, { strict = false } = {}) {
 }
 
 // The storage-resolved paths: no `game` param, so Summary re-reads the round
-// from storage on every render (the bounce back onto the screen, PRD §11.8).
+// from storage on every render (the bounce back onto the screen).
 async function renderSummaryFromStorage(game, params) {
   saveCompletedGame(game)
   const navigate = vi.fn()

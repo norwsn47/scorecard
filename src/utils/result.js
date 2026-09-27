@@ -4,7 +4,7 @@
  * The result itself is computed by calculateResult / deriveResult in game.js;
  * these format its `winners` / `winningTotal` for display. "Tied" is the shared
  * term and " - " (a spaced hyphen) the shared separator across the Summary,
- * History and the share image (PRD §4.4 / §4.5 / §4.7). Two or three level
+ * History and the share image. Two or three level
  * winners are spelled out; four or more fall back to a count.
  */
 

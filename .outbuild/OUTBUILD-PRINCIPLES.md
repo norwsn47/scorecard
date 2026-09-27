@@ -1,5 +1,5 @@
 # Outbuild Design Principles
-Last updated: 12 July 2026
+Last updated: 27 September 2026
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 *To be fed into the design-director agent alongside project references at step 2.4*
 
@@ -112,7 +112,7 @@ What this does not permit:
 
 ## How to use this
 
-When the design-director agent is invoked at step 2.4, feed this file alongside your reference screenshots and the project PRD. The design-director should use these principles to:
+When the design-director agent is invoked at step 2.4, feed this file alongside your reference screenshots and DESIGN.md. The design-director should use these principles to:
 
 1. Evaluate which visual directions from your references align with the Outbuild philosophy
 2. Make decisions that aren't in the references — spacing scale, typographic hierarchy, interaction patterns — based on these principles
@@ -137,9 +137,9 @@ When a project is built specifically for mobile use, it must never render a stre
 **Caveat font** is the single consistent Outbuild choice for all handwritten moments across every app. It is only ever used for this desktop wrapper note. Never used inside the app itself.
 
 **How it gets applied:**
-- The PRD or DESIGN.md will include a flag: `Mobile only: true`
+- `DESIGN.md` will include a flag: `Mobile only: true`
 - The frontend-developer reads this flag and implements the wrapper automatically — no need to ask
-- The code-reviewer checks for it: if the PRD says mobile-only and the wrapper is missing on desktop, that is a Critical finding
+- The code-reviewer checks for it: if DESIGN.md says mobile-only and the wrapper is missing on desktop, that is a Critical finding
 
 Every app built under the Outbuild name must include an attribution mark on the home or landing screen. This is not optional and must not be removed or hidden.
 

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-// The app promises no third-party requests for fonts (Privacy page, PRD §4.8):
+// The app promises no third-party requests for fonts (Privacy page):
 // fonts are self-hosted and the CSP only allows the app's own origin for them.
 
 // Vitest runs from the project root.

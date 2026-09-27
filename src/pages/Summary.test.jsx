@@ -514,8 +514,8 @@ describe('Summary - rounds that are already saved (#95)', () => {
   })
 })
 
-// A round whose save to D1 is still outstanding (pendingSyncUserId, BACKLOG #95,
-// PRD §11.8). Reached from History, after a browser bounce, or handed back after
+// A round whose save to D1 is still outstanding (pendingSyncUserId, BACKLOG #95).
+// Reached from History, after a browser bounce, or handed back after
 // an edit, it is always read-only here: the background sync saves it, never Done.
 describe('Summary - a pending round (#95)', () => {
   const STATUS = 'Not yet saved to your account. It will save automatically when you have signal.'
@@ -727,7 +727,7 @@ describe('Summary - signed out', () => {
   })
 })
 
-describe('Summary - signed-in star (#91, PRD 11.15)', () => {
+describe('Summary - signed-in star (#91)', () => {
   it('marks only the column header matching the signed-in name, case-insensitively', async () => {
     mockFetch({ user: { ...SIGNED_IN, name: 'ann' } })
     await renderSummary(baseGame())

@@ -236,7 +236,7 @@ describe('AuthProvider - logout', () => {
   })
 })
 
-describe('AuthProvider - updateProfile (PRD 11.14)', () => {
+describe('AuthProvider - updateProfile (user profile and account management)', () => {
   it('PATCHes only the fields passed and merges name / pending_email into the user', async () => {
     mockFetch({
       '/api/auth/me': () => json({ user: JANE }),
@@ -292,7 +292,7 @@ describe('AuthProvider - updateProfile (PRD 11.14)', () => {
   })
 })
 
-describe('AuthProvider - deleteAccount (PRD 11.14)', () => {
+describe('AuthProvider - deleteAccount (user profile and account management)', () => {
   it('DELETEs /api/users with credentials and clears the user', async () => {
     mockFetch({
       '/api/auth/me': () => json({ user: JANE }),

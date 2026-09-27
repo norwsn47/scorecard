@@ -52,7 +52,7 @@ function drawWithTrail(ctx, cx, baseline, main, trail, opts) {
 }
 
 // "Tied" is the shared term across the Summary, History and this image
-// (PRD §4.7 / item 36). `result` is a deriveResult() output; the wording lives
+// (item 36). `result` is a deriveResult() output; the wording lives
 // in result.js and is shared with History. Only the no-winner sentence is the
 // image's own. Only called for rounds of two or more players.
 function winnerLabel(result, players) {

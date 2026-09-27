@@ -9,7 +9,7 @@ import { isHeld, syncPendingRounds } from '../utils/sync.js'
 
 // The Edit Round screen holds a local round while it is open, and asks for a
 // sync run when the edit is abandoned or its stranded working copy is cleared
-// (BACKLOG #113, PRD §11.8). The real runner and the real holds are used; only
+// (BACKLOG #113). The real runner and the real holds are used; only
 // the entry point is spied so a test can see when a run was asked for.
 vi.mock('../utils/sync.js', async importOriginal => {
   const actual = await importOriginal()

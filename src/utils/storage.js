@@ -159,7 +159,7 @@ export function markCompletedGameSynced(id) {
   return safeWrite(KEYS.COMPLETED_GAMES, next)
 }
 
-// ── Pending sync (BACKLOG #95, PRD §11.8) ──────────────────────────────────
+// ── Pending sync (BACKLOG #95) ──────────────────────────────────
 // Marker design. A completed round that a signed-in user played but whose save
 // to D1 has not (yet) succeeded carries `pendingSyncUserId`: the id of the user
 // who played it, as a string. `syncRejected: true` alongside it means the
@@ -234,7 +234,8 @@ export function markCompletedGameRejected(id) {
 /**
  * Local rounds still waiting to be saved to D1 for this user: records whose
  * pendingSyncUserId equals `userId`. A record with no marker, or another
- * user's marker, is never returned (shared-device rule, PRD §11.8). Includes
+ * user's marker, is never returned (shared-device rule, CLAUDE.md "Deliberate
+ * product rules"). Includes
  * rejected rounds (syncRejected) - callers that only want the ones worth
  * retrying filter on `!g.syncRejected`. Returns [] for a missing userId.
  */

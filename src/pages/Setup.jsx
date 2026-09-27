@@ -71,7 +71,7 @@ export default function Setup({ navigate, goBack, params }) {
   )
   // Tracks the course selection this round-par stepper was last reset for,
   // so switching course mid-edit refreshes the stepper to the newly-selected
-  // course's own par (PRD §11.13) exactly once per switch — not on the
+  // course's own par exactly once per switch — not on the
   // initial mount (which must keep the round's own saved snapshot untouched)
   // and not on every re-render while the user hand-edits the stepper.
   const lastResetCourseId = useRef(selectedCourseId)
@@ -121,7 +121,7 @@ export default function Setup({ navigate, goBack, params }) {
   useEffect(() => { userIdRef.current = user?.id ?? null }, [user?.id])
 
   // While the Edit Round screen is open for a local round, the background sync
-  // leaves that round alone (BACKLOG #113, PRD §11.8): the `_edit` working copy
+  // leaves that round alone (BACKLOG #113): the `_edit` working copy
   // does not exist yet, so without a hold an `online` or app-open run could send
   // the old data and strand the edit. Holding a round that is not pending is a
   // no-op for the runner. The hold is released on unmount only: handleStart has

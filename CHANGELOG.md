@@ -5,11 +5,13 @@
 > Git history is the full record; this file is for context and decision rationale that commit messages don't carry.
 > Update the date below whenever you add an entry.
 
-**Last updated:** 20 September 2026
+**Last updated:** 27 September 2026
 
 ---
 
-## 20 September 2026 (failed signed-in saves are kept and re-synced, #95)
+## 27 September 2026 (PRD and product-owner agent removed from the workflow)
+
+- **Decision (reversal): `PRD.md` and the product-owner agent are dropped from the project entirely.** The PRD was useful for the initial build; now that the app is shipped and work arrives as small iterative requests, keeping it current slowed every change down for a document nobody but Claude read. The user is the sole product owner, so scope and behaviour decisions go to them directly in chat. The source of truth is now the code and tests, this file (decisions), `BACKLOG.md` (future work) and `DESIGN.md` (visuals). Salvaged before deletion: the agreed environment variable names (now in CLAUDE.md "Project-specific rules > Environment variables"), the out-of-scope list (now in CLAUDE.md "Project context > Out of scope"), and the handful of deliberate product rules that would otherwise look like bugs (now in CLAUDE.md "Project context > Deliberate product rules", or as plain-English code comments where the PRD section citation used to be). Every agent file, command and the pre-commit hook's dated-documents list were swept of PRD/product-owner references; agents now flag "deviations" (anything built differently from what was asked) instead of "PRD deviations".
 
 - **Decision: a narrow, marker-gated exception to "the two histories are
   strictly separate" (PRD §11.9).** A signed-in round whose save to D1 fails

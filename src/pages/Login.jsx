@@ -30,7 +30,7 @@ export default function Login({ navigate, goBack }) {
   const [sent, setSent]             = useState(false)
   const [error, setError]           = useState(null)
 
-  // #9 — resend link on the confirmation screen (PRD §11.4.2). Local,
+  // #9 — resend link on the confirmation screen. Local,
   // unpersisted state: a 30s cooldown after each resend tap, separate from
   // (and shorter than) the server's own 5-per-15-minutes throttle.
   const [resending, setResending]     = useState(false)

@@ -94,8 +94,8 @@ export function computeDisplayedHoles(players, scores, maxHoles) {
  *  - `dnf`          — players who did not complete every played hole.
  *  - `finishers`    — [{ name, total }] for players who completed every hole.
  *
- * Solo rounds (fewer than two players) have no result concept anywhere
- * (PRD §4.4 / §5): `winners` is empty, `isDraw` is false, `dnf` is empty.
+ * Solo rounds (fewer than two players) have no result concept anywhere:
+ * `winners` is empty, `isDraw` is false, `dnf` is empty.
  *
  * Trailing unplayed holes are ignored — a 9-hole round on a 36-slot
  * scorecard is treated as 9 holes, not as everyone DNF.
@@ -156,7 +156,7 @@ export function calculateResult(players, scores, holes) {
  * Re-derives the result for a game-shaped object (live or saved) — the single
  * entry point for computing the result on read. The `winner` / `dnf` fields
  * stored on saved rounds (localStorage and D1) are legacy and not
- * authoritative; every read surface recomputes through this helper (PRD §4.4).
+ * authoritative; every read surface recomputes through this helper.
  */
 export function deriveResult(game) {
   const players = Array.isArray(game?.players) ? game.players : []
@@ -169,7 +169,7 @@ export function deriveResult(game) {
  * (winner, winners, isDraw, winningTotal, dnf). holesPlayed = holes where at
  * least one player entered a score. The result is recomputed on read anyway
  * (deriveResult) — these stamped values are a convenience, not the source of
- * truth (PRD §4.4).
+ * truth.
  */
 export function finishGame(game) {
   const { winner, winners, isDraw, winningTotal, dnf } =

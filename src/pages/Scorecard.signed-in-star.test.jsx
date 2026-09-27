@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import Scorecard from './Scorecard.jsx'
 import { AuthProvider } from '../hooks/useAuth.jsx'
 
-// The signed-in identity star on the live Scorecard (PRD 11.15, BACKLOG #91):
+// The signed-in identity star on the live Scorecard (BACKLOG #91):
 // a small star next to the player whose name matches the account name, in the
 // column header and again in the finish-round confirm sheet. Matching is
 // case-insensitive here (trimming is covered by isSignedInPlayer in

@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import Rules from './Rules.jsx'
 
-// The course rules page (PRD 4.9). The rules text itself is verbatim from the
+// The course rules page. The rules text itself is verbatim from the
 // club (RulesContent) so it is only smoke-checked; this covers the back label
 // naming the screen goBack() lands on.
 

@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event'
 import ParStepperGrid, { stepPar } from './ParStepperGrid.jsx'
 
 // The shared par stepper used by course creation, course editing and the
-// round-level par correction (PRD 11.13). Par is clamped to 2-7, no wrap.
+// round-level par correction. Par is clamped to 2-7, no wrap.
 
 describe('stepPar', () => {
   it('steps one hole up or down by one and leaves the others alone', () => {

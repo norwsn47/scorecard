@@ -5,7 +5,7 @@ import Info from './Info.jsx'
 import { AuthProvider } from '../hooks/useAuth.jsx'
 
 // Covers BACKLOG #12: the Information page carries a contact link to the same
-// address the privacy page uses (PRD §4.8).
+// address the privacy page uses.
 
 beforeEach(() => {
   localStorage.clear()

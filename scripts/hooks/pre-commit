@@ -9,7 +9,7 @@ status=0
 
 for f in $(git diff --cached --name-only --diff-filter=AM); do
   case "$f" in
-    CLAUDE.md|PRD.md|DESIGN.md|BACKLOG.md|CHANGELOG.md|.claude/agents/*.md) ;;
+    CLAUDE.md|DESIGN.md|BACKLOG.md|CHANGELOG.md|.claude/agents/*.md) ;;
     *) continue ;;
   esac
   line=$(git show ":$f" | grep -m1 -i 'last updated')

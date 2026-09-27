@@ -13,11 +13,11 @@ import { useAuth } from '../hooks/useAuth.jsx'
 
 // Shown in the delete sheet (and by Summary's Edit) when a background save of
 // the same round is in flight, so a delete or edit cannot diverge from what the
-// server just received (PRD §11.8).
+// server just received.
 const SAVING_MESSAGE = 'Saving this round - try again in a moment.'
 
 // The signed-in user's rounds that are still waiting to be saved to D1
-// (marker-gated, PRD §11.9): only records tagged with this user's id, never an
+// (marker-gated): only records tagged with this user's id, never an
 // unmarked quick-play round and never another user's. A record that cannot be
 // read is skipped rather than blanking the list.
 function readPending(userId) {
@@ -132,7 +132,7 @@ export default function History({ navigate }) {
     return () => { cancelled = true }
   }, [user, reloadKey])
 
-  // Signed in: the D1 rounds plus this user's pending local rounds (PRD §11.9),
+  // Signed in: the D1 rounds plus this user's pending local rounds,
   // newest first, with a pending round the server already holds dropped. Signed
   // out: every local round, exactly as before.
   const allGames = user ? mergePendingGames(games, pending) : games

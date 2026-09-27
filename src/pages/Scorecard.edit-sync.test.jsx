@@ -6,7 +6,7 @@ import { AuthProvider } from '../hooks/useAuth.jsx'
 import { buildEditGame } from '../utils/game.js'
 import { getCompletedGames, markCompletedGamePending } from '../utils/storage.js'
 
-// A pending round's edit must not be stranded (BACKLOG #113, PRD §11.8): when
+// A pending round's edit must not be stranded (BACKLOG #113): when
 // the edit is saved or abandoned, a sync run is asked for, so the round goes to
 // the account with the edited data now rather than at the next app open. The
 // real runner is used; only the entry point is spied.

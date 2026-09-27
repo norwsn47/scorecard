@@ -1,5 +1,5 @@
 # CLAUDE.md
-Last updated: 19 September 2026
+Last updated: 27 September 2026
 > Ground rules for this project. Read this at the start of every session.
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
@@ -22,13 +22,13 @@ Decide which category a piece of work falls into and follow that path.
 **Small** — a single component or file, visual/copy/layout, a contained bug fix, config. No database schema, no auth, no API contract change, no new user-facing capability.
 - Build it directly (or via frontend-developer / backend-developer if you want).
 - Review gate: `npm run lint` and `npm test` pass → human localhost review (mandatory for anything visible in the browser) → commit. No separate reviewer agent unless the change touches auth, security or user data.
-- No PRD update, no project-manager, no CHANGELOG entry unless it records a decision or a reversal.
+- No project-manager, no CHANGELOG entry unless it records a decision or a reversal.
 - Delete the finished item from `BACKLOG.md` in the same commit.
 - A batch of small cosmetic changes given together is still "small": make them all on one branch, one localhost review, one commit (`fix/...` describing the batch).
 
 **Large** — backend logic, database schema or migration, auth, an API contract change, a new feature or user-facing capability, or anything touching several files across concerns.
 - The main session creates the branch (see "Version control"), then dispatches the project-manager. It scopes, plans and orchestrates: it dispatches the specialist agents and the code-reviewer, keeps `BACKLOG.md` current, and stops before the localhost review.
-- product-owner updates `PRD.md` first only if the change alters what the app does (a new capability or scope change).
+- If the change alters what the app does (a new capability or scope change), the project-manager confirms scope with you directly before any code is built.
 - Full review gate (below): code-reviewer, then your localhost review.
 - `CHANGELOG.md` entry only for a decision or a reversal.
 
@@ -39,14 +39,27 @@ If a "small" change turns out to need schema/auth/API/feature work once you're i
 ## Project context
 Scorecard by Outbuild — a mobile scorecard for the Bruntsfield Short Hole Golf Course. Shipped and in production on Cloudflare Pages.
 An Outbuild project on a personal machine (no longer a managed work laptop, confirmed 24 August 2026).
-Stack: Vite + React + Tailwind CSS · localStorage (quick-play) · Cloudflare Pages, D1, Pages Functions · Resend (magic-link auth). Full detail in `PRD.md`.
+Stack: Vite + React + Tailwind CSS · localStorage (quick-play) · Cloudflare Pages, D1, Pages Functions · Resend (magic-link auth).
+
+### Out of scope
+- Handicap calculations, course rating or slope
+- Par-based and alternative scoring modes (stableford, match play, points-based) — raw strokes only; per-hole par as a display concept is in scope
+- Leaderboards or social features
+- Push notifications
+- Native mobile app (web only)
+- Admin tools or course management
+- A full sign-up/onboarding journey (name, home course and par captured at account creation) — lightweight name capture via Settings is not onboarding
+
+### Deliberate product rules
+These would look like bugs or inconsistencies without the reasoning behind them:
+- **Quick-play and signed-in history are kept strictly separate** — no merging, with one narrow exception: a signed-in round that failed to save shows in that user's History via a marker until it syncs.
+- **Shared-device marker rule** — a pending (unsynced) round only ever syncs, shows, or counts for the specific signed-in user who played it; a different user signing in on the same device never sees it.
 
 ---
 
 ## Agent setup
 Specialist agents live in `.claude/agents/`. In active use:
 - **project-manager** — plans and orchestrates large changes; keeps BACKLOG.md current; stops before localhost review and merge
-- **product-owner** — owns PRD.md; runs only when a change alters product behaviour
 - **frontend-developer** — builds UI, always reads DESIGN.md first
 - **backend-developer** — builds APIs, database, auth, integrations
 - **code-reviewer** — read-only reviewer for large or risky changes and the audit commands; hands findings back, never edits or commits
@@ -55,12 +68,12 @@ On request only:
 - **debugger** — root-cause investigation when something is broken
 - **design-director** — token-level design changes to DESIGN.md
 
-There is no performance agent. When performance needs measuring, the main session does it.
+There is no performance agent. When performance needs measuring, the main session does it. There is no separate product owner agent — the user is the sole product owner, so scope and behaviour decisions come to them directly in chat.
 
 Commands in `.claude/commands/`, run only when asked: `/full-audit` (Critical/High findings go to BACKLOG, the rest are reported in chat), `/process-review`, `/pre-launch`.
 
 Project documents in the root, kept current:
-`CLAUDE.md` · `PRD.md` · `DESIGN.md` · `BACKLOG.md` · `CHANGELOG.md`
+`CLAUDE.md` · `DESIGN.md` · `BACKLOG.md` · `CHANGELOG.md`
 
 **Date rule:** Whenever a project document or an agent file in `.claude/agents/` is edited, update its `Last updated:` line to today's date before saving. Agent files carry the `Last updated:` line but rely on this rule rather than restating it. A pre-commit hook (`scripts/hooks/pre-commit`) blocks a commit when a staged document or agent file has a stale date. Install it once per clone with `git config core.hooksPath scripts/hooks`.
 
@@ -138,13 +151,12 @@ Runs before a change is committed. Scales with change size (see "Change size").
 **Large changes (and anything touching auth, security or user data):**
 1. code-reviewer — static analysis (Critical findings block) and rendering verification, then hands back
 2. Human reviews at localhost and confirms
-3. product-owner PRD alignment check, only if product behaviour changed — conflicts block the commit
-4. Commit → push → wait for merge sign-off
+3. Commit → push → wait for merge sign-off
 
 The human localhost review is never skipped for anything browser-visible, regardless of how small the change looks. Docs-only and config-only changes skip it.
 
-### PRD deviations
-If any agent's build differs from what `PRD.md` specifies — even a small, reasonable-looking call — it flags that explicitly in its handoff. It does not decide how to resolve it. The product-owner decides whether the PRD updates to match or the code changes. (Agent files reference this rather than restating it.)
+### Deviations
+If any agent's build differs from what was asked — even a small, reasonable-looking call — it flags that explicitly in its handoff, and why. (Agent files reference this rather than restating it.)
 
 ---
 
@@ -188,6 +200,17 @@ These apply to all output - from the main session and from every agent in `.clau
 
 ### Version control
 git + GitHub (full remote workflow). See the "Version control" section above.
+
+### Environment variables
+
+Configured in Cloudflare Pages (production and preview). Names only — never values — live here:
+- `RESEND_API_KEY` — Resend API key (held in the Resend dashboard)
+- `RESEND_FROM_EMAIL` — sending address for magic-link emails
+- `APP_URL` — base URL for constructing magic link URLs
+- `ADMIN_NOTIFY_EMAIL` — recipient for the best-effort account-deletion notification; falls back to a hardcoded address in code if unset
+- D1 binding `DB` (in `wrangler.toml`, not a Pages env var) — the `scorecard-plus` Cloudflare D1 database
+
+Cookie name and session/token expiry are hardcoded in the API layer, not env vars.
 
 ### CLI tools
 

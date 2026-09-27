@@ -4,7 +4,7 @@ import Summary from './Summary.jsx'
 import { AuthProvider } from '../hooks/useAuth.jsx'
 import { saveCompletedGame } from '../utils/storage.js'
 
-// PRD §5.3.3 / §11.9: the read-only Front 9 / Back 9 break lines on the
+// The read-only Front 9 / Back 9 break lines on the
 // Summary scorecard table (and, by extension, History's detail view, which
 // reuses this same component). 18-hole rounds only.
 

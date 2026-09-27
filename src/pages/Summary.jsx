@@ -47,7 +47,7 @@ export default function Summary({ navigate, params }) {
   // do survive the bounce.
   // The result (winner / Tied / No winner, DNF) is always re-derived from the
   // per-hole scores on read — the stored winner/dnf on a saved round are
-  // legacy and not authoritative (PRD §4.4). deriveResult is idempotent, so
+  // legacy and not authoritative. deriveResult is idempotent, so
   // this is a no-op for a round that finishGame or History already stamped.
   const rawGame = params?.game
     ?? (params?.gameId ? getCompletedGames().find(g => g.id === params.gameId) : null)
@@ -59,7 +59,7 @@ export default function Summary({ navigate, params }) {
   const [notes, setNotes]           = useState(() => game?.notes ?? '')
   const [saving, setSaving]         = useState(false)
   // Why Edit did nothing, or null: another round is in progress, or a save of
-  // this very round is in flight (PRD §11.8, §11.13).
+  // this very round is in flight.
   const [editNotice, setEditNotice] = useState(null)
   // Why the last save on this screen did not go through, or null. `kind` picks
   // the wording; `n` counts failures so the alert remounts and is announced
@@ -68,7 +68,7 @@ export default function Summary({ navigate, params }) {
   const savingRef                   = useRef(false)
   const failuresRef                 = useRef(0)
 
-  // The failed-save bookkeeping (BACKLOG #112, PRD §11.8). The round is marked
+  // The failed-save bookkeeping (BACKLOG #112). The round is marked
   // pending at the first failed save, and held so the background runner leaves
   // it alone while this screen shows the error (Retry is then the only sender).
   // - markedRef: the round already carries this user's pending marker.
@@ -140,7 +140,7 @@ export default function Summary({ navigate, params }) {
   const alreadySaved = game._fromDb || game.synced
 
   // A round a signed-in user played whose save to D1 is still outstanding
-  // (BACKLOG #95, PRD §11.8): it carries pendingSyncUserId. Whoever it belongs
+  // (BACKLOG #95): it carries pendingSyncUserId. Whoever it belongs
   // to, it is never re-posted from this screen (Done would send it as whoever
   // is signed in now), so it is always shown read-only. `ownsPending` is the
   // signed-in owner, who alone gets the status line and Edit.
@@ -169,13 +169,13 @@ export default function Summary({ navigate, params }) {
 
   // The Edit button is offered on a round that's actually stored somewhere we
   // can write back to: a D1 round opened from History (_fromDb) or the
-  // signed-in user's own pending round (a local edit, PRD §11.13) for a
+  // signed-in user's own pending round (a local edit) for a
   // logged-in user, or any local completed round for a logged-out user.
   const canEdit = user ? (!!game._fromDb || ownsPending) : true
 
   function handleEditRound() {
     // A save of this round is in flight: an edit now could diverge from what
-    // the server just received (PRD §11.8).
+    // the server just received.
     if (isPending && isSyncing(game.id)) {
       setEditNotice(SAVING_MESSAGE)
       return
@@ -230,7 +230,7 @@ export default function Summary({ navigate, params }) {
     if (release) release()
   }
 
-  // A Done / Retry save did not go through (BACKLOG #112, PRD §11.8). The round
+  // A Done / Retry save did not go through (BACKLOG #112). The round
   // is marked pending for its owner at the FIRST failure, so a back gesture or
   // closing the app on the error screen can never leave an unmarked, unsynced
   // round. The hold is taken before the mark, in the same tick, so the runner
@@ -271,7 +271,7 @@ export default function Summary({ navigate, params }) {
   // server's idempotent 200 for a round it already holds) marks it synced and
   // goes home. Anything else - a non-OK status or a network error - marks the
   // round pending, holds it, and stays on this screen with the error block, so
-  // a round is never silently lost (BACKLOG #95, #112, PRD §11.8). Signed out:
+  // a round is never silently lost (BACKLOG #95, #112). Signed out:
   // nothing to save, just go home (no marker, no hold, no request).
   // This handler is only reachable on the post-finish flow (a saved or
   // History round shows Edit instead of Done), so it never re-POSTs a round

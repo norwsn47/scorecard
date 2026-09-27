@@ -1,7 +1,7 @@
 # Design
 ## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
-Last updated: 21 September 2026
+Last updated: 27 September 2026
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
 ---
@@ -57,7 +57,7 @@ The app is otherwise **one brand colour doing all the work** (Outbuild principle
 - They colour **vs-par deltas only** — the per-hole superscript (`+1` / `-1` / `E`) and the round total-to-par (`41 (+5)`). Nothing else.
 - They are **never** used for buttons, borders, icons, links, backgrounds, focus rings, or any interactive or chrome role. A golfer must never have to wonder whether a green thing is tappable.
 - **Level par (`E`) gets no colour of its own** — it inherits whatever text colour its context already uses (`text`, `muted`, `accent` in a winner column, or white in the active cell).
-- The bracketed par **label** on the hole number (§5.1, e.g. "3 (3)") is *not* a delta — it stays uncoloured and is unaffected by this exception.
+- The bracketed par **label** on the hole number (e.g. "3 (3)", see "Score cells" above) is *not* a delta — it stays uncoloured and is unaffected by this exception.
 
 This keeps within the Outbuild allowance of "no more than two accents beyond the brand colour, used in precisely defined contexts."
 
@@ -432,20 +432,20 @@ table-fixed border-collapse w-full
 | Score cell (element) | A real `<button type="button">` filling the `td` (`block w-full py-3 px-1`, `td` is `p-0`), labelled "Hole N, par P, Player: score" (or "no score yet") with `aria-current="true"` on the active cell, so any hole can be reached and corrected by keyboard or screen reader (#96). Focus ring is inset: `focus-visible:ring-2 focus-visible:ring-inset`, `ring-accent/40` on a normal cell and `ring-white/80` on the accent-filled active cell. |
 | Hole # (active row) | `text-accent font-semibold` |
 | Hole # (inactive) | `text-muted` |
-| Hole # + par | hole number `font-semibold`, then the hole's par in brackets `font-normal ml-0.5` at the same size — e.g. **3** (3). The bracketed par **label** carries no colour of its own; it inherits the cell colour (muted / accent). Same treatment on the live grid and the read-only Summary table, and mirrored (bold hole number + normal-weight bracket, same muted colour) on the hand-drawn share canvas (`src/utils/share.js`) since 5 September 2026. Replaces the earlier raised `(N)` superscript. *Deltas-only exception:* the par carries no colour rule holds for this par **label** — but score-vs-par **deltas** (the `+1` / `-1` / `E` superscript and the round total-to-par) do take a semantic colour. See "Score vs par" below. |
+| Hole # + par | hole number `font-semibold`, then the hole's par in brackets `font-normal ml-0.5` at the same size — e.g. **3** (3). The bracketed par **label** carries no colour of its own; it inherits the cell colour (muted / accent). Same treatment on the live grid and the read-only Summary table, and mirrored (bold hole number + normal-weight bracket, same muted colour) on the hand-drawn share canvas (`src/utils/share.js`) since 5 September 2026. Replaces the earlier raised `(N)` superscript. *Deltas-only exception:* the par carries no colour rule holds for this par **label** — but score-vs-par **deltas** (the `+1` / `-1` / `E` superscript and the round total-to-par) do take a semantic colour. See "Score vs par" below (the "bracketed par label" it refers to is this row). |
 | Empty score | `—` (em dash) |
 
 ### Score vs par
 
-The one place the scorecard leaves pencil-and-paper monochrome. Applies to score-vs-par **deltas** only (PRD §5.3): the live per-hole superscript, the read-only Summary / History superscript, and the round total-to-par `41 (+5)`. It does **not** apply to the bracketed par *label* on the hole number (§5.1) — that stays uncoloured.
+The one place the scorecard leaves pencil-and-paper monochrome. Applies to score-vs-par **deltas** only: the live per-hole superscript, the read-only Summary / History superscript, and the round total-to-par `41 (+5)`. It does **not** apply to the bracketed par *label* on the hole number — that stays uncoloured.
 
-**Notation** (owned by PRD §5.3 / the shared `formatToPar` helper, repeated here for the visual spec):
+**Notation** (owned by the shared `formatToPar` helper, repeated here for the visual spec):
 - Under par: `-N` (`-1`, `-2`) — rendered in `under-par` `#2C6B3C`.
 - Level par: `E` — never `+0` / `-0`. **No colour of its own** — inherits the surrounding text colour.
 - Over par: `+N` (`+1`, `+5`) — always a leading `+` — rendered in `over-par` `#9B3A24`.
 - Hole not yet scored: nothing shown. No placeholder, no `E`.
 
-**Per-hole indicator (grid + Summary + share).** A superscript trailing the score digit — `font-ui text-[0.6em] align-super font-normal`, never bold, `ml-[1px]`. Smallest legible size; the digit stays the workhorse and the delta annotates it (micro register). Superscript rather than the inline `(par)` bracket used on the hole number, because up to six player columns share a row and `3 (+1)` will not fit — this is the one deliberate divergence from §5.1's inline treatment, justified by column width.
+**Per-hole indicator (grid + Summary + share).** A superscript trailing the score digit — `font-ui text-[0.6em] align-super font-normal`, never bold, `ml-[1px]`. Smallest legible size; the digit stays the workhorse and the delta annotates it (micro register). Superscript rather than the inline `(par)` bracket used on the hole number, because up to six player columns share a row and `3 (+1)` will not fit — this is the one deliberate divergence from the hole number's inline treatment, justified by column width.
 
 **Round total-to-par (totals bar, Summary totals row, finish dialog, share).** In brackets, on the total's own line: `41 (+5)`. Not superscript. `DNF` stays as the sub-label beneath where it applies. The bracket's digits and sign take the semantic colour; the surrounding total stays `text` / `accent` as today. Before a player has scored, the bracket is omitted entirely. Summary and History used to also show an `Av. X` (average strokes) sub-line here — dropped (#70, flagged as not interesting): the bracket already carries the same total-to-par information the average line duplicated.
 - Full size (matches the total) on the surfaces with room: the Summary totals row, the finish dialog, the share image.
@@ -579,7 +579,7 @@ Inline SVGs throughout — no icon library dependency.
 - Standard `strokeWidth`: `1.5` (general UI), `2` (close/X), `2.5` (advance chevron)
 - Sizes: `w-2.5 h-2.5` (external link ↗), `w-4 h-4` (close ✕), `w-6 h-6` (map, chevron)
 
-**Signed-in identity star (§11.15, `src/components/PlayerStar.jsx`)** — a small star badge trailing a player's name wherever players are listed (live Scorecard, Summary, History player rows and filter chips) when that name matches the signed-in user's own `users.name`. Stroke-based like the rest of the set, `w-2.5 h-2.5` — the same size tier as the external-link ↗ annotation, since the role is identical (a small glyph beside text, not a standalone control). Deliberately carries no colour of its own — it renders in `currentColor` and inherits whatever colour its surrounding name already has (muted header, accent winner name, text-on-accent filter chip), so it never introduces a competing colour rule or implies the signed-in player outranks guests in the round. Never shown on the share image (§4.7) — that's a static export for a recipient who may not be signed in.
+**Signed-in identity star (`src/components/PlayerStar.jsx`)** — a small star badge trailing a player's name wherever players are listed (live Scorecard, Summary, History player rows and filter chips) when that name matches the signed-in user's own `users.name`. Stroke-based like the rest of the set, `w-2.5 h-2.5` — the same size tier as the external-link ↗ annotation, since the role is identical (a small glyph beside text, not a standalone control). Deliberately carries no colour of its own — it renders in `currentColor` and inherits whatever colour its surrounding name already has (muted header, accent winner name, text-on-accent filter chip), so it never introduces a competing colour rule or implies the signed-in player outranks guests in the round. Never shown on the share image — that's a static export for a recipient who may not be signed in.
 
 ---
 

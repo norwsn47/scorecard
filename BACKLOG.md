@@ -5,7 +5,7 @@
 > - **Removing:** whoever finishes an item deletes its line in the same commit as the change (the project-manager for large changes, the main session for small ones). Add a `CHANGELOG.md` note only if it was a decision or a reversal.
 > - **Adding:** you ask; the project-manager adds genuine follow-ups from a large change; Critical/High review and audit findings are added. Lower findings stay in the chat report until you triage them.
 > - **Entries are short:** what needs doing, not the history. Nothing here is actioned without explicit instruction.
-> - **IDs are stable and never reused**, even after an item is deleted, so gaps are expected. Next free ID: **#123**.
+> - **IDs are stable and never reused**, even after an item is deleted, so gaps are expected. Next free ID: **#125**.
 
 **Last updated:** 27 September 2026
 
@@ -17,20 +17,20 @@
 The email copy/wordmark now read "Scorecard by Outbuild" (shipped 1 Sep). Remaining: the inbox *sender name* is set by the `RESEND_FROM_EMAIL` env var format — set it to a `Scorecard by Outbuild <address>` display-name format via the Cloudflare Pages dashboard (Settings → Environment variables). No code.
 
 ### 7. Course leaderboard — top rounds recorded on a course
-A screen that picks a course and shows the best (lowest) rounds recorded on it. Drawn **only from signed-in users' D1 entries** — quick-play localStorage rounds never feed it. Scope to settle when built: which courses are selectable (the user's own courses, the seeded Bruntsfield, or any course with entries), whether it ranks whole-round totals or per-player rounds within a game, how ties and DNF rounds are treated, and how many rows to show. Requires the database, so signed-in only. Post-MVP. **PRD §8 update needed** — it currently frames this as an "all-time personal leaderboard per user" (lowest round, most wins); the new shape is per-course, not per-user.
+A screen that picks a course and shows the best (lowest) rounds recorded on it. Drawn **only from signed-in users' D1 entries** — quick-play localStorage rounds never feed it. Scope to settle when built: which courses are selectable (the user's own courses, the seeded Bruntsfield, or any course with entries), whether it ranks whole-round totals or per-player rounds within a game, how ties and DNF rounds are treated, and how many rows to show. Requires the database, so signed-in only. Post-MVP. This is a per-course leaderboard, not a per-user one — an earlier framing as an "all-time personal leaderboard per user" (lowest round, most wins) is superseded.
 
 ### 8. Quick-play history import after sign-in
-Offer a one-time prompt after first sign-in to migrate localStorage game history into the new account (`POST` each local game with a migrated flag). Deferred because the two histories are deliberately separate in v2.0 (PRD §11.9) and this adds complexity without blocking the core Plus experience. Can reuse the `pendingSyncUserId` marker and sync runner built in #95 (`src/utils/sync.js`).
+Offer a one-time prompt after first sign-in to migrate localStorage game history into the new account (`POST` each local game with a migrated flag). Deferred because the two histories are deliberately kept separate (see CLAUDE.md "Deliberate product rules") and this adds complexity without blocking the core Plus experience. Can reuse the `pendingSyncUserId` marker and sync runner built in #95 (`src/utils/sync.js`).
 
 ### 10. Full onboarding journey (name + home course + par)
-A proper sign-up flow capturing name and home course together, with editable per-hole par. Introduces par as a first-class concept — currently explicitly out of scope for MVP and v2.0 (PRD §7). Materially bigger than the lightweight name capture in #5; needs a decision on how par interacts with the raw-stroke scoring model (PRD §5) before any code.
+A proper sign-up flow capturing name and home course together, with editable per-hole par. Introduces par as a first-class concept — currently explicitly out of scope (see CLAUDE.md "Out of scope"). Materially bigger than the lightweight name capture in #5; needs a decision on how par interacts with the raw-stroke scoring model before any code.
 
 ### 11. Multi-course architecture
-The architecture for properly supporting multiple courses, beyond the current v2.0 model where a signed-in user's "course" is a name string with a default hole count (PRD §11.7). Would cover structured per-course data (holes, par), how quick-play coexists with it, and whether system-provided courses become browsable. Planning item, not a single chunk — revisit once real usage shows users creating multiple distinct courses.
+The architecture for properly supporting multiple courses, beyond the current model where a signed-in user's "course" is a name string with a default hole count. Would cover structured per-course data (holes, par), how quick-play coexists with it, and whether system-provided courses become browsable. Planning item, not a single chunk — revisit once real usage shows users creating multiple distinct courses.
 
 
 ### 40. Optional match-play game mode (win each hole)
-A game-mode toggle at setup: **stroke play** (current — lowest total wins) or **match play** (win the most holes; each hole won by the lowest score, halved on a tie). Changes the winner calculation, the Summary, and the share image. Explicitly flagged by the user as a future edition. PRD §5 change needed.
+A game-mode toggle at setup: **stroke play** (current — lowest total wins) or **match play** (win the most holes; each hole won by the lowest score, halved on a tie). Changes the winner calculation, the Summary, and the share image. Explicitly flagged by the user as a future edition. Currently out of scope (see CLAUDE.md "Out of scope") — that would need revisiting first.
 
 ---
 
@@ -41,7 +41,7 @@ A game-mode toggle at setup: **stroke play** (current — lowest total wins) or 
 
 **What they actually want:** unique visitors, visit count, and time-on-page, simple, free, no consent banner.
 
-**The conflict (why this isn't a five-minute job):** any tool that identifies a visitor via cookies/localStorage (GA4, PostHog's default mode) sets non-essential identifiers, which under UK PECR + UK GDPR requires a consent banner - the app has deliberately never had one. The "Your data" privacy page and `Info.jsx` both currently state there is **no tracking or analytics at all** (PRD §4.8 links to that page); any of these routes makes that copy false and needs it corrected, banner or not.
+**The conflict (why this isn't a five-minute job):** any tool that identifies a visitor via cookies/localStorage (GA4, PostHog's default mode) sets non-essential identifiers, which under UK PECR + UK GDPR requires a consent banner - the app has deliberately never had one. The "Your data" privacy page and `Info.jsx` both currently state there is **no tracking or analytics at all**; any of these routes makes that copy false and needs it corrected, banner or not.
 
 **Options reviewed with the user, in order:**
 - **GA4 + consent banner** - free, gives time-on-page via "engagement time" (which Plausible's own testing found can underreport actual time-on-page by up to 80% vs their method). Rejected: user didn't want a banner in any form, including a single discreet line requiring a tap - PECR requires an affirmative action before the tracking script loads, a passive sentence with no action isn't valid consent.
@@ -52,23 +52,29 @@ A game-mode toggle at setup: **stroke play** (current — lowest total wins) or 
 
 **Already done regardless of what's eventually chosen:** events are instrumented app-wide - New Game Started, Game Completed (player count, holes), Scorecard Shared, Game Edited, Bruntsfield Home Link Clicked. `src/utils/analytics.js` is a `track()` wrapper around `window.plausible?.(...)` (currently a silent no-op) and `index.html:32` has the Plausible `<script>` commented out, ready to enable if that route is ever picked.
 
-**If revisited:** re-confirm pricing/feature details before building (this research is dated 19 September 2026 and analytics-tool pricing/features change). Still needs `Info.jsx` + `Privacy.jsx` + PRD §4.8 copy updated whatever's chosen, since all routes above make the current "no tracking" claim false.
+**If revisited:** re-confirm pricing/feature details before building (this research is dated 19 September 2026 and analytics-tool pricing/features change). Still needs `Info.jsx` + `Privacy.jsx` copy updated whatever's chosen, since all routes above make the current "no tracking" claim false.
 
 ### 42. "Sign in with Google" (OAuth)
-Add Google as a sign-in option alongside the magic link (PRD §11.4 is currently magic-link-only). Needs: an OAuth client created in the Google Cloud console (external, hence blocked), the redirect/callback Pages Function, and a decision on account linking — a user who has signed in by magic link and then uses Google with the same email address should land on the same account, not a duplicate. PRD §11.4 change needed. Assistance requested — unblock by setting up the Google Cloud OAuth client and confirming the account-linking behaviour.
+Add Google as a sign-in option alongside the magic link (currently magic-link-only). Needs: an OAuth client created in the Google Cloud console (external, hence blocked), the redirect/callback Pages Function, and a decision on account linking — a user who has signed in by magic link and then uses Google with the same email address should land on the same account, not a duplicate. Assistance requested — unblock by setting up the Google Cloud OAuth client and confirming the account-linking behaviour.
 
 ### 13. Official Bruntsfield logo
 Add the club's official logo (likely Home or the course info section) once permission to use it is obtained.
+
+### 123. Course par edits should retroactively update past rounds (needs decision)
+Currently, editing a course's own par is deliberately forward-looking only - already-played rounds keep their own stored `hole_pars` snapshot and are never rewritten (a separate "fix this round's par" control on the edit-round screen exists specifically to correct one past round without touching the course). Raised 27 September 2026: revisit whether a course-par edit should instead propagate to previously recorded rounds on that course. Needs a decision before any code, since it conflicts with the existing separate-control design and the round-level par snapshot model (`games.hole_pars`).
+
+### 124. Reduce the max score per hole from 14 to 9
+Raised 27 September 2026: lower the practical per-hole stroke cap from 14 to 9 (the official club Rule 4 limit is 7). Touches `MAX_STROKES` in `src/constants.js`, `ParStepperGrid`'s consumers, the tests asserting the current cap, and the CLAUDE.md "Deliberate product rules" line. Needs a go-ahead on the exact number before building.
 
 ---
 
 ## Known issues
 
 ### 121. Front 9 row can disappear after a mid-edit roster add (accepted, documented)
-On an 18-hole round, the live Scorecard's Front 9 subtotal row (§4.3/§5.3.3) gates on every *current* player having hole 9 scored. Adding a player mid-edit (§11.13.1) after hole 9 is already complete for everyone else can make the row disappear again until the new player's own hole 9 is scored. Narrow, edit-only path. Accepted as-is and documented in PRD §4.3 - no fix planned.
+On an 18-hole round, the live Scorecard's Front 9 subtotal row gates on every *current* player having hole 9 scored. Adding a player mid-edit after hole 9 is already complete for everyone else can make the row disappear again until the new player's own hole 9 is scored. Narrow, edit-only path. Accepted as-is and documented in a code comment in `Scorecard.jsx` - no fix planned.
 
-### 122. PRD §11.8's last sentence is stale after the edit-flow rework (#round-editing-ux-and-front-back-9)
-"While the user is on the Edit Round setup screen for a pending round (before the edit working copy exists)..." no longer matches the shipped flow: tapping Edit now goes straight to the hole-scores editor, building the `_edit` working copy before Setup is ever shown (Setup is only reached afterwards, via the optional "Edit game setup" button, by which point the working copy already exists). The real protection throughout is `isBeingEdited()` (`sync.js`, keyed on the active-game slot's `_edit` marker) - Setup's own `holdRound` effect is now largely redundant belt-and-suspenders, not the load-bearing gate the sentence describes. Doc-only, low priority: needs a light rewrite of that sentence in §11.8, not a code change.
+### 122. Stale comment describing the old edit-flow hold behaviour (#round-editing-ux-and-front-back-9)
+A comment describing "while the user is on the Edit Round setup screen for a pending round (before the edit working copy exists)..." no longer matches the shipped flow: tapping Edit now goes straight to the hole-scores editor, building the `_edit` working copy before Setup is ever shown (Setup is only reached afterwards, via the optional "Edit game setup" button, by which point the working copy already exists). The real protection throughout is `isBeingEdited()` (`sync.js`, keyed on the active-game slot's `_edit` marker) - Setup's own `holdRound` effect is now largely redundant belt-and-suspenders, not the load-bearing gate the comment describes. Doc-only, low priority: needs a light rewrite of that comment in `Setup.jsx`, not a code change.
 
 ### 43b. Back-nav polish - still open (follow-ups from the #43 build)
 - **D1-round gap:** the `gameId` re-resolution only covers local/quick-play rounds (looked up in `localStorage`). A browser back/forward bounce, or Setup's edit-cancel, landing back on a signed-in D1-only round opened from History (never saved locally) still falls back to the most recently completed *local* game, same as before this build — there's no `GET /api/games/:id` to re-fetch a single D1 round by id. Low priority (narrow path: sign in, open a past round from History, tap Edit, cancel before starting the scorecard, or a raw browser bounce) — would need a new API endpoint if it's worth closing.
@@ -94,7 +100,7 @@ Nothing below has been seen in a real browser or against the real backend; all w
 From the 11 September 2026 UI/UX review. Reported across mobile screens, not confirmed at pixel level via desktop emulation (doesn't render iOS status bar/notch chrome). Fixed 11 September 2026: `PageHeader.jsx`'s top padding reduced `pt-10` → `pt-6` (an existing DESIGN.md spacing token, not an invented value). Still needs a quick on-device visual check to confirm it reads right with real iOS status-bar/notch chrome. Low priority.
 
 ### 116. Lost-response then local edit keeps old server data (Medium, needs a backend change)
-If the server saved a round but the response was lost, and the user then edits the still-pending round locally (or changes its notes on the failed-save screen and retries) before the next sync, the idempotent 200 keeps the old data on the server and the edit stays local-only. Needs `PATCH` or `GET` by `client_round_id`. Documented as a known limit in PRD §11.8.
+If the server saved a round but the response was lost, and the user then edits the still-pending round locally (or changes its notes on the failed-save screen and retries) before the next sync, the idempotent 200 keeps the old data on the server and the edit stays local-only. Needs `PATCH` or `GET` by `client_round_id`. Documented as a known limit in a code comment in `Summary.jsx`.
 
 ### 115. Backend hardening follow-ups (Medium/Low, from the 20 Sep 2026 review)
 - Medium: `confirm-email.js` still checks the token then marks it used in two steps; use the same atomic claim as `verify.js` (the UNIQUE constraint makes two clicks benign today). Touches sign-in token code, so needs your go-ahead.
@@ -111,7 +117,7 @@ If the server saved a round but the response was lost, and the user then edits t
 ## Housekeeping & tech debt
 
 ### 91. Signed-in identity in gameplay (#5) - code-review housekeeping (CLEAR WITH NOTES, 18 Sep 2026)
-Minor items logged from the Phase 2 review of `feat/signed-in-identity-gameplay` (PRD §11.15); none block. (The two test-coverage gaps originally listed here - a star render assertion and an explicit `pastRound` pre-fill test - were closed on 19 September 2026 by `chore/test-coverage-gaps`.)
+Minor items logged from the Phase 2 review of `feat/signed-in-identity-gameplay`; none block. (The two test-coverage gaps originally listed here - a star render assertion and an explicit `pastRound` pre-fill test - were closed on 19 September 2026 by `chore/test-coverage-gaps`.)
 - **`PlayerStar`'s `aria-label="You"` may fold into the History filter-chip button's accessible name** (e.g. announced as "Alice You" rather than "Alice" with a separate marker), since the star sits inside the `<button>` alongside the plain-text name. Not wrong, but wasn't an explicit accessibility decision — worth a quick screen-reader spot-check.
 
 ### 93. Login resend: announce that the link was sent again (Low)
@@ -167,7 +173,7 @@ From the first `/full-audit`. Contrast ratios and tap sizes are hand-computed es
 ### 100. Inconsistent patterns (Medium/Low)
 - Low, backend: `me.js` returns `{ user: null }` with 401 (the client relies on it); mixed semicolon style.
 - Low, frontend: ErrorBoundary button styling (`App.jsx`); `useAuth.jsx:30` wipes the history stamp; back labels lack the arrow; empty-score glyph differs from DESIGN.md's em dash; `createGame`/`buildEditGame` take 6-7 positional args; large `Setup.jsx`, `Scorecard.jsx`, `Summary.jsx`.
-- Content flag: `BruntsfieldCoursePage.jsx:46` says "since 1456" (not in PRD; `Info.jsx` says 1895).
+- Content flag: `BruntsfieldCoursePage.jsx:46` says "since 1456"; `Info.jsx` says 1895 - inconsistent, needs reconciling.
 
 ### 102. Security hardening (Medium unless stated; no secrets found)
 - The CSP in `public/_headers` is Report-Only (shipped 21 Sep 2026; nosniff, X-Frame-Options and Referrer-Policy are enforced, verified live). Enforcing it waits on #119 (turn off Web Analytics, browse production for violations).

@@ -120,7 +120,7 @@ describe('Login (#35)', () => {
   })
 })
 
-// #9 — resend link on the confirmation screen (PRD §11.4.2).
+// #9 — resend link on the confirmation screen.
 describe('Login (#9) — resend link', () => {
   async function reachConfirmation(user) {
     await user.type(screen.getByPlaceholderText('you@example.com'), 'player@example.com')

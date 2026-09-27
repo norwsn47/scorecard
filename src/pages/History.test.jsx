@@ -91,7 +91,7 @@ describe('History — player filter (#51 / #61)', () => {
   })
 })
 
-// Signed-in identity star (PRD 11.15, BACKLOG #91). A signed-in user's History
+// Signed-in identity star (BACKLOG #91). A signed-in user's History
 // reads from D1, so this mocks /api/games as well as /api/auth/me. The star
 // shows on the player's filter chip and on their name in each round row.
 describe('History - signed-in star (#91)', () => {

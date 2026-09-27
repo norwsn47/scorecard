@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import PlayerStar from './PlayerStar.jsx'
 
-// The identity marker for the signed-in user's own name (PRD 11.15). It has no
+// The identity marker for the signed-in user's own name. It has no
 // colour of its own, so these pin the accessible name and the inherit-colour
 // contract rather than any visual detail.
 describe('PlayerStar', () => {

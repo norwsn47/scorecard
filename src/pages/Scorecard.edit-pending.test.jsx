@@ -7,8 +7,8 @@ import { buildEditGame } from '../utils/game.js'
 import { getActiveGame, getCompletedGames, markCompletedGamePending, markCompletedGameRejected } from '../utils/storage.js'
 import { AuthProvider } from '../hooks/useAuth.jsx'
 
-// Editing a pending round (its save to D1 is still outstanding, BACKLOG #95,
-// PRD §11.8 / §11.13) is local only and the round stays pending: the marker is
+// Editing a pending round (its save to D1 is still outstanding, BACKLOG #95)
+// is local only and the round stays pending: the marker is
 // kept, `synced` is never set, and Summary afterwards still treats it as pending.
 
 // Saving the edit now asks for a background sync run (BACKLOG #113; covered in

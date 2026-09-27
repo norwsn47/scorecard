@@ -3,7 +3,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import Privacy from './Privacy.jsx'
 
-// The "Your data" page (PRD 11.12). Content is static copy, so this covers what
+// The "Your data" page. Content is static copy, so this covers what
 // can break: the back label naming the screen goBack() lands on, and the
 // contact and external links.
 

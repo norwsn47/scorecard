@@ -103,7 +103,7 @@ describe('buildGamePayload', () => {
     ])
   })
 
-  it('ignores a stale stored dnf list (not authoritative, PRD 4.4)', () => {
+  it('ignores a stale stored dnf list (not authoritative)', () => {
     const body = buildGamePayload(round({ dnf: ['Ann'] }), '')
     expect(body.player_data.map(p => p.dnf)).toEqual([false, false])
   })

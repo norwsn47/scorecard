@@ -6,7 +6,7 @@ import { AuthProvider } from '../hooks/useAuth.jsx'
 import { getCompletedGames, markCompletedGamePending, markCompletedGameRejected, saveCompletedGame } from '../utils/storage.js'
 import { syncPendingRounds } from '../utils/sync.js'
 
-// Pending rounds in a signed-in History (BACKLOG #95, PRD §11.8 / §11.9): local
+// Pending rounds in a signed-in History (BACKLOG #95): local
 // rounds whose save to D1 is outstanding are listed with a badge, merged by
 // date, deduped against the D1 rows, never truncated by the 100-row cap, and
 // deletable locally. Storage is real localStorage; fetch is mocked.

@@ -2,7 +2,7 @@
 // > Par stepper row"). Originally built inline for course creation
 // (Setup.jsx "+ New course"); extracted (#54/#71) so course creation, course
 // editing (CourseEdit.jsx) and round-level par correction (Setup.jsx
-// editRound — PRD §11.13) all render and behave identically and can never
+// editRound) all render and behave identically and can never
 // drift apart. Callers own the heading above the grid — the wording differs
 // by context ("Par for each hole" vs "Par for this round").
 

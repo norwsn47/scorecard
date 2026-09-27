@@ -11,7 +11,7 @@ import {
  * Builds the JSON body for `POST /api/games` from a plain completed-round
  * record (the shape stored in localStorage, or Summary's derived copy of it).
  * The one place this body is assembled, so Summary's Done / Retry and the
- * background sync of pending rounds (BACKLOG #95, PRD §11.8) always send the
+ * background sync of pending rounds (BACKLOG #95) always send the
  * same thing. No React, no storage, no network: pure and safe to import
  * anywhere.
  *
@@ -24,7 +24,7 @@ import {
  * create a second row.
  *
  * The DNF flag is re-derived from the scores rather than read from the record,
- * because a stored `dnf` is legacy and not authoritative (PRD §4.4). For
+ * because a stored `dnf` is legacy and not authoritative. For
  * Summary's already-derived record this gives the identical answer.
  */
 export function buildGamePayload(game, notes = game?.notes) {
@@ -123,7 +123,7 @@ export async function postRound(record, notes) {
   }
 }
 
-// ── Background sync of pending rounds (BACKLOG #95, PRD §11.8) ─────────────
+// ── Background sync of pending rounds (BACKLOG #95) ─────────────
 
 // Ids of rounds whose POST is in flight right now. History uses isSyncing() to
 // block Edit / Delete of a pending round for those moments, so an edit or

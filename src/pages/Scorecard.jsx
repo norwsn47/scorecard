@@ -119,7 +119,7 @@ export default function Scorecard({ navigate, params }) {
   // Recomputed on every render, not sticky state: a player added mid-edit
   // after hole 9 is complete for everyone else can make this go false again
   // for a render or two, until the new player's own hole 9 is scored. That is
-  // a documented, accepted edge case (PRD §4.3) — not solved here.
+  // a documented, accepted edge case (BACKLOG #121) — not solved here.
   const frontNineComplete = game.holes === 18 && players.length > 0
     && players.every(p => (game.scores?.[p]?.[8] ?? null) != null)
 
@@ -222,8 +222,8 @@ export default function Scorecard({ navigate, params }) {
       track('Game Edited', { players: completed.players.length, holes: completed.holesPlayed })
       // Hand a read-only round to Summary. The _fromDb / synced flags stop
       // that screen re-saving it (see the alreadySaved guard in Summary).
-      // A pending round (its save to the account is still outstanding, PRD
-      // §11.8) is different: it was edited locally only and stays pending, so
+      // A pending round (its save to the account is still outstanding)
+      // is different: it was edited locally only and stays pending, so
       // Summary gets the stored record itself, marker included, and never
       // `synced: true`, which would claim the server has this edit.
       const stored = editContext.fromDb ? null : getCompletedGames().find(g => g.id === editContext.id)
@@ -394,8 +394,8 @@ export default function Scorecard({ navigate, params }) {
                       <tr className="border-t-2 border-b border-border bg-bg-card">
                         {/* No whitespace-nowrap here (unlike the hole-number
                             cell above) — the hole column is a fixed w-14 in a
-                            table-fixed layout with no horizontal scroll
-                            (PRD §4.3), so if "Front 9" doesn't fit on one
+                            table-fixed layout with no horizontal scroll,
+                            so if "Front 9" doesn't fit on one
                             line at the narrowest width it wraps onto two
                             rather than bleeding into the player columns. */}
                         <td className="py-3 px-2 text-center font-ui text-xs leading-tight text-text font-semibold">

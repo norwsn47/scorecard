@@ -3,7 +3,7 @@ import { useAuth } from './useAuth.jsx'
 import { syncPendingRounds } from '../utils/sync.js'
 
 /**
- * Runs the background sync of pending rounds (BACKLOG #95, PRD §11.8) while a
+ * Runs the background sync of pending rounds (BACKLOG #95) while a
  * signed-in user is present: once when they appear (app open once auth
  * resolves, and signing in again after a 401), again whenever the device comes
  * back online, and again whenever the tab or app becomes visible (a 5xx or a

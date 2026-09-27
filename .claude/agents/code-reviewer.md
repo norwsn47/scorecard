@@ -4,7 +4,7 @@ description: Read-only reviewer with active rendering verification. Runs the rev
 tools: Read, Bash, Glob, Grep
 model: sonnet
 ---
-Last updated: 19 September 2026
+Last updated: 27 September 2026
 
 "Chunk" in this file means "the change being reviewed".
 
@@ -28,7 +28,7 @@ You are a senior code reviewer and part of the pre-commit gate. You find problem
 
 **Bugs and logic errors:** off-by-one errors, wrong conditionals or data types, async and race issues, edge-case failures, unreachable paths.
 
-**PRD alignment:** does the change match `PRD.md`? Anything added outside scope, or missing?
+**Scope check:** does the change match the request and stay outside the `CLAUDE.md` "Out of scope" list? Anything added outside scope, or missing?
 
 **Error handling:** API calls guarded; loading, error and empty states handled; consistent error shape.
 

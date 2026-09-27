@@ -1,11 +1,10 @@
 // Small star badge marking a player's name as the signed-in account holder's
-// own name (PRD §11.15) — an identity marker only, never a score or winner
+// own name — an identity marker only, never a score or winner
 // style. Deliberately colourless: it renders in `currentColor`, so it always
 // takes on whatever colour its surrounding context already applies to that
 // name (muted column header, accent winner name, text-on-accent filter chip)
 // rather than introducing a colour rule of its own. That keeps it inert with
-// respect to the §5.3 vs-par colour system and the winner treatment, exactly
-// as PRD §11.15 requires.
+// respect to the vs-par colour system and the winner treatment.
 //
 // Sized to match the existing "annotation beside text" icon (the external
 // link ↗, `w-2.5 h-2.5`, DESIGN.md "Icons") rather than inventing a new size

@@ -3,7 +3,7 @@ import { act, render, screen, within } from '@testing-library/react'
 import Scorecard from './Scorecard.jsx'
 import { AuthProvider } from '../hooks/useAuth.jsx'
 
-// PRD §4.3 / §5.3.3: the live Front 9 subtotal row on an 18-hole scorecard.
+// The live Front 9 subtotal row on an 18-hole scorecard.
 // Appears once every current player has a stroke count for hole 9, stays
 // visible through the back nine, and never appears for a 9-hole or 36-hole
 // (Bruntsfield) round.
