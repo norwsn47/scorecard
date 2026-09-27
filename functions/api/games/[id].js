@@ -34,7 +34,7 @@ export async function onRequestPatch(context) {
   if (!parsed.ok) return parsed.response
   const { body } = parsed
 
-  const { course_id, played_at, holes_played, player_data, notes, hole_pars } = body
+  const { course_id, played_at, holes_played, player_data, notes, hole_pars, hole_pars_manually_set } = body
 
   // Build the UPDATE from only the fields actually present in the body.
   // id, user_id, client_round_id and created_at are never touched.
@@ -97,6 +97,13 @@ export async function onRequestPatch(context) {
       columns.push('hole_pars = ?')
       values.push(v.json)
     }
+  }
+
+  if ('hole_pars_manually_set' in body) {
+    // Sticky: the API only ever sets this to 1 (the per-round control's save
+    // path), never resets it back to 0 — see migrations/006.
+    columns.push('hole_pars_manually_set = ?')
+    values.push(hole_pars_manually_set ? 1 : 0)
   }
 
   if (columns.length === 0) {

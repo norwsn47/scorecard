@@ -104,6 +104,47 @@ describe('CourseEdit (#54/#71)', () => {
     )
   })
 
+  it('shows a heads-up that saving will update the par on past rounds, once a par change is made', async () => {
+    const user = userEvent.setup()
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ courses: [course] }) })
+
+    render(<CourseEdit navigate={vi.fn()} params={{ courseId: 'c1' }} />)
+    await screen.findByDisplayValue('Bruntsfield')
+
+    // No warning before anything has changed.
+    expect(screen.queryByText(/previously recorded round/)).not.toBeInTheDocument()
+
+    await user.click(screen.getByLabelText('Increase par for hole 1'))
+
+    expect(await screen.findByText('This will update the par shown on 12 previously recorded rounds.')).toBeInTheDocument()
+  })
+
+  it('does not show the past-rounds warning when the course has no recorded rounds, even if pars change', async () => {
+    const user = userEvent.setup()
+    const noRoundsCourse = { ...course, round_count: 0 }
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ courses: [noRoundsCourse] }) })
+
+    render(<CourseEdit navigate={vi.fn()} params={{ courseId: 'c1' }} />)
+    await screen.findByDisplayValue('Bruntsfield')
+
+    await user.click(screen.getByLabelText('Increase par for hole 1'))
+
+    expect(screen.queryByText(/previously recorded round/)).not.toBeInTheDocument()
+  })
+
+  it('uses the singular form of the past-rounds warning for exactly one recorded round', async () => {
+    const user = userEvent.setup()
+    const oneRoundCourse = { ...course, round_count: 1 }
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ courses: [oneRoundCourse] }) })
+
+    render(<CourseEdit navigate={vi.fn()} params={{ courseId: 'c1' }} />)
+    await screen.findByDisplayValue('Bruntsfield')
+
+    await user.click(screen.getByLabelText('Increase par for hole 1'))
+
+    expect(await screen.findByText('This will update the par shown on 1 previously recorded round.')).toBeInTheDocument()
+  })
+
   it('the delete confirmation states the round count before confirming, deletes, and returns home', async () => {
     const user = userEvent.setup()
     const fetchMock = vi.fn()

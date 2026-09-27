@@ -55,6 +55,10 @@ function buildGameFields(game, notes) {
     })),
     hole_pars: game.holePars ?? null,
     notes: (notes ?? '').trim() || null,
+    // Sticky flag (see migrations/006): only ever sent when true. Never send
+    // false — a routine save that doesn't touch the round-par stepper must
+    // never be able to clear a prior correction.
+    ...(game.holeParsManuallySet ? { hole_pars_manually_set: true } : {}),
   }
 }
 

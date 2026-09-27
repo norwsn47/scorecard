@@ -42,6 +42,12 @@ export default function CourseEdit({ navigate, params }) {
   const [deleting, setDeleting]   = useState(false)
   const [deleteError, setDeleteError] = useState(null)
   const cancelDeleteRef = useRef(null)
+  // The course's par as originally fetched, set once when the course loads —
+  // compared against the live `pars` state to decide whether the retroactive
+  // cascade warning below should show. Never reassigned after that, so a
+  // save-then-reload isn't needed to keep the comparison meaningful within
+  // this one edit session.
+  const originalPars = useRef(null)
 
   // While the delete-course sheet is open: pull focus onto the non-destructive
   // "Cancel", hand focus back to the "Delete this course" control on close, and
@@ -82,7 +88,9 @@ export default function CourseEdit({ navigate, params }) {
         } else {
           setCourse(found)
           setName(found.name)
-          setPars(deriveHolePars(found.hole_pars, found.holes))
+          const derived = deriveHolePars(found.hole_pars, found.holes)
+          setPars(derived)
+          originalPars.current = derived
         }
         setLoading(false)
       })
@@ -150,6 +158,14 @@ export default function CourseEdit({ navigate, params }) {
     ? `This will also delete ${roundCount} round${roundCount === 1 ? '' : 's'} recorded on this course. `
     : ''
 
+  // A par change now cascades onto every past round on this course that
+  // hasn't had its own par individually corrected (Setup's "Par for this
+  // round" control) — surfaced here as a plain heads-up before saving, not a
+  // second confirmation step. Only shown once there's an actual change to
+  // save and at least one round exists to be affected.
+  const parsChanged = !!originalPars.current && JSON.stringify(originalPars.current) !== JSON.stringify(pars)
+  const showParCascadeWarning = parsChanged && roundCount > 0
+
   return (
     <div className="h-full bg-bg flex flex-col">
 
@@ -215,6 +231,11 @@ export default function CourseEdit({ navigate, params }) {
             <div className="pt-1">
               <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted mb-2 pl-1">Par for each hole</p>
               <ParStepperGrid pars={pars} onStep={stepCoursePar} />
+              {showParCascadeWarning && (
+                <p className="font-ui text-xs text-muted mt-1.5 pl-1">
+                  This will update the par shown on {roundCount} previously recorded round{roundCount === 1 ? '' : 's'}.
+                </p>
+              )}
             </div>
 
             {saveError && (

@@ -39,6 +39,15 @@ function makeDB(courses, games = []) {
           if (c) setCols.forEach((col, i) => { c[col] = args[i] })
           return { success: true }
         }
+        if (/^UPDATE games SET hole_pars = \? WHERE course_id = \? AND user_id = \? AND hole_pars_manually_set = 0$/.test(sql.trim())) {
+          const [holePars, courseId, userId] = args
+          games.forEach((g) => {
+            if (g.course_id === courseId && g.user_id === userId && !g.hole_pars_manually_set) {
+              g.hole_pars = holePars
+            }
+          })
+          return { success: true }
+        }
         if (/^DELETE FROM games WHERE course_id = \? AND user_id = \?$/.test(sql.trim())) {
           const [courseId, userId] = args
           for (let i = games.length - 1; i >= 0; i -= 1) {
@@ -257,6 +266,80 @@ describe('onRequestPatch /api/courses/[id]', () => {
 
     expect(res.status).toBe(200)
     expect(json).toEqual({ ok: true, id: 'c1' })
+  })
+})
+
+// ── Retroactive course-par cascade (BACKLOG #123) ──────────────────────────
+describe('onRequestPatch /api/courses/[id] - retroactive hole_pars cascade', () => {
+  let courses
+  let games
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+    courses = [
+      { id: 'c1', user_id: 'u1', name: 'Braid Hills', holes: 9, hole_pars: JSON.stringify(Array(9).fill(3)), is_default: 0 },
+    ]
+    games = [
+      // Ordinary snapshot — eligible for the cascade.
+      { id: 'g1', user_id: 'u1', course_id: 'c1', hole_pars: JSON.stringify(Array(9).fill(3)), hole_pars_manually_set: 0 },
+      // Individually corrected via the per-round control — must be skipped.
+      { id: 'g2', user_id: 'u1', course_id: 'c1', hole_pars: JSON.stringify(Array(9).fill(5)), hole_pars_manually_set: 1 },
+      // Pre-003 round, hole_pars is NULL — gets backfilled as a side effect.
+      { id: 'g3', user_id: 'u1', course_id: 'c1', hole_pars: null, hole_pars_manually_set: 0 },
+      // A round on a different course — must never be touched.
+      { id: 'g4', user_id: 'u1', course_id: 'c-other', hole_pars: JSON.stringify(Array(9).fill(3)), hole_pars_manually_set: 0 },
+      // A round belonging to another user on the same course — must never be touched.
+      { id: 'g5', user_id: 'u2', course_id: 'c1', hole_pars: JSON.stringify(Array(9).fill(3)), hole_pars_manually_set: 0 },
+    ]
+  })
+
+  it('updates games rows for that course/user except ones with hole_pars_manually_set = 1, and backfills NULL rows', async () => {
+    const pars = Array(9).fill(4)
+    const ctx = patch({ hole_pars: pars })
+    ctx.env.DB = makeDB(courses, games)
+
+    const res = await onRequestPatch(ctx)
+
+    expect(res.status).toBe(200)
+    expect(courses[0].hole_pars).toBe(JSON.stringify(pars))
+    // Ordinary snapshot: rewritten.
+    expect(games.find((g) => g.id === 'g1').hole_pars).toBe(JSON.stringify(pars))
+    // Manually corrected: left exactly as it was.
+    expect(games.find((g) => g.id === 'g2').hole_pars).toBe(JSON.stringify(Array(9).fill(5)))
+    // Pre-003 NULL row: backfilled to the new explicit array.
+    expect(games.find((g) => g.id === 'g3').hole_pars).toBe(JSON.stringify(pars))
+    // Different course: untouched.
+    expect(games.find((g) => g.id === 'g4').hole_pars).toBe(JSON.stringify(Array(9).fill(3)))
+    // Different user, same course: untouched.
+    expect(games.find((g) => g.id === 'g5').hole_pars).toBe(JSON.stringify(Array(9).fill(3)))
+  })
+
+  it('never touches games when the PATCH changes only name', async () => {
+    const ctx = patch({ name: 'Renamed course' })
+    ctx.env.DB = makeDB(courses, games)
+
+    const res = await onRequestPatch(ctx)
+
+    expect(res.status).toBe(200)
+    expect(courses[0].name).toBe('Renamed course')
+    // Every game's hole_pars is exactly as it started.
+    expect(games.find((g) => g.id === 'g1').hole_pars).toBe(JSON.stringify(Array(9).fill(3)))
+    expect(games.find((g) => g.id === 'g2').hole_pars).toBe(JSON.stringify(Array(9).fill(5)))
+    expect(games.find((g) => g.id === 'g3').hole_pars).toBeNull()
+  })
+
+  it('runs the cascade atomically with the course update via DB.batch', async () => {
+    const pars = Array(9).fill(4)
+    const ctx = patch({ hole_pars: pars })
+    const db = makeDB(courses, games)
+    const batchSpy = vi.spyOn(db, 'batch')
+    ctx.env.DB = db
+
+    await onRequestPatch(ctx)
+
+    expect(batchSpy).toHaveBeenCalledTimes(1)
+    expect(batchSpy.mock.calls[0][0]).toHaveLength(2)
   })
 })
 

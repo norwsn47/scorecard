@@ -45,6 +45,11 @@ export async function onRequestPatch(context) {
     columns.push('name = ?')
     values.push(trimmed)
   }
+  // Set only when `hole_pars` is actually part of this PATCH — the games
+  // cascade must never run as a no-op alongside an unrelated field (e.g. a
+  // name-only edit).
+  let cascadeHoleParsJson = null
+
   if ('hole_pars' in body) {
     // Length is checked against the course's existing holes, never the
     // request body's — a holes field in the body is already rejected above.
@@ -52,15 +57,42 @@ export async function onRequestPatch(context) {
     if (!v.ok) return Response.json({ error: v.error }, { status: 400 })
     columns.push('hole_pars = ?')
     values.push(v.json)
+    cascadeHoleParsJson = v.json
   }
 
   if (columns.length === 0) {
     return Response.json({ ok: true, id })
   }
 
-  await DB.prepare(
+  const updateCourse = DB.prepare(
     `UPDATE courses SET ${columns.join(', ')} WHERE id = ? AND user_id = ?`
-  ).bind(...values, id, user.id).run()
+  ).bind(...values, id, user.id)
+
+  if (cascadeHoleParsJson !== null) {
+    // Retroactive cascade (BACKLOG #123): a course-par edit now rewrites the
+    // hole_pars of every past round recorded on this course, EXCEPT one whose
+    // par was individually corrected via the per-round "Par for this round"
+    // control (hole_pars_manually_set = 1) — a course-level edit must never
+    // overwrite a round the user explicitly fixed.
+    //
+    // Deliberately uncapped and not length-matched against each round's own
+    // holes_played: the read path (deriveHolePars) already only reads as many
+    // entries as a round actually played, so writing the full course-length
+    // array to every matching row is safe even for a shorter round. This also
+    // means a pre-003 row with hole_pars = NULL gets backfilled to an
+    // explicit array as a side effect, which is intended, not excluded.
+    //
+    // Runs atomically with the course's own row update via DB.batch, the same
+    // pattern onRequestDelete below uses for its cascade delete.
+    await DB.batch([
+      updateCourse,
+      DB.prepare(
+        'UPDATE games SET hole_pars = ? WHERE course_id = ? AND user_id = ? AND hole_pars_manually_set = 0'
+      ).bind(cascadeHoleParsJson, id, user.id),
+    ])
+  } else {
+    await updateCourse.run()
+  }
 
   return Response.json({ ok: true, id })
 }

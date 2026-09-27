@@ -1,0 +1,27 @@
+-- Adds a sticky flag distinguishing a round whose par was individually
+-- corrected via the "Par for this round" per-round control from a round
+-- whose hole_pars is just an auto-carried-forward snapshot of the course's
+-- par at play time.
+--
+-- The retroactive course-par cascade (a course edit now rewrites the
+-- hole_pars of its past rounds, BACKLOG #123) needs this distinction to know
+-- which rounds to leave alone: a round the user explicitly fixed must never
+-- be silently overwritten by a later course-level par edit.
+--
+--   games.hole_pars_manually_set — 0 (the default) means this round's
+--     hole_pars is an ordinary snapshot and is fair game for the course-par
+--     cascade. 1 means the user corrected this round's par directly, and the
+--     cascade's UPDATE (scoped with `AND hole_pars_manually_set = 0`) skips
+--     it. The API only ever sets this to 1 — nothing sets it back to 0 — so
+--     once a round is corrected it stays exempt from every future course
+--     edit, even after other unrelated edits to that round.
+--
+-- NOT NULL DEFAULT 0, so no backfill is needed: every existing row reads as
+-- "not manually corrected" and is eligible for the cascade, same as a fresh
+-- round would be.
+--
+-- Applied with `wrangler d1 execute scorecard-plus --file=migrations/006_add_hole_pars_manually_set.sql`
+-- (add --local for the local dev DB, --remote for production), matching 001-005.
+-- Must be applied to production D1 before the deploy that ships this.
+
+ALTER TABLE games ADD COLUMN hole_pars_manually_set INTEGER NOT NULL DEFAULT 0;

@@ -37,6 +37,9 @@ export function normalizeDbGame(row) {
     players,
     scores,
     holePars:    deriveHolePars(row.hole_pars, row.holes_played),
+    // So a round reopened for editing after being fetched from GET /api/games
+    // still knows it was previously manually corrected (BACKLOG #123).
+    holeParsManuallySet: !!row.hole_pars_manually_set,
     _fromDb:     true,
   }
   return { ...game, ...deriveResult(game) }

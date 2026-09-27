@@ -252,8 +252,17 @@ export function createGame(playerNames, courseId = null, courseName = null, past
  * `pastDate` is set to `dateIso` so finishGame stamps the chosen date rather
  * than "now". Winner, DNF, holesPlayed and completedAt are all left for
  * finishGame to recompute.
+ *
+ * `manuallySetPar` is true only when this edit is being saved via the
+ * per-round "Par for this round" control (Setup.jsx) — the one path that
+ * counts as the user individually correcting this round's par. The returned
+ * game's `holeParsManuallySet` is stuck on with an OR against the existing
+ * game's own flag, so a later edit that does not touch the round-par stepper
+ * (`manuallySetPar` false) can never clear a correction made on an earlier
+ * edit — the flag is sticky/monotonic, matching the API's own behaviour
+ * (see migrations/006 and sync.js's buildGameFields).
  */
-export function buildEditGame(existingGame, editedNames, courseId = null, courseName = null, dateIso = null, holePars = null, originalIndices = null) {
+export function buildEditGame(existingGame, editedNames, courseId = null, courseName = null, dateIso = null, holePars = null, originalIndices = null, manuallySetPar = false) {
   const oldNames = existingGame.players ?? []
 
   // The round's real hole count. Legacy rounds saved without `holes` → 36.
@@ -297,6 +306,8 @@ export function buildEditGame(existingGame, editedNames, courseId = null, course
     // `holePars` passed in when a D1 edit switches course; otherwise the
     // round keeps its own saved snapshot.
     holePars: deriveHolePars(holePars ?? existingGame.holePars, holeCount),
+    // Sticky: once true (on this or any earlier edit), stays true.
+    holeParsManuallySet: !!(existingGame.holeParsManuallySet || manuallySetPar),
     ...(dateIso ? { pastDate: dateIso } : {}),
   }
 }

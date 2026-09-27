@@ -84,6 +84,44 @@ describe('Setup — round-level par correction (#54/#71)', () => {
     })
   })
 
+  it('tapping the round-par stepper and saving marks the round as manually set', async () => {
+    const user = userEvent.setup()
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ user: null }) })
+
+    render(
+      <AuthProvider>
+        <Setup navigate={vi.fn()} params={{ editRound: true, game: savedLocalRound }} />
+      </AuthProvider>,
+    )
+
+    await screen.findByText('Par for this round')
+    await user.click(screen.getByLabelText('Increase par for hole 1')) // 3 -> 4
+    await user.click(screen.getByRole('button', { name: 'Edit hole scores' }))
+
+    await waitFor(() => {
+      expect(getActiveGame()?.holeParsManuallySet).toBe(true)
+    })
+  })
+
+  it('saving an edit without touching the round-par stepper does not mark the round as manually set', async () => {
+    const user = userEvent.setup()
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ user: null }) })
+
+    render(
+      <AuthProvider>
+        <Setup navigate={vi.fn()} params={{ editRound: true, game: savedLocalRound }} />
+      </AuthProvider>,
+    )
+
+    await screen.findByText('Par for this round')
+    await user.click(screen.getByRole('button', { name: 'Edit hole scores' }))
+
+    await waitFor(() => {
+      expect(getActiveGame()).not.toBeNull()
+    })
+    expect(getActiveGame()?.holeParsManuallySet).toBe(false)
+  })
+
   it('D1 edit: switching the course resets the round-par stepper to the newly-selected course\'s par, then stays hand-editable', async () => {
     const user = userEvent.setup()
     global.fetch = vi.fn(url => {
@@ -111,5 +149,34 @@ describe('Setup — round-level par correction (#54/#71)', () => {
     // Still freely hand-editable after the reset.
     await user.click(screen.getByLabelText('Increase par for hole 1'))
     expect(screen.getByRole('group', { name: 'Hole 1, par 6' })).toBeInTheDocument()
+  })
+
+  it('D1 edit: switching the course alone (no stepper tap) does not mark the round as manually set', async () => {
+    const user = userEvent.setup()
+    global.fetch = vi.fn(url => {
+      if (String(url).startsWith('/api/courses')) {
+        return Promise.resolve({ ok: true, json: async () => coursesResponse })
+      }
+      return Promise.resolve({ ok: true, json: async () => ({ user: { id: 'u1' } }) })
+    })
+
+    render(
+      <AuthProvider>
+        <Setup navigate={vi.fn()} params={{ editRound: true, game: savedDbRound }} />
+      </AuthProvider>,
+    )
+
+    expect(await screen.findByRole('group', { name: 'Hole 1, par 3' })).toBeInTheDocument()
+
+    const select = await screen.findByDisplayValue('Course A')
+    await user.selectOptions(select, 'Course B')
+    await waitFor(() => expect(screen.getByRole('group', { name: 'Hole 1, par 5' })).toBeInTheDocument())
+
+    await user.click(screen.getByRole('button', { name: 'Edit hole scores' }))
+
+    await waitFor(() => {
+      expect(getActiveGame()).not.toBeNull()
+    })
+    expect(getActiveGame()?.holeParsManuallySet).toBe(false)
   })
 })

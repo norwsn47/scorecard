@@ -5,7 +5,7 @@
 > - **Removing:** whoever finishes an item deletes its line in the same commit as the change (the project-manager for large changes, the main session for small ones). Add a `CHANGELOG.md` note only if it was a decision or a reversal.
 > - **Adding:** you ask; the project-manager adds genuine follow-ups from a large change; Critical/High review and audit findings are added. Lower findings stay in the chat report until you triage them.
 > - **Entries are short:** what needs doing, not the history. Nothing here is actioned without explicit instruction.
-> - **IDs are stable and never reused**, even after an item is deleted, so gaps are expected. Next free ID: **#126**.
+> - **IDs are stable and never reused**, even after an item is deleted, so gaps are expected. Next free ID: **#128**.
 
 **Last updated:** 27 September 2026
 
@@ -60,9 +60,6 @@ Add Google as a sign-in option alongside the magic link (currently magic-link-on
 ### 13. Official Bruntsfield logo
 Add the club's official logo (likely Home or the course info section) once permission to use it is obtained.
 
-### 123. Course par edits should retroactively update past rounds (needs decision)
-Currently, editing a course's own par is deliberately forward-looking only - already-played rounds keep their own stored `hole_pars` snapshot and are never rewritten (a separate "fix this round's par" control on the edit-round screen exists specifically to correct one past round without touching the course). Raised 27 September 2026: revisit whether a course-par edit should instead propagate to previously recorded rounds on that course. Needs a decision before any code, since it conflicts with the existing separate-control design and the round-level par snapshot model (`games.hole_pars`).
-
 ---
 
 ## Known issues
@@ -81,6 +78,9 @@ A comment describing "while the user is on the Edit Round setup screen for a pen
 
 ### 118. Apply migration 005 (indexes) to production D1 (manual, yours)
 `migrations/005_add_indexes.sql` is merged but NOT applied. Index-only, safe to re-run, and the app works the same without it. Run in the project folder: `npx wrangler d1 execute scorecard-plus --file=migrations/005_add_indexes.sql --remote`. Claude's attempts were blocked by the permission classifier; either run it yourself or add a Bash permission rule for that command.
+
+### 127. Apply migration 006 (hole_pars_manually_set) to production D1 (manual, yours)
+`migrations/006_add_hole_pars_manually_set.sql` is merged but NOT applied. Adds `games.hole_pars_manually_set`, which the retroactive course-par cascade (#123, shipped 27 September 2026) reads and writes on every affected request - deploying the code before this migration runs would error, not just under-apply the exclusion. Must be applied **before** deploying this branch's changes. Run in the project folder: `npx wrangler d1 execute scorecard-plus --file=migrations/006_add_hole_pars_manually_set.sql --remote` (add `--local` first to check against the local dev DB).
 
 ### 119. Turn off Cloudflare Web Analytics, then enforce the CSP (manual, then Claude)
 Confirmed 21 Sep 2026: the live HTML carries an injected `static.cloudflareinsights.com/beacon.min.js` tag, which contradicts the "no analytics" copy and would be blocked by an enforced CSP. Decided: turn it off (Cloudflare dashboard, Workers & Pages, the project, Metrics / Web Analytics, or Analytics & Logs, Web Analytics, delete the site). Then: tell Claude, who re-checks the live HTML for the beacon; browse production with DevTools open and confirm no "Content Security Policy" console violations; then Claude renames the header in `public/_headers` to `Content-Security-Policy` (see #102).
@@ -112,6 +112,11 @@ If the server saved a round but the response was lost, and the user then edits t
 ---
 
 ## Housekeeping & tech debt
+
+### 126. Retroactive course-par cascade (#123) - code-review housekeeping (CLEAR WITH NOTES, 27 September 2026)
+Minor items logged from the review of `feat/retroactive-course-par`; none block.
+- **Server doesn't enforce the sticky/monotonic invariant it documents.** `functions/api/games/[id].js`'s PATCH writes `hole_pars_manually_set = 0` whenever the body explicitly sends `false` - the invariant (once a round is flagged manually-corrected, nothing clears it) holds today only because the one caller (`src/utils/sync.js`'s `buildGameFields`) never sends `false`. The PATCH handler should only ever push `1` when the field is truthy and otherwise skip the column, so the guarantee is enforced by the API itself, not just client discipline.
+- **`CourseEdit.jsx`'s par-cascade heads-up message overstates scope.** It shows the course's total `round_count`, not the count actually eligible for the cascade (excluding rounds already individually corrected via `hole_pars_manually_set = 1`). If any round on the course has been manually corrected, the message overstates how many rounds will actually change.
 
 ### 91. Signed-in identity in gameplay (#5) - code-review housekeeping (CLEAR WITH NOTES, 18 Sep 2026)
 Minor items logged from the Phase 2 review of `feat/signed-in-identity-gameplay`; none block. (The two test-coverage gaps originally listed here - a star render assertion and an explicit `pastRound` pre-fill test - were closed on 19 September 2026 by `chore/test-coverage-gaps`.)

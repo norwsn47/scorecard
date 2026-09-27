@@ -634,4 +634,28 @@ describe('buildEditGame', () => {
     expect(game.scores.Robert.slice(0, 3)).toEqual([3, 3, 3])
     expect(game.scores.Alice.slice(0, 3)).toEqual([5, 5, 5])
   })
+
+  // ── holeParsManuallySet stickiness (BACKLOG #123) ───────────────────────────
+
+  it('defaults holeParsManuallySet to false when neither the existing game nor this edit set it', () => {
+    const game = buildEditGame(existing, ['Alice', 'Bob'])
+    expect(game.holeParsManuallySet).toBe(false)
+  })
+
+  it('sets holeParsManuallySet to true when manuallySetPar is true on this edit', () => {
+    const game = buildEditGame(existing, ['Alice', 'Bob'], null, null, null, null, null, true)
+    expect(game.holeParsManuallySet).toBe(true)
+  })
+
+  it('stays true (sticky) on a later edit that does not touch the round-par stepper', () => {
+    const alreadySet = { ...existing, holeParsManuallySet: true }
+    const game = buildEditGame(alreadySet, ['Alice', 'Bob'], null, null, null, null, null, false)
+    expect(game.holeParsManuallySet).toBe(true)
+  })
+
+  it('coerces a truthy-but-not-boolean existing flag to a real boolean', () => {
+    const alreadySet = { ...existing, holeParsManuallySet: 1 }
+    const game = buildEditGame(alreadySet, ['Alice', 'Bob'])
+    expect(game.holeParsManuallySet).toBe(true)
+  })
 })

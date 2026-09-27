@@ -355,6 +355,29 @@ describe('onRequestPatch /api/games/[id]', () => {
     expect(res.status).toBe(200)
     expect(json).toEqual({ ok: true, id: 'g1' })
   })
+
+  it('sets hole_pars_manually_set to 1 when sent true', async () => {
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+    const ctx = patch({ hole_pars_manually_set: true })
+    ctx.env.DB = makeDB(games)
+
+    const res = await onRequestPatch(ctx)
+
+    expect(res.status).toBe(200)
+    expect(games[0].hole_pars_manually_set).toBe(1)
+  })
+
+  it('sets hole_pars_manually_set to 0 when sent false', async () => {
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+    games[0].hole_pars_manually_set = 1
+    const ctx = patch({ hole_pars_manually_set: false })
+    ctx.env.DB = makeDB(games)
+
+    const res = await onRequestPatch(ctx)
+
+    expect(res.status).toBe(200)
+    expect(games[0].hole_pars_manually_set).toBe(0)
+  })
 })
 
 describe('onRequestPatch /api/games/[id] - malformed bodies and notes type', () => {

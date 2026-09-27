@@ -50,6 +50,12 @@ describe('normalizeDbGame', () => {
     expect(g.holePars).toEqual([3, 3, 3])
   })
 
+  it('carries hole_pars_manually_set through as holeParsManuallySet (BACKLOG #123)', () => {
+    expect(normalizeDbGame({ ...row, hole_pars_manually_set: 1 }).holeParsManuallySet).toBe(true)
+    expect(normalizeDbGame({ ...row, hole_pars_manually_set: 0 }).holeParsManuallySet).toBe(false)
+    expect(normalizeDbGame(row).holeParsManuallySet).toBe(false)
+  })
+
   it('re-derives the result rather than trusting stored dnf flags', () => {
     const tied = {
       ...row,

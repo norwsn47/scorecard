@@ -142,7 +142,7 @@ describe('onRequestPost /api/games — holes_played validation', () => {
 
 describe('onRequestPost /api/games — hole_pars', () => {
   // INSERT column order: id, user_id, course_id, played_at, holes_played,
-  // player_data, hole_pars, notes, client_round_id, created_at
+  // player_data, hole_pars, hole_pars_manually_set, notes, client_round_id, created_at
   const HOLE_PARS_ARG = 6
 
   beforeEach(() => {
@@ -276,6 +276,47 @@ describe('onRequestGet /api/games - client_round_id (#95)', () => {
   })
 })
 
+describe('onRequestGet /api/games - hole_pars_manually_set (#123)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+  })
+
+  function makeListDB(rows) {
+    const db = {
+      sqls: [],
+      prepare(sql) {
+        db.sqls.push(sql)
+        return {
+          bind() {
+            return this
+          },
+          async all() {
+            return { results: rows }
+          },
+        }
+      },
+    }
+    return db
+  }
+
+  it('selects hole_pars_manually_set and passes it through in the response rows', async () => {
+    const rows = [
+      { id: 'g1', hole_pars_manually_set: 1, played_at: '2026-08-01T10:00:00.000Z' },
+      { id: 'g2', hole_pars_manually_set: 0, played_at: '2026-07-01T10:00:00.000Z' },
+    ]
+    const db = makeListDB(rows)
+    const request = new Request('http://localhost/api/games')
+
+    const res = await onRequestGet({ env: { DB: db }, params: {}, request })
+
+    expect(res.status).toBe(200)
+    expect(db.sqls[0]).toMatch(/g\.hole_pars_manually_set/)
+    const body = await res.json()
+    expect(body.games.map((g) => g.hole_pars_manually_set)).toEqual([1, 0])
+  })
+})
+
 // ── Bad request bodies -> a clean 400 ──────────────────────────────────────
 describe('onRequestPost /api/games - malformed bodies', () => {
   beforeEach(() => {
@@ -303,11 +344,56 @@ describe('onRequestPost /api/games - malformed bodies', () => {
   })
 })
 
+// ── hole_pars_manually_set ───────────────────────────────────────────────────
+describe('onRequestPost /api/games — hole_pars_manually_set', () => {
+  // INSERT column order: id, user_id, course_id, played_at, holes_played,
+  // player_data, hole_pars, hole_pars_manually_set, notes, client_round_id, created_at
+  const MANUALLY_SET_ARG = 7
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    getSessionUser.mockResolvedValue({ id: 'u1', email: 'u1@example.com' })
+  })
+
+  it('inserts 0 when hole_pars_manually_set is absent', async () => {
+    const ctx = post({ ...validBody })
+    const db = makeDB()
+    ctx.env.DB = db
+
+    const res = await onRequestPost(ctx)
+
+    expect(res.status).toBe(201)
+    expect(db.inserted[0][MANUALLY_SET_ARG]).toBe(0)
+  })
+
+  it('inserts 1 when hole_pars_manually_set is true', async () => {
+    const ctx = post({ ...validBody, hole_pars_manually_set: true })
+    const db = makeDB()
+    ctx.env.DB = db
+
+    const res = await onRequestPost(ctx)
+
+    expect(res.status).toBe(201)
+    expect(db.inserted[0][MANUALLY_SET_ARG]).toBe(1)
+  })
+
+  it('inserts 0 when hole_pars_manually_set is falsy (false, 0, null)', async () => {
+    for (const value of [false, 0, null]) {
+      const ctx = post({ ...validBody, hole_pars_manually_set: value })
+      const db = makeDB()
+      ctx.env.DB = db
+      const res = await onRequestPost(ctx)
+      expect(res.status).toBe(201)
+      expect(db.inserted[0][MANUALLY_SET_ARG]).toBe(0)
+    }
+  })
+})
+
 // ── notes ──────────────────────────────────────────────────────────────────
 describe('onRequestPost /api/games - notes validation', () => {
   // INSERT column order: id, user_id, course_id, played_at, holes_played,
-  // player_data, hole_pars, notes, client_round_id, created_at
-  const NOTES_ARG = 7
+  // player_data, hole_pars, hole_pars_manually_set, notes, client_round_id, created_at
+  const NOTES_ARG = 8
 
   beforeEach(() => {
     vi.clearAllMocks()
@@ -387,7 +473,7 @@ describe('onRequestPost /api/games - course_id type', () => {
 
 // ── client_round_id: validation, idempotency, the unique-index race ────────
 describe('onRequestPost /api/games - client_round_id', () => {
-  const ROUND_ID_ARG = 8
+  const ROUND_ID_ARG = 9
 
   beforeEach(() => {
     vi.clearAllMocks()

@@ -124,6 +124,23 @@ describe('buildGamePayload', () => {
     buildGamePayload(r, 'x')
     expect(JSON.stringify(r)).toBe(before)
   })
+
+  // ── hole_pars_manually_set (BACKLOG #123) ───────────────────────────────────
+
+  it('omits hole_pars_manually_set entirely when the round was not manually corrected', () => {
+    const body = buildGamePayload(round(), '')
+    expect('hole_pars_manually_set' in body).toBe(false)
+  })
+
+  it('sends hole_pars_manually_set: true when the round was manually corrected', () => {
+    const body = buildGamePayload(round({ holeParsManuallySet: true }), '')
+    expect(body.hole_pars_manually_set).toBe(true)
+  })
+
+  it('never sends hole_pars_manually_set: false, even when the flag is explicitly false', () => {
+    const body = buildGamePayload(round({ holeParsManuallySet: false }), '')
+    expect('hole_pars_manually_set' in body).toBe(false)
+  })
 })
 
 // ── postRound ───────────────────────────────────────────────────────────────

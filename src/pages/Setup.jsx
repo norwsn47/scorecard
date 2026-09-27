@@ -69,6 +69,12 @@ export default function Setup({ navigate, goBack, params }) {
   const [roundPars, setRoundPars] = useState(() =>
     editGame?.holePars?.length ? [...editGame.holePars] : Array(roundHoleCount).fill(3)
   )
+  // Whether the user has actually tapped a +/- stepper on the round-par grid
+  // this edit session, as opposed to the value merely being carried forward
+  // unchanged or auto-reset by a course switch below. Only stepRoundPar sets
+  // this true - it's what tells buildEditGame this round was individually
+  // corrected, so a later course-level par cascade must leave it alone.
+  const [roundParTouched, setRoundParTouched] = useState(false)
   // Tracks the course selection this round-par stepper was last reset for,
   // so switching course mid-edit refreshes the stepper to the newly-selected
   // course's own par exactly once per switch — not on the
@@ -254,6 +260,7 @@ export default function Setup({ navigate, goBack, params }) {
 
   function stepRoundPar(i, delta) {
     setRoundPars(prev => stepParArray(prev, i, delta))
+    setRoundParTouched(true)
   }
 
   function suggestionsFor(index) {
@@ -331,7 +338,7 @@ export default function Setup({ navigate, goBack, params }) {
       // from the round's own saved snapshot, refreshed to a newly-selected
       // course's par on a course switch (see the reset effect above), and
       // otherwise freely hand-editable. Independent of the course itself.
-      const working = buildEditGame(editGame, trimmed, resolved.courseId, resolved.courseName, dateIso, roundPars, originalIndices)
+      const working = buildEditGame(editGame, trimmed, resolved.courseId, resolved.courseName, dateIso, roundPars, originalIndices, roundParTouched)
       working.notes = notes.trim() || null
       working._edit = { id: editGame.id, fromDb: isDbEdit }
       saveActiveGame(working)
@@ -600,7 +607,7 @@ export default function Setup({ navigate, goBack, params }) {
             <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted mb-2 pl-1">Par for this round</p>
             <ParStepperGrid pars={roundPars} onStep={stepRoundPar} />
             <p className="font-ui text-xs text-muted mt-1.5 pl-1">
-              Fixes the par recorded on this round only - the course's own par is unaffected.
+              Fixes the par recorded on this round only. A later change to the course's own par won't override this once you save.
             </p>
           </div>
         )}
