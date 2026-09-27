@@ -21,12 +21,13 @@ export default function CourseEdit({ navigate, params }) {
   const pastRound  = params?.pastRound ?? false
   const setupGame  = params?.game ?? null
   const bruntsfield = params?.bruntsfield ?? false
+  const fromScorecard = params?.fromScorecard ?? false
 
   // Where a successful save returns to — the exact Setup screen the user
   // came from. No in-page back button any more (#89); the phone's own back
   // navigation covers stepping back.
   function backToSetup() {
-    navigate('setup', { editRound, pastRound, game: setupGame, bruntsfield })
+    navigate('setup', { editRound, pastRound, game: setupGame, bruntsfield, fromScorecard })
   }
 
   const [loading, setLoading]     = useState(true)

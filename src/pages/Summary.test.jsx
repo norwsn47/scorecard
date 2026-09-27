@@ -496,6 +496,22 @@ describe('Summary - rounds that are already saved (#95)', () => {
     expect(navigate).toHaveBeenCalledWith('home')
     expect(gamePosts()).toHaveLength(0)
   })
+
+  // The regression this closes: an edit round-trip (History -> Summary ->
+  // Setup -> Scorecard(edit) -> save -> back here) pushes several history
+  // entries before landing back on this screen, so depth is never 0 - but a
+  // viewingSaved round still needs a trustworthy way out. beforeEach sets
+  // depth: 1, so this pins the fix without touching history state itself.
+  it('also shows the Home button on a saved round reached at depth > 0 (e.g. after an edit round-trip)', async () => {
+    mockFetch({ user: SIGNED_IN })
+    const user = userEvent.setup()
+    const { navigate } = await renderSummary(baseGame({ _fromDb: true }), { fromHistory: true })
+
+    await user.click(screen.getByRole('button', { name: 'Home' }))
+
+    expect(navigate).toHaveBeenCalledWith('home')
+    expect(gamePosts()).toHaveLength(0)
+  })
 })
 
 // A round whose save to D1 is still outstanding (pendingSyncUserId, BACKLOG #95,
@@ -543,14 +559,17 @@ describe('Summary - a pending round (#95)', () => {
     expect(screen.queryByText(REJECTED)).not.toBeInTheDocument()
   })
 
-  it('offers Edit to the signed-in owner, and Edit goes to Setup with the round', async () => {
+  it('offers Edit to the signed-in owner, and Edit goes straight to Scorecard with an edit working copy', async () => {
     mockFetch({ user: SIGNED_IN })
     const user = userEvent.setup()
     const { navigate } = await renderSummary(pendingGame(), { fromHistory: true })
 
     await user.click(screen.getByRole('button', { name: 'Edit' }))
 
-    expect(navigate).toHaveBeenCalledWith('setup', { editRound: true, game: expect.objectContaining({ id: 'round-1', pendingSyncUserId: 'u1' }) })
+    expect(navigate).toHaveBeenCalledWith('scorecard', {
+      game: expect.objectContaining({ id: 'round-1', players: ['Ann', 'Bo'], pendingSyncUserId: 'u1' }),
+      editContext: { id: 'round-1', fromDb: false },
+    })
   })
 
   it('does not offer Edit, Done or a status line to a different signed-in user, and never POSTs their round', async () => {
@@ -607,7 +626,10 @@ describe('Summary - a pending round (#95)', () => {
 
     await act(async () => { release(); await run })
     await user.click(screen.getByRole('button', { name: 'Edit' }))
-    expect(navigate).toHaveBeenCalledWith('setup', expect.any(Object))
+    expect(navigate).toHaveBeenCalledWith('scorecard', expect.objectContaining({
+      game: expect.any(Object),
+      editContext: expect.objectContaining({ id: 'round-1', fromDb: false }),
+    }))
   })
 
   it('still refuses Edit while another game is in progress, with the existing message', async () => {
@@ -638,6 +660,36 @@ describe('Summary - a pending round (#95)', () => {
     mockFetch({ user: SIGNED_IN })
     await renderSummary(baseGame({ _fromDb: true }), { fromHistory: true })
     expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument()
+  })
+
+  // Edit now skips the Setup screen by default and builds the same working
+  // copy Setup's own unedited "Edit hole scores" confirm would build, then
+  // goes straight to Scorecard. This pins that fast path down bit-for-bit:
+  // players, course, per-hole pars, scores and notes all carry over exactly.
+  it('the fast path (skip-Setup Edit) preserves players, course, pars, scores and notes exactly', async () => {
+    mockFetch({ user: SIGNED_IN })
+    const user = userEvent.setup()
+    const game = baseGame({ _fromDb: true, notes: '  A cracking evening  ' })
+    const { navigate } = await renderSummary(game, { fromHistory: true })
+
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+
+    expect(navigate).toHaveBeenCalledWith('scorecard', {
+      game: expect.objectContaining({
+        id: game.id,
+        players: game.players,
+        courseId: game.courseId,
+        courseName: game.courseName,
+        holePars: game.holePars,
+        scores: game.scores,
+        notes: 'A cracking evening',
+      }),
+      editContext: { id: game.id, fromDb: true },
+    })
+    // The date round-trips through Setup's own noon-local pattern rather than
+    // keeping the raw original timestamp untouched.
+    const [, params] = navigate.mock.calls.at(-1)
+    expect(params.game.pastDate).toBe(new Date('2026-08-01T12:00:00').toISOString())
   })
 
   it('an unmarked local round is still not editable by a signed-in user', async () => {

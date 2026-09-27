@@ -5,9 +5,9 @@
 > - **Removing:** whoever finishes an item deletes its line in the same commit as the change (the project-manager for large changes, the main session for small ones). Add a `CHANGELOG.md` note only if it was a decision or a reversal.
 > - **Adding:** you ask; the project-manager adds genuine follow-ups from a large change; Critical/High review and audit findings are added. Lower findings stay in the chat report until you triage them.
 > - **Entries are short:** what needs doing, not the history. Nothing here is actioned without explicit instruction.
-> - **IDs are stable and never reused**, even after an item is deleted, so gaps are expected. Next free ID: **#121**.
+> - **IDs are stable and never reused**, even after an item is deleted, so gaps are expected. Next free ID: **#123**.
 
-**Last updated:** 21 September 2026
+**Last updated:** 27 September 2026
 
 ---
 
@@ -63,6 +63,12 @@ Add the club's official logo (likely Home or the course info section) once permi
 ---
 
 ## Known issues
+
+### 121. Front 9 row can disappear after a mid-edit roster add (accepted, documented)
+On an 18-hole round, the live Scorecard's Front 9 subtotal row (§4.3/§5.3.3) gates on every *current* player having hole 9 scored. Adding a player mid-edit (§11.13.1) after hole 9 is already complete for everyone else can make the row disappear again until the new player's own hole 9 is scored. Narrow, edit-only path. Accepted as-is and documented in PRD §4.3 - no fix planned.
+
+### 122. PRD §11.8's last sentence is stale after the edit-flow rework (#round-editing-ux-and-front-back-9)
+"While the user is on the Edit Round setup screen for a pending round (before the edit working copy exists)..." no longer matches the shipped flow: tapping Edit now goes straight to the hole-scores editor, building the `_edit` working copy before Setup is ever shown (Setup is only reached afterwards, via the optional "Edit game setup" button, by which point the working copy already exists). The real protection throughout is `isBeingEdited()` (`sync.js`, keyed on the active-game slot's `_edit` marker) - Setup's own `holdRound` effect is now largely redundant belt-and-suspenders, not the load-bearing gate the sentence describes. Doc-only, low priority: needs a light rewrite of that sentence in §11.8, not a code change.
 
 ### 43b. Back-nav polish - still open (follow-ups from the #43 build)
 - **D1-round gap:** the `gameId` re-resolution only covers local/quick-play rounds (looked up in `localStorage`). A browser back/forward bounce, or Setup's edit-cancel, landing back on a signed-in D1-only round opened from History (never saved locally) still falls back to the most recently completed *local* game, same as before this build — there's no `GET /api/games/:id` to re-fetch a single D1 round by id. Low priority (narrow path: sign in, open a past round from History, tap Edit, cancel before starting the scorecard, or a raw browser bounce) — would need a new API endpoint if it's worth closing.
