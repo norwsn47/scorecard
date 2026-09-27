@@ -82,7 +82,25 @@ describe('CourseEdit (#54/#71)', () => {
       expect(body.holes).toBeUndefined()
     })
     await waitFor(() =>
-      expect(navigate).toHaveBeenCalledWith('setup', { editRound: true, pastRound: false, game: null, bruntsfield: false })
+      expect(navigate).toHaveBeenCalledWith('setup', { editRound: true, pastRound: false, game: null, bruntsfield: false, fromScorecard: false })
+    )
+  })
+
+  it('forwards fromScorecard back to Setup on save, so its back button keeps saying "Scorecard" (#round-trip)', async () => {
+    const user = userEvent.setup()
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ courses: [course] }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ ok: true, id: 'c1' }) })
+    global.fetch = fetchMock
+    const navigate = vi.fn()
+
+    render(<CourseEdit navigate={navigate} params={{ courseId: 'c1', editRound: true, pastRound: false, fromScorecard: true }} />)
+    await screen.findByDisplayValue('Bruntsfield')
+
+    await user.click(screen.getByRole('button', { name: /save changes/i }))
+
+    await waitFor(() =>
+      expect(navigate).toHaveBeenCalledWith('setup', { editRound: true, pastRound: false, game: null, bruntsfield: false, fromScorecard: true })
     )
   })
 

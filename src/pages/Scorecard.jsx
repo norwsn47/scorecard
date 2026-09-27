@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import CourseMapModal from '../components/CourseMapModal.lazy.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import ParDelta from '../components/ParDelta.jsx'
@@ -6,7 +6,7 @@ import PlayerStar from '../components/PlayerStar.jsx'
 import { BRUNTSFIELD_COURSE_NAME, MAX_HOLES, MAX_STROKES } from '../constants.js'
 import { track } from '../utils/analytics.js'
 import { computeDisplayedHoles, finishGame, isSignedInPlayer } from '../utils/game.js'
-import { deriveHolePars, playerTotal, roundToPar, scoreToPar } from '../utils/scores.js'
+import { deriveHolePars, playerTotal, roundToPar, scoreToPar, subtotal } from '../utils/scores.js'
 import { clearActiveCell, clearActiveGame, getActiveCell, getActiveGame, getCompletedGames, saveActiveCell, saveActiveGame, saveCompletedGame, updateCompletedGame } from '../utils/storage.js'
 import { buildGamePatch, syncPendingRounds } from '../utils/sync.js'
 import { useAuth } from '../hooks/useAuth.jsx'
@@ -113,6 +113,15 @@ export default function Scorecard({ navigate, params }) {
   // as a value here; CourseMapModal/Home render that same constant purely as
   // a label and don't do a comparison of their own).
   const isBruntsfieldCourse = !user ? true : game.courseName === BRUNTSFIELD_COURSE_NAME
+
+  // Front 9 subtotal row gate (§4.3, §5.3.3) — 18-hole rounds only, and only
+  // once every *current* player has a stroke count for hole 9 (index 8).
+  // Recomputed on every render, not sticky state: a player added mid-edit
+  // after hole 9 is complete for everyone else can make this go false again
+  // for a render or two, until the new player's own hole 9 is scored. That is
+  // a documented, accepted edge case (PRD §4.3) — not solved here.
+  const frontNineComplete = game.holes === 18 && players.length > 0
+    && players.every(p => (game.scores?.[p]?.[8] ?? null) != null)
 
   // Active cell values
   const activePlayer = players[activeCell.playerIndex] ?? null
@@ -325,54 +334,85 @@ export default function Scorecard({ navigate, params }) {
               {Array.from({ length: displayedHoles }, (_, holeIndex) => {
                 const isActiveRow = holeIndex === activeCell.holeIndex
                 return (
-                  <tr
-                    key={holeIndex}
-                    ref={isActiveRow ? activeRowRef : null}
-                    className={[
-                      'border-b border-border',
-                      isActiveRow ? 'bg-accent-tint' : '',
-                    ].join(' ')}
-                  >
-                    <td className={[
-                      'py-3 px-2 text-center font-ui text-xs whitespace-nowrap',
-                      isActiveRow ? 'text-accent font-semibold' : 'text-muted',
-                    ].join(' ')}>
-                      <span className="font-semibold">{holeIndex + 1}</span>
-                      <span className="font-normal ml-0.5">({holePars[holeIndex]})</span>
-                    </td>
-                    {players.map((player, playerIndex) => {
-                      const score    = (game.scores?.[player] ?? [])[holeIndex] ?? null
-                      const isActive = isActiveRow && playerIndex === activeCell.playerIndex
-                      return (
-                        <td
-                          key={player}
-                          className={[
-                            'p-0 text-center font-ui text-sm select-none transition-colors',
-                            isActive ? 'bg-accent text-white font-semibold' : 'text-text',
-                          ].join(' ')}
-                        >
-                          {/* A real button filling the cell, so a keyboard, switch
-                              or screen-reader user can jump to any hole to correct
-                              a score, not just step forward with Advance (#96). */}
-                          <button
-                            type="button"
-                            onClick={() => moveToCell({ holeIndex, playerIndex })}
-                            aria-label={`Hole ${holeIndex + 1}, par ${holePars[holeIndex]}, ${player}: ${score ?? 'no score yet'}`}
-                            aria-current={isActive ? 'true' : undefined}
+                  <Fragment key={holeIndex}>
+                    <tr
+                      ref={isActiveRow ? activeRowRef : null}
+                      className={[
+                        'border-b border-border',
+                        isActiveRow ? 'bg-accent-tint' : '',
+                      ].join(' ')}
+                    >
+                      <td className={[
+                        'py-3 px-2 text-center font-ui text-xs whitespace-nowrap',
+                        isActiveRow ? 'text-accent font-semibold' : 'text-muted',
+                      ].join(' ')}>
+                        <span className="font-semibold">{holeIndex + 1}</span>
+                        <span className="font-normal ml-0.5">({holePars[holeIndex]})</span>
+                      </td>
+                      {players.map((player, playerIndex) => {
+                        const score    = (game.scores?.[player] ?? [])[holeIndex] ?? null
+                        const isActive = isActiveRow && playerIndex === activeCell.playerIndex
+                        return (
+                          <td
+                            key={player}
                             className={[
-                              'block w-full py-3 px-1 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset',
-                              isActive ? 'focus-visible:ring-white/80' : 'focus-visible:ring-accent/40',
+                              'p-0 text-center font-ui text-sm select-none transition-colors',
+                              isActive ? 'bg-accent text-white font-semibold' : 'text-text',
                             ].join(' ')}
                           >
-                            {score ?? '–'}
-                            {score != null && (
-                              <ParDelta delta={scoreToPar(score, holePars[holeIndex])} inverted={isActive} />
-                            )}
-                          </button>
+                            {/* A real button filling the cell, so a keyboard, switch
+                                or screen-reader user can jump to any hole to correct
+                                a score, not just step forward with Advance (#96). */}
+                            <button
+                              type="button"
+                              onClick={() => moveToCell({ holeIndex, playerIndex })}
+                              aria-label={`Hole ${holeIndex + 1}, par ${holePars[holeIndex]}, ${player}: ${score ?? 'no score yet'}`}
+                              aria-current={isActive ? 'true' : undefined}
+                              className={[
+                                'block w-full py-3 px-1 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset',
+                                isActive ? 'focus-visible:ring-white/80' : 'focus-visible:ring-accent/40',
+                              ].join(' ')}
+                            >
+                              {score ?? '–'}
+                              {score != null && (
+                                <ParDelta delta={scoreToPar(score, holePars[holeIndex])} inverted={isActive} />
+                              )}
+                            </button>
+                          </td>
+                        )
+                      })}
+                    </tr>
+
+                    {/* Front 9 subtotal row (§4.3, §5.3.3) — 18-hole rounds
+                        only, appears once hole 9 is fully scored and stays
+                        visible for the rest of the round. Heavier borders and
+                        the card surface mark it as a break, not another hole
+                        row, matching how the totals bar below is
+                        differentiated from the hole grid. No per-hole par
+                        bracket here — it isn't a specific hole. */}
+                    {holeIndex === 8 && frontNineComplete && (
+                      <tr className="border-t-2 border-b border-border bg-bg-card">
+                        {/* No whitespace-nowrap here (unlike the hole-number
+                            cell above) — the hole column is a fixed w-14 in a
+                            table-fixed layout with no horizontal scroll
+                            (PRD §4.3), so if "Front 9" doesn't fit on one
+                            line at the narrowest width it wraps onto two
+                            rather than bleeding into the player columns. */}
+                        <td className="py-3 px-2 text-center font-ui text-xs leading-tight text-text font-semibold">
+                          Front 9
                         </td>
-                      )
-                    })}
-                  </tr>
+                        {players.map(player => {
+                          const { total, toPar } = subtotal(game.scores?.[player] ?? [], holePars, 0, 9)
+                          return (
+                            <td key={player} className="py-3 px-1 text-center font-ui text-base font-semibold text-text leading-tight">
+                              {total ?? '–'}
+                              <ParDelta delta={toPar} variant="bracket" className="text-sm font-normal" />
+                            </td>
+                          )
+                        })}
+                      </tr>
+                    )}
+                  </Fragment>
                 )
               })}
             </tbody>
@@ -437,6 +477,27 @@ export default function Scorecard({ navigate, params }) {
             </button>
           </div>
         </div>
+
+        {/* "Edit game setup" — edit mode only. Setup's default landing point
+            moved to Summary's Edit tap going straight here (players/course/
+            par/notes/date are unchanged, just reached differently); this is
+            the explicit way back to that unchanged Setup screen for anyone
+            who does want to change those things. No free slot in the header
+            (left = back, right = Save), so it sits in its own row below the
+            game controls rather than competing with Save for attention — same
+            weight as Summary's "Edit round" link. Passes the live `game`
+            state (not the initial copy) so Setup picks up whatever's already
+            been scored. */}
+        {isEdit && (
+          <div className="bg-bg px-5 pb-4 text-center shrink-0">
+            <button
+              onClick={() => navigate('setup', { editRound: true, game, fromScorecard: true })}
+              className="inline-block py-3.5 -my-3.5 font-ui text-xs text-muted underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            >
+              Edit game setup
+            </button>
+          </div>
+        )}
       </main>
 
       {isBruntsfieldCourse && showMap && <CourseMapModal onClose={() => setShowMap(false)} />}

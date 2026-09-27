@@ -18,6 +18,10 @@ export default function Setup({ navigate, goBack, params }) {
   const editGame                           = editRound ? (params?.game ?? null) : null
   const isDbEdit                           = !!editGame?._fromDb
   const fromBruntsfield                   = params?.bruntsfield ?? false
+  // Whether "Edit game setup" was opened from Scorecard's edit-mode grid,
+  // rather than Summary's Edit action — changes the header's back
+  // destination below (Change 2b).
+  const fromScorecard                      = editRound && (params?.fromScorecard ?? false)
   const { user }                          = useAuth()
   const [names, setNames]                 = useState(() =>
     editGame?.players?.length ? [...editGame.players] : ['']
@@ -52,11 +56,10 @@ export default function Setup({ navigate, goBack, params }) {
   const [newCoursePars, setNewCoursePars]       = useState(() => Array(9).fill(3))
   const [courseError, setCourseError]           = useState(null)
   const [notes, setNotes]                       = useState(() => editGame?.notes ?? '')
-  const [pastDate, setPastDate]                 = useState(() =>
-    editGame?.completedAt
-      ? localDateString(new Date(editGame.completedAt))
-      : localDateString()
-  )
+  const [pastDate, setPastDate]                 = useState(() => {
+    const seed = editGame?.pastDate ?? editGame?.completedAt
+    return seed ? localDateString(new Date(seed)) : localDateString()
+  })
 
   // Round-level par correction (§11.13) — a separate, distinct capability
   // from the course selector above it. Seeded from the round's own saved
@@ -367,7 +370,7 @@ export default function Setup({ navigate, goBack, params }) {
         title={editRound ? 'Edit Round' : pastRound ? 'Add Past Round' : 'New Game'}
         backLabel={
           editRound
-            ? '← Summary'
+            ? (fromScorecard ? '← Scorecard' : '← Summary')
             : pastRound
               ? '← History'
               : `← ${fromBruntsfield ? 'Course' : 'Home'}`
@@ -377,9 +380,11 @@ export default function Setup({ navigate, goBack, params }) {
           // pushing a fresh Summary entry (#43b fix) — pushing left a stale,
           // param-less Summary underneath that later broke History's own back
           // button. Summary re-resolves the exact round from the `gameId`
-          // App.jsx now persists across the bounce (see Summary.jsx).
+          // App.jsx now persists across the bounce (see Summary.jsx). Opened
+          // from Scorecard's own "Edit game setup" instead, the real step
+          // back lands on Scorecard, so the fallback names that destination.
           editRound
-            ? goBack('summary')
+            ? goBack(fromScorecard ? 'scorecard' : 'summary')
             : pastRound
               ? goBack('history')
               : goBack(fromBruntsfield ? 'bruntsfield' : 'home')
@@ -487,6 +492,7 @@ export default function Setup({ navigate, goBack, params }) {
                         pastRound,
                         game: editGame,
                         bruntsfield: fromBruntsfield,
+                        fromScorecard,
                       })}
                       className="shrink-0 inline-block py-3 -my-3 px-1 font-ui text-sm text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                     >

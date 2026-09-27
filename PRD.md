@@ -2,7 +2,7 @@
 ## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
 **Version:** 2.0
-**Last updated:** 21 September 2026
+**Last updated:** 27 September 2026
 
 > The rationale and section-by-section history of past updates lives in `CHANGELOG.md`, not here. This line is just a date.
 
@@ -86,6 +86,7 @@ Outbuild palette applied for outdoor sunlight legibility on a phone:
   - **Maximum score per hole: 14 strokes.** The **+** button is disabled once 14 is reached. Note: the official Bruntsfield Short Hole Golf Club stroke limit is 7 per hole (see 4.9); the app uses a higher practical cap of 14 to accommodate casual play without being as restrictive as the official rule.
   - The **→** button advances focus to the next player on the same hole, or the next hole's first player
 - Each scored cell shows its result against the hole's par as a small superscript (`+1` / `-1` / `E`), live as the score changes — see §5.3.1
+- **Front 9 subtotal row (18-hole courses only, `game.holes === 18`).** > **Status:** shipped 27 September 2026 (see §5.3.3 for the Summary-side counterpart, shipped alongside it). Once hole 9's row is fully scored — every current player has a stroke count for hole 9 — an auto-calculated **Front 9** subtotal row appears beneath it, per player: each player's total for holes 1–9, computed the same way as the round total (over scored holes only, §5.3.2). It then stays visible for the rest of the round as holes 10–18 are played — it is not a one-off or transient row. This never appears for a 9-hole round, and never for the 36-hole Bruntsfield course (quick-play or the seeded default course, §6) — front/back-9 has no meaning across 36 holes. **Known edge case:** because the gate is "every *current* player has hole 9 scored," adding a player mid-edit (§11.13.1) after hole 9 is already complete for everyone else can make the row disappear again for that render, until the new player's own hole 9 is scored. Accepted as a narrow, edit-only corner case — not solved by this capability.
 - A player's name carries a small star badge when it matches the signed-in user's own name (§11.15)
 - Running totals shown above the control bar, always visible — each total also shows the player's round score-to-par in brackets, e.g. `41 (+5)` (§5.3.2)
 - Progress is **auto-saved to local storage continuously**
@@ -251,7 +252,7 @@ An end-of-round eagle / birdie / par / bogey tally was built and removed the sam
 
 ### 5.3 Score vs par — display standard
 
-> **Status:** notation, placement and colour are locked; this section is the spec. Colour is a **semantic under / level / over set** (see "Colour" below). The exact tokens, their sunlight-contrast values, and the override rule for a delta sitting in an already-accent (winner) or already-inverted (active cell) context live in DESIGN.md. Shipped as the per-hole indicator (§5.3.1) and the round total-to-par (§5.3.2).
+> **Status:** notation, placement and colour are locked; this section is the spec. Colour is a **semantic under / level / over set** (see "Colour" below). The exact tokens, their sunlight-contrast values, and the override rule for a delta sitting in an already-accent (winner) or already-inverted (active cell) context live in DESIGN.md. Shipped as the per-hole indicator (§5.3.1) and the round total-to-par (§5.3.2). The Front 9 / Back 9 subtotal (§5.3.3) reuses this same notation and colour system on a new surface — shipped 27 September 2026.
 
 **Purpose.** One convention for how a score and its par render together, everywhere the two appear: the bracketed par on the hole number (§5.1), the live per-hole indicator (§5.3.1), and the round total-to-par (§5.3.2). All of these must read as one system.
 
@@ -303,6 +304,21 @@ Beside each player's round total, in brackets, their score-to-par for the round:
 
 **Touchpoints:** §4.3 (live grid + totals bar), §4.4 (finish dialog + post-finish Summary), §4.7 (share image), §11.9 (History read-only detail). §5.1 references this standard rather than restate it.
 
+#### 5.3.3 Front 9 / Back 9 totals (Summary, 18-hole courses only)
+
+> **Status:** shipped 27 September 2026. Written up and built alongside §4.3's live Front 9 row as one combined capability.
+
+For an 18-hole round only (`game.holes === 18`), the read-only Summary scorecard table (§4.4) — and, by extension, History's detail view, which reuses the same component (§11.9) — inserts a break/divider line after the hole 9 row, and a second one after the hole 18 row, both before the existing grand total row:
+- **After hole 9:** each player's **Front 9** total (holes 1–9), with their Front-9 score-to-par in brackets, using the same §5.3 notation and colour rules as the round total-to-par (§5.3.2) — e.g. `23 (+2)` / `21 (E)` / `19 (-2)`.
+- **After hole 18:** each player's **Back 9** total (holes 10–18), with their Back-9 score-to-par in brackets, same notation and colour rules.
+- Both subtotals are computed over **scored holes only within that half**, exactly as the round total is computed over scored holes only (§5.3.2) — no special-casing. A player who stopped before hole 10 on an 18-hole round therefore shows a real Front 9 total, and the existing dash / no-bracket treatment (§5.3.2) for Back 9 (since it has no scored holes) — the break line itself is never hidden or suppressed because a half wasn't completed. This keeps subtotals consistent with how every other partial/DNF figure already renders in this PRD.
+- **Known edge case, accepted:** the break line itself only renders when the table's row loop actually reaches that hole index — it is not a separate "should a break line show" check. So a round where **every player stopped before hole 9 on an 18-hole round shows no Front 9 break line at all**, not even a placeholder or dash version, because the loop never reaches index 8 for anyone. This is a direct consequence of the "computed over scored holes only, no special-casing" rule above, not a special case introduced to handle it. Confirmed accepted as-is — no code change. (A related, separately accepted edge case affecting the *live* Scorecard's Front 9 row — it disappearing again after a roster edit past hole 9 — is documented at §4.3.)
+- Does not apply to a 9-hole round (there is no back half to split) or to the 36-hole Bruntsfield course, quick-play or seeded (§6) — front/back-9 has no defined meaning across 36 holes.
+- **Live Scorecard equivalent:** see §4.3 for the corresponding Front 9 subtotal row shown during play, before the round finishes. The Summary break lines are the read-only, after-the-fact counterpart of that same figure, plus the Back 9 half which the live grid never needs to show separately (the running total already covers it as holes are played).
+- Likely wants a small helper alongside `scoreToPar` / `roundToPar` in `src/utils/scores.js` — e.g. `subtotal(playerScores, holePars, startIndex, endIndex)` — reusing the same over-scored-holes logic rather than a bespoke calculation, consistent with §5.3.2's note about `roundToPar`.
+
+**Touchpoints:** §4.3 (live Front 9 row — the in-play counterpart), §4.4 (Summary table), §11.9 (History detail view — inherits automatically, see note there), §6 (hole-count gating).
+
 ---
 
 ## 6. Course
@@ -312,6 +328,7 @@ Beside each player's round total, in brackets, their score-to-par for the round:
 - Signed-in users can create their own courses at **9 or 18 holes** (default 9). 36 holes is not offered for user-created courses (§11.7)
 - UI includes a **"More courses coming soon"** placeholder where course selection will eventually live
 - Per-hole par is stored per course and per saved round (see §5.1); it is display only. No other hole-level metadata (no yardage, no difficulty rating)
+- **Front 9 / Back 9 subtotals** (§4.3, §5.3.3) apply only when `game.holes === 18`: never to a 9-hole round, and never to the 36-hole Bruntsfield course (quick-play or the seeded default course), since 36 holes has no single front/back split
 - A signed-in user can **edit** a course they created after the fact — its **name** and **per-hole pars**, but never its hole count, which is fixed for the life of the course. A signed-in user can also **delete** a course they created; deletion **cascades** and removes every round recorded on it too. Full detail in §11.7
 
 ---
@@ -600,7 +617,7 @@ When a user is authenticated, the game save behaviour changes:
   - **Dedupe on sync**: once a pending round syncs (marker cleared), only the D1 row shows. Matching is by `client_round_id` (the local round's id, §11.3), so a round never appears twice, including when the server saved it but the response was lost and the marker is not yet cleared. `GET /api/games` therefore returns `client_round_id` on each row
 - Signed-out History is unchanged (it lists every local round, including any still pending, with no badge)
 - Logged-in history screen shows: course name, date, player names, holes played, and the result label (Winner / Tied / No winner), consistent with §4.5. (Game naming was removed from the UI, so no game-name column is shown.)
-- Tapping a game shows the full scorecard (read-only, same layout as the existing summary screen), including the per-hole vs-par indicator (§5.3.1) and the round total-to-par (§5.3.2)
+- Tapping a game shows the full scorecard (read-only, same layout as the existing summary screen), including the per-hole vs-par indicator (§5.3.1) and the round total-to-par (§5.3.2). The Front 9 / Back 9 break lines (§5.3.3, 18-hole rounds only) apply here automatically too, since this detail view reuses the same read-only Summary component; no separate work is needed for History
 - Tapping a player name filters to games that player appeared in
 - Empty state if no games saved yet - shown only when the load actually succeeded. A failed load shows "Couldn't load your rounds" with a **Try again** button, and a 401 shows "You've been signed out" with **Sign in**; neither is ever presented as "No rounds yet" (BACKLOG #99)
 - A single round whose stored data cannot be read is skipped with a quiet note ("1 round couldn't be shown."); it does not blank the rest of the list
@@ -651,17 +668,23 @@ Users can correct a previously saved round from its detail (Summary) view. Editi
 Quick-play edits are localStorage-only and device-specific, consistent with all other quick-play behaviour (§4.6, §11.10). A quick-play round can only be edited on the device that holds it.
 
 **Entry point:**
-- When a saved round is opened from History, the round-detail (Summary) view uses navigation chrome rather than the immediate post-finish layout: a **"← Rounds"** back button top-left and an **"Edit"** action top-right. There is no full-width "Done" button on this view, and the saved note (if any) is shown as small static text — notes are edited only in edit mode.
+- When a saved round is opened from History, the round-detail (Summary) view uses navigation chrome rather than the immediate post-finish layout: a **"Home"** back button top-left (goes straight to Home — not a step back into a "Rounds"/History list) and an **"Edit"** action top-right. There is no full-width "Done" button on this view, and the saved note (if any) is shown as small static text — notes are edited only in edit mode.
+  > **Correction (27 September 2026):** this bullet previously read "a **'← Rounds'** back button". The shipped header (`src/pages/Summary.jsx`) has always rendered plain **"Home"**, with no arrow, and always navigates straight to Home — it never stepped back to a "Rounds" list. That was a wording error in this PRD, not a behaviour change, and is corrected here.
 - The immediate post-finish Summary (shown right after finishing a round) is unchanged — it keeps its "Done" button and inline notes field (§4.4, §11.3).
 - Editing is blocked while a game is in progress. In that state the Edit action does nothing and the user is told to finish their current round first.
+- **Tapping "Edit" opens the hole-scores editor (Scorecard, in edit mode) directly — not Setup.** This reverses the original v1 flow, where Edit opened Setup (players/course/par/notes/date) as the one and only edit screen. Every capability listed below is unchanged; only the route to the players/course/par/notes/date fields moved, one explicit tap later:
+  - The hole-scores editor is the same Scorecard component used for live play, in edit mode (header titled "Edit Round", "Save" in place of "Finish"). It carries an **"Edit game setup"** link beneath the game controls. Tapping it opens Setup — also titled "Edit Round" in its own header — pre-filled with the round's current players, course, this round's par, notes and date (§11.7, §11.13.1).
+  - Setup's confirm button in this flow reads **"Edit hole scores"** (not "Start the round") and returns to the hole-scores editor with whatever was changed carried into the working copy; nothing is written to storage or D1 until the hole-scores editor's own "Save" is tapped.
+  - Cancelling out of Setup reached this way returns to the hole-scores editor, resuming the same in-progress edit — not back to Summary. This is real browser-history back navigation, so it restores the exact editing state the user left rather than a fresh screen.
+  - The two screens are one continuous edit session shown as two steps, not a detour and a return trip: "the Setup step" referenced elsewhere in this section and in §11.13.1 (players, course, round par, notes, date) is this same screen, just reached via "Edit game setup" rather than directly from Summary. There is no longer a direct History/Summary → Setup entry point for an existing round.
 
 **What can be edited in v1 (both round types unless noted):**
 - **Round date** (`played_at`) — pre-filled with the existing date and re-stamped on save. Editable for both local/quick-play and logged-in D1 rounds.
 - **Player names** — rename existing players.
 - **Per-hole scores** — for existing players, using the same scoring grid and controls as normal play (§4.3), including the 14-stroke cap.
-- **Notes** — a pre-filled free-text notes field on the edit screen (same 300-character client-side limit as §11.3), saved with the rest of the round. This is the only route to editing notes on an already-saved round.
+- **Notes** — a pre-filled free-text notes field on the Setup step of the edit flow (reached via "Edit game setup" from the hole-scores editor — see "Entry point" above; same 300-character client-side limit as §11.3), saved with the rest of the round. This is the only route to editing notes on an already-saved round.
 - **Course** — logged-in D1 rounds only, via the existing course selector (§11.7). For local/quick-play rounds the course is fixed and not editable in v1. **A round's hole count can't change during an edit:** the selector offers only courses with the round's own hole count (the round's current course always stays selectable), and a course created mid-edit is locked to that hole count (9 or 18). A round with any other hole count (e.g. a 36-hole no-course round) can therefore switch only among same-length courses and cannot create a new one during the edit. This prevents a stale-size grid where a longer round is switched onto a shorter course (BACKLOG #56).
-- **This round's hole pars** — a **separate, distinct capability from editing the course itself (§11.7)** and from the "Course" field above. Applies to both round types (local/quick-play and logged-in D1). The user can correct the per-hole par values recorded on this one round (`games.hole_pars`, §11.3) — independent of, and without touching, the course's own par definition (`courses.hole_pars`). Editing a course's par (§11.7) is forward-looking only and never rewrites a round already saved against it; this field is how a user instead goes back and fixes the par on one specific already-played round. Uses the same −/+ stepper pattern (2–7 band) as the course par editor (§11.7), rendered for exactly the round's existing hole count — editing a round's par never changes `holes_played` and has no effect on totals, winner or DNF (par is display-only per §5). **On the edit screen this control must be presented as clearly separate from the course-name/course-selector control** — its own labelled section, not merged into or adjacent-looking to the course picker — so a user cannot confuse "I'm correcting this round's par" with "I'm changing which course this round is attached to".
+- **This round's hole pars** — a **separate, distinct capability from editing the course itself (§11.7)** and from the "Course" field above. Applies to both round types (local/quick-play and logged-in D1). The user can correct the per-hole par values recorded on this one round (`games.hole_pars`, §11.3) — independent of, and without touching, the course's own par definition (`courses.hole_pars`). Editing a course's par (§11.7) is forward-looking only and never rewrites a round already saved against it; this field is how a user instead goes back and fixes the par on one specific already-played round. Uses the same −/+ stepper pattern (2–7 band) as the course par editor (§11.7), rendered for exactly the round's existing hole count — editing a round's par never changes `holes_played` and has no effect on totals, winner or DNF (par is display-only per §5). **On this Setup step of the edit flow, this control must be presented as clearly separate from the course-name/course-selector control** — its own labelled section, not merged into or adjacent-looking to the course picker — so a user cannot confuse "I'm correcting this round's par" with "I'm changing which course this round is attached to".
 - **The player roster** — adding and removing players. Originally deferred at v1 (see the superseded note below); now specified in full at §11.13.1 (BACKLOG #6).
 
 **What is NOT editable (deferred — see BACKLOG.md):**

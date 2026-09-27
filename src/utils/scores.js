@@ -67,6 +67,34 @@ export function roundToPar(playerScores, holePars) {
 }
 
 /**
+ * Subtotal for one player over a hole range [startIndex, endIndex) — e.g. the
+ * Front 9 (0, 9) or Back 9 (9, 18) of an 18-hole round (§5.3.3). Computed over
+ * scored holes only within that range, exactly like roundToPar (§5.3.2) — no
+ * special-casing for a partial half. Reuses roundToPar rather than a bespoke
+ * calculation so the two figures can never drift.
+ *
+ * @returns {{ total: number|null, toPar: number|null }} total is null when
+ *   nothing in the range is scored (callers render the existing '-' / no-
+ *   bracket treatment, same as playerTotal/roundToPar's null convention).
+ */
+export function subtotal(playerScores, holePars, startIndex, endIndex) {
+  const scores = Array.isArray(playerScores) ? playerScores : []
+  const pars = Array.isArray(holePars) ? holePars : []
+  let total = 0
+  let scored = 0
+  for (let i = startIndex; i < endIndex; i++) {
+    const s = scores[i]
+    if (s == null) continue
+    total += s
+    scored++
+  }
+  return {
+    total: scored === 0 ? null : total,
+    toPar: roundToPar(scores.slice(startIndex, endIndex), pars.slice(startIndex, endIndex)),
+  }
+}
+
+/**
  * Normalises a `hole_pars` value into a plain array of exactly `holeCount`
  * integers. Accepts a JSON string, an array, or null/undefined. Anything
  * missing, short or invalid becomes par 3 — correct for Bruntsfield and for

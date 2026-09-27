@@ -1,15 +1,15 @@
-import { useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { MAX_HOLES } from '../constants.js'
 import { track } from '../utils/analytics.js'
-import { formatDateOnly } from '../utils/format.js'
-import { deriveResult, isSignedInPlayer } from '../utils/game.js'
+import { formatDateOnly, localDateString } from '../utils/format.js'
+import { buildEditGame, deriveResult, isSignedInPlayer } from '../utils/game.js'
 import { tiedNames, strokesLabel } from '../utils/result.js'
-import { deriveHolePars, playerTotal, roundToPar, scoreToPar } from '../utils/scores.js'
+import { deriveHolePars, playerTotal, roundToPar, scoreToPar, subtotal } from '../utils/scores.js'
 import PageHeader from '../components/PageHeader.jsx'
 import ParDelta from '../components/ParDelta.jsx'
 import PlayerStar from '../components/PlayerStar.jsx'
 import { shareScorecard } from '../utils/share.js'
-import { getActiveGame, getCompletedGames, markCompletedGamePending, markCompletedGameSynced, updatePendingNotes } from '../utils/storage.js'
+import { clearActiveCell, getActiveGame, getCompletedGames, markCompletedGamePending, markCompletedGameSynced, saveActiveGame, updatePendingNotes } from '../utils/storage.js'
 import { holdRound, isSyncing, postRound, syncPendingRounds } from '../utils/sync.js'
 import { useAuth } from '../hooks/useAuth.jsx'
 
@@ -107,16 +107,6 @@ export default function Summary({ navigate, params }) {
     }
   }, [])
 
-  // A reload, deep link, or restored tab always resets history state to depth
-  // 0 — there's nothing in-app to step back to, and no in-page back button any
-  // more (#89) for the case where there is. Only relevant to the viewingSaved
-  // branch below (a round opened from History, or a synced round with no edit
-  // rights) — the post-finish flow always arrives at depth > 0, straight from
-  // Scorecard. Read once on mount: this only needs to catch the "landed here
-  // with a blank history" case, not react to later in-app navigation (#89
-  // fix-forward).
-  const [showHomeLink] = useState(() => (window.history.state?.depth ?? 0) === 0)
-
   // No round to show (e.g. /summary opened directly with nothing in storage).
   // Bounce home from an effect, not an inline navigate() during render -
   // navigate() sets state on the parent, which React rejects mid-render (same
@@ -205,7 +195,25 @@ export default function Summary({ navigate, params }) {
       setEditNotice('This round has just been saved. Open it from History to edit it.')
       return
     }
-    navigate('setup', { editRound: true, game })
+    // Skip the Setup screen by default (BACKLOG-driven UX change): build the
+    // same working copy Setup's own "Edit hole scores" confirm would build
+    // for an unchanged round (no course/date/par/roster edits), and go
+    // straight to the hole-scores editor. "Edit game setup" on Scorecard
+    // (added this change) is the explicit way back to the setup screen for
+    // anyone who does want to change those things.
+    const identityIndices = game.players.map((_, i) => i)
+    // Mirrors Setup's own date round-trip exactly (noon-local on the round's
+    // existing date) so the fast path is bit-for-bit identical to "open
+    // Setup, immediately tap Edit hole scores without touching anything" —
+    // deliberately not "just keep the original timestamp", to avoid a new,
+    // inconsistent date behaviour between the fast path and the explicit one.
+    const dateIso = new Date(localDateString(new Date(game.completedAt)) + 'T12:00:00').toISOString()
+    const working = buildEditGame(game, game.players, game.courseId ?? null, game.courseName ?? null, dateIso, game.holePars, identityIndices)
+    working.notes = (game.notes ?? '').trim() || null
+    working._edit = { id: game.id, fromDb: !!game._fromDb }
+    saveActiveGame(working)
+    clearActiveCell()
+    navigate('scorecard', { game: working, editContext: working._edit })
   }
 
   function reportSaveFailure(kind) {
@@ -343,20 +351,22 @@ export default function Summary({ navigate, params }) {
       {/* Post-finish: "Done" top-right (saves + goes home), no back slot — this
           flow always arrives straight from Scorecard (depth > 0), where native
           back genuinely works. A round opened from History (viewingSaved):
-          "Edit" top-right; no in-page back button either (#89, the phone's own
-          back navigation covers stepping back to the list) except when this
-          screen was reached with nothing in-app to step back to (a reload, a
-          deep link, or a restored tab all reset history depth to 0) — then a
-          "Home" fallback appears on the left so there's still a way out.
-          Composes the shared PageHeader rather than hand-rolling its own copy
-          (#69) — this used to duplicate PageHeader's markup exactly, back when
-          the header centred its title on an absolute layer above the side
-          slots; #85 replaced that with the three-slot flex layout, so
-          there's nothing left to drift out of sync. */}
+          "Edit" top-right, and an explicit "Home" on the left every time — not
+          just when this screen was reached with nothing in-app to step back to.
+          A viewingSaved round can also be reached via an edit round-trip
+          (History -> Summary -> Setup -> Scorecard(edit) -> save -> back here),
+          which pushes several history entries first, so a depth-based check
+          would miss this case even though there's just as much need for a
+          trustworthy way out. Native back still works in addition, but is no
+          longer the only path. Composes the shared PageHeader rather than
+          hand-rolling its own copy (#69) — this used to duplicate PageHeader's
+          markup exactly, back when the header centred its title on an absolute
+          layer above the side slots; #85 replaced that with the three-slot flex
+          layout, so there's nothing left to drift out of sync. */}
       <PageHeader
         title={game.courseName || undefined}
         subtitle={formatDateOnly(game.completedAt)}
-        onBack={viewingSaved && showHomeLink ? () => navigate('home') : undefined}
+        onBack={viewingSaved ? () => navigate('home') : undefined}
         backLabel="Home"
         right={
           viewingSaved ? (
@@ -466,29 +476,76 @@ export default function Summary({ navigate, params }) {
 
             <tbody>
               {Array.from({ length: game.holesPlayed ?? game.holes }, (_, holeIndex) => (
-                <tr key={holeIndex} className="border-b border-border">
-                  <td className="py-2 px-3 font-ui text-xs text-muted whitespace-nowrap">
-                    <span className="font-semibold">{holeIndex + 1}</span>
-                    <span className="font-normal ml-0.5">({holePars[holeIndex]})</span>
-                  </td>
-                  {(game.players ?? []).map(player => {
-                    const score = game.scores[player]?.[holeIndex]
-                    return (
-                      <td
-                        key={player}
-                        className={[
-                          'py-2 px-3 text-center font-ui text-sm',
-                          isWinner(player) ? 'text-accent font-medium' : 'text-text',
-                        ].join(' ')}
-                      >
-                        {score ?? '-'}
-                        {score != null && (
-                          <ParDelta delta={scoreToPar(score, holePars[holeIndex])} />
-                        )}
-                      </td>
-                    )
-                  })}
-                </tr>
+                <Fragment key={holeIndex}>
+                  <tr className="border-b border-border">
+                    <td className="py-2 px-3 font-ui text-xs text-muted whitespace-nowrap">
+                      <span className="font-semibold">{holeIndex + 1}</span>
+                      <span className="font-normal ml-0.5">({holePars[holeIndex]})</span>
+                    </td>
+                    {(game.players ?? []).map(player => {
+                      const score = game.scores[player]?.[holeIndex]
+                      return (
+                        <td
+                          key={player}
+                          className={[
+                            'py-2 px-3 text-center font-ui text-sm',
+                            isWinner(player) ? 'text-accent font-medium' : 'text-text',
+                          ].join(' ')}
+                        >
+                          {score ?? '-'}
+                          {score != null && (
+                            <ParDelta delta={scoreToPar(score, holePars[holeIndex])} />
+                          )}
+                        </td>
+                      )
+                    })}
+                  </tr>
+
+                  {/* Front 9 / Back 9 break lines (§5.3.3, §11.9) — 18-hole
+                      rounds only. Read-only counterpart of the live
+                      Scorecard's Front 9 row (§4.3): each half's total is
+                      computed over scored holes only within that half, so a
+                      round that stopped mid-round still shows a real Front 9
+                      line and the existing dash/no-bracket treatment for a
+                      half with nothing scored. The loop above only reaches
+                      these indices when that many holes were actually played,
+                      which naturally hides the Back 9 line for a round that
+                      stopped at or before hole 9. History's detail view reuses
+                      this same component, so it inherits both lines
+                      automatically. */}
+                  {game.holes === 18 && holeIndex === 8 && (
+                    <tr className="border-t-2 border-b border-border bg-bg-card">
+                      <th scope="row" className="py-3 px-3 text-left font-ui text-xs font-semibold text-text whitespace-nowrap">
+                        Front 9
+                      </th>
+                      {(game.players ?? []).map(player => {
+                        const { total, toPar } = subtotal(game.scores?.[player] ?? [], holePars, 0, 9)
+                        return (
+                          <td key={player} className="py-3 px-3 text-center font-ui text-base font-semibold text-text">
+                            {total ?? '-'}
+                            <ParDelta delta={toPar} variant="bracket" />
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  )}
+                  {game.holes === 18 && holeIndex === 17 && (
+                    <tr className="border-t-2 border-b border-border bg-bg-card">
+                      <th scope="row" className="py-3 px-3 text-left font-ui text-xs font-semibold text-text whitespace-nowrap">
+                        Back 9
+                      </th>
+                      {(game.players ?? []).map(player => {
+                        const { total, toPar } = subtotal(game.scores?.[player] ?? [], holePars, 9, 18)
+                        return (
+                          <td key={player} className="py-3 px-3 text-center font-ui text-base font-semibold text-text">
+                            {total ?? '-'}
+                            <ParDelta delta={toPar} variant="bracket" />
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  )}
+                </Fragment>
               ))}
             </tbody>
 
