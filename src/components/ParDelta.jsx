@@ -1,6 +1,6 @@
 import { formatToPar } from '../utils/scores.js'
 
-// Score-vs-par delta, rendered to the DESIGN.md "Score vs par" spec (§5.3).
+// Score-vs-par delta, rendered to the DESIGN.md "Score vs par" spec.
 // One component for every in-app surface so the notation, size and the
 // semantic-colour override rule can never drift between the live grid, the
 // read-only Summary / History table and the totals rows.

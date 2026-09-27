@@ -85,7 +85,7 @@ export async function onRequestPatch(context) {
     values.push(notes || null)
   }
   if ('hole_pars' in body) {
-    // Re-snapshots the round's par — sent when a D1 edit switches course (§5.1).
+    // Re-snapshots the round's par — sent when a D1 edit switches course.
     // Explicit null clears it (read back as par 3 per hole).
     if (hole_pars === null) {
       columns.push('hole_pars = ?')

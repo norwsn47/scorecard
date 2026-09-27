@@ -65,7 +65,7 @@ describe('App router — SPA navigation', () => {
     expect(renderPhaseWarnings).toHaveLength(0)
   })
 
-  it('boots on a deep-linked /settings while signed out and bounces to Home (§11.14)', async () => {
+  it('boots on a deep-linked /settings while signed out and bounces to Home', async () => {
     window.history.replaceState({}, '', '/settings')
 
     render(<App />)

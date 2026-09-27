@@ -59,7 +59,7 @@ export async function onRequestPost(context) {
     return Response.json({ error: 'Invalid holes_played' }, { status: 400 })
   }
 
-  // Par snapshot for the round (§5.1). Absent → NULL, read as par 3 per hole.
+  // Par snapshot for the round. Absent → NULL, read as par 3 per hole.
   let holeParsJson = null
   if (hole_pars != null) {
     const v = validateHolePars(hole_pars, holes_played)

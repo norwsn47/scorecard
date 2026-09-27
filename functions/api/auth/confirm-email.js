@@ -1,5 +1,5 @@
 // GET /api/auth/confirm-email?token=<token> — completes an email change begun
-// by PATCH /api/users (§11.4.1). This is a NEW endpoint, deliberately not an
+// by PATCH /api/users. This is a NEW endpoint, deliberately not an
 // extension of /api/auth/verify: verify finds-or-creates a user and opens a
 // session, and running that here would create a second account for the pending
 // address. This endpoint only swaps the address on the existing user.
@@ -31,7 +31,7 @@ export async function onRequestGet(context) {
 
   // The user whose pending change this token is for. A superseded request
   // (pending_email overwritten by a later change) or an already-applied one
-  // leaves no match — the link is dead (§11.4.1).
+  // leaves no match — the link is dead.
   const owner = await DB.prepare(
     'SELECT id FROM users WHERE pending_email = ?'
   ).bind(tokenRow.email).first()
@@ -52,7 +52,7 @@ export async function onRequestGet(context) {
 
   // Atomic: swap the address, clear the pending flag, burn the token. Sessions
   // key on the session id, not the email, so every device stays signed in
-  // (§11.4.1 "No re-login").
+  // ("No re-login").
   //
   // The `takenByOther` check above narrows the race window; the real backstop
   // is the `users.email` UNIQUE constraint. If another confirmation for the

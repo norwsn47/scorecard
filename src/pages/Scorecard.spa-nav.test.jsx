@@ -10,7 +10,7 @@ import { AuthProvider } from '../hooks/useAuth.jsx'
 // effect rather than inline during render is proven by App.test.jsx's #17
 // case, where `navigate` is App's real setState-driven function.
 
-// Scorecard reads useAuth() (§11.15, the signed-in identity star) — a
+// Scorecard reads useAuth() (the signed-in identity star) — a
 // logged-out resolution is all these cases need.
 beforeEach(() => {
   localStorage.clear()

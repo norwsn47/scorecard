@@ -6,7 +6,7 @@ export function playerTotal(scores, player) {
     .reduce((sum, s) => sum + s, 0)
 }
 
-// ── Par (§5.1) ─────────────────────────────────────────────────────────────
+// ── Par ────────────────────────────────────────────────────────────────────
 // Par is display / derived-stats only — it never affects totals, the winner,
 // DNF or the draw rule. A missing or malformed par is read as par 3.
 
@@ -22,9 +22,9 @@ export function scoreToPar(score, par) {
 }
 
 /**
- * Shared score-vs-par formatter (§5.3). Turns a signed delta into the one
+ * Shared score-vs-par formatter. Turns a signed delta into the one
  * notation every surface uses — the per-hole superscript (#38), the round
- * total-to-par (#52), and later the §5.2 tally (#64):
+ * total-to-par (#52), and the round-total tally (#64):
  *   null / undefined  → ''      (hole not scored — nothing is shown)
  *   0                 → 'E'     (level par — never '+0' / '-0')
  *   > 0               → '+N'    (always a leading '+')
@@ -41,7 +41,7 @@ export function formatToPar(delta) {
 }
 
 /**
- * Round total-to-par (§5.3.2 / #52): the sum of scoreToPar(score, par) over the
+ * Round total-to-par (#52): the sum of scoreToPar(score, par) over the
  * holes this player has actually scored. Unscored holes (null / NaN) are
  * skipped, so a mid-round or DNF player's figure reflects only what they have
  * played. Returns null when the player has scored nothing — callers omit the
@@ -68,8 +68,8 @@ export function roundToPar(playerScores, holePars) {
 
 /**
  * Subtotal for one player over a hole range [startIndex, endIndex) — e.g. the
- * Front 9 (0, 9) or Back 9 (9, 18) of an 18-hole round (§5.3.3). Computed over
- * scored holes only within that range, exactly like roundToPar (§5.3.2) — no
+ * Front 9 (0, 9) or Back 9 (9, 18) of an 18-hole round. Computed over
+ * scored holes only within that range, exactly like roundToPar — no
  * special-casing for a partial half. Reuses roundToPar rather than a bespoke
  * calculation so the two figures can never drift.
  *

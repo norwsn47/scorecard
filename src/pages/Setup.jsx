@@ -29,7 +29,7 @@ export default function Setup({ navigate, goBack, params }) {
   // Parallel to `names` — for an edit, each entry is the index that name held
   // in the original saved roster (so its scores carry forward on save), or
   // `null` for a player added during this edit (no prior scores to carry
-  // forward — §11.13.1's "no backfill" rule). Kept in lock-step with `names`
+  // forward — the "no backfill" rule). Kept in lock-step with `names`
   // by handleAddPlayer/handleRemovePlayer so a mid-list removal can never
   // misalign a remaining player's scores with the wrong name. Unused outside
   // edit mode (New Game/Add Past Round build fresh score rows regardless).
@@ -61,7 +61,7 @@ export default function Setup({ navigate, goBack, params }) {
     return seed ? localDateString(new Date(seed)) : localDateString()
   })
 
-  // Round-level par correction (§11.13) — a separate, distinct capability
+  // Round-level par correction — a separate, distinct capability
   // from the course selector above it. Seeded from the round's own saved
   // par snapshot, at the round's own hole count (never the course's hole
   // count, which can differ). Stays hand-editable once touched.
@@ -98,8 +98,8 @@ export default function Setup({ navigate, goBack, params }) {
   const dateValid   = !showDate || (pastDate !== '' && !Number.isNaN(new Date(pastDate + 'T12:00:00').getTime()))
   const ready       = canStartGame(names, names.length) && courseReady && dateValid
 
-  // Pre-fill the first player slot with the signed-in user's own name (§4.2,
-  // §11.15) — a genuinely new round only, never an edit (renaming an existing
+  // Pre-fill the first player slot with the signed-in user's own name
+  // — a genuinely new round only, never an edit (renaming an existing
   // player is a different action). `user` resolves asynchronously from
   // /api/auth/me, so this runs once it (and its `name`) is available rather
   // than at the useState initialiser above. Guarded so it never clobbers a
@@ -193,7 +193,7 @@ export default function Setup({ navigate, goBack, params }) {
   }, [user, editRound, coursesReloadKey])
 
   // Reset the round-par stepper to the newly-selected course's own par
-  // whenever the course selection actually changes mid-edit (§11.13) — a
+  // whenever the course selection actually changes mid-edit — a
   // fresh default (par 3 across the board) when switching to "+ New course",
   // matching that form's own default. Skipped on the initial mount so the
   // round's saved par snapshot isn't clobbered just because `courses` loaded.
@@ -327,7 +327,7 @@ export default function Setup({ navigate, goBack, params }) {
       if (!resolved) return
 
       const dateIso = new Date(pastDate + 'T12:00:00').toISOString()
-      // Par: whatever the round-par stepper currently holds (§11.13) — seeded
+      // Par: whatever the round-par stepper currently holds — seeded
       // from the round's own saved snapshot, refreshed to a newly-selected
       // course's par on a course switch (see the reset effect above), and
       // otherwise freely hand-editable. Independent of the course itself.
@@ -589,7 +589,7 @@ export default function Setup({ navigate, goBack, params }) {
           </div>
         )}
 
-        {/* Round-level par correction (§11.13) — a separate, distinct
+        {/* Round-level par correction — a separate, distinct
             capability from the course selector above: this fixes the par
             recorded on this one round, not the course's own par definition.
             Kept in its own labelled section, deliberately not merged into or

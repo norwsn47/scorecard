@@ -1,4 +1,4 @@
-// Per-hole par (§5.1). Par is a display / derived-stats attribute only — it
+// Per-hole par. Par is a display / derived-stats attribute only — it
 // never affects totals, the winner, DNF or the draw rule. Stored as a JSON
 // array of integers in a TEXT column, consistent with `games.player_data`.
 //

@@ -114,7 +114,7 @@ export default function Scorecard({ navigate, params }) {
   // a label and don't do a comparison of their own).
   const isBruntsfieldCourse = !user ? true : game.courseName === BRUNTSFIELD_COURSE_NAME
 
-  // Front 9 subtotal row gate (§4.3, §5.3.3) — 18-hole rounds only, and only
+  // Front 9 subtotal row gate — 18-hole rounds only, and only
   // once every *current* player has a stroke count for hole 9 (index 8).
   // Recomputed on every render, not sticky state: a player added mid-edit
   // after hole 9 is complete for everyone else can make this go false again
@@ -383,7 +383,7 @@ export default function Scorecard({ navigate, params }) {
                       })}
                     </tr>
 
-                    {/* Front 9 subtotal row (§4.3, §5.3.3) — 18-hole rounds
+                    {/* Front 9 subtotal row — 18-hole rounds
                         only, appears once hole 9 is fully scored and stays
                         visible for the rest of the round. Heavier borders and
                         the card surface mark it as a break, not another hole

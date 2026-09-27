@@ -1,5 +1,5 @@
 // Session cookie helpers and the session lookup. The cookie name, its
-// attributes and its 30-day lifetime are hardcoded here (not env vars, §11.11)
+// attributes and its 30-day lifetime are hardcoded here (not env vars)
 // so verify, logout, me, the account-delete path and getSessionUser all agree.
 
 export const SESSION_TTL_SECONDS = 2592000 // 30 days

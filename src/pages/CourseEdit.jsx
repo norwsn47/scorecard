@@ -3,7 +3,7 @@ import PageHeader from '../components/PageHeader.jsx'
 import ParStepperGrid, { stepPar as stepParArray } from '../components/ParStepperGrid.jsx'
 import { deriveHolePars } from '../utils/scores.js'
 
-// Editing and deleting a signed-in user's own course (§11.7, #54/#71).
+// Editing and deleting a signed-in user's own course (#54/#71).
 // Reached only from Setup's course selector "Edit" link — GET /api/courses
 // has no single-course endpoint, so this mounts by fetching the full list
 // and finding the one course by id (the same request Setup itself already
@@ -210,7 +210,7 @@ export default function CourseEdit({ navigate, params }) {
 
             {/* Per-hole par — reuses the same stepper as course creation and
                 round-level par correction (#54/#71). Hole count itself is
-                fixed for the life of the course (§11.7) — no control for it
+                fixed for the life of the course — no control for it
                 here, the grid simply renders exactly the course's own length. */}
             <div className="pt-1">
               <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted mb-2 pl-1">Par for each hole</p>
@@ -253,7 +253,7 @@ export default function CourseEdit({ navigate, params }) {
       </main>
 
       {/* Delete confirmation — mirrors History.jsx's confirmDeleteId sheet
-          exactly, but the copy states the round count up front (§11.7) so
+          exactly, but the copy states the round count up front so
           the user knows the cascade before confirming. */}
       {confirmDelete && course && (
         <div

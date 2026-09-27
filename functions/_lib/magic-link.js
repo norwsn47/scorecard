@@ -1,6 +1,6 @@
 // Shared magic-link machinery for the two endpoints that email a one-time link:
-// sign-in (`POST /api/auth/request-link`, §11.4) and email-change confirmation
-// (`PATCH /api/users`, §11.4.1). Both used to carry their own copy of the
+// sign-in (`POST /api/auth/request-link`) and email-change confirmation
+// (`PATCH /api/users`). Both used to carry their own copy of the
 // per-address throttle, the token generation + INSERT, and the send wrapper.
 //
 // What differs between the two (429 message, subject, heading, intro, CTA

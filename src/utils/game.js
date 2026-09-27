@@ -31,7 +31,7 @@ export function canStartGame(names, count) {
 }
 
 /**
- * True when `playerName` is the signed-in account holder's own name (§11.15)
+ * True when `playerName` is the signed-in account holder's own name
  * — an exact match against `users.name` after trimming whitespace and
  * lower-casing both sides. Same normalisation findDuplicateIndices uses for
  * the duplicate-name check above, so the app has one name-comparison rule,
@@ -188,7 +188,7 @@ export function finishGame(game) {
     completedAt: game.pastDate ?? new Date().toISOString(),
     holesPlayed,
     // Snapshot the round's par at completion, sliced to the holes actually
-    // played (§5.1) — later course edits never rewrite a saved round.
+    // played — later course edits never rewrite a saved round.
     holePars: deriveHolePars(game.holePars, holesPlayed),
     winner,
     winners,
@@ -235,12 +235,12 @@ export function createGame(playerNames, courseId = null, courseName = null, past
  * Scorecard screen.
  *
  * `editedNames` is mapped onto the existing player rows via `originalIndices`
- * (§11.13.1) — an array the same length as `editedNames` where each entry is
+ * — an array the same length as `editedNames` where each entry is
  * either the index that name held in `existingGame.players` (its scores carry
  * forward, covering a plain rename) or `null` for a newly-added player (no
  * previous scores — every hole starts unscored, the "no backfill" rule). When
  * `originalIndices` is omitted, it defaults to a straight positional mapping
- * (`editedNames[i]` <- `existingGame.players[i]`) — the pre-§11.13.1 behaviour,
+ * (`editedNames[i]` <- `existingGame.players[i]`) — the original behaviour,
  * still correct for a same-length rename-only edit with no roster change.
  *
  * Each row is copied into a fresh array sized to the round's own hole count
@@ -276,7 +276,7 @@ export function buildEditGame(existingGame, editedNames, courseId = null, course
   editedNames.forEach((name, i) => {
     const row = Array(holeCount).fill(null)
     // A newly-added player (originalIndices[i] === null) has no prior row —
-    // every hole stays unscored (§11.13.1's "no backfill" rule), so `oldRow`
+    // every hole stays unscored (the "no backfill" rule), so `oldRow`
     // resolves to an empty array and the fill above is left untouched.
     const origIndex = originalIndices ? originalIndices[i] : i
     const oldRow = origIndex != null ? (existingGame.scores?.[oldNames[origIndex]] ?? []) : []
@@ -295,7 +295,7 @@ export function buildEditGame(existingGame, editedNames, courseId = null, course
     courseId: courseId ?? null,
     courseName: courseName ?? null,
     // `holePars` passed in when a D1 edit switches course; otherwise the
-    // round keeps its own saved snapshot (§11.7).
+    // round keeps its own saved snapshot.
     holePars: deriveHolePars(holePars ?? existingGame.holePars, holeCount),
     ...(dateIso ? { pastDate: dateIso } : {}),
   }

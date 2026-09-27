@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import ParDelta from './ParDelta.jsx'
 
-// The one renderer for every score-vs-par delta (§5.3). These lock the
+// The one renderer for every score-vs-par delta. These lock the
 // notation and the semantic-colour override rule so they can't drift.
 describe('ParDelta', () => {
   it('renders nothing for an unscored hole (null / undefined delta)', () => {

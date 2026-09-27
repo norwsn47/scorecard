@@ -5,9 +5,9 @@ import Setup from './Setup.jsx'
 import { AuthProvider } from '../hooks/useAuth.jsx'
 import { getActiveGame } from '../utils/storage.js'
 
-// Round-level par correction on the past-round edit flow (§11.13, #54/#71) —
+// Round-level par correction on the past-round edit flow (#54/#71) —
 // a separate, distinct capability from the course selector above it, and
-// from editing the course itself (§11.7). Alongside Scorecard.edit.test.jsx
+// from editing the course itself. Alongside Scorecard.edit.test.jsx
 // and Setup.edit-recovery.test.jsx.
 
 const savedLocalRound = {
@@ -46,7 +46,7 @@ beforeEach(() => {
   localStorage.clear()
 })
 
-describe('Setup — round-level par correction (§11.13, #54/#71)', () => {
+describe('Setup — round-level par correction (#54/#71)', () => {
   it('logged-out (local) edit: shows a "Par for this round" section, seeded from the round\'s own saved par, with no course section above it', async () => {
     global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ user: null }) })
 

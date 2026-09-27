@@ -37,7 +37,7 @@ async function changeHole1AndSave(user) {
   await user.click(screen.getByRole('button', { name: /save changes/i }))
 }
 
-// Scorecard reads useAuth() (§11.15, the signed-in identity star) — the
+// Scorecard reads useAuth() (the signed-in identity star) — the
 // localStorage-path case needs a resolvable /api/auth/me even though it
 // otherwise never touches the network; the D1-path case supplies its own
 // fetch mock per-test below.

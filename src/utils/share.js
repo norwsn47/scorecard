@@ -80,7 +80,7 @@ async function buildCanvas(game) {
   const HOLE_COL    = 44
   const playerColW  = (W - PAD * 2 - HOLE_COL) / players.length
 
-  // Per-hole par for the vs-par superscripts and the round total-to-par (§5.3).
+  // Per-hole par for the vs-par superscripts and the round total-to-par.
   const holePars   = deriveHolePars(game.holePars, holes)
 
   // Section heights
@@ -195,7 +195,7 @@ async function buildCanvas(game) {
       ctx.fillRect(PAD, rowY, W - PAD * 2, ROW_H)
     }
     // Hole number + par in brackets, matching the live grid and Summary
-    // treatment (§5.1): the number bold, the par trailing in brackets at the
+    // treatment: the number bold, the par trailing in brackets at the
     // same size, not bold, no colour of its own — e.g. "3 (3)".
     ctx.textAlign = 'left'
     ctx.fillStyle = C.muted

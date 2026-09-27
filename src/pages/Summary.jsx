@@ -125,7 +125,7 @@ export default function Summary({ navigate, params }) {
   const isWinner = player => winners.includes(player)
 
   // Per-hole par for the read-only table — small bracketed reference next to
-  // each hole number, matching the live Scorecard grid (§5.1, item 37).
+  // each hole number, matching the live Scorecard grid (item 37).
   const holePars = deriveHolePars(game.holePars, game.holesPlayed ?? game.holes ?? MAX_HOLES)
 
   const resultBase = 'font-ui text-xs tracking-[0.12em] uppercase text-muted text-center'
@@ -445,7 +445,7 @@ export default function Summary({ navigate, params }) {
       )}
 
       <main className="flex-1 flex flex-col min-h-0">
-        {/* Read-only scorecard. The vs-par tally (§5.2) lives in the same table
+        {/* Read-only scorecard. The vs-par tally lives in the same table
             as extra rows below the totals so its columns stay locked to the
             player columns above, even when the grid scrolls sideways. */}
         <div className="flex-1 overflow-y-auto overflow-x-auto mt-3 pb-2">
@@ -501,9 +501,9 @@ export default function Summary({ navigate, params }) {
                     })}
                   </tr>
 
-                  {/* Front 9 / Back 9 break lines (§5.3.3, §11.9) — 18-hole
+                  {/* Front 9 / Back 9 break lines — 18-hole
                       rounds only. Read-only counterpart of the live
-                      Scorecard's Front 9 row (§4.3): each half's total is
+                      Scorecard's Front 9 row: each half's total is
                       computed over scored holes only within that half, so a
                       round that stopped mid-round still shows a real Front 9
                       line and the existing dash/no-bracket treatment for a

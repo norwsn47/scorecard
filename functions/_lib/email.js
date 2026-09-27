@@ -1,4 +1,5 @@
-// Shared email helpers for the magic-link machinery (§11.4, §11.4.1, §11.14).
+// Shared email helpers for the magic-link machinery (sign-in, email-change
+// re-verification, and account management emails).
 //
 // The Resend send call and the email-address format check are shared by
 // `request-link.js` and the profile endpoints; both live here. On a Resend
@@ -85,7 +86,7 @@ function safeLogText(value) {
 /**
  * The branded magic-link email body — a wordmark, a heading, a one-line intro,
  * a single CTA button, and the plain-text fallback URL. Shared by the sign-in
- * email (§11.4) and the email-change confirmation (§11.4.1); the heading, intro
+ * email and the email-change confirmation; the heading, intro
  * and CTA label are the only things that differ between them.
  */
 export function magicLinkEmailHtml({ heading, intro, ctaLabel, link }) {

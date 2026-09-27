@@ -35,7 +35,7 @@ beforeEach(() => {
   localStorage.clear()
 })
 
-describe('Scorecard — Front 9 subtotal row (§4.3, §5.3.3)', () => {
+describe('Scorecard — Front 9 subtotal row', () => {
   it('does not show before hole 9 is complete for every player', async () => {
     const game = eighteenHoleGame({
       scores: {

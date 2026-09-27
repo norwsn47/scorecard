@@ -6,8 +6,8 @@ export function AuthProvider({ children }) {
   const [user, setUser]         = useState(null)
   const [loading, setLoading]   = useState(true)
   const [authError, setAuthError] = useState(null)
-  // ?email=changed|expired|taken redirected from GET /api/auth/confirm-email
-  // (§11.4.1). Surfaced as a one-off banner on Home; the param is stripped
+  // ?email=changed|expired|taken redirected from GET /api/auth/confirm-email.
+  // Surfaced as a one-off banner on Home; the param is stripped
   // straight away, exactly like ?auth= above.
   const [emailNotice, setEmailNotice] = useState(null)
 
@@ -33,7 +33,7 @@ export function AuthProvider({ children }) {
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), 5000)
 
-    // /api/auth/me now returns { id, email, name, pending_email } (§11.5) — the
+    // /api/auth/me now returns { id, email, name, pending_email } — the
     // spread keeps all four on the context user.
     fetch('/api/auth/me', { credentials: 'include', signal: controller.signal })
       .then(res => res.json())
@@ -50,8 +50,8 @@ export function AuthProvider({ children }) {
     setUser(null)
   }, [])
 
-  // PATCH /api/users (§11.14). `name` is applied server-side immediately;
-  // `email` starts the re-verification flow (§11.4.1) and comes back as
+  // PATCH /api/users. `name` is applied server-side immediately;
+  // `email` starts the re-verification flow and comes back as
   // `pending_email` until the link in the new inbox is clicked — `email` itself
   // is unchanged here. Pass only the fields you want to change. Throws an Error
   // (with `.status`) on a non-2xx response.
@@ -83,7 +83,7 @@ export function AuthProvider({ children }) {
     return data
   }, [])
 
-  // DELETE /api/users (§11.14) — irreversible. Server clears the session cookie;
+  // DELETE /api/users — irreversible. Server clears the session cookie;
   // we drop the context user so the app falls back to the signed-out state.
   // Quick-play localStorage history is deliberately left untouched.
   const deleteAccount = useCallback(async () => {

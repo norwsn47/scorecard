@@ -5,7 +5,7 @@ import userEvent from '@testing-library/user-event'
 import Settings from './Settings.jsx'
 import { AuthProvider } from '../hooks/useAuth.jsx'
 
-// Settings panel (§11.14, #4). Covers: the signed-out bounce, the name field
+// Settings panel (#4). Covers: the signed-out bounce, the name field
 // calling PATCH /api/users, the email field surfacing 409 / 429, and the
 // typed-DELETE gate on the destructive button before it calls DELETE /api/users
 // and (via the signed-out guard) returns Home.

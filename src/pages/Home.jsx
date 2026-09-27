@@ -7,7 +7,7 @@ import { getActiveGame, getCompletedGames } from '../utils/storage.js'
 import { useAuth } from '../hooks/useAuth.jsx'
 
 // ?email=changed|expired|taken redirected back from GET /api/auth/confirm-email
-// (§11.4.1) — the address change confirmed, the link was dead, or the address
+// — the address change confirmed, the link was dead, or the address
 // was taken in the meantime. useAuth captures the flag and strips the param;
 // Home copies it into local state once and clears the context value straight
 // away, so the banner shows for this visit only and never re-appears on a
@@ -179,9 +179,9 @@ export default function Home({ navigate }) {
           </button>
         )}
 
-        {/* Foot of the actions: signed-out sees the sign-in nudge (unchanged,
-            §11.10); signed-in sees a plain "you are signed in" line (§4.1,
-            §11.6). The way into Settings is the header gear (#83). */}
+        {/* Foot of the actions: signed-out sees the sign-in nudge (unchanged);
+            signed-in sees a plain "you are signed in" line. The way into
+            Settings is the header gear (#83). */}
         {user ? (
           <div className="pt-0 text-center">
             <p className="font-ui text-xs text-muted break-words">

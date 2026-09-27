@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import Setup from './Setup.jsx'
 import { AuthProvider } from '../hooks/useAuth.jsx'
 
-// §11.15 — a signed-in user's own name pre-fills the first player slot on a
+// A signed-in user's own name pre-fills the first player slot on a
 // genuinely new round, is still freely editable, and is never forced onto an
 // edit of an existing round (renaming a player there is a distinct action).
 
@@ -31,7 +31,7 @@ function renderSetup(params = {}) {
   return { navigate }
 }
 
-describe('Setup — signed-in name pre-fill on New Game (§4.2, §11.15)', () => {
+describe('Setup — signed-in name pre-fill on New Game', () => {
   it('pre-fills the first player slot with the signed-in user\'s own name once it resolves', async () => {
     mockAuthMe({ id: 'u1', name: 'Alice' })
     renderSetup()

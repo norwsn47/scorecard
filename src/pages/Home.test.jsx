@@ -5,9 +5,9 @@ import userEvent from '@testing-library/user-event'
 import Home from './Home.jsx'
 import { AuthProvider } from '../hooks/useAuth.jsx'
 
-// Home's signed-in additions (§4.1, §11.6, §11.14): the Settings entry point
+// Home's signed-in additions: the Settings entry point
 // and signed-in indicator, and the one-off ?email= banner redirected back from
-// GET /api/auth/confirm-email (§11.4.1) which useAuth strips from the URL.
+// GET /api/auth/confirm-email which useAuth strips from the URL.
 //
 // Everything renders through StrictMode, mirroring src/main.jsx — the banner
 // regression that prompted this (effect cleanup wiping the notice during
@@ -43,7 +43,7 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-describe('Home — signed-in indicator and Settings entry (§11.14)', () => {
+describe('Home — signed-in indicator and Settings entry', () => {
   it('shows the signed-in indicator and opens Settings, for a signed-in user', async () => {
     const user = userEvent.setup()
     mountFetch({ id: 'u1', email: 'jane@example.com', name: null, pending_email: null })
@@ -88,7 +88,7 @@ describe('Home — signed-in indicator and Settings entry (§11.14)', () => {
   })
 })
 
-describe('Home — ?email= confirm-email banner (§11.4.1)', () => {
+describe('Home — ?email= confirm-email banner', () => {
   it.each([
     ['changed', /email address has been updated\. sign in with your new address/i],
     ['expired', /expired or has already been used\. open the app and request the change again/i],

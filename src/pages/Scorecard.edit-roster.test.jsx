@@ -6,7 +6,7 @@ import { buildEditGame } from '../utils/game.js'
 import { getCompletedGames } from '../utils/storage.js'
 import { AuthProvider } from '../hooks/useAuth.jsx'
 
-// Rendering a roster change during a past-round edit (§11.13.1, BACKLOG #6) —
+// Rendering a roster change during a past-round edit (BACKLOG #6) —
 // the Scorecard grid must show an added player's columns, with already-played
 // holes empty/unscored for them, and must not block saving on that gap.
 
@@ -26,7 +26,7 @@ beforeEach(() => {
   global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ user: null }) })
 })
 
-describe('Scorecard — edit-mode grid with an added player (§11.13.1)', () => {
+describe('Scorecard — edit-mode grid with an added player', () => {
   it('renders the added player\'s column with already-played holes empty, and saves without a backfill', async () => {
     const user = userEvent.setup()
     // "Priya" added with no prior scores (originalIndices[1] === null).

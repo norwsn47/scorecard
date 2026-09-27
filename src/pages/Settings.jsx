@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import PageHeader from '../components/PageHeader.jsx'
 import { useAuth } from '../hooks/useAuth.jsx'
 
-// Self-serve profile and account controls for a signed-in user (§11.14, #4).
-// Reachable only when signed in — from the Home header gear (§4.1, #83) or the
-// Info page Account section (§4.8). A signed-out visitor hitting /settings directly
+// Self-serve profile and account controls for a signed-in user (#4).
+// Reachable only when signed in — from the Home header gear (#83) or the
+// Info page Account section. A signed-out visitor hitting /settings directly
 // bounces to Home from an effect, mirroring the Scorecard no-game guard (#17).
 // No in-page back button for normal in-app navigation (#89) — the phone's
 // own back navigation covers stepping back to wherever this was opened from.
@@ -328,7 +328,7 @@ export default function Settings({ navigate }) {
       </main>
 
       {/* Delete confirmation — mirrors History.jsx's delete-round sheet, with a
-          typed-DELETE gate on the destructive button (§11.14). */}
+          typed-DELETE gate on the destructive button. */}
       {confirmDelete && (
         <div
           className="fixed inset-0 flex items-end justify-center z-50"

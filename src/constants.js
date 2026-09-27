@@ -21,16 +21,16 @@ export const QUICK_PLAY_COURSE_NAME = 'Quick Play'
 export const MAX_HOLES = 36
 
 // Quick-play (logged-out) assumes par 3 for all 36 holes — the Bruntsfield
-// reality and the single source of that value (§5.1). Logged-in rounds carry
+// reality and the single source of that value. Logged-in rounds carry
 // their course's own hole_pars instead.
 export const BRUNTSFIELD_HOLE_PARS = Array(MAX_HOLES).fill(3)
 
 // Bruntsfield / quick-play hole count. 36 is reserved for the default course;
-// user-created courses are 9 or 18 (§11.7). This is the one place the
+// user-created courses are 9 or 18. This is the one place the
 // quick-play hole count lives — call sites wire it into createGame.
 export const BRUNTSFIELD_HOLE_COUNT = MAX_HOLES
 
-// The par band a single hole may have (§5.1): 2 to 7 inclusive. The par
+// The par band a single hole may have: 2 to 7 inclusive. The par
 // stepper stops at these edges and deriveHolePars reads anything outside the
 // band as par 3. The backend validator keeps its own copy (functions/_lib/
 // hole-pars.js); constants.test.js fails if the two drift apart.

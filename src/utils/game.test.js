@@ -35,7 +35,7 @@ describe('findDuplicateIndices', () => {
   })
 })
 
-// ── isSignedInPlayer (§11.15) ────────────────────────────────────────────────
+// ── isSignedInPlayer ─────────────────────────────────────────────────────────
 
 describe('isSignedInPlayer', () => {
   it('matches an exact name', () => {
@@ -569,7 +569,7 @@ describe('buildEditGame', () => {
     expect(finished.winner).toBe('Alice')
   })
 
-  // ── §11.13.1 — adding/removing players during an edit ──────────────────────
+  // ── Adding/removing players during an edit ──────────────────────────────────
 
   it('originalIndices maps scores by original identity, not position, so removing a middle player never misaligns the remaining scores', () => {
     const threePlayer = {
@@ -629,7 +629,7 @@ describe('buildEditGame', () => {
     expect(finished.dnf).toEqual([])
   })
 
-  it('falls back to positional mapping when originalIndices is omitted (pre-§11.13.1 rename-only callers)', () => {
+  it('falls back to positional mapping when originalIndices is omitted (rename-only callers)', () => {
     const game = buildEditGame(existing, ['Alice', 'Robert'])
     expect(game.scores.Robert.slice(0, 3)).toEqual([3, 3, 3])
     expect(game.scores.Alice.slice(0, 3)).toEqual([5, 5, 5])

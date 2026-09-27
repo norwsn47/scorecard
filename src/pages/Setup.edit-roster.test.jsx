@@ -5,9 +5,9 @@ import Setup from './Setup.jsx'
 import { AuthProvider } from '../hooks/useAuth.jsx'
 import { getActiveGame } from '../utils/storage.js'
 
-// Adding/removing players during a past-round edit (§11.13.1, BACKLOG #6) —
+// Adding/removing players during a past-round edit (BACKLOG #6) —
 // reuses the same Add Player / ✕ remove controls and duplicate-name blocking
-// as New Game setup (§4.2), now also enabled in edit mode.
+// as New Game setup, now also enabled in edit mode.
 
 const twoPlayerLocalRound = {
   id: 'g1',
@@ -40,7 +40,7 @@ beforeEach(() => {
   global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ user: null }) })
 })
 
-describe('Setup — adding/removing players during an edit (§11.13.1)', () => {
+describe('Setup — adding/removing players during an edit', () => {
   it('shows the same "+ Add player" control used by New Game', async () => {
     render(
       <AuthProvider>

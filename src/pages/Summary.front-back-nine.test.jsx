@@ -43,7 +43,7 @@ beforeEach(() => {
   localStorage.clear()
 })
 
-describe('Summary — Front 9 / Back 9 break lines (§5.3.3)', () => {
+describe('Summary — Front 9 / Back 9 break lines', () => {
   it('shows both break lines for a full 18-hole round, with correct totals and to-par figures', async () => {
     await renderSummary(game18())
 

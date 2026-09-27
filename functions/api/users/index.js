@@ -4,18 +4,18 @@ import { readJsonObject } from '../../_lib/request.js'
 import { isOverLinkLimit, prepareTokenInsert, sendMagicLinkEmail } from '../../_lib/magic-link.js'
 
 // `users.name` shares the 1–60 char band a player name uses in
-// `functions/_lib/game-input.js` (§11.3, §11.14).
+// `functions/_lib/game-input.js`.
 const NAME_MAX = 60
 
 /**
- * PATCH /api/users — updates the current session's user (§11.14). No id in the
+ * PATCH /api/users — updates the current session's user. No id in the
  * path; always acts on "me". Body `{ name?, email? }`, both optional.
  *
  * - neither field present → 200 no-op (mirrors PATCH /api/courses/[id])
  * - `name`  → trimmed; 1–60 chars sets it, empty string clears it to null,
  *             over 60 is a 400. Applied immediately.
  * - `email` → validated, then applied asynchronously via the re-verification
- *             flow (§11.4.1): pending_email is staged, a magic_tokens row is
+ *             flow: pending_email is staged, a magic_tokens row is
  *             issued for the new address, and a confirmation email is sent to
  *             it. `users.email` does not change until the link is clicked.
  */
@@ -79,7 +79,7 @@ export async function onRequestPatch(context) {
       return Response.json({ error: 'That email address is already in use' }, { status: 409 })
     }
 
-    // §11.4.1 / BACKLOG #14 - the same per-address cap request-link.js
+    // BACKLOG #14 - the same per-address cap request-link.js
     // applies, measured against the NEW address so this endpoint can't be used
     // to flood an inbox.
     if (await isOverLinkLimit(DB, newEmail, Date.now())) {
@@ -96,13 +96,13 @@ export async function onRequestPatch(context) {
     return Response.json({ ok: true, name: nameUpdate }, { status: 200 })
   }
 
-  // ---- Email change (§11.4.1) ----
+  // ---- Email change ----
   const { token, statement: insertToken } = prepareTokenInsert(DB, newEmail, Date.now())
 
   // Stage pending_email (and the name, if supplied — it is applied immediately
-  // "regardless", §11.14) and issue the token, atomically. A prior outstanding
+  // regardless) and issue the token, atomically. A prior outstanding
   // pending_email / link is overwritten; its confirmation link then goes dead
-  // because step 5's pending_email match no longer succeeds (§11.4.1).
+  // because step 5's pending_email match no longer succeeds.
   const setCols = ['pending_email = ?']
   const setVals = [newEmail]
   if (nameUpdate !== undefined) {
@@ -137,7 +137,7 @@ export async function onRequestPatch(context) {
     )
   }
 
-  // §11.4.1 step 4 — best-effort security notice to the OLD address. No new
+  // Best-effort security notice to the OLD address. No new
   // address disclosed (avoids leaking a mistyped address), no action link.
   // Never blocks or fails the request.
   context.waitUntil(
@@ -158,7 +158,7 @@ export async function onRequestPatch(context) {
 
 /**
  * DELETE /api/users — deletes the current session's user and everything tied to
- * the account, in one atomic DB.batch (§11.14). Irreversible. The session
+ * the account, in one atomic DB.batch. Irreversible. The session
  * cookie is the only server-side authorisation; the typed-DELETE confirmation
  * is client-side friction only.
  */
@@ -177,7 +177,7 @@ export async function onRequestDelete(context) {
 
   // One atomic cascade. D1/SQLite doesn't enforce foreign keys, so every
   // dependent row is deleted explicitly, in dependency order, ending with the
-  // users row itself (§11.14).
+  // users row itself.
   await DB.batch([
     DB.prepare('DELETE FROM games WHERE user_id = ?').bind(user.id),
     DB.prepare('DELETE FROM courses WHERE user_id = ?').bind(user.id),
@@ -186,7 +186,7 @@ export async function onRequestDelete(context) {
     DB.prepare('DELETE FROM users WHERE id = ?').bind(user.id),
   ])
 
-  // Best-effort admin notification (§11.14). Failure is swallowed — a mail
+  // Best-effort admin notification. Failure is swallowed — a mail
   // failure never blocks or reverses the deletion. Body is a TIMESTAMP ONLY:
   // no email address, no user id, nothing identifying.
   const adminTo = ADMIN_NOTIFY_EMAIL ?? 'williamadamgriffiths@gmail.com'

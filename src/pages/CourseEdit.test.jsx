@@ -3,7 +3,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import CourseEdit from './CourseEdit.jsx'
 
-// Editing and deleting a course from its dedicated screen (§11.7, #54/#71).
+// Editing and deleting a course from its dedicated screen (#54/#71).
 // GET /api/courses has no single-course endpoint, so CourseEdit fetches the
 // full list and finds the course by id — same request Setup already makes.
 
@@ -28,7 +28,7 @@ describe('CourseEdit (#54/#71)', () => {
 
     expect(await screen.findByDisplayValue('Bruntsfield')).toBeInTheDocument()
     // Rendered read-only-length at the course's own hole count (9) — no
-    // hole-count control anywhere on this screen (§11.7).
+    // hole-count control anywhere on this screen.
     expect(screen.getAllByRole('group', { name: /^Hole \d, par 3$/ })).toHaveLength(9)
     expect(screen.queryByText(/holes.*can.t be changed later/i)).not.toBeInTheDocument()
   })
@@ -78,7 +78,7 @@ describe('CourseEdit (#54/#71)', () => {
       const body = JSON.parse(patchCall[1].body)
       expect(body.name).toBe('Bruntsfield Renamed')
       expect(body.hole_pars[0]).toBe(4)
-      // Hole count is never sent — the API rejects it outright (§11.7).
+      // Hole count is never sent — the API rejects it outright.
       expect(body.holes).toBeUndefined()
     })
     await waitFor(() =>

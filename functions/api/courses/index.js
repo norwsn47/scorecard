@@ -2,7 +2,7 @@ import { getSessionUser } from '../../_lib/session.js'
 import { defaultHoleParsJson, validateHolePars } from '../../_lib/hole-pars.js'
 import { readJsonObject } from '../../_lib/request.js'
 
-// User-created courses are 9 or 18 holes only (§11.7). 36 is reserved for
+// User-created courses are 9 or 18 holes only. 36 is reserved for
 // quick-play Bruntsfield and the seeded default course, which are not created
 // through this endpoint.
 const ALLOWED_HOLE_COUNTS = [9, 18]
@@ -16,7 +16,7 @@ export async function onRequestGet(context) {
   // course); the client parses it, same as `games.player_data`.
   // `round_count` is a correlated subquery so the frontend can show "this will
   // also delete N rounds" in the delete-confirmation dialog without a second
-  // request (§11.7).
+  // request.
   const { results } = await DB.prepare(
     `SELECT id, name, holes, hole_pars, is_default,
        (SELECT COUNT(*) FROM games g WHERE g.course_id = courses.id) AS round_count
@@ -43,7 +43,7 @@ export async function onRequestPost(context) {
   if (!name) return Response.json({ error: 'Course name is required' }, { status: 400 })
   if (name.length > 60) return Response.json({ error: 'Course name must be 60 characters or fewer' }, { status: 400 })
 
-  // Hole count: must be exactly 9 or 18 (§11.7). A strict identity check also
+  // Hole count: must be exactly 9 or 18. A strict identity check also
   // rejects strings ("9"), floats (9.5), null and a missing field.
   const holes = body.holes
   if (!ALLOWED_HOLE_COUNTS.includes(holes)) {
@@ -51,7 +51,7 @@ export async function onRequestPost(context) {
   }
 
   // Par: a new course always stores an explicit array matching its hole count.
-  // Absent from the request → all 3s (§11.7). Only pre-003 rows ever have NULL.
+  // Absent from the request → all 3s. Only pre-003 rows ever have NULL.
   let holeParsJson = defaultHoleParsJson(holes)
   if (body.hole_pars != null) {
     const v = validateHolePars(body.hole_pars, holes)

@@ -60,9 +60,6 @@ Add Google as a sign-in option alongside the magic link (currently magic-link-on
 ### 13. Official Bruntsfield logo
 Add the club's official logo (likely Home or the course info section) once permission to use it is obtained.
 
-### 125. Dangling bare "§x.y" section refs left after the PRD removal (Low)
-The PRD-removal sweep (27 Sep 2026) only caught comments that literally said "PRD §x.y". A separate set of bare "§11.14"-style refs (no "PRD" prefix) was missed in `functions/` (`email.js`, `users/index.js`, `magic-link.js`, `request-link.js`, `request-link.test.js`, `users/index.test.js`) and a few `src/` files (`Privacy.jsx`, `Info.jsx`, `Rules.jsx`, `Home.test.jsx`, `App.test.jsx`, `Settings.jsx`, `Settings.test.jsx`, `useAuth.jsx`, `constants.js`). Low priority since they still read sensibly in context, but worth a comment-only tidy pass at some point.
-
 ### 123. Course par edits should retroactively update past rounds (needs decision)
 Currently, editing a course's own par is deliberately forward-looking only - already-played rounds keep their own stored `hole_pars` snapshot and are never rewritten (a separate "fix this round's par" control on the edit-round screen exists specifically to correct one past round without touching the course). Raised 27 September 2026: revisit whether a course-par edit should instead propagate to previously recorded rounds on that course. Needs a decision before any code, since it conflicts with the existing separate-control design and the round-level par snapshot model (`games.hole_pars`).
 

@@ -37,7 +37,7 @@ export async function onRequestPost(context) {
   // 15 minutes after it is issued, so anything whose expiry is more than 24h
   // in the past is long dead. This keeps abandoned sign-in attempts from
   // retaining email addresses in the table indefinitely (GDPR data-
-  // minimisation, §11.12). Best-effort and off the critical path: run after
+  // minimisation). Best-effort and off the critical path: run after
   // the response via waitUntil, and swallow failures — a prune that fails
   // (lock contention, a large first-run backlog) must never break sign-in.
   const staleCutoff = new Date(now - 24 * 60 * 60 * 1000).toISOString();

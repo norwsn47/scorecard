@@ -21,7 +21,7 @@ export async function onRequestPatch(context) {
   if (!parsed.ok) return parsed.response
   const { body } = parsed
 
-  // Hole count is fixed for the life of the course (§11.7) — reject any
+  // Hole count is fixed for the life of the course — reject any
   // attempt to change it, rather than silently ignoring it.
   if ('holes' in body) {
     return Response.json({ error: 'Hole count cannot be changed' }, { status: 400 })
@@ -83,8 +83,8 @@ export async function onRequestDelete(context) {
 
   // Cascade delete: D1/SQLite doesn't enforce foreign keys, and there is no
   // ON DELETE CASCADE on games.course_id, so every round recorded on this
-  // course is deleted explicitly here, atomically with the course itself
-  // (§11.3, §11.7). Both statements are scoped by user_id too, as defense in
+  // course is deleted explicitly here, atomically with the course itself.
+  // Both statements are scoped by user_id too, as defense in
   // depth alongside the ownership check above.
   await DB.batch([
     DB.prepare('DELETE FROM games WHERE course_id = ? AND user_id = ?').bind(id, user.id),
