@@ -164,6 +164,8 @@ export default function CourseEdit({ navigate, params }) {
   // second confirmation step. Only shown once there's an actual change to
   // save and at least one round exists to be affected.
   const parsChanged = !!originalPars.current && JSON.stringify(originalPars.current) !== JSON.stringify(pars)
+  // roundCount is every round on the course, not just the ones the cascade will
+  // actually touch — overstates scope if any round is individually corrected.
   const showParCascadeWarning = parsChanged && roundCount > 0
 
   return (

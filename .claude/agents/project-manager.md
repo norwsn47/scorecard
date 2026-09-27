@@ -27,7 +27,7 @@ For confirmed-large work, also read the last few `CHANGELOG.md` entries. Read `D
 4. **Review it.** Dispatch the code-reviewer once the build is done. If it delegates to the debugger, dispatch the debugger straight away. Performance issues have no agent: log a follow-up, or ask the main session to measure.
 5. **Close it out**, before you stop:
    - Delete the finished item's line from `BACKLOG.md`.
-   - Add genuine follow-ups from this change as short to-do lines (what to do, not the history), using the next free ID at the top of `BACKLOG.md` and updating it. Critical/High reviewer findings go in. Minor reviewer notes do not.
+   - Add genuine follow-ups from this change as one-to-three-line entries (what to do, not the history), using the next free ID at the top of `BACKLOG.md` and updating it — only a real bug, a feature idea the user has asked for, or a manual step they owe. Critical/High reviewer findings go in. Minor or non-blocking reviewer notes, and anything accepted or won't-fix, do not — put the context in a code comment instead if it matters.
    - Add a `CHANGELOG.md` entry only if the change was a decision or a reversal.
    - Update the `Last updated:` line of every document you edit.
 6. **Stop and hand back.** You do not run the localhost review, commit, push or merge. Hand back a summary and stop. The main session gets the user's localhost review and merge sign-off, as CLAUDE.md "Version control" and "Review gate" require.

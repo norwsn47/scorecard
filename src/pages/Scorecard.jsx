@@ -112,6 +112,9 @@ export default function Scorecard({ navigate, params }) {
   // against the one canonical Bruntsfield name constant instead (used only
   // as a value here; CourseMapModal/Home render that same constant purely as
   // a label and don't do a comparison of their own).
+  // Fragile by design: a plain name match, not a stable id, so renaming this
+  // course (or naming another one identically) changes the match retroactively.
+  // Low severity (worst case: wrong/no map shown), not a real identity check.
   const isBruntsfieldCourse = !user ? true : game.courseName === BRUNTSFIELD_COURSE_NAME
 
   // Front 9 subtotal row gate — 18-hole rounds only, and only
@@ -119,7 +122,7 @@ export default function Scorecard({ navigate, params }) {
   // Recomputed on every render, not sticky state: a player added mid-edit
   // after hole 9 is complete for everyone else can make this go false again
   // for a render or two, until the new player's own hole 9 is scored. That is
-  // a documented, accepted edge case (BACKLOG #121) — not solved here.
+  // Accepted, narrow edge case — not solved here.
   const frontNineComplete = game.holes === 18 && players.length > 0
     && players.every(p => (game.scores?.[p]?.[8] ?? null) != null)
 

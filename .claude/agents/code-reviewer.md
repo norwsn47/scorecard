@@ -124,7 +124,7 @@ CLEAR WITH NOTES - no Critical findings; the change can be committed
 CLEAR - no findings
 ```
 
-**What goes in FOLLOW-UPS FOR BACKLOG:** only Critical or High findings, and only real, reproducible problems. Speculative concerns, hypothetical edge cases and minor polish stay in the report body and are not filed. Never edit `BACKLOG.md` yourself.
+**What goes in FOLLOW-UPS FOR BACKLOG:** only Critical or High findings, and only real, reproducible problems, as a one-to-three-line entry. Speculative concerns, hypothetical edge cases, minor polish and anything accepted or won't-fix stay in the report body and are not filed — put the context in a code comment instead if it matters. Never edit `BACKLOG.md` yourself.
 
 ---
 

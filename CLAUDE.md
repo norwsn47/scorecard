@@ -11,7 +11,7 @@ The app is shipped and in production. Work now arrives as individual requests, n
 
 At the start of a session, skim `BACKLOG.md` (a short to-do list) and the most recent `CHANGELOG.md` entries for context. Small, well-defined changes: just do them (see "Change size" and "Review gate"). For large or vague work, dispatch the project-manager (see below).
 
-`BACKLOG.md` is a to-do list so nothing is forgotten. Add a one-line entry when the user asks, or when a genuine follow-up comes out of a change. Delete an item's line in the same commit that finishes it. IDs are never reused. Its header has the full rules.
+`BACKLOG.md` is a to-do list so nothing is forgotten, not a review log — only real bugs, feature ideas the user has asked for, and manual steps the user owes go in. Add an entry when the user asks, or when a Critical/High review or audit finding needs one; a non-blocking review note or an accepted/won't-fix item is never logged (put the context in a code comment instead if it matters). Entries stay one to three lines. Delete an item's line in the same commit that finishes it. IDs are never reused. Its header has the full rules.
 
 ---
 

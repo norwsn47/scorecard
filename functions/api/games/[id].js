@@ -100,8 +100,9 @@ export async function onRequestPatch(context) {
   }
 
   if ('hole_pars_manually_set' in body) {
-    // Sticky: the API only ever sets this to 1 (the per-round control's save
-    // path), never resets it back to 0 — see migrations/006.
+    // Meant to be sticky (see migrations/006) but not enforced here: this
+    // still writes 0 if the body explicitly sends false. Holds today only
+    // because the one caller (sync.js) never sends false — not a server guarantee.
     columns.push('hole_pars_manually_set = ?')
     values.push(hole_pars_manually_set ? 1 : 0)
   }

@@ -26,6 +26,6 @@ Report findings as: FILE | ISSUE | SEVERITY (Critical / High / Medium / Low). Do
 
 **Where findings go:**
 - **Critical and High:** list them under a "FOR BACKLOG" heading, one short to-do line each (what to do, not the history). The main session adds these to `BACKLOG.md` and surfaces them to the user for a priority call.
-- **Medium and Low:** report them in chat only, grouped by the seven headings above and kept short (a few lines per group, cap of about 10 items per group; say how many more there are if you cut any). Do not file them. The user triages the report; anything they choose not to action now is added to `BACKLOG.md` as a to-do item afterwards.
+- **Medium and Low:** report them in chat only, grouped by the seven headings above and kept short (a few lines per group, cap of about 10 items per group; say how many more there are if you cut any). Do not file them. The user triages the report; only a genuine bug, feature idea or manual step the user wants tracked goes into `BACKLOG.md` afterwards, as a one-to-three-line entry — an accepted or won't-fix item is never logged (a code comment instead, if the context matters).
 
 Delegate anything needing root-cause investigation to the debugger using the existing handoff format - do not attempt it inline. Runtime performance measurement has no agent: list it as a follow-up for the user to decide on."
