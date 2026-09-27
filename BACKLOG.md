@@ -2,7 +2,7 @@
 ## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
 > A to-do list, so nothing gets forgotten. Open items only.
-> - **Adding:** only if it's something I'd actually do — a real bug, a feature idea I've asked for, or a manual step I owe. Critical/High findings from a review or audit go in; everything else stays in the chat report. Non-blocking review notes are never logged. Accepted or won't-fix items are never logged either — if the context matters, it goes in a code comment instead.
+> - **Adding:** only if it's something I'd actually do — a real bug, a feature idea I've asked for, or a manual step I owe. Critical/High findings from a review or audit go in; everything else stays in the chat report. Non-blocking review notes are never logged. Accepted or won't-fix items are never to-dos: one line in "Known and accepted" below, or a code comment where the issue sits in one place. Reviews and audits read that section and don't re-raise it.
 > - **Removing:** whoever finishes an item deletes its line in the same commit as the change. Add a `CHANGELOG.md` note only if it was a decision or a reversal.
 > - **Entries stay short:** one to three lines — what needs doing, not the history.
 > - **IDs are stable and never reused**, even after an item is deleted, so gaps are expected. Next free ID: **#124**.
@@ -39,3 +39,10 @@
 ---
 
 **Tidy-ups to do when passing:** duplicated code between `Home.jsx` and `BruntsfieldCoursePage.jsx`; the backend's own copies of the hole cap and par band; large page files (`Setup.jsx`, `Scorecard.jsx`, `Summary.jsx`); the empty `README.md`.
+
+---
+
+## Known and accepted
+
+<!-- Not to-dos. Decisions not to fix something, so reviews and audits don't raise them again. -->
+<!-- One line each: what, and why it's accepted, with the date. -->
