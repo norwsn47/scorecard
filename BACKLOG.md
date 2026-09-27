@@ -76,9 +76,6 @@ A comment describing "while the user is on the Edit Round setup screen for a pen
 - `Setup.edit-recovery.test.jsx` covers the abandoned-edit guard directly; `App.test.jsx` now also drives it through a real `popstate` bounce, and `Login.test.jsx` covers the "← Home" label. Still no render test for the `goBack()` fix itself.
 
 
-### 118. Apply migration 005 (indexes) to production D1 (manual, yours)
-`migrations/005_add_indexes.sql` is merged but NOT applied. Index-only, safe to re-run, and the app works the same without it. Run in the project folder: `npx wrangler d1 execute scorecard-plus --file=migrations/005_add_indexes.sql --remote`. Claude's attempts were blocked by the permission classifier; either run it yourself or add a Bash permission rule for that command.
-
 ### 119. Turn off Cloudflare Web Analytics, then enforce the CSP (manual, then Claude)
 Confirmed 21 Sep 2026: the live HTML carries an injected `static.cloudflareinsights.com/beacon.min.js` tag, which contradicts the "no analytics" copy and would be blocked by an enforced CSP. Decided: turn it off (Cloudflare dashboard, Workers & Pages, the project, Metrics / Web Analytics, or Analytics & Logs, Web Analytics, delete the site). Then: tell Claude, who re-checks the live HTML for the beacon; browse production with DevTools open and confirm no "Content Security Policy" console violations; then Claude renames the header in `public/_headers` to `Content-Security-Policy` (see #102).
 
