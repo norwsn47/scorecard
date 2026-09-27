@@ -19,7 +19,7 @@ describe('shared constants', () => {
     expect(BRUNTSFIELD_HOLE_PARS).toEqual(Array(36).fill(3))
     expect(PAR_MIN).toBe(2)
     expect(PAR_MAX).toBe(7)
-    expect(MAX_STROKES).toBe(14)
+    expect(MAX_STROKES).toBe(9)
   })
 
   it('keeps the par band in step with the backend validator', () => {

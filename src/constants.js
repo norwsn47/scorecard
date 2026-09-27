@@ -38,4 +38,6 @@ export const PAR_MIN = 2
 export const PAR_MAX = 7
 
 // The most strokes a player can be given on one hole with the + button.
-export const MAX_STROKES = 14
+// The official Bruntsfield stroke limit (Rule 4, see the rules page) is 7;
+// this is a deliberately slightly higher practical cap for casual play.
+export const MAX_STROKES = 9

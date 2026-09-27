@@ -5,7 +5,7 @@
 > - **Removing:** whoever finishes an item deletes its line in the same commit as the change (the project-manager for large changes, the main session for small ones). Add a `CHANGELOG.md` note only if it was a decision or a reversal.
 > - **Adding:** you ask; the project-manager adds genuine follow-ups from a large change; Critical/High review and audit findings are added. Lower findings stay in the chat report until you triage them.
 > - **Entries are short:** what needs doing, not the history. Nothing here is actioned without explicit instruction.
-> - **IDs are stable and never reused**, even after an item is deleted, so gaps are expected. Next free ID: **#125**.
+> - **IDs are stable and never reused**, even after an item is deleted, so gaps are expected. Next free ID: **#126**.
 
 **Last updated:** 27 September 2026
 
@@ -60,11 +60,11 @@ Add Google as a sign-in option alongside the magic link (currently magic-link-on
 ### 13. Official Bruntsfield logo
 Add the club's official logo (likely Home or the course info section) once permission to use it is obtained.
 
+### 125. Dangling bare "§x.y" section refs left after the PRD removal (Low)
+The PRD-removal sweep (27 Sep 2026) only caught comments that literally said "PRD §x.y". A separate set of bare "§11.14"-style refs (no "PRD" prefix) was missed in `functions/` (`email.js`, `users/index.js`, `magic-link.js`, `request-link.js`, `request-link.test.js`, `users/index.test.js`) and a few `src/` files (`Privacy.jsx`, `Info.jsx`, `Rules.jsx`, `Home.test.jsx`, `App.test.jsx`, `Settings.jsx`, `Settings.test.jsx`, `useAuth.jsx`, `constants.js`). Low priority since they still read sensibly in context, but worth a comment-only tidy pass at some point.
+
 ### 123. Course par edits should retroactively update past rounds (needs decision)
 Currently, editing a course's own par is deliberately forward-looking only - already-played rounds keep their own stored `hole_pars` snapshot and are never rewritten (a separate "fix this round's par" control on the edit-round screen exists specifically to correct one past round without touching the course). Raised 27 September 2026: revisit whether a course-par edit should instead propagate to previously recorded rounds on that course. Needs a decision before any code, since it conflicts with the existing separate-control design and the round-level par snapshot model (`games.hole_pars`).
-
-### 124. Reduce the max score per hole from 14 to 9
-Raised 27 September 2026: lower the practical per-hole stroke cap from 14 to 9 (the official club Rule 4 limit is 7). Touches `MAX_STROKES` in `src/constants.js`, `ParStepperGrid`'s consumers, the tests asserting the current cap, and the CLAUDE.md "Deliberate product rules" line. Needs a go-ahead on the exact number before building.
 
 ---
 
