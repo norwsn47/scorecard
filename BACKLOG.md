@@ -79,9 +79,6 @@ A comment describing "while the user is on the Edit Round setup screen for a pen
 ### 118. Apply migration 005 (indexes) to production D1 (manual, yours)
 `migrations/005_add_indexes.sql` is merged but NOT applied. Index-only, safe to re-run, and the app works the same without it. Run in the project folder: `npx wrangler d1 execute scorecard-plus --file=migrations/005_add_indexes.sql --remote`. Claude's attempts were blocked by the permission classifier; either run it yourself or add a Bash permission rule for that command.
 
-### 127. Apply migration 006 (hole_pars_manually_set) to production D1 (manual, yours)
-`migrations/006_add_hole_pars_manually_set.sql` is merged but NOT applied. Adds `games.hole_pars_manually_set`, which the retroactive course-par cascade (#123, shipped 27 September 2026) reads and writes on every affected request - deploying the code before this migration runs would error, not just under-apply the exclusion. Must be applied **before** deploying this branch's changes. Run in the project folder: `npx wrangler d1 execute scorecard-plus --file=migrations/006_add_hole_pars_manually_set.sql --remote` (add `--local` first to check against the local dev DB).
-
 ### 119. Turn off Cloudflare Web Analytics, then enforce the CSP (manual, then Claude)
 Confirmed 21 Sep 2026: the live HTML carries an injected `static.cloudflareinsights.com/beacon.min.js` tag, which contradicts the "no analytics" copy and would be blocked by an enforced CSP. Decided: turn it off (Cloudflare dashboard, Workers & Pages, the project, Metrics / Web Analytics, or Analytics & Logs, Web Analytics, delete the site). Then: tell Claude, who re-checks the live HTML for the beacon; browse production with DevTools open and confirm no "Content Security Policy" console violations; then Claude renames the header in `public/_headers` to `Content-Security-Policy` (see #102).
 
