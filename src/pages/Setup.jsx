@@ -614,19 +614,39 @@ export default function Setup({ navigate, goBack, params }) {
                   )}
                 </div>
               ) : (
-                <div className="flex items-center gap-2">
-                  <select
-                    aria-label="Course"
-                    value={selectedCourseId ?? ''}
-                    onChange={e => selectCourse(e.target.value)}
-                    className="flex-1 min-w-0 py-3 pl-4 pr-4 rounded-md border border-field font-ui text-base bg-bg-card text-text focus:outline-none focus:ring-2 focus:ring-accent/40"
-                  >
-                    {selectableCourses.map(c => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
-                  {/* Edit affordance — only for a real, selected course (never
-                      shown mid "+ New course") (#54/#71). */}
+                <div>
+                  <div className="flex items-center gap-2">
+                    <select
+                      aria-label="Course"
+                      value={selectedCourseId ?? ''}
+                      onChange={e => selectCourse(e.target.value)}
+                      className="flex-1 min-w-0 py-3 pl-4 pr-4 rounded-md border border-field font-ui text-base bg-bg-card text-text focus:outline-none focus:ring-2 focus:ring-accent/40"
+                    >
+                      {selectableCourses.map(c => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                    {/* "+ New course" used to be a sentinel option inside the
+                        select above (value="__new__") — picking it didn't
+                        select a course, it flipped the UI into creation mode.
+                        That pattern isn't cleanly drivable by userEvent in
+                        jsdom and reads oddly as a select option, so it's a
+                        separate button beside the select instead. A bare "+"
+                        (named for screen readers) so the select keeps the
+                        width to show full course names. */}
+                    <button
+                      type="button"
+                      onClick={startNewCourse}
+                      aria-label="New course"
+                      title="New course"
+                      className="shrink-0 w-11 h-11 rounded-sm border border-accent text-accent font-ui text-xl leading-none active:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                    >
+                      <span aria-hidden="true">+</span>
+                    </button>
+                  </div>
+                  {/* Edit affordance — small text under the select, only for a
+                      real, selected course (never shown mid "+ New course")
+                      (#54/#71). */}
                   {selectedCourseId && (
                     <button
                       type="button"
@@ -638,26 +658,11 @@ export default function Setup({ navigate, goBack, params }) {
                         bruntsfield: fromBruntsfield,
                         fromScorecard,
                       })}
-                      className="shrink-0 inline-block py-3 -my-3 px-1 font-ui text-sm text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                      className="inline-block mt-1.5 pl-1 py-2 -my-1 font-ui text-xs text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                     >
-                      Edit
+                      Edit course
                     </button>
                   )}
-                  {/* "+ New course" used to be a sentinel option inside the
-                      select above (value="__new__") — picking it didn't
-                      select a course, it flipped the UI into creation mode.
-                      That pattern isn't cleanly drivable by userEvent in
-                      jsdom and reads oddly as a select option, so it's a
-                      separate button beside the select instead — same label
-                      and visual treatment as the zero-courses empty state's
-                      "+ New course" button below. */}
-                  <button
-                    type="button"
-                    onClick={startNewCourse}
-                    className="shrink-0 py-2 px-4 rounded-sm border border-accent text-accent font-ui text-xs tracking-[0.1em] uppercase font-semibold active:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-                  >
-                    + New course
-                  </button>
                 </div>
               )
             ) : (

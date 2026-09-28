@@ -112,7 +112,7 @@ describe('Setup - fromScorecard survives a course-edit detour (#round-trip)', ()
       </AuthProvider>,
     )
 
-    await user.click(await screen.findByRole('button', { name: 'Edit' }))
+    await user.click(await screen.findByRole('button', { name: 'Edit course' }))
     expect(setupNavigate).toHaveBeenCalledWith('courseEdit', expect.objectContaining({ courseId: 'c1', fromScorecard: true }))
     const [, courseEditParams] = setupNavigate.mock.calls.find(([page]) => page === 'courseEdit')
     first.unmount()

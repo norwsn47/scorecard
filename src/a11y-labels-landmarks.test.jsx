@@ -89,7 +89,7 @@ describe('Setup', () => {
     await screen.findByDisplayValue('Nine A')
     expect(screen.getByLabelText('Course').tagName).toBe('SELECT')
 
-    await user.click(screen.getByRole('button', { name: '+ New course' }))
+    await user.click(screen.getByRole('button', { name: /new course/i }))
     expect(screen.getByLabelText('Course name')).toBeInTheDocument()
   })
 })

@@ -176,7 +176,7 @@ describe('Setup - editing a round can now change its course/hole count (#56 reve
     renderEdit(dbRound({ holes: 9, scoredHoles: 3, courseId: 'a', courseName: 'Nine A' }))
 
     await courseSelect('Nine A')
-    await user.click(screen.getByRole('button', { name: '+ New course' }))
+    await user.click(screen.getByRole('button', { name: /new course/i }))
 
     expect(screen.getByRole('radiogroup', { name: 'Number of holes on this course' })).toBeInTheDocument()
     expect(screen.getByRole('radio', { name: '9 holes' })).toHaveAttribute('aria-checked', 'true')
@@ -188,7 +188,7 @@ describe('Setup - editing a round can now change its course/hole count (#56 reve
     renderEdit(dbRound({ holes: 18, scoredHoles: 18, courseId: 'a', courseName: 'Eighteen A' }))
 
     await courseSelect('Eighteen A')
-    await user.click(screen.getByRole('button', { name: '+ New course' }))
+    await user.click(screen.getByRole('button', { name: /new course/i }))
 
     const dialog = await screen.findByRole('dialog')
     expect(within(dialog).getByText(/holes 10 to 18/)).toBeInTheDocument()
@@ -200,7 +200,7 @@ describe('Setup - editing a round can now change its course/hole count (#56 reve
 
     // Trying again and confirming this time opens the creation form at 9
     // holes; the course is still only created once the user actually submits.
-    await user.click(screen.getByRole('button', { name: '+ New course' }))
+    await user.click(screen.getByRole('button', { name: /new course/i }))
     await user.click(await screen.findByRole('button', { name: 'Create course' }))
     expect(await screen.findByPlaceholderText('Course name')).toBeInTheDocument()
     expect(postBodies).toHaveLength(0)
@@ -219,7 +219,7 @@ describe('Setup - editing a round can now change its course/hole count (#56 reve
     renderEdit(dbRound({ holes: 36, scoredHoles: 3, courseId: null, courseName: null }))
 
     await screen.findByText('No courses yet - add one to get started')
-    await user.click(screen.getByRole('button', { name: '+ New course' }))
+    await user.click(screen.getByRole('button', { name: /new course/i }))
 
     expect(screen.getByRole('radiogroup', { name: 'Number of holes on this course' })).toBeInTheDocument()
   })
@@ -235,7 +235,7 @@ describe('Setup - editing a round can now change its course/hole count (#56 reve
 
     expect(optionNames(await courseSelect('Nine A'))).toEqual(['Nine A', 'Eighteen C'])
 
-    await user.click(screen.getByRole('button', { name: '+ New course' }))
+    await user.click(screen.getByRole('button', { name: /new course/i }))
     expect(screen.getByRole('radiogroup', { name: 'Number of holes on this course' })).toBeInTheDocument()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })

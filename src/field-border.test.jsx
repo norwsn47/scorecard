@@ -64,7 +64,7 @@ describe('form fields use the stronger edge (#108)', () => {
     mockApi([nineHoleCourse])
     const { container } = render(<AuthProvider><Setup navigate={vi.fn()} params={{}} /></AuthProvider>)
     await settle()
-    await user.click(await screen.findByRole('button', { name: '+ New course' }))
+    await user.click(await screen.findByRole('button', { name: /new course/i }))
     expectFieldEdges(container)
 
     await user.click(screen.getByRole('button', { name: /add player/i }))

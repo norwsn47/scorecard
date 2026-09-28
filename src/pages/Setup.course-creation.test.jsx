@@ -44,7 +44,7 @@ async function enterCreationMode() {
   const user = userEvent.setup()
   renderSetup()
   await screen.findByDisplayValue('Course A')
-  await user.click(screen.getByRole('button', { name: '+ New course' }))
+  await user.click(screen.getByRole('button', { name: /new course/i }))
   return user
 }
 
@@ -55,9 +55,9 @@ describe('Setup — "+ New course" button (#35)', () => {
     const select = await screen.findByDisplayValue('Course A')
     expect(select.tagName).toBe('SELECT')
     // No more sentinel option inside the select itself.
-    expect(screen.queryByRole('option', { name: '+ New course' })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '+ New course' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument()
+    expect(screen.queryByRole('option', { name: /new course/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /new course/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Edit course' })).toBeInTheDocument()
   })
 
   it('clicking "+ New course" enters creation mode and shows the radiogroup and par stepper', async () => {
