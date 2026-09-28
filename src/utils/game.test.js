@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildEditGame, calculateResult, canStartGame, computeDisplayedHoles, createGame, deriveResult, findDuplicateIndices, finishGame, isSignedInPlayer } from './game.js'
+import { buildEditGame, calculateResult, canStartGame, computeDisplayedHoles, createGame, deriveResult, findDuplicateIndices, finishGame, highestScoredHoleIndex, isSignedInPlayer } from './game.js'
 
 // ── findDuplicateIndices ──────────────────────────────────────────────────────
 
@@ -657,5 +657,86 @@ describe('buildEditGame', () => {
     const alreadySet = { ...existing, holeParsManuallySet: 1 }
     const game = buildEditGame(alreadySet, ['Alice', 'Bob'])
     expect(game.holeParsManuallySet).toBe(true)
+  })
+
+  // ── targetHoleCount (BACKLOG #56 reversal) ──────────────────────────────
+
+  describe('targetHoleCount', () => {
+    it('truncates to a smaller targetHoleCount with no highestScored floor applied, once the caller (Setup.jsx) has already confirmed the data loss', () => {
+      const eighteen = {
+        id: 'row-xyz',
+        holes: 18,
+        players: ['Alice', 'Bob'],
+        scores: {
+          Alice: Array(18).fill(4),
+          Bob: Array(18).fill(3),
+        },
+      }
+      const game = buildEditGame(eighteen, ['Alice', 'Bob'], null, null, null, null, null, false, 9)
+      expect(game.holes).toBe(9)
+      expect(game.scores.Alice).toHaveLength(9)
+      expect(game.scores.Bob).toHaveLength(9)
+      expect(game.scores.Alice).toEqual(Array(9).fill(4))
+    })
+
+    it('pads to a larger targetHoleCount, preserving existing scores and filling the rest with null', () => {
+      const nine = {
+        id: 'row-xyz',
+        holes: 9,
+        players: ['Alice'],
+        scores: { Alice: Array(9).fill(4) },
+      }
+      const game = buildEditGame(nine, ['Alice'], null, null, null, null, null, false, 18)
+      expect(game.holes).toBe(18)
+      expect(game.scores.Alice).toHaveLength(18)
+      expect(game.scores.Alice.slice(0, 9)).toEqual(Array(9).fill(4))
+      expect(game.scores.Alice.slice(9).every(s => s === null)).toBe(true)
+    })
+
+    it('omitting targetHoleCount is byte-for-byte identical to the old behaviour - the highestScored floor still applies (regression check for ordinary edits, e.g. a plain rename with no course change)', () => {
+      const withTarget = buildEditGame(existing, ['Alice', 'Robert'], 'course-1', 'Old Course', '2026-01-01T12:00:00.000Z')
+      const withoutTarget = buildEditGame(existing, ['Alice', 'Robert'], 'course-1', 'Old Course', '2026-01-01T12:00:00.000Z', null, null, false, null)
+      expect(withoutTarget).toEqual(withTarget)
+      expect(withoutTarget.holes).toBe(36)
+    })
+
+    it('a non-positive or non-integer targetHoleCount is ignored, falling back to the highestScored floor', () => {
+      const game0 = buildEditGame(existing, ['Alice', 'Bob'], null, null, null, null, null, false, 0)
+      const gameNeg = buildEditGame(existing, ['Alice', 'Bob'], null, null, null, null, null, false, -3)
+      const gameFloat = buildEditGame(existing, ['Alice', 'Bob'], null, null, null, null, null, false, 9.5)
+      expect(game0.holes).toBe(36)
+      expect(gameNeg.holes).toBe(36)
+      expect(gameFloat.holes).toBe(36)
+    })
+  })
+})
+
+// ── highestScoredHoleIndex ───────────────────────────────────────────────────
+
+describe('highestScoredHoleIndex', () => {
+  it('returns the 0-based index of the highest hole with a real score for any player', () => {
+    const game = {
+      players: ['Alice', 'Bob'],
+      scores: { Alice: [5, null, null], Bob: [3, 4, null] },
+    }
+    expect(highestScoredHoleIndex(game)).toBe(1)
+  })
+
+  it('returns -1 when nothing has been scored yet', () => {
+    const game = { players: ['Alice'], scores: { Alice: [null, null, null] } }
+    expect(highestScoredHoleIndex(game)).toBe(-1)
+  })
+
+  it('returns -1 for a game with no players/scores at all', () => {
+    expect(highestScoredHoleIndex({})).toBe(-1)
+    expect(highestScoredHoleIndex(null)).toBe(-1)
+  })
+
+  it('ignores a player with no score row', () => {
+    const game = {
+      players: ['Alice', 'Ghost'],
+      scores: { Alice: [5, 5] },
+    }
+    expect(highestScoredHoleIndex(game)).toBe(1)
   })
 })

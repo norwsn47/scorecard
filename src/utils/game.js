@@ -229,6 +229,30 @@ export function createGame(playerNames, courseId = null, courseName = null, past
 }
 
 /**
+ * The highest hole index (0-based) holding a real, non-null score for any
+ * player in `game` — the same scan `buildEditGame` uses internally to build
+ * its `highestScored` floor. Extracted as a shared helper so that floor and
+ * Setup.jsx's shrink-confirmation trigger (BACKLOG #56 reversal — see
+ * `buildEditGame`'s `targetHoleCount` doc below) can never drift on what
+ * counts as "real data that would be lost". Returns -1 when nothing has been
+ * scored yet.
+ */
+export function highestScoredHoleIndex(game) {
+  const names = game?.players ?? []
+  let highest = -1
+  names.forEach(n => {
+    const row = game?.scores?.[n] ?? []
+    for (let i = row.length - 1; i >= 0; i--) {
+      if ((row[i] ?? null) !== null) {
+        if (i > highest) highest = i
+        break
+      }
+    }
+  })
+  return highest
+}
+
+/**
  * Builds a working active-game object for editing an existing completed round
  * (Chunk 40). Unlike createGame, this does NOT zero the scores — it carries
  * the existing per-player score arrays forward so they can be adjusted on the
@@ -243,43 +267,38 @@ export function createGame(playerNames, courseId = null, courseName = null, past
  * (`editedNames[i]` <- `existingGame.players[i]`) — the original behaviour,
  * still correct for a same-length rename-only edit with no roster change.
  *
- * Each row is copied into a fresh array sized to the round's own hole count
- * (`existingGame.holes`, or 36 for a legacy round saved without it) so the
- * Scorecard grid and finishGame behave exactly as they do for a live round —
- * a completed 9-hole round edits as 9 rows, not 36 with a trailing empty one.
- * If `scores` somehow hold data past that count (shouldn't happen) the array
- * grows to cover it rather than dropping strokes. The original `id` is pinned.
- * `pastDate` is set to `dateIso` so finishGame stamps the chosen date rather
- * than "now". Winner, DNF, holesPlayed and completedAt are all left for
- * finishGame to recompute.
+ * Each row is copied into a fresh array sized to `holeCount` (worked out
+ * below) so the Scorecard grid and finishGame behave exactly as they do for a
+ * live round. If `scores` somehow hold data past that count the copy loop
+ * below only ever writes indices `< holeCount`, so a shrinking `holeCount`
+ * truncates rather than throwing — see `targetHoleCount` below for when that
+ * is actually intended. The original `id` is pinned. `pastDate` is set to
+ * `dateIso` so finishGame stamps the chosen date rather than "now". Winner,
+ * DNF, holesPlayed and completedAt are all left for finishGame to recompute.
  *
- * `manuallySetPar` is true only when this edit is being saved via the
- * per-round "Par for this round" control (Setup.jsx) — the one path that
- * counts as the user individually correcting this round's par. The returned
- * game's `holeParsManuallySet` is stuck on with an OR against the existing
- * game's own flag, so a later edit that does not touch the round-par stepper
- * (`manuallySetPar` false) can never clear a correction made on an earlier
- * edit — the flag is sticky/monotonic, matching the API's own behaviour
- * (see migrations/006 and sync.js's buildGameFields).
+ * `targetHoleCount` (BACKLOG #56 reversal, frontend half) — a round used to be
+ * locked to its own hole count for the whole of an edit, because switching a
+ * longer round onto a shorter course silently dropped the extra holes with no
+ * warning. That restriction is gone: Setup.jsx now lets any course be
+ * selected, but only after confirming with the user when the switch would
+ * drop real recorded scores (its own shrink-confirmation dialog, gated at the
+ * point of selection). This parameter is how that confirmation reaches here:
+ *   - A positive integer: trusted completely as the new `holeCount`, with NO
+ *     floor applied — this is exactly what should happen once Setup.jsx has
+ *     already confirmed the data loss with the user, so re-applying the floor
+ *     here would just undo that confirmation.
+ *   - Omitted/null (the default): falls back to exactly the old behaviour —
+ *     `Math.max(existingGame.holes ?? MAX_HOLES, highestScored + 1)`, the
+ *     safety net for every ordinary edit (rename, note, date change, or a
+ *     course switch that doesn't change hole count) that must never lose
+ *     strokes by accident.
  */
-export function buildEditGame(existingGame, editedNames, courseId = null, courseName = null, dateIso = null, holePars = null, originalIndices = null, manuallySetPar = false) {
+export function buildEditGame(existingGame, editedNames, courseId = null, courseName = null, dateIso = null, holePars = null, originalIndices = null, manuallySetPar = false, targetHoleCount = null) {
   const oldNames = existingGame.players ?? []
 
-  // The round's real hole count. Legacy rounds saved without `holes` → 36.
-  const declared = existingGame.holes ?? MAX_HOLES
-  // Never lose real strokes: if any row has a score past `declared`, grow to
-  // cover the highest scored hole.
-  let highestScored = -1
-  oldNames.forEach(n => {
-    const row = existingGame.scores?.[n] ?? []
-    for (let i = row.length - 1; i >= 0; i--) {
-      if ((row[i] ?? null) !== null) {
-        if (i > highestScored) highestScored = i
-        break
-      }
-    }
-  })
-  const holeCount = Math.max(declared, highestScored + 1)
+  const holeCount = Number.isInteger(targetHoleCount) && targetHoleCount > 0
+    ? targetHoleCount
+    : Math.max(existingGame.holes ?? MAX_HOLES, highestScoredHoleIndex(existingGame) + 1)
 
   const scores = {}
   editedNames.forEach((name, i) => {

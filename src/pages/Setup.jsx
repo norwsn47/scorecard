@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import PageHeader from '../components/PageHeader.jsx'
 import ParStepperGrid, { stepPar as stepParArray } from '../components/ParStepperGrid.jsx'
 import { BRUNTSFIELD_COURSE_NAME, BRUNTSFIELD_HOLE_COUNT, BRUNTSFIELD_HOLE_PARS, QUICK_PLAY_COURSE_NAME } from '../constants.js'
-import { buildEditGame, canStartGame, createGame, findDuplicateIndices } from '../utils/game.js'
+import { buildEditGame, canStartGame, createGame, findDuplicateIndices, highestScoredHoleIndex } from '../utils/game.js'
 import { localDateString } from '../utils/format.js'
 import { deriveHolePars } from '../utils/scores.js'
 import { clearActiveCell, clearActiveGame, getActiveGame, getPlayers, saveActiveGame, savePlayers } from '../utils/storage.js'
@@ -65,7 +65,11 @@ export default function Setup({ navigate, goBack, params }) {
   // from the course selector above it. Seeded from the round's own saved
   // par snapshot, at the round's own hole count (never the course's hole
   // count, which can differ). Stays hand-editable once touched.
-  const roundHoleCount = editGame?.holePars?.length ?? editGame?.holes ?? 9
+  // Reactive (not a frozen const) since reversing #56 means the round's hole
+  // count now tracks whichever course is actually selected mid-edit — every
+  // place that changes the selection (an existing-course pick, "+ New
+  // course", or confirming a shrink) resizes this, and `roundPars`, together.
+  const [roundHoleCount, setRoundHoleCount] = useState(() => editGame?.holePars?.length ?? editGame?.holes ?? 9)
   const [roundPars, setRoundPars] = useState(() =>
     editGame?.holePars?.length ? [...editGame.holePars] : Array(roundHoleCount).fill(3)
   )
@@ -75,28 +79,36 @@ export default function Setup({ navigate, goBack, params }) {
   // this true - it's what tells buildEditGame this round was individually
   // corrected, so a later course-level par cascade must leave it alone.
   const [roundParTouched, setRoundParTouched] = useState(false)
-  // Tracks the course selection this round-par stepper was last reset for,
-  // so switching course mid-edit refreshes the stepper to the newly-selected
-  // course's own par exactly once per switch — not on the
-  // initial mount (which must keep the round's own saved snapshot untouched)
-  // and not on every re-render while the user hand-edits the stepper.
-  const lastResetCourseId = useRef(selectedCourseId)
+  // A course switch, or a "+ New course" hole-count pick, that would drop
+  // real recorded scores (BACKLOG #56 reversal) waits here for the user to
+  // confirm before any real state changes — see "shrink confirmation" below.
+  // { kind: 'selectCourse', courseId, courseName, holes } |
+  // { kind: 'startNewCourse' | 'newCourseHoles', holes }
+  const [pendingChange, setPendingChange] = useState(null)
+  const cancelPendingRef = useRef(null)
+  // Snapshot of course/hole-count/par state taken the moment "+ New course"
+  // is actually entered, so its own Cancel button can put everything back
+  // exactly as it was — including any par the user had already hand-edited —
+  // rather than recomputing a fresh default that would discard it.
+  const priorSelectionRef = useRef(null)
 
   // Course selector is shown for logged-in users, except when editing a
   // local/quick-play round — its course is not editable (confirmed scope).
   const showCourse  = !!user && (!editRound || isDbEdit)
   const showDate    = pastRound || editRound
 
-  // A round's hole count can't change while editing it (#56): switching a
-  // 36-hole round onto a 9-hole course would leave a 36-row grid with the
-  // extra holes padded to par 3. So an edit only offers courses with the
-  // round's own hole count (plus the round's current course, so it always
-  // stays selectable), and a course created mid-edit gets that hole count.
-  const selectableCourses = editRound
-    ? courses.filter(c => c.holes === roundHoleCount || c.id === editGame?.courseId)
-    : courses
-  const canCreateCourse   = !editRound || NEW_COURSE_HOLE_OPTIONS.includes(roundHoleCount)
-  const newCourseDefaultHoles = editRound && canCreateCourse ? roundHoleCount : 9
+  // Every course is selectable regardless of hole count while editing
+  // (BACKLOG #56 reversed): a round used to be locked to courses matching its
+  // own hole count, because switching onto a shorter course silently dropped
+  // the extra holes with no warning. That protection now lives in two other
+  // places instead — the shrink-confirmation dialog below (gated at the point
+  // of selection, before any state actually changes) and buildEditGame's
+  // conditional `highestScored` floor (src/utils/game.js) — so the old #56
+  // bug can't recur even though the course list is no longer filtered.
+  const selectableCourses = courses
+  // "+ New course" mid-edit starts at 9, matching New Game's own default —
+  // no longer pinned to the round's existing hole count.
+  const newCourseDefaultHoles = 9
   const dupeIndices = findDuplicateIndices(names)
   const courseReady = !showCourse || !creatingCourse || newCourseName.trim().length > 0
   // A cleared date field is '' - new Date('T12:00:00') is invalid and
@@ -198,18 +210,30 @@ export default function Setup({ navigate, goBack, params }) {
       .catch(() => setCoursesStatus('failed'))
   }, [user, editRound, coursesReloadKey])
 
-  // Reset the round-par stepper to the newly-selected course's own par
-  // whenever the course selection actually changes mid-edit — a
-  // fresh default (par 3 across the board) when switching to "+ New course",
-  // matching that form's own default. Skipped on the initial mount so the
-  // round's saved par snapshot isn't clobbered just because `courses` loaded.
+  // Shrink-confirmation dialog (BACKLOG #56 reversal) — mirrors the shipped
+  // bottom-sheet pattern (DESIGN.md "Dialog semantics", History.jsx's
+  // delete-round sheet): autofocus the non-destructive "Cancel" on open,
+  // return focus to the opener on close, Escape dismisses. There's no async
+  // gap here (confirming only updates local state — any course POST happens
+  // later, at Start), so no in-flight guard is needed.
   useEffect(() => {
-    if (!(editRound && isDbEdit)) return
-    if (lastResetCourseId.current === selectedCourseId) return
-    lastResetCourseId.current = selectedCourseId
-    const c = courses.find(x => x.id === selectedCourseId)
-    setRoundPars(c ? deriveHolePars(c.hole_pars, roundHoleCount) : Array(roundHoleCount).fill(3))
-  }, [selectedCourseId]) // eslint-disable-line react-hooks/exhaustive-deps
+    if (!pendingChange) return
+    const opener = document.activeElement
+    cancelPendingRef.current?.focus()
+    return () => opener?.focus?.()
+  }, [pendingChange])
+  useEffect(() => {
+    if (!pendingChange) return
+    function onKey(e) {
+      if (e.key === 'Escape') setPendingChange(null)
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [pendingChange])
+
+  function closePendingChange() {
+    setPendingChange(null)
+  }
 
   function handleNameChange(i, value) {
     const next = [...names]
@@ -229,29 +253,139 @@ export default function Setup({ navigate, goBack, params }) {
     setOriginalIndices(originalIndices.filter((_, idx) => idx !== i))
   }
 
-  function handleNewCourseHoleCount(count) {
-    setNewCourseHoleCount(count)
-    setNewCoursePars(Array(count).fill(3))
+  // True only while editing a DB round: whether switching to `candidateHoles`
+  // would drop a real, already-recorded score. Shared by every entry point
+  // that can change the round's effective hole count — the course <select>,
+  // the "+ New course" button, and its 9/18 radiogroup — so they can never
+  // disagree on what counts as unsafe. New Game / Add Past Round have no
+  // `editGame` to lose data from, so this is always false there.
+  function wouldLoseScores(candidateHoles) {
+    if (!(editRound && isDbEdit && editGame)) return false
+    return candidateHoles < highestScoredHoleIndex(editGame) + 1
   }
 
-  // The "+ New course" form always opens, and closes, on the same defaults:
-  // the round's own hole count while editing (else 9) and par 3 throughout.
-  function resetNewCourseDefaults() {
-    setNewCourseHoleCount(newCourseDefaultHoles)
-    setNewCoursePars(Array(newCourseDefaultHoles).fill(3))
+  // Resizes the round-par stepper (and its backing hole count) to whichever
+  // course is now actually selected — par 3 throughout for "no course
+  // selected" (courseId null). The single place real state changes once a
+  // course switch is either safe or has been confirmed.
+  function commitCourseSelection(courseId, holes) {
+    setSelectedCourseId(courseId)
+    setRoundHoleCount(holes)
+    const c = courses.find(x => x.id === courseId)
+    setRoundPars(c ? deriveHolePars(c.hole_pars, holes) : Array(holes).fill(3))
   }
 
-  function startNewCourse() {
+  // The course <select>'s onChange — gated by wouldLoseScores per the shrink
+  // confirmation (BACKLOG #56 reversal): a shrink holds the candidate in
+  // `pendingChange` rather than touching `selectedCourseId`, so a cancelled
+  // dialog leaves the previous course selected and the round's scores
+  // completely untouched, exactly as though nothing had been clicked.
+  function selectCourse(courseId) {
+    const course = courses.find(c => c.id === courseId)
+    const holes = course?.holes ?? roundHoleCount
+    if (wouldLoseScores(holes)) {
+      setPendingChange({ kind: 'selectCourse', courseId, courseName: course?.name ?? null, holes })
+      return
+    }
+    commitCourseSelection(courseId, holes)
+  }
+
+  // Actually enters "+ New course" at `holes` — snapshots the state it's
+  // replacing first (course, hole count, and the round-par array exactly as
+  // it stands, including any hand-edited values) so cancelNewCourse can put
+  // it all back untouched.
+  function enterCreatingCourse(holes) {
+    priorSelectionRef.current = { courseId: selectedCourseId, holeCount: roundHoleCount, pars: [...roundPars] }
     setCreatingCourse(true)
     setSelectedCourseId(null)
-    resetNewCourseDefaults()
+    setNewCourseHoleCount(holes)
+    setNewCoursePars(Array(holes).fill(3))
+    setRoundHoleCount(holes)
+    setRoundPars(Array(holes).fill(3))
   }
 
+  // "+ New course" — gated the same way as selectCourse: its default (9,
+  // matching New Game) can itself be unsafe for a round with scores past
+  // hole 9, so that default is proposed via pendingChange rather than
+  // applied immediately whenever it would lose data.
+  function startNewCourse() {
+    if (wouldLoseScores(newCourseDefaultHoles)) {
+      setPendingChange({ kind: 'startNewCourse', holes: newCourseDefaultHoles })
+      return
+    }
+    enterCreatingCourse(newCourseDefaultHoles)
+  }
+
+  // The "+ New course" form's own Cancel — aborts course creation entirely
+  // and restores exactly what was selected before (BACKLOG #56 reversal: this
+  // now needs to put the round-par stepper back too, since opening the form
+  // resizes it to the proposed new course's hole count).
   function cancelNewCourse() {
     setCreatingCourse(false)
     setNewCourseName('')
     setCourseError(null)
-    resetNewCourseDefaults()
+    setNewCourseHoleCount(newCourseDefaultHoles)
+    setNewCoursePars(Array(newCourseDefaultHoles).fill(3))
+    const prior = priorSelectionRef.current
+    if (prior) {
+      setSelectedCourseId(prior.courseId)
+      setRoundHoleCount(prior.holeCount)
+      setRoundPars(prior.pars)
+      priorSelectionRef.current = null
+    }
+  }
+
+  // The "+ New course" 9/18 radiogroup, gated like every other hole-count
+  // entry point above.
+  function handleNewCourseHoleCount(count) {
+    if (wouldLoseScores(count)) {
+      setPendingChange({ kind: 'newCourseHoles', holes: count })
+      return
+    }
+    applyNewCourseHoleCount(count)
+  }
+
+  function applyNewCourseHoleCount(count) {
+    setNewCourseHoleCount(count)
+    setNewCoursePars(Array(count).fill(3))
+    setRoundHoleCount(count)
+    setRoundPars(Array(count).fill(3))
+  }
+
+  // Confirming the shrink dialog applies whichever candidate was waiting.
+  function confirmPendingChange() {
+    if (!pendingChange) return
+    if (pendingChange.kind === 'selectCourse') {
+      commitCourseSelection(pendingChange.courseId, pendingChange.holes)
+    } else if (pendingChange.kind === 'startNewCourse') {
+      enterCreatingCourse(pendingChange.holes)
+    } else if (pendingChange.kind === 'newCourseHoles') {
+      applyNewCourseHoleCount(pendingChange.holes)
+    }
+    setPendingChange(null)
+  }
+
+  // The dialog's heading/body/confirm-button copy for whichever candidate is
+  // pending, naming the actual holes at risk (one-indexed, matching the
+  // Hole N convention used everywhere else in the app).
+  function pendingChangeCopy(change) {
+    if (!change || !editGame) return null
+    const from = change.holes + 1
+    const to = highestScoredHoleIndex(editGame) + 1
+    const holeRange = from === to ? `hole ${from}` : `holes ${from} to ${to}`
+    if (change.kind === 'selectCourse') {
+      const name = change.courseName || 'This course'
+      return {
+        heading: `Switch to ${name}?`,
+        body: `${name} only has ${change.holes} holes. The scores already recorded on ${holeRange} will be lost.`,
+        confirmLabel: 'Switch course',
+      }
+    }
+    return {
+      heading: `Create a ${change.holes}-hole course?`,
+      body: `This round already has scores on ${holeRange}. They'll be lost once the course is created.`,
+      confirmLabel: 'Create course',
+    }
   }
 
   function stepCoursePar(i, delta) {
@@ -336,9 +470,16 @@ export default function Setup({ navigate, goBack, params }) {
       const dateIso = new Date(pastDate + 'T12:00:00').toISOString()
       // Par: whatever the round-par stepper currently holds — seeded
       // from the round's own saved snapshot, refreshed to a newly-selected
-      // course's par on a course switch (see the reset effect above), and
-      // otherwise freely hand-editable. Independent of the course itself.
-      const working = buildEditGame(editGame, trimmed, resolved.courseId, resolved.courseName, dateIso, roundPars, originalIndices, roundParTouched)
+      // course's par on a course switch (see commitCourseSelection /
+      // enterCreatingCourse above), and otherwise freely hand-editable.
+      // Independent of the course itself.
+      // `resolved.holes` carries the resolved course's real hole count
+      // through as `targetHoleCount` (BACKLOG #56 reversal) — a shrink only
+      // ever reaches here once Setup's own confirmation dialog has already
+      // been shown, so bypassing buildEditGame's `highestScored` floor here
+      // is exactly what should happen. Null when no real course is resolved,
+      // which correctly falls back to that floor.
+      const working = buildEditGame(editGame, trimmed, resolved.courseId, resolved.courseName, dateIso, roundPars, originalIndices, roundParTouched, resolved.holes)
       working.notes = notes.trim() || null
       working._edit = { id: editGame.id, fromDb: isDbEdit }
       saveActiveGame(working)
@@ -452,19 +593,15 @@ export default function Setup({ navigate, goBack, params }) {
                 // rather than leaving it as an undiscoverable accident (#76).
                 <div className="py-4 px-4 rounded-md border border-dashed border-border bg-bg-card text-center">
                   <p className="font-ui text-sm text-muted mb-3">
-                    {editRound && courses.length > 0
-                      ? `No courses with ${roundHoleCount} holes - a round's hole count can't change while editing`
-                      : 'No courses yet - add one to get started'}
+                    No courses yet - add one to get started
                   </p>
-                  {canCreateCourse && (
-                    <button
-                      type="button"
-                      onClick={startNewCourse}
-                      className="py-2 px-4 rounded-sm border border-accent text-accent font-ui text-xs tracking-[0.1em] uppercase font-semibold active:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-                    >
-                      + New course
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={startNewCourse}
+                    className="py-2 px-4 rounded-sm border border-accent text-accent font-ui text-xs tracking-[0.1em] uppercase font-semibold active:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  >
+                    + New course
+                  </button>
                   {/* Only true for a genuinely new round (New Game / Add Past
                       Round) — an editRound detour through this same empty
                       state (editing an existing no-course D1 round while the
@@ -481,7 +618,7 @@ export default function Setup({ navigate, goBack, params }) {
                   <select
                     aria-label="Course"
                     value={selectedCourseId ?? ''}
-                    onChange={e => setSelectedCourseId(e.target.value)}
+                    onChange={e => selectCourse(e.target.value)}
                     className="flex-1 min-w-0 py-3 pl-4 pr-4 rounded-md border border-field font-ui text-base bg-bg-card text-text focus:outline-none focus:ring-2 focus:ring-accent/40"
                   >
                     {selectableCourses.map(c => (
@@ -514,15 +651,13 @@ export default function Setup({ navigate, goBack, params }) {
                       separate button beside the select instead — same label
                       and visual treatment as the zero-courses empty state's
                       "+ New course" button below. */}
-                  {canCreateCourse && (
-                    <button
-                      type="button"
-                      onClick={startNewCourse}
-                      className="shrink-0 py-2 px-4 rounded-sm border border-accent text-accent font-ui text-xs tracking-[0.1em] uppercase font-semibold active:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-                    >
-                      + New course
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={startNewCourse}
+                    className="shrink-0 py-2 px-4 rounded-sm border border-accent text-accent font-ui text-xs tracking-[0.1em] uppercase font-semibold active:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  >
+                    + New course
+                  </button>
                 </div>
               )
             ) : (
@@ -552,34 +687,32 @@ export default function Setup({ navigate, goBack, params }) {
 
                 {/* Hole count — 9 or 18 only, fixed once the course is
                     created (no course-edit flow yet, #54). Changing it resets
-                    the par list to that many par-3 holes. */}
+                    the par list to that many par-3 holes. Offered the same
+                    way in edit mode as New Game / Add Past Round (BACKLOG #56
+                    reversed) — handleNewCourseHoleCount gates a shrink that
+                    would lose real recorded scores behind the same
+                    confirmation dialog as the course <select> above. */}
                 <div className="mt-4">
-                  {editRound ? (
-                    <p className="font-ui text-sm text-text pl-1">{roundHoleCount} holes</p>
-                  ) : (
-                    <div className="flex gap-2" role="radiogroup" aria-label="Number of holes on this course">
-                      {NEW_COURSE_HOLE_OPTIONS.map(n => (
-                        <button
-                          key={n}
-                          type="button"
-                          role="radio"
-                          aria-checked={newCourseHoleCount === n}
-                          onClick={() => handleNewCourseHoleCount(n)}
-                          className={[
-                            'flex-1 h-11 rounded-md border font-ui text-sm active:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
-                            newCourseHoleCount === n
-                              ? 'border-accent text-accent'
-                              : 'border-border text-text',
-                          ].join(' ')}
-                        >
-                          {n} holes
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  <p className="font-ui text-xs text-muted mt-1.5 pl-1">
-                    {editRound ? "Holes - matches this round, can't be changed" : "Holes — can't be changed later"}
-                  </p>
+                  <div className="flex gap-2" role="radiogroup" aria-label="Number of holes on this course">
+                    {NEW_COURSE_HOLE_OPTIONS.map(n => (
+                      <button
+                        key={n}
+                        type="button"
+                        role="radio"
+                        aria-checked={newCourseHoleCount === n}
+                        onClick={() => handleNewCourseHoleCount(n)}
+                        className={[
+                          'flex-1 h-11 rounded-md border font-ui text-sm active:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
+                          newCourseHoleCount === n
+                            ? 'border-accent text-accent'
+                            : 'border-border text-text',
+                        ].join(' ')}
+                      >
+                        {n} holes
+                      </button>
+                    ))}
+                  </div>
+                  <p className="font-ui text-xs text-muted mt-1.5 pl-1">Holes — can't be changed later</p>
                 </div>
 
                 {/* Per-hole par — course creation only. Every hole starts at
@@ -590,9 +723,7 @@ export default function Setup({ navigate, goBack, params }) {
                 </div>
               </>
             )}
-            <p className="font-ui text-xs text-muted mt-1.5 pl-1">
-              {editRound ? `Course - ${roundHoleCount}-hole courses only, to match this round` : 'Course'}
-            </p>
+            <p className="font-ui text-xs text-muted mt-1.5 pl-1">Course</p>
           </div>
         )}
 
@@ -744,6 +875,52 @@ export default function Setup({ navigate, goBack, params }) {
         </div>
 
       </main>
+
+      {/* Shrink confirmation — mirrors History.jsx's delete-round sheet:
+          role="dialog", aria-modal, aria-labelledby, autofocus on the
+          non-destructive "Cancel", Escape and backdrop-click to dismiss
+          (DESIGN.md "Dialog semantics"). BACKLOG #56 reversed: a course
+          switch (or a new course's hole count) that would drop real recorded
+          scores waits here rather than applying immediately - cancelling
+          leaves the previous course selected and every score untouched. */}
+      {pendingChange && (() => {
+        const copy = pendingChangeCopy(pendingChange)
+        if (!copy) return null
+        return (
+          <div
+            className="fixed inset-0 flex items-end justify-center z-50"
+            style={{ background: 'var(--overlay-backdrop)' }}
+            onClick={closePendingChange}
+          >
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="course-switch-heading"
+              onClick={e => e.stopPropagation()}
+              className="bg-bg rounded-t-2xl w-full max-w-[430px] px-6 pt-6 pb-10 shadow-card"
+            >
+              <div className="w-10 h-1 bg-border rounded-full mx-auto mb-6" />
+              <h2 id="course-switch-heading" className="font-display italic text-2xl text-text mb-1">{copy.heading}</h2>
+              <p className="font-ui text-xs text-muted tracking-wide mb-8">{copy.body}</p>
+              <div className="flex gap-3">
+                <button
+                  ref={cancelPendingRef}
+                  onClick={closePendingChange}
+                  className="flex-1 py-3 rounded-sm border border-border font-ui text-sm tracking-[0.08em] uppercase text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmPendingChange}
+                  className="flex-1 py-3 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.08em] uppercase font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                >
+                  {copy.confirmLabel}
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }

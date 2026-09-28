@@ -5,9 +5,13 @@
 > Git history is the full record; this file is for context and decision rationale that commit messages don't carry.
 > Update the date below whenever you add an entry.
 
-**Last updated:** 27 September 2026
+**Last updated:** 28 September 2026
 
 ---
+
+## 28 September 2026 (editing a round can change its course's hole count, reversing #56)
+
+- **Decision (reversal): a saved round being edited can now switch onto a course with a different hole count.** Previously (#56), Setup.jsx's edit-mode course selector only listed courses matching the round's own hole count, because switching onto a shorter course used to silently truncate the grid with no warning - a signed-in user editing a 36-hole round couldn't even see their 9- or 18-hole courses in the dropdown. Any course is now selectable regardless of hole count. Growing (e.g. 9 → 18 holes) applies immediately with no warning - it was already safe, the extra holes just render blank, the same mechanism as a player added mid-edit. Shrinking (e.g. 36 → 9 holes) is gated behind a confirmation dialog naming exactly which holes will lose their recorded scores; cancelling is a true no-op - the previous course stays selected and no score is touched. The same gate covers creating a brand-new, shorter course mid-edit. `buildEditGame` (`src/utils/game.js`) gained a `targetHoleCount` parameter: trusted directly (no safety floor) only when the caller has already confirmed the data loss, and falling back to the pre-existing `highestScored` floor - which still protects an ordinary edit (rename, note, date change, no course switch) from ever losing strokes by accident - when omitted. No backend or schema change was needed: `functions/api/games/[id].js` already accepted any `holes_played` 1-36 with a matching `hole_pars` length.
 
 ## 27 September 2026 (BACKLOG pruned and restructured; stricter rules on what gets logged)
 
