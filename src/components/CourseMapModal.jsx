@@ -82,7 +82,9 @@ export default function CourseMapModal({ onClose }) {
         )}
 
         {!showRules && mapState !== 'error' && (
-          <div className="relative min-h-[240px]">
+          // The min-height only holds space for the loading placeholder - once
+          // the map has loaded, the box fits the image so a wide map leaves no gap.
+          <div className={`relative ${mapState === 'loaded' ? '' : 'min-h-[240px]'}`}>
             {mapState !== 'loaded' && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <p className="font-ui text-sm text-muted">Loading map…</p>
