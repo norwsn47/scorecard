@@ -60,7 +60,7 @@ export default function CourseMapModal({ onClose }) {
             {BRUNTSFIELD_COURSE_NAME}
           </p>
           <p className="font-ui text-xs tracking-[0.15em] uppercase text-muted mt-0.5">
-            {showRules ? 'Course Rules' : 'Course Map'}
+            {showRules ? 'Course Rules' : 'Winter Course Map'}
           </p>
           <button
             ref={closeButtonRef}
@@ -99,8 +99,8 @@ export default function CourseMapModal({ onClose }) {
               >
                 <img
                   ref={imgRef}
-                  src="/course_map_v2.png"
-                  alt={`${BRUNTSFIELD_COURSE_NAME} course map`}
+                  src="/course_map_winter.jpg"
+                  alt={`${BRUNTSFIELD_COURSE_NAME} 9-hole winter course map`}
                   className={`w-full block transition-opacity ${mapState === 'loaded' ? 'opacity-100' : 'opacity-0'}`}
                   onLoad={() => setMapState('loaded')}
                   onError={() => setMapState('error')}
