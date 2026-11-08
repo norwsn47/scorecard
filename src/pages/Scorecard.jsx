@@ -446,11 +446,16 @@ export default function Scorecard({ navigate, params }) {
               <button
                 onClick={() => setShowMap(true)}
                 aria-label="View course map"
-                className="w-16 h-16 rounded-full border-2 border-control-warm text-control-warm flex items-center justify-center active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                // No ring: the map is glanced at now and then, so it steps back
+                // from the three per-shot scoring controls beside it. Same 64px
+                // tap area; a small "Map" caption replaces the circle as the cue.
+                // Muted (not control-warm) so the 11px caption clears 4.5:1.
+                className="w-16 h-16 rounded-md text-muted flex flex-col items-center justify-center gap-1 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.159.69.159 1.006 0z" />
                 </svg>
+                <span aria-hidden="true" className="font-ui text-[11px] leading-none tracking-[0.08em] uppercase">Map</span>
               </button>
             ) : <div className="w-16" />}
             <button
