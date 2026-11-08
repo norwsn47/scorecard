@@ -44,6 +44,14 @@ function mockFetch({ user = null, postGames = okResponse } = {}) {
   })
 }
 
+// The note field starts collapsed behind "+ Add a note" (a note is optional and
+// occasional). Opens it if needed and returns the field.
+const addNoteButton = () => screen.getByRole('button', { name: '+ Add a note' })
+async function openNote(user) {
+  if (!screen.queryByLabelText('Round notes')) await user.click(addNoteButton())
+  return screen.getByLabelText('Round notes')
+}
+
 const gamePosts = () => global.fetch.mock.calls.filter(([url, opts]) => url === '/api/games' && opts?.method === 'POST')
 
 // Seeds the round in localStorage (as Scorecard's finish flow does), renders
@@ -134,7 +142,7 @@ describe('Summary - saving on Done, signed in (#95)', () => {
     const user = userEvent.setup()
     await renderSummary(baseGame())
 
-    await user.type(screen.getByPlaceholderText('Add a note about this round...'), '  Windy on the 2nd  ')
+    await user.type(await openNote(user), '  Windy on the 2nd  ')
     await user.click(screen.getByRole('button', { name: 'Done' }))
 
     expect(JSON.parse(gamePosts()[0][1].body).notes).toBe('Windy on the 2nd')
@@ -145,7 +153,7 @@ describe('Summary - saving on Done, signed in (#95)', () => {
     const user = userEvent.setup()
     await renderSummary(baseGame())
 
-    await user.type(screen.getByPlaceholderText('Add a note about this round...'), '   ')
+    await user.type(await openNote(user), '   ')
     await user.click(screen.getByRole('button', { name: 'Done' }))
 
     expect(JSON.parse(gamePosts()[0][1].body).notes).toBeNull()
@@ -156,7 +164,7 @@ describe('Summary - saving on Done, signed in (#95)', () => {
     const user = userEvent.setup()
     await renderSummary(baseGame())
 
-    const field = screen.getByPlaceholderText('Add a note about this round...')
+    const field = await openNote(user)
     await user.click(field)
     await user.paste('x'.repeat(320))
 
@@ -192,7 +200,7 @@ describe('Summary - saving on Done, signed in (#95)', () => {
     // we have not navigated yet.
     const saving = await screen.findByRole('button', { name: 'Saving…' })
     expect(saving).toBeDisabled()
-    expect(screen.getByPlaceholderText('Add a note about this round...')).toBeDisabled()
+    expect(addNoteButton()).toBeDisabled()
     await user.click(saving)
     expect(gamePosts()).toHaveLength(1)
     expect(navigate).not.toHaveBeenCalled()
@@ -299,7 +307,7 @@ describe('Summary - when the save fails (#95)', () => {
     const user = userEvent.setup()
     const { navigate } = await renderSummary(baseGame())
 
-    await user.type(screen.getByPlaceholderText('Add a note about this round...'), 'Windy')
+    await user.type(await openNote(user), 'Windy')
     await user.click(screen.getByRole('button', { name: 'Done' }))
     await screen.findByRole('alert')
     expect(navigate).not.toHaveBeenCalled()
@@ -351,7 +359,7 @@ describe('Summary - when the save fails (#95)', () => {
     expect(retrying).toBeDisabled()
     // Keep is locked too, and so is the note: nothing can race the request.
     expect(keepButton()).toBeDisabled()
-    expect(screen.getByPlaceholderText('Add a note about this round...')).toBeDisabled()
+    expect(addNoteButton()).toBeDisabled()
     await user.click(retrying)
     await user.click(keepButton())
     expect(gamePosts()).toHaveLength(2) // the failed first try + one retry
@@ -369,7 +377,7 @@ describe('Summary - when the save fails (#95)', () => {
     const user = userEvent.setup()
     const { navigate } = await renderSummary(baseGame())
 
-    await user.type(screen.getByPlaceholderText('Add a note about this round...'), '  Windy on the 2nd  ')
+    await user.type(await openNote(user), '  Windy on the 2nd  ')
     await user.click(screen.getByRole('button', { name: 'Done' }))
     await screen.findByRole('alert')
     await user.click(keepButton())
@@ -404,7 +412,7 @@ describe('Summary - when the save fails (#95)', () => {
     const user = userEvent.setup()
     await renderSummary(baseGame())
 
-    await user.type(screen.getByPlaceholderText('Add a note about this round...'), '   ')
+    await user.type(await openNote(user), '   ')
     await user.click(screen.getByRole('button', { name: 'Done' }))
     await screen.findByRole('alert')
     await user.click(keepButton())
@@ -447,7 +455,7 @@ describe('buildGamePayload matches what Summary POSTs', () => {
     const game = baseGame()
     await renderSummary(game)
 
-    await user.type(screen.getByPlaceholderText('Add a note about this round...'), 'Breezy')
+    await user.type(await openNote(user), 'Breezy')
     await user.click(screen.getByRole('button', { name: 'Done' }))
 
     expect(JSON.parse(gamePosts()[0][1].body)).toEqual(buildGamePayload(game, 'Breezy'))
@@ -465,7 +473,7 @@ describe('Summary - rounds that are already saved (#95)', () => {
     await renderSummary(game, { fromHistory: true })
 
     expect(screen.queryByRole('button', { name: 'Done' })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Edit round' })).toBeInTheDocument()
     expect(gamePosts()).toHaveLength(0)
   })
 
@@ -537,7 +545,7 @@ describe('Summary - a pending round (#95)', () => {
     await renderSummary(pendingGame())
 
     expect(screen.queryByRole('button', { name: 'Done' })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Edit round' })).toBeInTheDocument()
     expect(screen.getByText(STATUS)).toBeInTheDocument()
     expect(gamePosts()).toHaveLength(0)
   })
@@ -548,7 +556,7 @@ describe('Summary - a pending round (#95)', () => {
 
     expect(screen.getByText(REJECTED)).toBeInTheDocument()
     expect(screen.queryByText(STATUS)).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Edit round' })).toBeInTheDocument()
   })
 
   it('shows no status line on a saved round', async () => {
@@ -564,7 +572,7 @@ describe('Summary - a pending round (#95)', () => {
     const user = userEvent.setup()
     const { navigate } = await renderSummary(pendingGame(), { fromHistory: true })
 
-    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    await user.click(screen.getByRole('button', { name: 'Edit round' }))
 
     expect(navigate).toHaveBeenCalledWith('scorecard', {
       game: expect.objectContaining({ id: 'round-1', players: ['Ann', 'Bo'], pendingSyncUserId: 'u1' }),
@@ -576,7 +584,7 @@ describe('Summary - a pending round (#95)', () => {
     mockFetch({ user: { ...SIGNED_IN, id: 'u2' } })
     await renderSummary(pendingGame(), { fromHistory: true })
 
-    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Edit round' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Done' })).not.toBeInTheDocument()
     expect(screen.queryByText(STATUS)).not.toBeInTheDocument()
     expect(gamePosts()).toHaveLength(0)
@@ -594,7 +602,7 @@ describe('Summary - a pending round (#95)', () => {
     mockFetch({ user: { ...SIGNED_IN, id: 7 } })
     await renderSummary(pendingGame({ pendingSyncUserId: '7' }), { fromHistory: true })
 
-    expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Edit round' })).toBeInTheDocument()
     expect(screen.getByText(STATUS)).toBeInTheDocument()
   })
 
@@ -602,7 +610,7 @@ describe('Summary - a pending round (#95)', () => {
     mockFetch({ user: null })
     await renderSummary(pendingGame(), { fromHistory: true })
 
-    expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Edit round' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Done' })).not.toBeInTheDocument()
     expect(screen.queryByText(STATUS)).not.toBeInTheDocument()
     expect(gamePosts()).toHaveLength(0)
@@ -620,12 +628,12 @@ describe('Summary - a pending round (#95)', () => {
     const run = syncPendingRounds('u1')
     await act(async () => { await new Promise(resolve => setTimeout(resolve, 0)) }) // POST in flight
 
-    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    await user.click(screen.getByRole('button', { name: 'Edit round' }))
     expect(screen.getByRole('alert')).toHaveTextContent('Saving this round - try again in a moment.')
     expect(navigate).not.toHaveBeenCalled()
 
     await act(async () => { release(); await run })
-    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    await user.click(screen.getByRole('button', { name: 'Edit round' }))
     expect(navigate).toHaveBeenCalledWith('scorecard', expect.objectContaining({
       game: expect.any(Object),
       editContext: expect.objectContaining({ id: 'round-1', fromDb: false }),
@@ -638,7 +646,7 @@ describe('Summary - a pending round (#95)', () => {
     const user = userEvent.setup()
     const { navigate } = await renderSummary(pendingGame(), { fromHistory: true })
 
-    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    await user.click(screen.getByRole('button', { name: 'Edit round' }))
 
     expect(screen.getByRole('alert')).toHaveTextContent('Finish your current round before editing a past one.')
     expect(navigate).not.toHaveBeenCalled()
@@ -650,7 +658,7 @@ describe('Summary - a pending round (#95)', () => {
     const { navigate } = await renderSummary(pendingGame(), { fromHistory: true })
     markCompletedGameSynced('round-1') // a background sync finished meanwhile
 
-    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    await user.click(screen.getByRole('button', { name: 'Edit round' }))
 
     expect(screen.getByRole('alert')).toHaveTextContent('This round has just been saved. Open it from History to edit it.')
     expect(navigate).not.toHaveBeenCalled()
@@ -659,7 +667,7 @@ describe('Summary - a pending round (#95)', () => {
   it('a saved D1 round is still editable, and an unmarked signed-in local round still is not', async () => {
     mockFetch({ user: SIGNED_IN })
     await renderSummary(baseGame({ _fromDb: true }), { fromHistory: true })
-    expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Edit round' })).toBeInTheDocument()
   })
 
   // Edit now skips the Setup screen by default and builds the same working
@@ -672,7 +680,7 @@ describe('Summary - a pending round (#95)', () => {
     const game = baseGame({ _fromDb: true, notes: '  A cracking evening  ' })
     const { navigate } = await renderSummary(game, { fromHistory: true })
 
-    await user.click(screen.getByRole('button', { name: 'Edit' }))
+    await user.click(screen.getByRole('button', { name: 'Edit round' }))
 
     expect(navigate).toHaveBeenCalledWith('scorecard', {
       game: expect.objectContaining({
@@ -695,7 +703,7 @@ describe('Summary - a pending round (#95)', () => {
   it('an unmarked local round is still not editable by a signed-in user', async () => {
     mockFetch({ user: SIGNED_IN })
     await renderSummary(baseGame(), { fromHistory: true })
-    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Edit round' })).not.toBeInTheDocument()
   })
 })
 

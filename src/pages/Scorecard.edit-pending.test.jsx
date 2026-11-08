@@ -153,7 +153,7 @@ describe('Scorecard - editing a pending round', () => {
 
     expect(screen.getByText('Not yet saved to your account. It will save automatically when you have signal.')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Done' })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Edit round' })).toBeInTheDocument()
     expect(global.fetch.mock.calls.some(([, o]) => o?.method === 'POST')).toBe(false)
   })
 })
