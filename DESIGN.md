@@ -32,7 +32,7 @@ All tokens are defined as CSS custom properties in `src/styles/index.css` and al
 | `accent-hover` | `--color-accent-hover` | `#142f1e` | Accent on press |
 | `border` | `--color-border` | `#D9D0C4` | Hairlines, dividers, card and outline-button edges — warm light, decorative (1.39:1 on `bg`, deliberately below the 3:1 graphics floor) |
 | `field` | `--color-border-field` | `#827970` | Boundary of **form fields only** — text inputs, textareas, selects. Used as `border-field`. Warm mid-grey, ~3.7:1 on `bg-card` (see "Sunlight contrast") |
-| `control-warm` | `--color-control-warm` | `#7D746C` | Warm grey for secondary game controls: Map and Decrement outline and glyph, Advance fill |
+| `control-warm` | `--color-control-warm` | `#7D746C` | Warm grey for secondary game controls: Decrement outline and glyph, Advance fill |
 | `under-par` | `--color-under-par` | `#2C6B3C` | Score-vs-par **delta** when under par (`-1`, `-2` …). Deltas only — never chrome, never interactive |
 | `over-par` | `--color-over-par` | `#9B3A24` | Score-vs-par **delta** when over par (`+1`, `+5` …). Deltas only — never chrome, never interactive |
 | *(desktop only)* | — | `#E8E2D6` | Background behind phone frame on desktop |
@@ -82,7 +82,7 @@ The app is used outdoors on a phone in bright light, so both delta colours were 
 | `over-par` `#9B3A24` | **6.3 : 1** ✓ | **6.1 : 1** ✓ | 1.6 : 1 ✗ |
 | white `#FFFFFF` (active-cell text) | — | — | **11.2 : 1** ✓ |
 | `accent` `#1A4329` (winner column text) | 10.2 : 1 ✓ | 9.8 : 1 ✓ | — |
-| `control-warm` `#7D746C` (Map / Decrement outline and glyph, Advance fill) | 4.2 : 1 ✓ | 4.0 : 1 ✓ | — |
+| `control-warm` `#7D746C` (Decrement outline and glyph, Advance fill) | 4.2 : 1 ✓ | 4.0 : 1 ✓ | — |
 | `muted` `#6B6560` (secondary text, inactive hole numbers, placeholders) | 5.2 : 1 ✓ | 5.0 : 1 ✓ | — |
 | `field` `#827970` (text input, textarea, select edge) | 3.9 : 1 ✓ | 3.7 : 1 ✓ | — |
 | `border` `#D9D0C4` (decorative hairlines only) | 1.39 : 1 (exempt) | 1.33 : 1 (exempt) | — |
@@ -289,7 +289,7 @@ active:bg-border
 
 | Button | Classes |
 |---|---|
-| Map | `rounded-full border-2 border-control-warm text-control-warm` |
+| Map | `w-16 h-16 rounded-md text-muted flex-col` - no ring; map glyph over an 11px uppercase "Map" caption (muted, so the caption clears 4.5:1). Steps back from the three scoring controls; same 64px tap area |
 | Decrement (−) | `rounded-full border-2 border-control-warm text-control-warm text-2xl` — disabled: `opacity-25` |
 | Increment (+) | `rounded-full bg-accent border-2 border-accent text-bg text-2xl` |
 | Advance (→) | `rounded-full bg-control-warm border-2 border-control-warm text-bg` — disabled: `opacity-25` |
