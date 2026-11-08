@@ -12,8 +12,11 @@ import { AuthProvider } from '../hooks/useAuth.jsx'
 
 const baseUser = { id: 'u1', email: 'jane@example.com', name: null, pending_email: null }
 
-function mountFetch({ user = baseUser, patch, del } = {}) {
+function mountFetch({ user = baseUser, patch, del, logout } = {}) {
   global.fetch = vi.fn((url, opts) => {
+    if (url.includes('/api/auth/logout')) {
+      return (logout ?? (() => Promise.resolve({ ok: true, json: async () => ({}) })))(opts)
+    }
     if (url.includes('/api/auth/me')) {
       return Promise.resolve({ ok: true, json: async () => ({ user }) })
     }
@@ -57,7 +60,7 @@ describe('Settings - About row (#83)', () => {
     const { navigate } = renderSettings()
 
     await screen.findByRole('heading', { name: 'Settings' })
-    await user.click(screen.getByRole('button', { name: 'Information' }))
+    await user.click(screen.getByRole('button', { name: /^Information/ }))
     expect(navigate).toHaveBeenCalledWith('info', { from: 'settings' })
   })
 })
@@ -99,11 +102,14 @@ describe('Settings (#4)', () => {
     mountFetch({ user: { ...baseUser, name: 'Jan' }, patch })
     renderSettings()
 
-    const field = await screen.findByDisplayValue('Jan')
+    // The name shows as a value with a pencil; the field opens on tap.
+    await user.click(await screen.findByRole('button', { name: 'Edit name' }))
+    const field = screen.getByDisplayValue('Jan')
+    expect(field).toHaveFocus()
 
     await user.clear(field)
     await user.type(field, '  Jane  ')
-    await user.click(screen.getByRole('button', { name: 'Save name' }))
+    await user.click(screen.getByRole('button', { name: 'Save' }))
 
     await waitFor(() => {
       expect(patch).toHaveBeenCalled()
@@ -118,9 +124,10 @@ describe('Settings (#4)', () => {
     mountFetch({ user: { ...baseUser, name: 'Jan' }, patch })
     renderSettings()
 
-    const field = await screen.findByDisplayValue('Jan')
+    await user.click(await screen.findByRole('button', { name: 'Edit name' }))
+    const field = screen.getByDisplayValue('Jan')
     await user.clear(field)
-    await user.click(screen.getByRole('button', { name: 'Save name' }))
+    await user.click(screen.getByRole('button', { name: 'Save' }))
 
     await waitFor(() => expect(JSON.parse(patch.mock.calls[0][0].body)).toEqual({ name: '' }))
   })
@@ -258,5 +265,82 @@ describe('Settings (#4)', () => {
       expect(del.mock.calls[0][0].method).toBe('DELETE')
     })
     await waitFor(() => expect(navigate).toHaveBeenCalledWith('home', {}, { replace: true }))
+  })
+})
+
+describe('Settings - quiet name row and Sign out', () => {
+  it('Cancel closes the name field without saving and restores the saved name', async () => {
+    const user = userEvent.setup()
+    const patch = vi.fn()
+    mountFetch({ user: { ...baseUser, name: 'Jan' }, patch })
+    renderSettings()
+
+    const pencil = await screen.findByRole('button', { name: 'Edit name' })
+    expect(pencil).toHaveAttribute('aria-expanded', 'false')
+    await user.click(pencil)
+    await user.type(screen.getByDisplayValue('Jan'), 'ice')
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    expect(screen.queryByDisplayValue('Janice')).not.toBeInTheDocument()
+    expect(screen.getByText('Jan')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Edit name' })).toHaveFocus()
+    expect(patch).not.toHaveBeenCalled()
+  })
+
+  it('Enter saves the name and hands focus back to the pencil', async () => {
+    const user = userEvent.setup()
+    const patch = vi.fn(() => Promise.resolve({ ok: true, json: async () => ({ name: 'Jane' }) }))
+    mountFetch({ user: { ...baseUser, name: 'Jan' }, patch })
+    renderSettings()
+
+    await user.click(await screen.findByRole('button', { name: 'Edit name' }))
+    await user.type(screen.getByDisplayValue('Jan'), 'e{Enter}')
+
+    await waitFor(() => expect(JSON.parse(patch.mock.calls[0][0].body)).toEqual({ name: 'Jane' }))
+    expect(await screen.findByText('Saved.')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Edit name' })).toHaveFocus()
+  })
+
+  it('Escape closes the name field without saving', async () => {
+    const user = userEvent.setup()
+    const patch = vi.fn()
+    mountFetch({ user: { ...baseUser, name: 'Jan' }, patch })
+    renderSettings()
+
+    await user.click(await screen.findByRole('button', { name: 'Edit name' }))
+    await user.type(screen.getByDisplayValue('Jan'), 'ice{Escape}')
+
+    expect(screen.queryByDisplayValue('Janice')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Edit name' })).toHaveFocus()
+    expect(patch).not.toHaveBeenCalled()
+  })
+
+  it('shows "Not set" when there is no saved name', async () => {
+    mountFetch()
+    renderSettings()
+    expect(await screen.findByText('Not set')).toBeInTheDocument()
+  })
+
+  it('signs out and returns Home once the server confirms', async () => {
+    const user = userEvent.setup()
+    mountFetch()
+    const { navigate } = renderSettings()
+
+    await user.click(await screen.findByRole('button', { name: 'Sign out' }))
+
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('home', {}, { replace: true }))
+    expect(global.fetch).toHaveBeenCalledWith('/api/auth/logout', expect.objectContaining({ method: 'POST' }))
+  })
+
+  it('stays signed in and says so when the sign-out request fails', async () => {
+    const user = userEvent.setup()
+    mountFetch({ logout: () => Promise.resolve({ ok: false, json: async () => ({}) }) })
+    const { navigate } = renderSettings()
+
+    await user.click(await screen.findByRole('button', { name: 'Sign out' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent("Couldn't sign out")
+    expect(navigate).not.toHaveBeenCalledWith('home', {}, { replace: true })
+    expect(screen.getByRole('button', { name: 'Sign out' })).toBeEnabled()
   })
 })
