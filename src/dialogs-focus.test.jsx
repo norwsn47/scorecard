@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import Scorecard from './pages/Scorecard.jsx'
 import CourseEdit from './pages/CourseEdit.jsx'
 import History from './pages/History.jsx'
+import Summary from './pages/Summary.jsx'
 import Settings from './pages/Settings.jsx'
 import CourseMapModal from './components/CourseMapModal.jsx'
 import { AuthProvider } from './hooks/useAuth.jsx'
@@ -179,19 +180,6 @@ describe('History cards', () => {
     expect(within(card).getByRole('button', { name: 'Bo' })).toHaveAttribute('aria-pressed', 'true')
     expect(navigate).not.toHaveBeenCalled()
   })
-
-  it('the delete sheet returns focus to the round\'s delete control on Escape', async () => {
-    const user = userEvent.setup()
-    await renderHistory()
-
-    const del = screen.getByRole('button', { name: 'Delete round' })
-    await user.click(del)
-    expect(screen.getByRole('dialog', { name: 'Delete this round?' })).toBeInTheDocument()
-
-    await user.keyboard('{Escape}')
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(del).toHaveFocus()
-  })
 })
 
 describe('Settings - focus return', () => {
@@ -217,6 +205,27 @@ describe('Settings - focus return', () => {
     await user.click(del)
     expect(screen.getByRole('dialog')).toBeInTheDocument()
 
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(del).toHaveFocus()
+  })
+})
+
+describe('Summary - delete sheet', () => {
+  it('moves focus to Cancel and hands it back to the "Delete this round" link on Escape', async () => {
+    mockFetch({ user: null })
+    const user = userEvent.setup()
+    const game = {
+      id: 'r1', courseName: 'B', completedAt: '2026-08-01T12:00:00.000Z', holes: 1, holesPlayed: 1,
+      holePars: [3], players: ['Ann'], scores: { Ann: [3] },
+    }
+    localStorage.setItem('scorecard_completed', JSON.stringify([game]))
+    render(<AuthProvider><Summary navigate={vi.fn()} params={{ game, fromHistory: true }} /></AuthProvider>)
+    await settle()
+
+    const del = screen.getByRole('button', { name: 'Delete this round' })
+    await user.click(del)
+    expect(within(screen.getByRole('dialog', { name: 'Delete this round?' })).getByRole('button', { name: 'Cancel' })).toHaveFocus()
     await user.keyboard('{Escape}')
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(del).toHaveFocus()

@@ -1,20 +1,15 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import PageHeader from '../components/PageHeader.jsx'
 import ParDelta from '../components/ParDelta.jsx'
 import PlayerStar from '../components/PlayerStar.jsx'
 import { formatShortDate } from '../utils/format.js'
 import { isSignedInPlayer } from '../utils/game.js'
 import { playerTotal, roundToPar } from '../utils/scores.js'
-import { deleteCompletedGame, getCompletedGames, getPendingCompletedGames } from '../utils/storage.js'
+import { getCompletedGames, getPendingCompletedGames } from '../utils/storage.js'
 import { mergePendingGames, normalizeDbGame, normalizeLocalGame, normalizePendingGame } from '../utils/history.js'
 import { historyResultLabel } from '../utils/result.js'
-import { isSyncing, subscribeToSync } from '../utils/sync.js'
+import { subscribeToSync } from '../utils/sync.js'
 import { useAuth } from '../hooks/useAuth.jsx'
-
-// Shown in the delete sheet (and by Summary's Edit) when a background save of
-// the same round is in flight, so a delete or edit cannot diverge from what the
-// server just received.
-const SAVING_MESSAGE = 'Saving this round - try again in a moment.'
 
 // The signed-in user's rounds that are still waiting to be saved to D1
 // (marker-gated): only records tagged with this user's id, never an
@@ -41,16 +36,12 @@ export default function History({ navigate }) {
   const [loading, setLoading]         = useState(!!user)
   const [filter, setFilter]           = useState(null)
   const [courseFilter, setCourseFilter] = useState(null)
-  const [confirmDeleteId, setConfirmDeleteId] = useState(null)
-  const cancelButtonRef = useRef(null)
   // Load state for the signed-in list: null | 'failed' | 'signedOut'. A failed
   // load must not read as "No rounds yet" (#99). `skipped` counts stored rounds
   // that couldn't be read, so one bad row no longer blanks the whole list.
   const [loadError, setLoadError]     = useState(null)
   const [skipped, setSkipped]         = useState(0)
   const [reloadKey, setReloadKey]     = useState(0)
-  const [deleting, setDeleting]       = useState(false)
-  const [deleteError, setDeleteError] = useState(null)
 
   // A reload, deep link, or restored tab always resets history state to depth
   // 0 — there's nothing in-app to step back to, and no in-page back button any
@@ -58,34 +49,6 @@ export default function History({ navigate }) {
   // needs to catch the "landed here with a blank history" case, not react to
   // later in-app navigation (#89 fix-forward).
   const [showHomeLink] = useState(() => (window.history.state?.depth ?? 0) === 0)
-
-  function closeDeleteConfirm() {
-    if (deleting) return
-    setDeleteError(null)
-    setConfirmDeleteId(null)
-  }
-
-  // While the delete sheet is open: pull focus onto the non-destructive
-  // "Cancel" action, hand focus back to the delete control that opened it on
-  // close, and let Escape dismiss it, matching Settings.jsx's delete-account
-  // sheet (#80). Backdrop click is wired on the overlay element itself below.
-  useEffect(() => {
-    if (!confirmDeleteId) return
-    const opener = document.activeElement
-    cancelButtonRef.current?.focus()
-    return () => opener?.focus?.()
-  }, [confirmDeleteId])
-  useEffect(() => {
-    if (!confirmDeleteId || deleting) return
-    function onKey(e) {
-      if (e.key === 'Escape') {
-        setDeleteError(null)
-        setConfirmDeleteId(null)
-      }
-    }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [confirmDeleteId, deleting])
 
   // A background sync that saved (or newly rejected) a round while this screen
   // is open: reload, so a just-saved round shows as its D1 row rather than as a
@@ -157,44 +120,6 @@ export default function History({ navigate }) {
     setFilter(prev => (prev === name ? null : name))
   }
 
-  async function executeDelete(id) {
-    const game = allGames.find(g => g.id === id)
-    if (!game) return
-    if (game._fromDb) {
-      setDeleting(true)
-      setDeleteError(null)
-      try {
-        const res = await fetch(`/api/games/${game.id}`, { method: 'DELETE', credentials: 'include' })
-        // 404: already gone (deleted on another device) - the round is not there, which is the goal.
-        if (!res.ok && res.status !== 404) throw new Error('delete failed')
-      } catch {
-        // Keep the round in the list: it is still saved, so do not pretend otherwise.
-        setDeleteError("Couldn't delete this round - check your connection and try again.")
-        setDeleting(false)
-        return
-      }
-      setDeleting(false)
-      // The server saved this round but the local copy is still marked pending
-      // (the marker was not cleared yet). Drop that copy too, or the next
-      // background sync would send the round back to the account.
-      if (game.clientRoundId && pending.some(p => p.id === game.clientRoundId)) {
-        deleteCompletedGame(game.clientRoundId)
-      }
-    } else {
-      // A pending round is local only: no server call, no waiting. The one
-      // exception is a save of this very round in flight right now.
-      if (game._pending && isSyncing(game.id)) {
-        setDeleteError(SAVING_MESSAGE)
-        return
-      }
-      deleteCompletedGame(game.id)
-    }
-    setGames(prev => prev.filter(g => g.id !== id))
-    if (user) setPending(readPending(user.id))
-    setDeleteError(null)
-    setConfirmDeleteId(null)
-  }
-
   return (
     <div className="h-full bg-bg flex flex-col">
 
@@ -205,7 +130,7 @@ export default function History({ navigate }) {
         right={user ? (
           <button
             onClick={() => navigate('setup', { pastRound: true })}
-            className="font-ui text-xs tracking-[0.1em] uppercase font-semibold text-accent py-2 px-4 rounded-sm border border-accent active:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="min-h-[44px] px-2 -mr-2 flex items-center whitespace-nowrap font-ui text-xs tracking-[0.1em] uppercase font-semibold text-accent active:text-accent-hover rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             + Add
           </button>
@@ -376,7 +301,7 @@ export default function History({ navigate }) {
 
             {/* Card content sits above the open button; clicks pass through to it
                 except on the player-name buttons. */}
-            <div className="relative pointer-events-none text-left px-4 pt-4 pb-4 pr-12">
+            <div className="relative pointer-events-none text-left px-4 pt-4 pb-4">
               {/* A round whose save to the account is still outstanding. Quiet
                   accent pill (the app's "attention" treatment, no new colour);
                   real text, so a screen reader reads it with the card. A round
@@ -393,7 +318,7 @@ export default function History({ navigate }) {
               )}
 
               {/* Course name */}
-              {game.courseName && (
+              {game.courseName && !(user && courses.length === 1) && (
                 <p className="font-ui text-xs tracking-[0.08em] uppercase text-accent mb-1">{game.courseName}</p>
               )}
 
@@ -450,65 +375,11 @@ export default function History({ navigate }) {
                 <p className="font-ui text-xs text-muted mt-2 italic leading-relaxed line-clamp-2">{game.notes}</p>
               )}
             </div>
-
-            {/* Delete button */}
-            <button
-              onClick={e => { e.stopPropagation(); setConfirmDeleteId(game.id) }}
-              aria-label="Delete round"
-              className="absolute top-1 right-1 w-11 h-11 flex items-center justify-center text-muted active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-3.5 h-3.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
           </div>
           )
         })}
 
       </main>
-
-      {/* Delete confirmation — mirrors Settings.jsx's delete-account sheet:
-          role="dialog", aria-modal, aria-labelledby, autofocus, Escape and
-          backdrop-click to dismiss (#80). */}
-      {confirmDeleteId && (
-        <div
-          className="fixed inset-0 flex items-end justify-center z-50"
-          style={{ background: 'var(--overlay-backdrop)' }}
-          onClick={closeDeleteConfirm}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="delete-round-heading"
-            onClick={e => e.stopPropagation()}
-            className="bg-bg rounded-t-2xl w-full max-w-[430px] px-6 pt-6 pb-10 shadow-card"
-          >
-            <div className="w-10 h-1 bg-border rounded-full mx-auto mb-6" />
-            <h2 id="delete-round-heading" className="font-display italic text-2xl text-text mb-1">Delete this round?</h2>
-            <p className="font-ui text-xs text-muted tracking-wide mb-8">This cannot be undone.</p>
-            {deleteError && (
-              <p role="alert" className="font-ui text-xs text-accent mb-3">{deleteError}</p>
-            )}
-            <div className="flex gap-3">
-              <button
-                ref={cancelButtonRef}
-                onClick={closeDeleteConfirm}
-                disabled={deleting}
-                className="flex-1 py-3 rounded-sm border border-border font-ui text-sm tracking-[0.08em] uppercase text-text active:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => executeDelete(confirmDeleteId)}
-                disabled={deleting}
-                className="flex-1 py-3 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.08em] uppercase font-semibold active:opacity-80 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-              >
-                {deleting ? 'Deleting…' : 'Delete'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
     </div>
   )
