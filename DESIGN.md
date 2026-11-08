@@ -214,8 +214,8 @@ Every button in the app belongs to one of three sizes. The tier says how much we
 | Tier | Says | Padding / type | Where it's used |
 |---|---|---|---|
 | **Full CTA** | "This is the one thing to do on this screen" | `py-4 px-6`, `text-sm tracking-[0.1em] uppercase font-semibold` (filled) / `font-medium` (outline) | Home primary/secondary, Bruntsfield course page, Login submit, Setup "Start Game" |
-| **Dialog button** | "Choose one of two things, right now" | `py-3 px-4` full-width standalone, or `flex-1 py-3` paired in a row; `text-sm tracking-[0.08em] uppercase font-medium` (outline) / `font-semibold` (filled) | Resume Game, course-map link (standalone); Scorecard finish-confirm, History delete-confirm (paired) |
-| **Header action** | "A secondary action that shouldn't outweigh the page title" | `py-2 px-4`, `text-xs tracking-[0.1em] uppercase font-semibold` | Scorecard header Finish/Save, History "+ Add" |
+| **Dialog button** | "Choose one of two things, right now" | `py-3 px-4` full-width standalone, or `flex-1 py-3` paired in a row; `text-sm tracking-[0.08em] uppercase font-medium` (outline) / `font-semibold` (filled) | Resume Game, course-map link (standalone); Scorecard finish-confirm, Summary delete-confirm (paired) |
+| **Header action** | "A secondary action that shouldn't outweigh the page title" | `py-2 px-4`, `text-xs tracking-[0.1em] uppercase font-semibold` | Scorecard header Finish/Save (bordered); History "+ Add" is plain accent text, no border |
 
 **Disabled state — every tier, no exceptions: `opacity-40`.** Circular control-bar buttons (Increment/Decrement/Advance) are a different affordance and keep their own already-documented `opacity-25` — see "Control bar buttons" below for why.
 
@@ -264,17 +264,19 @@ Confirm / filled: flex-1 py-3 rounded-sm bg-accent text-bg
                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40
                   disabled: opacity-40
 ```
-Used in Scorecard's finish-confirm sheet and History's delete-confirm sheet.
+Used in Scorecard's finish-confirm sheet and Summary's delete-confirm sheet (opened from the "Delete this round" link below Share, shown only on a saved round that is reliably identified).
 
 **Disabled opacity standardised to `opacity-40` in this pass.** Scorecard's confirm button shipped with `disabled:opacity-60` and no documented reason — **`src/pages/Scorecard.jsx` line 412 needs a code change** to bring it in line with every other disabled button in the app.
 
-### Header action button (Header action tier) — Finish/Save, + Add
+### Header action button (Header action tier) — Finish/Save
 ```
 py-2 px-4 rounded-sm border border-accent text-accent
 font-ui text-xs tracking-[0.1em] uppercase font-semibold
 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40
 ```
-Sits inside a `PageHeader` right slot (or an equivalent compact context) — small enough not to outweigh the page title, still comfortably legible at `text-xs` because it carries a short, familiar word ("Finish", "Save", "+ Add"). Touch target is ~34px including border, below the 44px ideal; accepted for the same reason "Inline link tap targets" (below) accepts ~36-40px for `text-xs` inline elements — this is a deliberately quiet secondary action inside a fixed-height chrome bar, not the screen's one primary action.
+Sits inside a `PageHeader` right slot (or an equivalent compact context) — small enough not to outweigh the page title, still comfortably legible at `text-xs` because it carries a short, familiar word ("Finish", "Save"). Touch target is ~34px including border, below the 44px ideal; accepted for the same reason "Inline link tap targets" (below) accepts ~36-40px for `text-xs` inline elements — this is a deliberately quiet secondary action inside a fixed-height chrome bar, not the screen's one primary action.
+
+History's "+ Add" has dropped the border and is plain accent text (`min-h-[44px] px-2 -mr-2`, `text-xs tracking-[0.1em] uppercase font-semibold text-accent`, focus ring kept), so it meets the 44px target.
 
 ### Add-player button (dashed ghost)
 ```
@@ -414,15 +416,15 @@ Subtext:   font-ui text-xs text-muted tracking-wide
 
 **Dialog semantics — every bottom sheet, no exceptions (#80).** A confirmation sheet is a real modal dialog, not just a styled panel, and needs the behaviour to match:
 - `role="dialog"`, `aria-modal="true"`, `aria-labelledby` pointing at the heading's own `id` — on the sheet element itself, not the backdrop.
-- **Autofocus on open** — a `useEffect` keyed on the sheet's open state moves focus onto the sheet's most useful control the moment it mounts: the confirmation text input if the sheet has one (Settings' delete-account sheet, which gates on a typed "DELETE"), otherwise the non-destructive button (History's delete-round sheet focuses "Cancel", not "Delete" — a stray Enter keypress should never confirm a destructive action).
-- **Escape dismisses** — the same effect adds a `keydown` listener while the sheet is open (removed on cleanup) that closes it on `Escape`, equivalent to tapping the non-destructive action. Skip this while a destructive action is genuinely in flight (Settings' sheet checks its own `deleting` flag) so an in-progress delete can't be abandoned mid-request; a sheet with no async gap (History's) doesn't need the guard.
+- **Autofocus on open** — a `useEffect` keyed on the sheet's open state moves focus onto the sheet's most useful control the moment it mounts: the confirmation text input if the sheet has one (Settings' delete-account sheet, which gates on a typed "DELETE"), otherwise the non-destructive button (Summary's delete-round sheet focuses "Cancel", not "Delete" — a stray Enter keypress should never confirm a destructive action).
+- **Escape dismisses** — the same effect adds a `keydown` listener while the sheet is open (removed on cleanup) that closes it on `Escape`, equivalent to tapping the non-destructive action. Skip this while a destructive action is genuinely in flight (Settings' sheet checks its own `deleting` flag) so an in-progress delete can't be abandoned mid-request; a sheet with no async gap doesn't need the guard.
 - **Backdrop click dismisses** — `onClick` on the backdrop `div` closes the sheet; the sheet itself carries `onClick={e => e.stopPropagation()}` so a tap inside it doesn't bubble up and immediately close it.
 - **Focus returns to the opener on close** - the open effect captures `document.activeElement` before moving focus in and restores it in its cleanup. The focus effect is keyed on the open state only (never on a `deleting`/`finishing` flag, which would re-pull focus mid-action); the Escape listener is a second effect that also depends on that flag and is skipped while an action is in flight.
 - Close logic lives in one named function (`closeDelete`, `closeDeleteConfirm`, etc.) reused by the backdrop click, the Escape handler, and the sheet's own Cancel/dismiss button, so the three paths can never drift apart.
 
-Shipped in `Settings.jsx` (delete-account), `History.jsx` (delete-round, brought up to parity in #80), `Scorecard.jsx` (Finish/Save sheet), `CourseEdit.jsx` (delete-course sheet) and `Setup.jsx` (the edit-mode course-switch confirmation, added when BACKLOG #56 was reversed - no async gap, so no in-flight guard needed on the Escape handler). `CourseMapModal.jsx` is a centred modal, not a sheet, but follows the same rules: `role="dialog"`, `aria-labelledby` its course heading, focus on the Close button, Escape and backdrop dismiss, focus returned to the Map control (it reads `onClose` through a ref so a parent re-render never re-grabs focus).
+Shipped in `Settings.jsx` (delete-account), `Summary.jsx` (delete-round, moved from History; brought up to parity in #80), `Scorecard.jsx` (Finish/Save sheet), `CourseEdit.jsx` (delete-course sheet) and `Setup.jsx` (the edit-mode course-switch confirmation, added when BACKLOG #56 was reversed - no async gap, so no in-flight guard needed on the Escape handler). `CourseMapModal.jsx` is a centred modal, not a sheet, but follows the same rules: `role="dialog"`, `aria-labelledby` its course heading, focus on the Close button, Escape and backdrop dismiss, focus returned to the Map control (it reads `onClose` through a ref so a parent re-render never re-grabs focus).
 
-**A card that is tappable and also holds tappable parts** (History rounds) is never a button containing buttons. The card is a `div`; the "open this round" action is a real `<button>` stretched behind the content (`absolute inset-0`), the content sits above it with `pointer-events-none`, and each inner control (a player-name toggle with `aria-pressed`, the delete control) is its own real button with `pointer-events-auto`.
+**A card that is tappable and also holds tappable parts** (History rounds) is never a button containing buttons. The card is a `div`; the "open this round" action is a real `<button>` stretched behind the content (`absolute inset-0`), the content sits above it with `pointer-events-none`, and each inner control (a player-name toggle with `aria-pressed`) is its own real button with `pointer-events-auto`.
 
 ### Scorecard table
 ```
@@ -613,4 +615,4 @@ Inline SVGs throughout — no icon library dependency.
 
 **Known gap, accepted (scoped out 19 September 2026).** Non-field controls still draw their edge in `border-border` (1.39:1): the outline buttons (Full CTA outline, paired Dialog "Cancel", Setup's small Cancel), the inactive 9/18 toggle, inactive filter chips and the par stepper cells. Their text labels carry the affordance (`text` / `muted`, 4.5:1 or better), so a golfer can still find and read them, but the boundary itself is below 3:1. Revisit as its own decision. The lever would be `border-field` on outline buttons, which darkens every secondary button on Home and the Bruntsfield page, so it is a visible change to weigh, not a token tweak.
 
-**No other outstanding divergences.** The four items found in the #44 button-size pass are all fixed in code: dialog and submit buttons use `disabled:opacity-40`, the History "+ Add" header action matches the Header action tier, and every button carries the `focus-visible` ring.
+**No other outstanding divergences.** The four items found in the #44 button-size pass are all fixed in code: dialog and submit buttons use `disabled:opacity-40`, the History "+ Add" header action matched the Header action tier (it is now plain accent text), and every button carries the `focus-visible` ring.

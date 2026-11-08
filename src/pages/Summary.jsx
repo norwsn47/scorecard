@@ -10,12 +10,9 @@ import ParDelta from '../components/ParDelta.jsx'
 import PlayerStar from '../components/PlayerStar.jsx'
 import { shareScorecard } from '../utils/share.js'
 import { clearActiveCell, getActiveGame, getCompletedGames, markCompletedGamePending, markCompletedGameSynced, saveActiveGame, updatePendingNotes } from '../utils/storage.js'
+import { deleteRound, DELETE_FAILED_MESSAGE, SAVING_MESSAGE } from '../utils/deleteRound.js'
 import { holdRound, isSyncing, postRound, syncPendingRounds } from '../utils/sync.js'
 import { useAuth } from '../hooks/useAuth.jsx'
-
-// What the user reads when a signed-in save does not go through (#95). Calm,
-// says what happened and what they can do; never blames them.
-const SAVING_MESSAGE = 'Saving this round - try again in a moment.'
 
 const SAVE_ERROR_COPY = {
   failed: "Couldn't save this round. Check your signal and try again, or keep it on this device for now.",
@@ -94,6 +91,40 @@ export default function Summary({ navigate, params }) {
   const userIdRef                   = useRef(null)
 
   useEffect(() => { userIdRef.current = user?.id ?? null }, [user?.id])
+
+  // "Delete this round" sheet. Same dialog rules as the other sheets: focus on
+  // Cancel when it opens, back to the link on close, Escape and backdrop
+  // dismiss, but neither while a delete is in flight.
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting]           = useState(false)
+  const [deleteError, setDeleteError]     = useState(null)
+  const deleteLinkRef                     = useRef(null)
+  const cancelButtonRef                   = useRef(null)
+  const deletingRef                       = useRef(false)
+
+  function closeDeleteConfirm() {
+    if (deletingRef.current) return
+    setDeleteError(null)
+    setConfirmDelete(false)
+  }
+
+  useEffect(() => {
+    if (!confirmDelete) return
+    const opener = deleteLinkRef.current
+    cancelButtonRef.current?.focus()
+    return () => opener?.focus?.()
+  }, [confirmDelete])
+  useEffect(() => {
+    if (!confirmDelete || deleting) return
+    function onKey(e) {
+      if (e.key === 'Escape') {
+        setDeleteError(null)
+        setConfirmDelete(false)
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [confirmDelete, deleting])
 
   // Leaving by any route other than Keep or a successful save (the back
   // gesture, an unmount for any reason): release the hold and, if this screen
@@ -181,6 +212,43 @@ export default function Summary({ navigate, params }) {
   // signed-in user's own pending round (a local edit) for a
   // logged-in user, or any local completed round for a logged-out user.
   const canEdit = user ? (!!game._fromDb || ownsPending) : true
+
+  // Delete is offered only when it is safe and complete (this is user data):
+  // - viewingSaved: never on the post-finish flow, where Done owns the round.
+  // - the round is reliably identified: it arrived as params.game, or it was
+  //   re-resolved by params.gameId and matches. After a back/forward bounce the
+  //   game param is dropped and the fallback is the newest local round, which
+  //   can be a different one (BACKLOG #43b); never guess which round to delete.
+  // - signed in: only a round the helper can delete in full - a D1 round
+  //   (_fromDb) or the owner's pending local round. A local record that is only
+  //   `synced` has a server copy the helper would not touch, so deleting it
+  //   would remove the local copy and leave the account row. Signed out: any
+  //   local completed round.
+  const reliablyIdentified = !!params?.game || (!!params?.gameId && game.id === params.gameId)
+  const canDelete = !!viewingSaved && reliablyIdentified && (user ? (!!game._fromDb || ownsPending) : true)
+
+  async function handleDeleteRound() {
+    if (deletingRef.current) return
+    deletingRef.current = true
+    setDeleting(true)
+    setDeleteError(null)
+    let result
+    try {
+      result = await deleteRound(game, { userId: user?.id })
+    } catch {
+      result = { ok: false, error: DELETE_FAILED_MESSAGE }
+    }
+    deletingRef.current = false
+    if (result.ok) {
+      // Replace this entry so Back does not return to the deleted round.
+      // History reloads on mount.
+      if (mountedRef.current) navigate('history', {}, { replace: true })
+      return
+    }
+    if (!mountedRef.current) return
+    setDeleting(false)
+    setDeleteError(result.error)
+  }
 
   function handleEditRound() {
     // A save of this round is in flight: an edit now could diverge from what
@@ -707,6 +775,18 @@ export default function Summary({ navigate, params }) {
               </button>
             )}
           </div>
+          {canDelete && (
+            <div className="text-center">
+              <button
+                ref={deleteLinkRef}
+                type="button"
+                onClick={() => setConfirmDelete(true)}
+                className="inline-block font-ui text-sm text-muted underline underline-offset-2 py-3 -my-3 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm"
+              >
+                Delete this round
+              </button>
+            </div>
+          )}
           {!viewingSaved && canEdit && editNotice && (
             <p role="alert" className="font-ui text-xs text-accent tracking-wide leading-relaxed text-center">
               {editNotice}
@@ -731,6 +811,49 @@ export default function Summary({ navigate, params }) {
 
         </div>
       </main>
+
+      {/* Delete confirmation - role="dialog", aria-modal, aria-labelledby,
+          autofocus on Cancel, Escape and backdrop dismiss (DESIGN.md "Dialog
+          semantics"). Locked while the delete is in flight. */}
+      {confirmDelete && canDelete && (
+        <div
+          className="fixed inset-0 flex items-end justify-center z-50"
+          style={{ background: 'var(--overlay-backdrop)' }}
+          onClick={closeDeleteConfirm}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="summary-delete-round-heading"
+            onClick={e => e.stopPropagation()}
+            className="bg-bg rounded-t-2xl w-full max-w-[430px] px-6 pt-6 pb-10 shadow-card"
+          >
+            <div className="w-10 h-1 bg-border rounded-full mx-auto mb-6" />
+            <h2 id="summary-delete-round-heading" className="font-display italic text-2xl text-text mb-1">Delete this round?</h2>
+            <p className="font-ui text-xs text-muted tracking-wide mb-8">This cannot be undone.</p>
+            {deleteError && (
+              <p role="alert" className="font-ui text-xs text-accent mb-3">{deleteError}</p>
+            )}
+            <div className="flex gap-3">
+              <button
+                ref={cancelButtonRef}
+                onClick={closeDeleteConfirm}
+                disabled={deleting}
+                className="flex-1 py-3 rounded-sm border border-border font-ui text-sm tracking-[0.08em] uppercase text-text active:bg-bg-card disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteRound}
+                disabled={deleting}
+                className="flex-1 py-3 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.08em] uppercase font-semibold active:opacity-80 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              >
+                {deleting ? 'Deleting…' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   )

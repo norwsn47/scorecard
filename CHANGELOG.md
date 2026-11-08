@@ -5,9 +5,13 @@
 > Git history is the full record; this file is for context and decision rationale that commit messages don't carry.
 > Update the date below whenever you add an entry.
 
-**Last updated:** 28 September 2026
+**Last updated:** 8 November 2026
 
 ---
+
+## 8 November 2026 (deleting a round moves from the History card into the opened round)
+
+Deleting is rare and the per-card cross was easy to mis-tap. It is now a "Delete this round" link on Summary, shown only for a saved round that can be reliably identified (hidden after a back/forward bounce, see #43b). The delete logic is shared in `src/utils/deleteRound.js`; behaviour is unchanged.
 
 ## 28 September 2026 (editing a round can change its course's hole count, reversing #56)
 

@@ -3,7 +3,7 @@ import { act, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import History from './History.jsx'
 import { AuthProvider } from '../hooks/useAuth.jsx'
-import { getCompletedGames, markCompletedGamePending, markCompletedGameRejected, saveCompletedGame } from '../utils/storage.js'
+import { markCompletedGamePending, markCompletedGameRejected, saveCompletedGame } from '../utils/storage.js'
 import { syncPendingRounds } from '../utils/sync.js'
 
 // Pending rounds in a signed-in History (BACKLOG #95): local
@@ -300,155 +300,6 @@ describe('History - pending rounds when the saved list will not load', () => {
   })
 })
 
-describe('History - deleting a pending round', () => {
-  it('removes the local record only: no server call, no waiting, sheet closes', async () => {
-    seed('p1', '2026-08-02T10:00:00.000Z', ['Pending'], { pendingFor: 'u1' })
-    seed('p2', '2026-08-01T10:00:00.000Z', ['Other'], { pendingFor: 'u1' })
-    mockApi()
-    const user = userEvent.setup()
-    await renderHistory()
-    const before = global.fetch.mock.calls.length
-
-    const card = screen.getByRole('button', { name: /^Open round.*Pending/ }).parentElement
-    await user.click(within(card).getByRole('button', { name: 'Delete round' }))
-    const dialog = screen.getByRole('dialog')
-    expect(within(dialog).getByRole('heading', { name: 'Delete this round?' })).toBeInTheDocument()
-    await user.click(within(dialog).getByRole('button', { name: 'Delete' }))
-
-    expect(global.fetch.mock.calls.length).toBe(before) // nothing was requested
-    expect(calls('DELETE')).toHaveLength(0)
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(getCompletedGames().map(g => g.id)).toEqual(['p2'])
-    expect(openButtons()).toHaveLength(1)
-    expect(openNames()[0]).toMatch(/Other/)
-  })
-
-  it('deletes a rejected round locally too', async () => {
-    seed('p1', '2026-08-02T10:00:00.000Z', ['Refused'], { pendingFor: 'u1', rejected: true })
-    mockApi()
-    const user = userEvent.setup()
-    await renderHistory()
-
-    await user.click(screen.getByRole('button', { name: 'Delete round' }))
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }))
-
-    expect(calls('DELETE')).toHaveLength(0)
-    expect(getCompletedGames()).toHaveLength(0)
-  })
-
-  it('blocks the delete with a calm message while a save of that round is in flight, and works once it has finished', async () => {
-    seed('p1', '2026-08-02T10:00:00.000Z', ['Pending'], { pendingFor: 'u1' })
-    let release
-    // Every load answers with whatever the server holds; a saved round would
-    // come back as a row, but here the POST is held, so it does not.
-    mockApi({ post: () => new Promise(resolve => { release = () => resolve({ ok: false, status: 503, json: async () => ({}) }) }) })
-    const user = userEvent.setup()
-    await renderHistory()
-
-    const run = syncPendingRounds('u1')
-    await tick() // the POST is now in flight
-
-    await user.click(screen.getByRole('button', { name: 'Delete round' }))
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }))
-
-    const dialog = screen.getByRole('dialog') // still open
-    expect(within(dialog).getByRole('alert')).toHaveTextContent('Saving this round - try again in a moment.')
-    expect(getCompletedGames().map(g => g.id)).toEqual(['p1']) // not deleted
-    expect(within(dialog).getByRole('button', { name: 'Delete' })).toBeEnabled()
-
-    // The save ends (it failed, so the round stays pending); trying again now works.
-    await act(async () => { release(); await run })
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }))
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(getCompletedGames()).toHaveLength(0)
-  })
-
-  it('clears the "saving" message when the sheet is closed and reopened', async () => {
-    seed('p1', '2026-08-02T10:00:00.000Z', ['Pending'], { pendingFor: 'u1' })
-    let release
-    mockApi({ post: () => new Promise(resolve => { release = () => resolve({ ok: false, status: 503, json: async () => ({}) }) }) })
-    const user = userEvent.setup()
-    await renderHistory()
-    const run = syncPendingRounds('u1')
-    await tick()
-
-    await user.click(screen.getByRole('button', { name: 'Delete round' }))
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }))
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }))
-    await user.click(screen.getByRole('button', { name: 'Delete round' }))
-
-    expect(within(screen.getByRole('dialog')).queryByRole('alert')).not.toBeInTheDocument()
-    await act(async () => { release(); await run })
-  })
-})
-
-describe('History - deleting a saved round is unchanged', () => {
-  it('waits for the server, then removes the row', async () => {
-    let release
-    mockApi({
-      games: [dbRow('d1', '2026-08-01T10:00:00.000Z', ['Saved'])],
-      del: () => new Promise(resolve => { release = () => resolve({ ok: true, status: 200, json: async () => ({}) }) }),
-    })
-    const user = userEvent.setup()
-    await renderHistory()
-
-    await user.click(screen.getByRole('button', { name: 'Delete round' }))
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }))
-
-    expect(calls('DELETE')).toHaveLength(1)
-    expect(calls('DELETE')[0][0]).toBe('/api/games/d1')
-    // In flight: the sheet stays, its buttons are locked.
-    expect(within(screen.getByRole('dialog')).getByRole('button', { name: 'Deleting…' })).toBeDisabled()
-    expect(openButtons()).toHaveLength(1)
-
-    await act(async () => { release() })
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(openButtons()).toHaveLength(0)
-  })
-
-  it('keeps the row and says so in the sheet when the server fails', async () => {
-    mockApi({
-      games: [dbRow('d1', '2026-08-01T10:00:00.000Z', ['Saved'])],
-      del: () => resp(500),
-    })
-    const user = userEvent.setup()
-    await renderHistory()
-
-    await user.click(screen.getByRole('button', { name: 'Delete round' }))
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }))
-
-    expect(within(screen.getByRole('dialog')).getByRole('alert')).toHaveTextContent("Couldn't delete this round")
-    expect(openButtons()).toHaveLength(1)
-  })
-
-  it('also removes a still-pending local twin of the round, so a later sync cannot send it back', async () => {
-    seed('p1', '2026-08-02T10:00:00.000Z', ['Twin'], { pendingFor: 'u1' })
-    mockApi({ games: [dbRow('d1', '2026-08-02T10:00:00.000Z', ['Twin'], { client_round_id: 'p1' })] })
-    const user = userEvent.setup()
-    await renderHistory()
-    expect(openButtons()).toHaveLength(1)
-
-    await user.click(screen.getByRole('button', { name: 'Delete round' }))
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }))
-
-    expect(calls('DELETE')).toHaveLength(1)
-    expect(getCompletedGames()).toHaveLength(0)
-    expect(openButtons()).toHaveLength(0)
-  })
-
-  it('leaves an unmarked local copy of a saved round alone', async () => {
-    seed('q1', '2026-08-02T10:00:00.000Z', ['Twin'], { synced: true })
-    mockApi({ games: [dbRow('d1', '2026-08-02T10:00:00.000Z', ['Twin'], { client_round_id: 'q1' })] })
-    const user = userEvent.setup()
-    await renderHistory()
-
-    await user.click(screen.getByRole('button', { name: 'Delete round' }))
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }))
-
-    expect(getCompletedGames().map(g => g.id)).toEqual(['q1'])
-  })
-})
-
 describe('History - reacting to a background sync', () => {
   it('reloads when a sync saves a round, so it shows once, as the saved row', async () => {
     seed('p1', '2026-08-02T10:00:00.000Z', ['Twin'], { pendingFor: 'u1' })
@@ -531,18 +382,5 @@ describe('History - signed out is unchanged', () => {
     expect(screen.queryByText('Kept on this device only.')).not.toBeInTheDocument()
     expect(openNames().join(' ')).not.toMatch(/not yet saved|can't be saved/i)
     expect(calls('GET', url => url === '/api/games')).toHaveLength(0)
-  })
-
-  it('deletes a still-pending round locally from signed-out History', async () => {
-    seed('p1', '2026-08-02T10:00:00.000Z', ['Pending'], { pendingFor: 'u1' })
-    mockApi({ user: null })
-    const user = userEvent.setup()
-    await renderHistory()
-
-    await user.click(screen.getByRole('button', { name: 'Delete round' }))
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }))
-
-    expect(getCompletedGames()).toHaveLength(0)
-    expect(calls('DELETE')).toHaveLength(0)
   })
 })

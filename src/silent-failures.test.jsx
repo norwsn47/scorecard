@@ -39,12 +39,11 @@ afterEach(() => {
 })
 
 // ───────────────────────── History ─────────────────────────
-describe('History - loading and deleting (#99)', () => {
-  function mockApi({ games, del } = {}) {
-    global.fetch = vi.fn((url, opts) => {
+describe('History - loading (#99)', () => {
+  function mockApi({ games } = {}) {
+    global.fetch = vi.fn(url => {
       const u = String(url)
       if (u.includes('/api/auth/me')) return json({ user: SIGNED_IN })
-      if (opts?.method === 'DELETE') return del ? del() : json({})
       if (u.startsWith('/api/games')) return games()
       return Promise.reject(new Error(`unexpected fetch: ${u}`))
     })
@@ -87,58 +86,6 @@ describe('History - loading and deleting (#99)', () => {
     expect(await screen.findByRole('button', { name: /^Open round/ })).toBeInTheDocument()
     expect(screen.getAllByRole('button', { name: /^Open round/ })).toHaveLength(1)
     expect(screen.getByRole('status')).toHaveTextContent("1 round couldn't be shown.")
-  })
-
-  it('a failed delete keeps the round, says so, and leaves the sheet open', async () => {
-    const user = userEvent.setup()
-    mockApi({ games: () => json({ games: [dbRound] }), del: () => json({}, { ok: false, status: 500 }) })
-    renderHistory()
-
-    await user.click(await screen.findByRole('button', { name: 'Delete round' }))
-    await user.click(screen.getByRole('button', { name: 'Delete' }))
-
-    expect(await screen.findByText("Couldn't delete this round - check your connection and try again.")).toBeInTheDocument()
-    expect(screen.getByRole('dialog')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /^Open round/ })).toBeInTheDocument()
-  })
-
-  it('a successful delete (or one that is already gone, 404) removes the round and closes the sheet', async () => {
-    for (const status of [200, 404]) {
-      const user = userEvent.setup()
-      mockApi({
-        games: () => json({ games: [dbRound] }),
-        del: () => json({}, { ok: status === 200, status }),
-      })
-      const { unmount } = render(<AuthProvider><History navigate={vi.fn()} goBack={vi.fn()} /></AuthProvider>)
-
-      await user.click(await screen.findByRole('button', { name: 'Delete round' }))
-      await user.click(screen.getByRole('button', { name: 'Delete' }))
-
-      await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
-      expect(screen.queryByRole('button', { name: /^Open round/ })).not.toBeInTheDocument()
-      unmount()
-    }
-  })
-
-  it('while the delete is in flight both buttons are disabled and the sheet cannot be dismissed', async () => {
-    const user = userEvent.setup()
-    let release
-    mockApi({
-      games: () => json({ games: [dbRound] }),
-      del: () => new Promise(resolve => { release = () => resolve({ ok: true, status: 200, json: async () => ({}) }) }),
-    })
-    renderHistory()
-
-    await user.click(await screen.findByRole('button', { name: 'Delete round' }))
-    await user.click(screen.getByRole('button', { name: 'Delete' }))
-
-    expect(await screen.findByRole('button', { name: 'Deleting…' })).toBeDisabled()
-    expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisabled()
-    await user.keyboard('{Escape}')
-    expect(screen.getByRole('dialog')).toBeInTheDocument()
-
-    await act(async () => { release() })
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 })
 

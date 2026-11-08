@@ -32,15 +32,65 @@ const round = (id, players, completedAt) => ({
   holePars: [3, 3],
 })
 
-describe('History - delete control', () => {
-  it('is labelled "Delete round" (the UI says round, not game) and opens the confirm sheet', async () => {
-    const user = userEvent.setup()
+describe('History - cards', () => {
+  const dbRow = (id, courseName) => ({
+    id,
+    played_at: '2026-08-01T10:00:00.000Z',
+    holes_played: 2,
+    course_id: null,
+    course_name: courseName,
+    notes: null,
+    hole_pars: '[3,3]',
+    player_data: JSON.stringify([{ name: 'Ann', scores: [3, 3], total: 6 }]),
+  })
+
+  async function renderSignedIn(games) {
+    global.fetch = vi.fn(url => {
+      if (url.includes('/api/auth/me')) return Promise.resolve({ ok: true, json: async () => ({ user: { id: 'u1', email: 'ann@example.com', name: 'Ann' } }) })
+      if (url.includes('/api/games')) return Promise.resolve({ ok: true, json: async () => ({ games }) })
+      return Promise.reject(new Error(`unexpected fetch: ${url}`))
+    })
+    renderHistory()
+    await screen.findAllByRole('button', { name: /^Open round/ })
+  }
+
+  it('has no delete control on a card (deleting lives on the round itself)', async () => {
     seedLocalGames([round('g1', ['Ann'], '2026-08-01T10:00:00.000Z')])
     renderHistory()
+    expect(await screen.findByRole('button', { name: /^Open round/ })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /delete/i })).not.toBeInTheDocument()
+  })
 
-    await user.click(await screen.findByRole('button', { name: 'Delete round' }))
-    expect(screen.queryByRole('button', { name: 'Delete game' })).not.toBeInTheDocument()
-    expect(screen.getByRole('dialog')).toBeInTheDocument()
+  it('signed in with one course: the label at the top names it and cards do not repeat it', async () => {
+    await renderSignedIn([dbRow('a', 'Bruntsfield'), dbRow('b', 'Bruntsfield')])
+    const main = screen.getByRole('main')
+    expect(screen.getAllByText('Bruntsfield')).toHaveLength(1)
+    expect(within(main).queryByText('Bruntsfield')).not.toBeInTheDocument()
+  })
+
+  it('signed in with several courses: each card keeps its course name', async () => {
+    await renderSignedIn([dbRow('a', 'Bruntsfield'), dbRow('b', 'Nine A')])
+    const main = screen.getByRole('main')
+    expect(within(main).getByText('Bruntsfield')).toBeInTheDocument()
+    expect(within(main).getByText('Nine A')).toBeInTheDocument()
+  })
+
+  it('signed out: a card still shows its course name when it has one', async () => {
+    seedLocalGames([{ ...round('g1', ['Ann'], '2026-08-01T10:00:00.000Z'), courseName: 'Bruntsfield' }])
+    renderHistory()
+    expect(await within(await screen.findByRole('main')).findByText('Bruntsfield')).toBeInTheDocument()
+  })
+
+  it('signed in: "+ Add" is reachable by name and opens Setup for a past round', async () => {
+    const user = userEvent.setup()
+    const navigate = vi.fn()
+    global.fetch = vi.fn(url => {
+      if (url.includes('/api/auth/me')) return Promise.resolve({ ok: true, json: async () => ({ user: { id: 'u1', email: 'a@b.c', name: 'Ann' } }) })
+      return Promise.resolve({ ok: true, json: async () => ({ games: [] }) })
+    })
+    render(<AuthProvider><History navigate={navigate} goBack={vi.fn()} /></AuthProvider>)
+    await user.click(await screen.findByRole('button', { name: '+ Add' }))
+    expect(navigate).toHaveBeenCalledWith('setup', { pastRound: true })
   })
 })
 
