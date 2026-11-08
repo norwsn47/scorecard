@@ -57,6 +57,13 @@ const settle = () => act(async () => { await new Promise(resolve => setTimeout(r
 const stored = () => getCompletedGames().find(g => g.id === 'round-1')
 const keepButton = () => screen.getByRole('button', { name: 'Keep on this device and go home' })
 const noteField = () => screen.getByPlaceholderText('Add a note about this round...')
+// The note field starts collapsed behind "+ Add a note" (a note is optional and
+// occasional). Opens it if needed and returns the field.
+const addNoteButton = () => screen.getByRole('button', { name: '+ Add a note' })
+async function openNote(user) {
+  if (!screen.queryByLabelText('Round notes')) await user.click(addNoteButton())
+  return screen.getByLabelText('Round notes')
+}
 
 async function renderSummary(game, { strict = false } = {}) {
   saveCompletedGame(game)
@@ -171,7 +178,7 @@ describe('Summary - the first failed save marks the round pending (#112)', () =>
     const user = userEvent.setup()
     const { navigate } = await renderSummary(baseGame())
 
-    await user.type(noteField(), '  Windy  ')
+    await user.type(await openNote(user), '  Windy  ')
     await failFirstSave(user, navigate)
 
     expect(stored().notes).toBe('Windy')
@@ -486,9 +493,9 @@ describe('Summary - a round resolved from storage keeps its error screen (#112)'
     expect(screen.getByRole('alert')).toHaveTextContent("Couldn't save this round")
     expect(screen.getByRole('button', { name: 'Retry' })).toBeEnabled()
     expect(keepButton()).toBeEnabled()
-    expect(noteField()).toBeEnabled()
+    expect(addNoteButton()).toBeEnabled()
     expect(screen.getByRole('button', { name: 'Done' })).toBeEnabled()
-    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Edit round' })).not.toBeInTheDocument()
     expect(screen.queryByText(STATUS_LINE, { exact: false })).not.toBeInTheDocument()
     expect(isHeld('round-1')).toBe(true)
   })
@@ -548,7 +555,7 @@ describe('Summary - a round resolved from storage keeps its error screen (#112)'
     expect(screen.queryByRole('button', { name: 'Done' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Retry' })).not.toBeInTheDocument()
     expect(screen.queryByPlaceholderText('Add a note about this round...')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Edit' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Edit round' })).toBeEnabled()
     expect(isHeld('round-1')).toBe(false)
   })
 })
@@ -631,7 +638,7 @@ describe('Summary - notes typed on the error screen (#112)', () => {
     await failFirstSave(user, navigate)
     expect(stored().notes).toBeNull()
 
-    await user.type(noteField(), 'Windy on the 2nd')
+    await user.type(await openNote(user), 'Windy on the 2nd')
     expect(stored().notes).toBe('Windy on the 2nd')
     expect(stored().pendingSyncUserId).toBe('u1')
 
@@ -646,7 +653,7 @@ describe('Summary - notes typed on the error screen (#112)', () => {
     mockFetch({ postGames: failWith(500) })
     const user = userEvent.setup()
     const { navigate } = await renderSummary(baseGame())
-    await user.type(noteField(), 'Windy')
+    await user.type(await openNote(user), 'Windy')
     await failFirstSave(user, navigate)
     expect(stored().notes).toBe('Windy')
 
@@ -662,7 +669,7 @@ describe('Summary - notes typed on the error screen (#112)', () => {
     const { navigate } = await renderSummary(baseGame())
     await failFirstSave(user, navigate)
 
-    await user.type(noteField(), 'Breezy')
+    await user.type(await openNote(user), 'Breezy')
     await user.click(screen.getByRole('button', { name: 'Retry' }))
 
     await waitFor(() => expect(navigate).toHaveBeenCalledWith('home'))
@@ -675,7 +682,7 @@ describe('Summary - notes typed on the error screen (#112)', () => {
     await renderSummary(baseGame())
     const before = localStorage.getItem('gt_completed_games')
 
-    await user.type(noteField(), 'Windy')
+    await user.type(await openNote(user), 'Windy')
 
     expect(localStorage.getItem('gt_completed_games')).toBe(before)
     expect(stored().pendingSyncUserId).toBeUndefined()
@@ -693,7 +700,7 @@ describe('Summary - notes typed on the error screen (#112)', () => {
     await failFirstSave(user, navigate)
     vi.restoreAllMocks()
 
-    await user.type(noteField(), 'Windy')
+    await user.type(await openNote(user), 'Windy')
 
     expect(stored().pendingSyncUserId).toBeUndefined()
     expect(stored().notes).toBeUndefined()

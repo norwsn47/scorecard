@@ -57,6 +57,15 @@ export default function Summary({ navigate, params }) {
 
   const [sharing, setSharing]       = useState(false)
   const [notes, setNotes]           = useState(() => game?.notes ?? '')
+  // The notes field starts collapsed behind "+ Add a note" unless the round
+  // already carries a note. Opening it moves focus into the field.
+  const [notesOpen, setNotesOpen]   = useState(() => !!game?.notes)
+  const notesRef                    = useRef(null)
+  const notesWasOpenRef             = useRef(notesOpen)
+  useEffect(() => {
+    if (notesOpen && !notesWasOpenRef.current) notesRef.current?.focus()
+    notesWasOpenRef.current = notesOpen
+  }, [notesOpen])
   const [saving, setSaving]         = useState(false)
   // Why Edit did nothing, or null: another round is in progress, or a save of
   // this very round is in flight.
@@ -348,10 +357,14 @@ export default function Summary({ navigate, params }) {
   return (
     <div className="h-full bg-bg flex flex-col">
 
-      {/* Post-finish: "Done" top-right (saves + goes home), no back slot — this
+      {/* Header right slot: an "Edit round" pencil icon on both flows (when the
+          round can be edited). Editing a finished round is an occasional fix,
+          so it is a quiet icon rather than text; "Done" (saves + goes home)
+          moved down to the action bar beside Share, where it gets the weight
+          an every-round action deserves. Post-finish: no back slot — this
           flow always arrives straight from Scorecard (depth > 0), where native
           back genuinely works. A round opened from History (viewingSaved):
-          "Edit" top-right, and an explicit "Home" on the left every time — not
+          an explicit "Home" on the left every time — not
           just when this screen was reached with nothing in-app to step back to.
           A viewingSaved round can also be reached via an edit round-trip
           (History -> Summary -> Setup -> Scorecard(edit) -> save -> back here),
@@ -369,25 +382,20 @@ export default function Summary({ navigate, params }) {
         onBack={viewingSaved ? () => navigate('home') : undefined}
         backLabel="Home"
         right={
-          viewingSaved ? (
-            canEdit && (
-              <button
-                onClick={handleEditRound}
-                disabled={saving}
-                className="py-3 min-h-[44px] flex items-center text-accent font-ui text-sm tracking-[0.08em] uppercase disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-              >
-                Edit
-              </button>
-            )
-          ) : (
+          canEdit ? (
             <button
-              onClick={handleGoHome}
+              onClick={handleEditRound}
               disabled={saving}
-              className="py-3 min-h-[44px] flex items-center text-accent font-ui text-sm tracking-[0.08em] uppercase font-semibold disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              aria-label="Edit round"
+              title="Edit round"
+              className="w-11 h-11 -mr-2.5 flex items-center justify-center rounded-md text-muted active:text-accent disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
-              {saving ? 'Saving…' : 'Done'}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-[18px] h-[18px]" aria-hidden="true">
+                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4z" />
+                <path d="M14.5 5.5l3 3" />
+              </svg>
             </button>
-          )
+          ) : null
         }
       />
 
@@ -598,10 +606,26 @@ export default function Summary({ navigate, params }) {
             <>
               {/* Notes - signed in only. Editable until Done saves the round; a
                   saved round is never in this branch (it shows read-only notes
-                  above instead). Locked while a save is in flight. */}
-              {user && (
+                  above instead). Locked while a save is in flight. Optional and
+                  occasional, so it starts collapsed behind a small "Add a note"
+                  link, and opens already expanded when the round has a note. */}
+              {user && !notesOpen && (
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => setNotesOpen(true)}
+                    disabled={saving}
+                    aria-expanded={false}
+                    className="inline-block py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2 active:opacity-70 disabled:opacity-40 disabled:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  >
+                    + Add a note
+                  </button>
+                </div>
+              )}
+              {user && notesOpen && (
                 <div>
                   <textarea
+                    ref={notesRef}
                     aria-label="Round notes"
                     value={notes}
                     onChange={e => {
@@ -655,38 +679,39 @@ export default function Summary({ navigate, params }) {
             </>
           )}
 
-          {/* Edit round / Share scorecard — each gets its own line so full
-              tap-target padding can be applied without the two links
-              overlapping (#34). "Done" for a post-finish round lives in the
-              header (top-right). Edit is dropped in the read-only History view
-              (it lives in the header there). */}
-          <div className="text-center space-y-3">
-            {!viewingSaved && canEdit && (
-              <div>
-                <button
-                  onClick={handleEditRound}
-                  disabled={saving}
-                  className="inline-block py-3.5 -my-3.5 font-ui text-xs text-muted underline underline-offset-2 active:opacity-70 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-                >
-                  Edit round
-                </button>
-              </div>
-            )}
-            <div>
+          {/* Action bar. Post-finish: Share (outline) beside Done (filled) -
+              Done saves and goes home, the one thing every round ends with, so
+              it is the primary button. A round opened from History has nothing
+              to save, so Share takes the full width. Edit lives in the header
+              (pencil icon) on both flows. */}
+          <div className={viewingSaved ? '' : 'grid grid-cols-2 gap-3'}>
+            <button
+              onClick={handleShare}
+              disabled={sharing}
+              className="w-full py-4 px-3 rounded-sm border border-accent text-accent font-ui text-sm tracking-[0.1em] uppercase font-medium flex items-center justify-center gap-2 active:bg-accent/10 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 shrink-0" aria-hidden="true">
+                <path d="M12 3v12" />
+                <path d="M7 8l5-5 5 5" />
+                <path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" />
+              </svg>
+              {sharing ? 'Generating…' : 'Share'}
+            </button>
+            {!viewingSaved && (
               <button
-                onClick={handleShare}
-                disabled={sharing}
-                className="inline-block py-3.5 -my-3.5 font-ui text-xs text-muted underline underline-offset-2 active:opacity-70 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                onClick={handleGoHome}
+                disabled={saving}
+                className="w-full py-4 px-3 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn active:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
-                {sharing ? 'Generating…' : 'Share scorecard'}
+                {saving ? 'Saving…' : 'Done'}
               </button>
-            </div>
-            {!viewingSaved && canEdit && editNotice && (
-              <p role="alert" className="font-ui text-xs text-accent tracking-wide leading-relaxed">
-                {editNotice}
-              </p>
             )}
           </div>
+          {!viewingSaved && canEdit && editNotice && (
+            <p role="alert" className="font-ui text-xs text-accent tracking-wide leading-relaxed text-center">
+              {editNotice}
+            </p>
+          )}
 
           {!user && (
             <div className="text-center space-y-1 pt-2">
