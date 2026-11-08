@@ -4,30 +4,20 @@ import ParStepperGrid, { stepPar as stepParArray } from '../components/ParSteppe
 import { deriveHolePars } from '../utils/scores.js'
 
 // Editing and deleting a signed-in user's own course (#54/#71).
-// Reached only from Setup's course selector "Edit" link — GET /api/courses
+// Reached from Settings > My courses. GET /api/courses
 // has no single-course endpoint, so this mounts by fetching the full list
 // and finding the one course by id (the same request Setup itself already
 // makes, including `round_count` for the delete-confirmation copy).
-export default function CourseEdit({ navigate, params }) {
+export default function CourseEdit({ navigate, goBack, params }) {
   const courseId = params?.courseId ?? null
 
-  // Setup's own edit-flow context, forwarded through so the back/save
-  // actions can return to exactly the Setup screen the user came from
-  // (New Game / Add Past Round / Edit Round) rather than a generic one.
-  // Setup's own in-progress form state (player names, notes, date) is not
-  // preserved across this detour — the same trade-off already accepted for
-  // Setup's "Read the course rules" link.
-  const editRound  = params?.editRound ?? false
-  const pastRound  = params?.pastRound ?? false
-  const setupGame  = params?.game ?? null
-  const bruntsfield = params?.bruntsfield ?? false
-  const fromScorecard = params?.fromScorecard ?? false
-
-  // Where a successful save returns to — the exact Setup screen the user
-  // came from. No in-page back button any more (#89); the phone's own back
-  // navigation covers stepping back.
-  function backToSetup() {
-    navigate('setup', { editRound, pastRound, game: setupGame, bruntsfield, fromScorecard })
+  // Back and a successful save both return to Settings > My courses, which
+  // re-fetches on mount so the edit shows. goBack steps through real history
+  // (so Back from My courses doesn't land on this screen again); with nothing
+  // in-app behind it, it falls back to navigating to My courses directly.
+  function backToCourses() {
+    if (goBack) goBack('courses')
+    else navigate('courses')
   }
 
   const [loading, setLoading]     = useState(true)
@@ -124,7 +114,7 @@ export default function CourseEdit({ navigate, params }) {
         setSaving(false)
         return
       }
-      backToSetup()
+      backToCourses()
     } catch {
       setSaveError('That did not save - please try again')
       setSaving(false)
@@ -143,10 +133,9 @@ export default function CourseEdit({ navigate, params }) {
         setDeleting(false)
         return
       }
-      // The course (and every round on it) is gone — the safest landing spot
-      // is Home, not back into a Setup screen that might still be pointed at
-      // the now-deleted course id.
-      navigate('home')
+      // The course (and every round on it) is gone. Return to My courses,
+      // which re-fetches on mount, so the deleted course drops off the list.
+      backToCourses()
     } catch {
       setDeleteError('That did not delete - please try again')
       setDeleting(false)
@@ -171,7 +160,7 @@ export default function CourseEdit({ navigate, params }) {
   return (
     <div className="h-full bg-bg flex flex-col">
 
-      <PageHeader title={course?.name} subtitle="Edit course" />
+      <PageHeader title={course?.name} subtitle="Edit course" backLabel="← Courses" onBack={backToCourses} />
 
       <main className="flex-1 overflow-y-auto px-5 pt-6 pb-10 w-full space-y-3">
 

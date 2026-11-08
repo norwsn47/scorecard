@@ -1,5 +1,6 @@
 import { Component, useEffect, useState } from 'react'
 import CourseEdit            from './pages/CourseEdit.jsx'
+import Courses               from './pages/Courses.jsx'
 import History              from './pages/History.jsx'
 import Info                 from './pages/Info.jsx'
 import Login                from './pages/Login.jsx'
@@ -58,6 +59,7 @@ const PAGES = {
   settings:    Settings,
   bruntsfield: BruntsfieldCoursePage,
   courseEdit:  CourseEdit,
+  courses:     Courses,
 }
 
 // Pages whose URL slug differs from their key

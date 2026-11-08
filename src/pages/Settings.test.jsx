@@ -65,6 +65,20 @@ describe('Settings - About row (#83)', () => {
   })
 })
 
+describe('Settings - My courses row', () => {
+  it('opens the My courses page', async () => {
+    const user = userEvent.setup()
+    mountFetch()
+    const { navigate } = renderSettings()
+
+    await screen.findByRole('heading', { name: 'Settings' })
+    const row = screen.getByRole('button', { name: /^My courses/ })
+    expect(row).toHaveTextContent('Names and par for each hole')
+    await user.click(row)
+    expect(navigate).toHaveBeenCalledWith('courses', {})
+  })
+})
+
 describe('Settings (#4)', () => {
   it('renders the panel when signed in', async () => {
     mountFetch()
