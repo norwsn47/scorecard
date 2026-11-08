@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import PageHeader from '../components/PageHeader.jsx'
+import PlayerStar from '../components/PlayerStar.jsx'
 import { useAuth } from '../hooks/useAuth.jsx'
 
 // Self-serve profile and account controls for a signed-in user (#4).
@@ -19,7 +20,7 @@ const EMAIL_ERROR = {
 }
 
 export default function Settings({ navigate }) {
-  const { user, loading, updateProfile, deleteAccount } = useAuth()
+  const { user, loading, updateProfile, deleteAccount, logout } = useAuth()
 
   // Signed-out guard — bounce from an effect, never inline during render
   // (navigate() sets state on the parent). Deleting the account also drops
@@ -44,6 +45,32 @@ export default function Settings({ navigate }) {
   const [savingName, setSavingName] = useState(false)
   const [nameError, setNameError]   = useState(null)
   const [nameSaved, setNameSaved]   = useState(false)
+  // The name is set once and rarely changed, so it shows as a value with a
+  // small pencil; the field only opens on a deliberate tap. Focus moves into
+  // the field on open and back to the pencil on close (mirrors the email form).
+  const [nameEditing, setNameEditing] = useState(false)
+  const nameInputRef    = useRef(null)
+  const nameTriggerRef  = useRef(null)
+  const nameWasOpenRef  = useRef(false)
+  useEffect(() => {
+    if (nameEditing) nameInputRef.current?.focus()
+    else if (nameWasOpenRef.current) nameTriggerRef.current?.focus()
+    nameWasOpenRef.current = nameEditing
+  }, [nameEditing])
+
+  // Back out of editing without saving: restore the saved value.
+  function closeNameEdit() {
+    setNameEditing(false)
+    setName(user?.name ?? '')
+    setNameError(null)
+  }
+
+  // ── Sign out ──────────────────────────────────────────
+  // Same behaviour as the Information page's Sign out (#99): only once the
+  // server confirms does the context user drop, and the signed-out guard above
+  // then returns Home. A failure keeps the user signed in and says so.
+  const [signingOut, setSigningOut]       = useState(false)
+  const [signOutError, setSignOutError]   = useState(false)
 
   // ── Email ─────────────────────────────────────────────
   // The new-email form is collapsed behind a "Change email address" control
@@ -111,6 +138,18 @@ export default function Settings({ navigate }) {
   const trimmedName = name.trim()
   const nameUnchanged = trimmedName === (user.name ?? '')
 
+  async function handleSignOut() {
+    if (signingOut) return
+    setSignOutError(false)
+    setSigningOut(true)
+    try {
+      await logout()
+    } catch {
+      setSignOutError(true)
+      setSigningOut(false)
+    }
+  }
+
   async function handleSaveName() {
     if (savingName || nameUnchanged) return
     setNameError(null)
@@ -119,6 +158,7 @@ export default function Settings({ navigate }) {
     try {
       await updateProfile({ name: trimmedName })
       setNameSaved(true)
+      setNameEditing(false)
     } catch (err) {
       setNameError(err.message || 'That did not save - please try again')
     } finally {
@@ -178,151 +218,214 @@ export default function Settings({ navigate }) {
         backLabel="Home"
       />
 
-      <main className="flex-1 overflow-y-auto px-5 pt-6 pb-14 space-y-8 max-w-sm mx-auto w-full">
+      {/* Everything here is set once and rarely changed, so each value reads as
+          a quiet row with a small pencil rather than a full-width form; the
+          field opens only on a deliberate tap. Sign out and Delete sit at the
+          foot as plain links. */}
+      <main className="flex-1 overflow-y-auto px-5 pt-6 pb-14 max-w-sm mx-auto w-full flex flex-col gap-9">
 
-        {/* ── Name ── */}
-        <section className="space-y-3">
-          <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted">Your name</p>
-          <p className="font-ui text-sm text-muted leading-relaxed">
-            It fills in your name at the start of a new round and marks you with a small star on the scorecard. Leave it blank if you would rather not.
-          </p>
-          <input
-            type="text"
-            value={name}
-            onChange={e => { setName(e.target.value.slice(0, 60)); setNameError(null); setNameSaved(false) }}
-            placeholder="Your name"
-            maxLength={60}
-            aria-label="Your name"
-            className={fieldClass}
-          />
-          {nameError && <p role="alert" className="font-ui text-xs text-accent pl-1">{nameError}</p>}
-          {nameSaved && <p role="status" className="font-ui text-xs text-muted pl-1">Saved.</p>}
-          <button
-            onClick={handleSaveName}
-            disabled={savingName || nameUnchanged}
-            className={[
-              'w-full py-3 px-4 rounded-sm border border-accent text-accent font-ui text-sm tracking-[0.08em] uppercase font-medium',
-              'active:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
-              (savingName || nameUnchanged) ? 'opacity-40 cursor-not-allowed' : '',
-            ].join(' ')}
-          >
-            {savingName ? 'Saving…' : 'Save name'}
-          </button>
-        </section>
+        {/* ── Account: name and email ── */}
+        <section>
+          <h2 className="font-ui text-xs tracking-[0.12em] uppercase text-muted mb-1">Account</h2>
 
-        <div className="w-8 h-0.5 bg-border" />
-
-        {/* ── Email ── */}
-        <section className="space-y-3">
-          <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted">Email address</p>
-          <p className="font-ui text-sm text-muted leading-relaxed break-words">
-            Signing in uses <span className="text-text">{user.email}</span>.
-          </p>
-
-          {user.pending_email && (
-            <div className="rounded-md border border-border bg-bg-card px-4 py-3">
-              <p className="font-ui text-sm text-text break-words">
-                Waiting for confirmation of <span className="font-medium">{user.pending_email}</span>.
+          {!nameEditing ? (
+            <div className="flex items-center gap-3 py-3.5 border-b border-border">
+              <div className="flex-1 min-w-0 space-y-1">
+                <p className="font-ui text-xs text-muted">Name</p>
+                <p className="font-ui text-base text-text break-words">
+                  {user.name
+                    ? <>{user.name}<PlayerStar className="ml-1 text-accent" /></>
+                    : <span className="text-muted">Not set</span>}
+                </p>
+                <p className="font-ui text-xs text-muted leading-relaxed">Fills in new rounds and adds your star.</p>
+                {nameSaved && <p role="status" className="font-ui text-xs text-muted">Saved.</p>}
+              </div>
+              <button
+                ref={nameTriggerRef}
+                type="button"
+                onClick={() => { setNameSaved(false); setNameEditing(true) }}
+                aria-label="Edit name"
+                aria-expanded={false}
+                className="w-11 h-11 -mr-2.5 shrink-0 flex items-center justify-center rounded-md text-accent active:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              >
+                <PencilIcon />
+              </button>
+            </div>
+          ) : (
+            <div className="py-3.5 border-b border-border space-y-2.5">
+              <label htmlFor="settings-name" className="font-ui text-xs text-muted block">Name</label>
+              <input
+                id="settings-name"
+                ref={nameInputRef}
+                type="text"
+                value={name}
+                onChange={e => { setName(e.target.value.slice(0, 60)); setNameError(null); setNameSaved(false) }}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') handleSaveName()
+                  if (e.key === 'Escape' && !savingName) closeNameEdit()
+                }}
+                placeholder="Your name"
+                maxLength={60}
+                className={fieldClass}
+              />
+              <p className="font-ui text-xs text-muted leading-relaxed">
+                Fills in your name at the start of a new round and marks you with a small star on the scorecard. Leave it blank if you would rather not.
               </p>
-              <p className="font-ui text-xs text-muted mt-1 leading-relaxed">
-                Open the link we sent to that inbox to switch over. Until then you stay signed in with {user.email}.
-              </p>
+              {nameError && <p role="alert" className="font-ui text-xs text-accent pl-1">{nameError}</p>}
+              <div className="flex items-center gap-5">
+                <button
+                  type="button"
+                  onClick={handleSaveName}
+                  disabled={savingName || nameUnchanged}
+                  className="min-h-[44px] py-2.5 px-5 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold active:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                >
+                  {savingName ? 'Saving…' : 'Save'}
+                </button>
+                <button
+                  type="button"
+                  onClick={closeNameEdit}
+                  disabled={savingName}
+                  className="inline-block py-3 -my-3 font-ui text-sm text-muted underline underline-offset-2 active:opacity-70 disabled:opacity-40 disabled:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           )}
 
-          {!emailFormOpen ? (
-            <button
-              ref={emailTriggerRef}
-              type="button"
-              onClick={() => setEmailFormOpen(true)}
-              aria-expanded={false}
-              className={[
-                'w-full py-3 px-4 rounded-sm border border-accent text-accent font-ui text-sm tracking-[0.08em] uppercase font-medium',
-                'active:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
-              ].join(' ')}
-            >
-              Change email address
-            </button>
-          ) : (
-            <form onSubmit={handleSaveEmail} className="space-y-3">
-              <input
-                ref={emailInputRef}
-                type="email"
-                value={newEmail}
-                onChange={e => { setNewEmail(e.target.value); setEmailError(null); setEmailSent(false) }}
-                placeholder="you@example.com"
-                autoComplete="email"
-                aria-label="New email address"
-                className={fieldClass}
-              />
-              {emailError && <p role="alert" className="font-ui text-xs text-accent pl-1">{emailError}</p>}
-              {emailSent && (
-                <p role="status" className="font-ui text-xs text-muted pl-1 leading-relaxed">
-                  Check the new inbox for a confirmation link. Your address only changes once you open it.
-                </p>
-              )}
-              <button
-                type="submit"
-                disabled={savingEmail || !newEmail.trim()}
-                className={[
-                  'w-full py-3 px-4 rounded-sm border border-accent text-accent font-ui text-sm tracking-[0.08em] uppercase font-medium',
-                  'active:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
-                  (savingEmail || !newEmail.trim()) ? 'opacity-40 cursor-not-allowed' : '',
-                ].join(' ')}
-              >
-                {savingEmail ? 'Sending…' : 'Send confirmation link'}
-              </button>
-              <div>
-                <button
-                  type="button"
-                  onClick={closeEmailForm}
-                  disabled={savingEmail}
-                  className="inline-block py-3 -my-3 font-ui text-sm text-muted underline underline-offset-2 active:opacity-70 disabled:opacity-40 disabled:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-                >
-                  Keep my current email
-                </button>
+          {/* Email - the new-email form stays collapsed behind the pencil (#84)
+              and reveals in place on a deliberate tap. */}
+          <div className="py-3.5 border-b border-border space-y-3">
+            <div className="flex items-center gap-3">
+              <div className="flex-1 min-w-0 space-y-1">
+                <p className="font-ui text-xs text-muted">Email</p>
+                <p className="font-ui text-base text-text break-all">{user.email}</p>
+                <p className="font-ui text-xs text-muted">Used to sign in.</p>
               </div>
-            </form>
-          )}
-        </section>
+              {!emailFormOpen && (
+                <button
+                  ref={emailTriggerRef}
+                  type="button"
+                  onClick={() => setEmailFormOpen(true)}
+                  aria-label="Change email address"
+                  aria-expanded={false}
+                  className="w-11 h-11 -mr-2.5 shrink-0 flex items-center justify-center rounded-md text-accent active:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                >
+                  <PencilIcon />
+                </button>
+              )}
+            </div>
 
-        <div className="w-8 h-0.5 bg-border" />
+            {user.pending_email && (
+              <div className="rounded-md border border-border bg-bg-card px-4 py-3">
+                <p className="font-ui text-sm text-text break-words">
+                  Waiting for confirmation of <span className="font-medium">{user.pending_email}</span>.
+                </p>
+                <p className="font-ui text-xs text-muted mt-1 leading-relaxed">
+                  Open the link we sent to that inbox to switch over. Until then you stay signed in with {user.email}.
+                </p>
+              </div>
+            )}
+
+            {emailFormOpen && (
+              <form onSubmit={handleSaveEmail} className="space-y-3">
+                <input
+                  ref={emailInputRef}
+                  type="email"
+                  value={newEmail}
+                  onChange={e => { setNewEmail(e.target.value); setEmailError(null); setEmailSent(false) }}
+                  placeholder="you@example.com"
+                  autoComplete="email"
+                  aria-label="New email address"
+                  className={fieldClass}
+                />
+                {emailError && <p role="alert" className="font-ui text-xs text-accent pl-1">{emailError}</p>}
+                {emailSent && (
+                  <p role="status" className="font-ui text-xs text-muted pl-1 leading-relaxed">
+                    Check the new inbox for a confirmation link. Your address only changes once you open it.
+                  </p>
+                )}
+                <button
+                  type="submit"
+                  disabled={savingEmail || !newEmail.trim()}
+                  className={[
+                    'w-full py-3 px-4 rounded-sm border border-accent text-accent font-ui text-sm tracking-[0.08em] uppercase font-medium',
+                    'active:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
+                    (savingEmail || !newEmail.trim()) ? 'opacity-40 cursor-not-allowed' : '',
+                  ].join(' ')}
+                >
+                  {savingEmail ? 'Sending…' : 'Send confirmation link'}
+                </button>
+                <div>
+                  <button
+                    type="button"
+                    onClick={closeEmailForm}
+                    disabled={savingEmail}
+                    className="inline-block py-3 -my-3 font-ui text-sm text-muted underline underline-offset-2 active:opacity-70 disabled:opacity-40 disabled:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  >
+                    Keep my current email
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </section>
 
         {/* ── About ── */}
         {/* The header gear replaced the info icon for signed-in users (#83), so
             the Information page (rules, privacy, contact) is reached from here. */}
-        <section className="space-y-3">
-          <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted">About</p>
-          <p className="font-ui text-sm text-muted leading-relaxed">
-            About the app, the course rules, how your data is handled and how to get in touch.
-          </p>
-          <div>
-            <button
-              onClick={() => navigate('info', { from: 'settings' })}
-              className="inline-block py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-            >
-              Information
-            </button>
-          </div>
+        <section>
+          <h2 className="font-ui text-xs tracking-[0.12em] uppercase text-muted mb-1">About</h2>
+          <button
+            type="button"
+            onClick={() => navigate('info', { from: 'settings' })}
+            className="w-full min-h-[48px] py-2 flex items-center justify-between gap-3 border-b border-border text-left active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+          >
+            <span className="font-ui text-base text-text">Information</span>
+            <span className="flex items-center gap-1.5 font-ui text-xs text-muted">
+              Rules, privacy, contact
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4" aria-hidden="true">
+                <path d="M9 6l6 6-6 6" />
+              </svg>
+            </span>
+          </button>
         </section>
 
-        {/* ── Delete account ── */}
-        <section className="space-y-3">
-          <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted">Delete account</p>
-          <p className="font-ui text-sm text-muted leading-relaxed">
-            Removes your account and every round and course saved to it, on every device. This cannot be undone. Quick-play scores saved on this device are not part of your account and stay put.
-          </p>
+        <div className="flex-1" />
+
+        {/* ── Sign out and Delete account ── */}
+        <section className="space-y-6">
           <div>
             <button
+              type="button"
+              onClick={handleSignOut}
+              disabled={signingOut}
+              className="inline-block py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2 active:opacity-70 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            >
+              {signingOut ? 'Signing out…' : 'Sign out'}
+            </button>
+            {signOutError && (
+              <p role="alert" className="font-ui text-xs text-accent mt-3">
+                Couldn't sign out - check your connection and try again.
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
+            <button
+              type="button"
               onClick={() => { setDeleteError(null); setDeleteWord(''); setConfirmDelete(true) }}
-              className="inline-block py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="inline-block py-3 -my-3 font-ui text-sm text-muted underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               Delete my account
             </button>
+            <p className="font-ui text-xs text-muted leading-relaxed pt-1">
+              Removes your account and every round and course saved to it, on every device. This cannot be undone. Quick-play scores saved on this device are not part of your account and stay put.
+            </p>
+            {deleteError && !confirmDelete && (
+              <p role="alert" className="font-ui text-xs text-accent pl-1">{deleteError}</p>
+            )}
           </div>
-          {deleteError && !confirmDelete && (
-            <p role="alert" className="font-ui text-xs text-accent pl-1">{deleteError}</p>
-          )}
         </section>
 
       </main>
@@ -387,5 +490,16 @@ export default function Settings({ navigate }) {
       )}
 
     </div>
+  )
+}
+
+// Small pencil used for the "edit this value" affordance on the Name and Email
+// rows. Decorative: the button around it carries the accessible name.
+function PencilIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5" aria-hidden="true">
+      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4z" />
+      <path d="M14.5 5.5l3 3" />
+    </svg>
   )
 }
