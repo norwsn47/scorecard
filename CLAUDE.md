@@ -1,5 +1,5 @@
 # CLAUDE.md
-Last updated: 27 September 2026
+Last updated: 8 November 2026
 > Ground rules for this project. Read this at the start of every session.
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
@@ -47,7 +47,7 @@ Stack: Vite + React + Tailwind CSS · localStorage (quick-play) · Cloudflare Pa
 - Leaderboards or social features
 - Push notifications
 - Native mobile app (web only)
-- Admin tools or course management
+- Admin-side or global course management (a signed-in user viewing and editing their own courses via Settings > My courses is in scope)
 - A full sign-up/onboarding journey (name, home course and par captured at account creation) — lightweight name capture via Settings is not onboarding
 
 ### Deliberate product rules

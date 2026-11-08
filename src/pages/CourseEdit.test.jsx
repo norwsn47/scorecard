@@ -54,7 +54,7 @@ describe('CourseEdit (#54/#71)', () => {
     expect(navigate).toHaveBeenCalledWith('login')
   })
 
-  it('saves the edited name and par via PATCH, then returns to the calling Setup screen', async () => {
+  it('saves the edited name and par via PATCH, then returns to My courses', async () => {
     const user = userEvent.setup()
     const fetchMock = vi.fn()
       .mockResolvedValueOnce({ ok: true, json: async () => ({ courses: [course] }) })
@@ -62,7 +62,8 @@ describe('CourseEdit (#54/#71)', () => {
     global.fetch = fetchMock
     const navigate = vi.fn()
 
-    render(<CourseEdit navigate={navigate} params={{ courseId: 'c1', editRound: true, pastRound: false }} />)
+    const goBack = vi.fn()
+    render(<CourseEdit navigate={navigate} goBack={goBack} params={{ courseId: 'c1' }} />)
     await screen.findByDisplayValue('Bruntsfield')
 
     const nameInput = screen.getByPlaceholderText('Course name')
@@ -81,27 +82,34 @@ describe('CourseEdit (#54/#71)', () => {
       // Hole count is never sent — the API rejects it outright.
       expect(body.holes).toBeUndefined()
     })
-    await waitFor(() =>
-      expect(navigate).toHaveBeenCalledWith('setup', { editRound: true, pastRound: false, game: null, bruntsfield: false, fromScorecard: false })
-    )
+    await waitFor(() => expect(goBack).toHaveBeenCalledWith('courses'))
+    expect(navigate).not.toHaveBeenCalledWith('setup', expect.anything())
   })
 
-  it('forwards fromScorecard back to Setup on save, so its back button keeps saying "Scorecard" (#round-trip)', async () => {
+  it('the back button returns to My courses', async () => {
     const user = userEvent.setup()
-    const fetchMock = vi.fn()
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ courses: [course] }) })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ ok: true, id: 'c1' }) })
-    global.fetch = fetchMock
-    const navigate = vi.fn()
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ courses: [course] }) })
+    const goBack = vi.fn()
 
-    render(<CourseEdit navigate={navigate} params={{ courseId: 'c1', editRound: true, pastRound: false, fromScorecard: true }} />)
+    render(<CourseEdit navigate={vi.fn()} goBack={goBack} params={{ courseId: 'c1' }} />)
     await screen.findByDisplayValue('Bruntsfield')
 
+    await user.click(screen.getByRole('button', { name: '← Courses' }))
+    expect(goBack).toHaveBeenCalledWith('courses')
+  })
+
+  it('navigates straight to My courses on save when no goBack is available', async () => {
+    const user = userEvent.setup()
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ courses: [course] }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ ok: true, id: 'c1' }) })
+    const navigate = vi.fn()
+
+    render(<CourseEdit navigate={navigate} params={{ courseId: 'c1' }} />)
+    await screen.findByDisplayValue('Bruntsfield')
     await user.click(screen.getByRole('button', { name: /save changes/i }))
 
-    await waitFor(() =>
-      expect(navigate).toHaveBeenCalledWith('setup', { editRound: true, pastRound: false, game: null, bruntsfield: false, fromScorecard: true })
-    )
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('courses'))
   })
 
   it('shows a heads-up that saving will update the par on past rounds, once a par change is made', async () => {
@@ -145,7 +153,7 @@ describe('CourseEdit (#54/#71)', () => {
     expect(await screen.findByText('This will update the par shown on 1 previously recorded round.')).toBeInTheDocument()
   })
 
-  it('the delete confirmation states the round count before confirming, deletes, and returns home', async () => {
+  it('the delete confirmation states the round count before confirming, deletes, and returns to My courses', async () => {
     const user = userEvent.setup()
     const fetchMock = vi.fn()
       .mockResolvedValueOnce({ ok: true, json: async () => ({ courses: [course] }) })
@@ -166,6 +174,7 @@ describe('CourseEdit (#54/#71)', () => {
       expect(fetchMock.mock.calls[1][0]).toBe('/api/courses/c1')
       expect(fetchMock.mock.calls[1][1].method).toBe('DELETE')
     })
-    await waitFor(() => expect(navigate).toHaveBeenCalledWith('home'))
+    await waitFor(() => expect(navigate).toHaveBeenCalledWith('courses'))
+    expect(navigate).not.toHaveBeenCalledWith('home')
   })
 })

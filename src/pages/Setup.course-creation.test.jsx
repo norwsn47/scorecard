@@ -10,7 +10,7 @@ import { AuthProvider } from '../hooks/useAuth.jsx'
 // drivable by userEvent.selectOptions / fireEvent.change in jsdom (a native
 // select fires a real "selection changed" change event, not a "command"
 // one), which left the 9/18 hole-count radiogroup and the par stepper's 2-7
-// clamp untested. Refactored so "+ New course" is a standalone button beside
+// clamp untested. Refactored so "+ New course" is a standalone text link under
 // the select — same trigger, ordinary click, now testable directly.
 
 const coursesResponse = {
@@ -49,7 +49,7 @@ async function enterCreationMode() {
 }
 
 describe('Setup — "+ New course" button (#35)', () => {
-  it('sits beside the select, which now holds only real course options', async () => {
+  it('sits under the select, which holds only real course options, with no Edit course link', async () => {
     renderSetup()
 
     const select = await screen.findByDisplayValue('Course A')
@@ -57,7 +57,7 @@ describe('Setup — "+ New course" button (#35)', () => {
     // No more sentinel option inside the select itself.
     expect(screen.queryByRole('option', { name: /new course/i })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: /new course/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Edit course' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Edit course' })).not.toBeInTheDocument()
   })
 
   it('clicking "+ New course" enters creation mode and shows the radiogroup and par stepper', async () => {

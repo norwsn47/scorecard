@@ -369,6 +369,22 @@ export default function Settings({ navigate }) {
               </form>
             )}
           </div>
+
+          {/* My courses - tap-through to the signed-in user's own courses
+              (names and par). Same row shape as About > Information. */}
+          <button
+            type="button"
+            onClick={() => navigate('courses', {})}
+            className="w-full min-h-[56px] py-2 flex items-center justify-between gap-3 border-b border-border text-left active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+          >
+            <span className="min-w-0">
+              <span className="block font-ui text-base text-text">My courses</span>
+              <span className="block font-ui text-xs text-muted">Names and par for each hole</span>
+            </span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 shrink-0 text-muted" aria-hidden="true">
+              <path d="M9 6l6 6-6 6" />
+            </svg>
+          </button>
         </section>
 
         {/* ── About ── */}

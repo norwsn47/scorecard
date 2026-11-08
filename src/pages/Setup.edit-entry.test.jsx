@@ -1,8 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { render, screen } from '@testing-library/react'
 import Setup from './Setup.jsx'
-import CourseEdit from './CourseEdit.jsx'
 import { AuthProvider } from '../hooks/useAuth.jsx'
 
 // Covers the two Setup-side changes needed so Summary's Edit can skip
@@ -68,67 +66,5 @@ describe('Setup - back label names where "Edit game setup" was opened from', () 
   it('ignores fromScorecard outside edit mode (New Game never reads it)', () => {
     renderSetup({ fromScorecard: true })
     expect(screen.queryByRole('button', { name: '← Scorecard' })).not.toBeInTheDocument()
-  })
-})
-
-describe('Setup - fromScorecard survives a course-edit detour (#round-trip)', () => {
-  // A DB round's course selector, reached with fromScorecard: true, offers an
-  // "Edit" link onto CourseEdit.jsx — that detour used to drop fromScorecard,
-  // so Setup came back mislabelled "← Summary" even though Scorecard was the
-  // real step back. Runs the actual Setup -> CourseEdit -> Setup round trip.
-  const dbGame = {
-    id: 'g1',
-    _fromDb: true,
-    players: ['Ann'],
-    scores: { Ann: [3, 4] },
-    holes: 2,
-    holesPlayed: 2,
-    completedAt: '2026-08-01T12:00:00.000Z',
-    holePars: [3, 3],
-    courseId: 'c1',
-    courseName: 'Some Course',
-  }
-  const course = { id: 'c1', name: 'Some Course', holes: 2, hole_pars: JSON.stringify([3, 3]), is_default: 1, round_count: 1 }
-
-  function mockApi() {
-    global.fetch = vi.fn(url => {
-      if (String(url).includes('/api/auth/me')) {
-        return Promise.resolve({ ok: true, json: async () => ({ user: { id: 'u1', email: 'a@b.co', name: 'Ann' } }) })
-      }
-      if (String(url).startsWith('/api/courses')) {
-        return Promise.resolve({ ok: true, json: async () => ({ courses: [course] }) })
-      }
-      return Promise.reject(new Error(`unexpected fetch: ${url}`))
-    })
-  }
-
-  it('forwards fromScorecard onto the course "Edit" link, and CourseEdit hands it back on save', async () => {
-    const user = userEvent.setup()
-    mockApi()
-    const setupNavigate = vi.fn()
-    const first = render(
-      <AuthProvider>
-        <Setup navigate={setupNavigate} goBack={vi.fn()} params={{ editRound: true, game: dbGame, fromScorecard: true }} />
-      </AuthProvider>,
-    )
-
-    await user.click(await screen.findByRole('button', { name: 'Edit course' }))
-    expect(setupNavigate).toHaveBeenCalledWith('courseEdit', expect.objectContaining({ courseId: 'c1', fromScorecard: true }))
-    const [, courseEditParams] = setupNavigate.mock.calls.find(([page]) => page === 'courseEdit')
-    first.unmount()
-
-    const courseEditNavigate = vi.fn()
-    const second = render(<CourseEdit navigate={courseEditNavigate} params={courseEditParams} />)
-    await user.click(await screen.findByRole('button', { name: /save changes/i }))
-
-    await waitFor(() =>
-      expect(courseEditNavigate).toHaveBeenCalledWith('setup', expect.objectContaining({ fromScorecard: true })),
-    )
-    const [, setupParams] = courseEditNavigate.mock.calls.find(([page]) => page === 'setup')
-    second.unmount()
-
-    renderSetup(setupParams)
-    expect(await screen.findByRole('button', { name: '← Scorecard' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: '← Summary' })).not.toBeInTheDocument()
   })
 })
