@@ -524,7 +524,10 @@ export default function Summary({ navigate, params }) {
         {/* Read-only scorecard. The vs-par tally lives in the same table
             as extra rows below the totals so its columns stay locked to the
             player columns above, even when the grid scrolls sideways. */}
-        <div className="flex-1 overflow-y-auto overflow-x-auto mt-3 pb-2">
+        {/* No bottom padding here: the sticky Total row pins to the scroll
+            box's edge, so any padding below it leaves a strip where the hole
+            rows show through as they scroll underneath. */}
+        <div className="flex-1 overflow-y-auto overflow-x-auto mt-3">
           <table className="w-full min-w-max border-collapse">
             <thead>
               <tr className="border-b border-border bg-bg-card">
@@ -750,13 +753,14 @@ export default function Summary({ navigate, params }) {
           {/* Action bar. Post-finish: Share (outline) beside Done (filled) -
               Done saves and goes home, the one thing every round ends with, so
               it is the primary button. A round opened from History has nothing
-              to save, so Share takes the full width. Edit lives in the header
+              to save, so Share takes the full width and is slimmer, leaving more
+              of the screen for the scorecard. Edit lives in the header
               (pencil icon) on both flows. */}
           <div className={viewingSaved ? '' : 'grid grid-cols-2 gap-3'}>
             <button
               onClick={handleShare}
               disabled={sharing}
-              className="w-full py-4 px-3 rounded-sm border border-accent text-accent font-ui text-sm tracking-[0.1em] uppercase font-medium flex items-center justify-center gap-2 active:bg-accent/10 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className={`w-full ${viewingSaved ? 'py-2.5' : 'py-4'} px-3 rounded-sm border border-accent text-accent font-ui text-sm tracking-[0.1em] uppercase font-medium flex items-center justify-center gap-2 active:bg-accent/10 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40`}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 shrink-0" aria-hidden="true">
                 <path d="M12 3v12" />
