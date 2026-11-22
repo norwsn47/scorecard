@@ -27,7 +27,7 @@ export default function BruntsfieldCoursePage({ navigate }) {
 
         {/* Heading row — h1 + info icon inline, icon aligns to first line */}
         <div className="flex items-start -mr-2.5">
-          <h1 className="font-display text-[42px] italic text-text leading-[1.1] text-left flex-1">
+          <h1 className="type-display text-text text-left flex-1">
             <span className="whitespace-nowrap">Bruntsfield Short</span><br />Hole Scorecard
           </h1>
           <button
@@ -42,7 +42,7 @@ export default function BruntsfieldCoursePage({ navigate }) {
           </button>
         </div>
 
-        <p className="font-display italic text-base text-text text-left mt-2">
+        <p className="type-body text-text text-left mt-2">
           Golf played here since 1456
         </p>
 
@@ -50,12 +50,12 @@ export default function BruntsfieldCoursePage({ navigate }) {
 
         {/* Numbered list */}
         <div className="grid grid-cols-[1.5rem_1fr] gap-x-3 gap-y-2">
-          <span className="font-ui text-base text-accent font-semibold text-right">1</span>
-          <span className="font-ui text-base text-muted">No sign-up, no faff - just golf</span>
-          <span className="font-ui text-base text-accent font-semibold text-right">2</span>
-          <span className="font-ui text-base text-muted">Every hole, as you play it</span>
-          <span className="font-ui text-base text-accent font-semibold text-right">3</span>
-          <span className="font-ui text-base text-muted">Share your card when you're done</span>
+          <span className="type-strong text-accent text-right">1</span>
+          <span className="type-body text-muted">No sign-up, no faff - just golf</span>
+          <span className="type-strong text-accent text-right">2</span>
+          <span className="type-body text-muted">Every hole, as you play it</span>
+          <span className="type-strong text-accent text-right">3</span>
+          <span className="type-body text-muted">Share your card when you're done</span>
         </div>
       </header>
 
@@ -65,10 +65,10 @@ export default function BruntsfieldCoursePage({ navigate }) {
         {activeGame && (
           <button
             onClick={() => navigate('scorecard')}
-            className="w-full py-3 px-4 rounded-sm border border-accent text-accent font-ui text-sm tracking-[0.08em] uppercase font-medium flex items-center justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="w-full py-3 px-4 rounded-sm border border-accent text-accent type-strong flex items-center justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
-            <span>Resume Game</span>
-            <span className="text-xs text-muted normal-case tracking-normal font-normal truncate max-w-[160px]">
+            <span>Resume game</span>
+            <span className="type-small text-muted truncate max-w-[160px]">
               {activeGame.name || activeGame.players?.join(', ')}
             </span>
           </button>
@@ -76,21 +76,21 @@ export default function BruntsfieldCoursePage({ navigate }) {
 
         <button
           onClick={() => { track('New Game Started'); navigate('setup', { bruntsfield: true }) }}
-          className="w-full py-4 px-6 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn active:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+          className="w-full py-4 px-6 rounded-sm bg-accent text-bg type-strong shadow-btn active:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
         >
-          New Game
+          New game
         </button>
 
         <button
           onClick={() => setShowMap(true)}
-          className="w-full py-4 px-6 rounded-sm border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+          className="w-full py-4 px-6 rounded-sm border border-border text-text type-strong active:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
         >
           View Course Map
         </button>
 
         <button
           onClick={() => navigate('rules', { from: 'bruntsfield' })}
-          className="w-full py-4 px-6 rounded-sm border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+          className="w-full py-4 px-6 rounded-sm border border-border text-text type-strong active:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
         >
           Course Rules
         </button>
@@ -98,9 +98,9 @@ export default function BruntsfieldCoursePage({ navigate }) {
         {user && (
           <button
             onClick={() => navigate('history', { bruntsfield: true })}
-            className="w-full py-4 px-6 rounded-sm border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="w-full py-4 px-6 rounded-sm border border-border text-text type-strong active:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
-            Past Rounds
+            Past rounds
           </button>
         )}
 
@@ -108,7 +108,7 @@ export default function BruntsfieldCoursePage({ navigate }) {
           <div className="text-center">
             <button
               onClick={() => navigate('summary', { game: lastGame })}
-              className="inline-block py-3 -my-3 font-ui text-xs text-muted active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="inline-block py-3 -my-3 type-small-strong text-muted active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               Last round:{' '}
               <span className="underline underline-offset-2">
@@ -122,7 +122,7 @@ export default function BruntsfieldCoursePage({ navigate }) {
           <div className="pt-4 text-center">
             <button
               onClick={() => navigate('login')}
-              className="inline-block py-3 -my-3 font-ui text-xs text-accent active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="inline-block py-3 -my-3 type-small-strong text-accent active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               Want to save your scores? <span className="underline underline-offset-2">Sign in</span>
             </button>
@@ -134,7 +134,7 @@ export default function BruntsfieldCoursePage({ navigate }) {
         <div className="pt-4 text-center">
           <button
             onClick={() => { track('Bruntsfield Home Link Clicked'); navigate('home') }}
-            className="inline-block py-3 -my-3 font-ui text-xs text-muted active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="inline-block py-3 -my-3 type-small-strong text-muted active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             ← Golf Scorecard home
           </button>

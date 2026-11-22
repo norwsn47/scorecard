@@ -135,7 +135,7 @@ describe('Home — ?email= confirm-email banner', () => {
     await waitFor(() => expect(screen.queryByRole('status')).not.toBeInTheDocument())
 
     await user.click(screen.getByRole('button', { name: 'toggle-home' })) // remount Home
-    await screen.findByRole('button', { name: 'New Game' })
+    await screen.findByRole('button', { name: 'New game' })
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
   })
 
@@ -144,7 +144,7 @@ describe('Home — ?email= confirm-email banner', () => {
     mountFetch(null)
     renderHome()
 
-    await screen.findByRole('button', { name: 'New Game' })
+    await screen.findByRole('button', { name: 'New game' })
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
     expect(window.location.search).toBe('?email=weird')
   })

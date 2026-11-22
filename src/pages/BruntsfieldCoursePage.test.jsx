@@ -5,7 +5,7 @@ import BruntsfieldCoursePage from './BruntsfieldCoursePage.jsx'
 import { AuthProvider } from '../hooks/useAuth.jsx'
 
 // Covers #78: the three conditional foot-of-page links (active game /
-// "Resume Game", signed-out "Last round", signed-in "Past Rounds") and the
+// "Resume game", signed-out "Last round", signed-in "Past rounds") and the
 // always-present "← Golf Scorecard home" link, including its track() call.
 
 function mountFetch(user = null) {
@@ -35,24 +35,24 @@ beforeEach(() => {
 })
 
 describe('BruntsfieldCoursePage (#78)', () => {
-  it('signed out, no active game, no last round: shows New Game and the sign-in prompt, not Resume/Last round', async () => {
+  it('signed out, no active game, no last round: shows New game and the sign-in prompt, not Resume/Last round', async () => {
     mountFetch(null)
     renderPage()
 
-    await screen.findByRole('button', { name: 'New Game' })
-    expect(screen.queryByRole('button', { name: /Resume Game/ })).not.toBeInTheDocument()
+    await screen.findByRole('button', { name: 'New game' })
+    expect(screen.queryByRole('button', { name: /Resume game/ })).not.toBeInTheDocument()
     expect(screen.queryByText(/Last round:/)).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Sign in/ })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Past Rounds' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Past rounds' })).not.toBeInTheDocument()
   })
 
-  it('shows Resume Game when an active game is in progress and navigates to the scorecard on tap', async () => {
+  it('shows Resume game when an active game is in progress and navigates to the scorecard on tap', async () => {
     const user = userEvent.setup()
     localStorage.setItem('gt_active_game', JSON.stringify(activeGame))
     mountFetch(null)
     const { navigate } = renderPage()
 
-    const resume = await screen.findByRole('button', { name: /Resume Game/ })
+    const resume = await screen.findByRole('button', { name: /Resume game/ })
     expect(resume).toHaveTextContent('Saturday four')
 
     await user.click(resume)
@@ -72,15 +72,15 @@ describe('BruntsfieldCoursePage (#78)', () => {
     expect(navigate).toHaveBeenCalledWith('summary', { game: completedGame })
   })
 
-  it('signed in: shows Past Rounds instead of the sign-in prompt or last-round link, and navigates on tap', async () => {
+  it('signed in: shows Past rounds instead of the sign-in prompt or last-round link, and navigates on tap', async () => {
     const user = userEvent.setup()
     // Would be picked up as "last round" if the user were signed out —
-    // signed in, it must not surface here (Past Rounds covers it instead).
+    // signed in, it must not surface here (Past rounds covers it instead).
     localStorage.setItem('gt_completed_games', JSON.stringify([completedGame]))
     mountFetch({ id: 'u1', email: 'jane@example.com' })
     const { navigate } = renderPage()
 
-    const pastRounds = await screen.findByRole('button', { name: 'Past Rounds' })
+    const pastRounds = await screen.findByRole('button', { name: 'Past rounds' })
     expect(screen.queryByText(/Last round:/)).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Sign in/ })).not.toBeInTheDocument()
 

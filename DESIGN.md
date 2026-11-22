@@ -68,7 +68,7 @@ Not a state colour. `field` is the *resting* edge of a field. Error / duplicate 
 
 The app is otherwise **one brand colour doing all the work** (Outbuild principle 3). `under-par` and `over-par` are the single, deliberate exception, and they are tightly fenced:
 
-- They colour **vs-par deltas only** — the per-hole superscript (`+1` / `-1` / `E`) and the round total-to-par (`41 (+5)`). Nothing else.
+- They colour **vs-par deltas only** — the per-hole inline delta (`+1` / `-1` / `E`) and the round total-to-par (`41 (+5)`). Nothing else.
 - They are **never** used for buttons, borders, icons, links, backgrounds, focus rings, or any interactive or chrome role. A golfer must never have to wonder whether a green thing is tappable.
 - **Level par (`E`) gets no colour of its own** — it inherits whatever text colour its context already uses (`text`, `muted`, `accent` in a winner column, or white in the active cell).
 - The bracketed par **label** on the hole number (e.g. "3 (3)", see "Score cells" above) is *not* a delta — it stays uncoloured and is unaffected by this exception.
@@ -128,7 +128,7 @@ Two registers. The display font is used once, deliberately, for a specific edito
 
 ### Type utilities (redesign, stage 1)
 
-Eight type utilities are defined in `src/styles/index.css` (in `@layer components`), taken from the `textStyles` in `tokens.json`. Sizes, line heights and tracking are in **rem**, so they scale with the 18px root used in the desktop frame. **They are defined and not yet used by any component.** Stage 2 replaces the ad hoc type classes below with them. Serif is for Display and Title only.
+Eight type utilities are defined in `src/styles/index.css` (in `@layer components`), taken from the `textStyles` in `tokens.json`. Sizes, line heights and tracking are in **rem**, so they scale with the 18px root used in the desktop frame. **They are the only way to style text.** Stage 2 replaced every ad hoc size, weight, tracking and uppercase class in `src/` with them, and `src/styles/type-guard.test.js` fails on raw `text-xs|sm|base|lg|xl|2xl...`, `uppercase` and `tracking-*` classes in `src/**/*.jsx` (the only exceptions are the +/- glyphs on the round control buttons and the par stepper, which are icon sizes, not text). Serif is for Display and Title only. Only Label caps is uppercase.
 
 | Utility | Font | Weight | Size / line height | Tracking | Case |
 |---|---|---|---|---|---|
@@ -145,29 +145,28 @@ The two font-weight ranges loaded (Cormorant Garamond 400 to 600, Inter 400 to 6
 
 ### Editorial register — Cormorant Garamond italic
 
-| Context | Classes |
+Serif is for Display and Title only. Nothing else in the app uses it.
+
+| Context | Utility |
 |---|---|
-| App name (Home) | `font-display text-5xl italic text-text` |
-| Page header title | `font-display text-2xl italic text-text` |
-| Course name (Summary header, Course Map modal) | `font-display text-2xl italic text-text` / `text-xl` |
-| Winner callout name (Summary) | `font-display text-sm italic text-accent` |
+| App name (Home) | `type-display text-text` |
+| Page header title, course name (Summary header, Course Map modal), section headings set in serif | `type-title text-text` |
 
 **Home screen alignment exception:** The `h1` title and subtitle on the Home screen are left-aligned (`text-left`). This is a deliberate departure from the centred page-header title used on every other screen. The Home screen follows a printed-document convention.
 
 ### UI register — Inter
 
-| Context | Classes |
+Everything that is not Display or Title is Inter, through one of six utilities. Only Label caps is uppercase; buttons, header actions and navigation (Back) are sentence case.
+
+| Context | Utility |
 |---|---|
-| Micro labels / table headers | `font-ui text-xs tracking-[0.12em] uppercase text-muted` |
-| Primary button label | `font-ui text-sm tracking-[0.1em] uppercase font-semibold` |
-| Secondary button label | `font-ui text-sm tracking-[0.1em] uppercase font-medium` |
-| Navigation (Back) | `font-ui text-sm tracking-[0.08em] uppercase text-muted` |
-| Body / descriptive copy | `font-ui text-sm text-muted` |
-| Input text | `font-ui text-base text-text` |
-| Total score | `font-ui text-base font-semibold text-text` |
-| Score cell | `font-ui text-sm` |
-| Score-vs-par delta (superscript) | `font-ui text-[0.6em] align-super font-normal` — smallest legible, never bold; see "Score vs par" |
-| Error / banner | `font-ui text-xs tracking-wide` |
+| Body and descriptive copy, input text, the total score | `type-body` (`type-strong` where it needs emphasis, 500) |
+| Buttons, header actions (Finish, Save), navigation (Back), emphasised labels, score cells | `type-strong` or `type-small-strong`, sentence case |
+| Secondary copy, helper text, table cells, error and banner text | `type-small` (`type-small-strong` for emphasis) |
+| Score-vs-par delta, fine print | `type-caption` (12px, 500, tracking 0.2px); see "Score vs par" |
+| Micro labels and table headers | `type-label-caps` (the only uppercase style), `text-muted` |
+
+Colour is applied separately with the colour tokens (`text-text`, `text-muted`, `text-accent`); the utilities set family, size, line height, weight, tracking and case only.
 
 ### Caveat — desktop note only
 `font-family: 'Caveat', cursive; font-size: 1.15rem; line-height: 1.35` — rotated 5deg, muted colour, opacity 0.75. Never used inside the app itself.
@@ -499,14 +498,14 @@ table-fixed border-collapse w-full
 | Active row | `bg-[rgba(26,67,41,0.05)]` |
 | Active cell | `bg-accent text-white font-semibold` |
 | Score cell (element) | A real `<button type="button">` filling the `td` (`block w-full py-3 px-1`, `td` is `p-0`), labelled "Hole N, par P, Player: score" (or "no score yet") with `aria-current="true"` on the active cell, so any hole can be reached and corrected by keyboard or screen reader (#96). Focus ring is inset: `focus-visible:ring-2 focus-visible:ring-inset`, `ring-accent/40` on a normal cell and `ring-white/80` on the accent-filled active cell. |
-| Hole # (active row) | `text-accent font-semibold` |
+| Hole # (active row) | `text-accent` (the bold weight was dropped in stage 2 with the type utilities; stage 7 may restore it per plan 5e) |
 | Hole # (inactive) | `text-muted` |
-| Hole # + par | hole number `font-semibold`, then the hole's par in brackets `font-normal ml-0.5` at the same size — e.g. **3** (3). The bracketed par **label** carries no colour of its own; it inherits the cell colour (muted / accent). Same treatment on the live grid and the read-only Summary table, and mirrored (bold hole number + normal-weight bracket, same muted colour) on the hand-drawn share canvas (`src/utils/share.js`) since 5 September 2026. Replaces the earlier raised `(N)` superscript. *Deltas-only exception:* the par carries no colour rule holds for this par **label** — but score-vs-par **deltas** (the `+1` / `-1` / `E` superscript and the round total-to-par) do take a semantic colour. See "Score vs par" below (the "bracketed par label" it refers to is this row). |
+| Hole # + par | hole number `type-strong`, then the hole's par in brackets `type-caption ml-0.5` (12px, so smaller than the number; stage 2 of the redesign) — e.g. **3** (3). The bracketed par **label** carries no colour of its own; it inherits the cell colour (muted / accent). Same treatment on the live grid and the read-only Summary table, and mirrored (bold hole number + normal-weight bracket, same muted colour) on the hand-drawn share canvas (`src/utils/share.js`) since 5 September 2026. Replaces the earlier raised `(N)` superscript. *Deltas-only exception:* the par carries no colour rule holds for this par **label** — but score-vs-par **deltas** (the `+1` / `-1` / `E` inline delta and the round total-to-par) do take a semantic colour. See "Score vs par" below (the "bracketed par label" it refers to is this row). |
 | Empty score | `—` (em dash) |
 
 ### Score vs par
 
-The one place the scorecard leaves pencil-and-paper monochrome. Applies to score-vs-par **deltas** only: the live per-hole superscript, the read-only Summary / History superscript, and the round total-to-par `41 (+5)`. It does **not** apply to the bracketed par *label* on the hole number — that stays uncoloured.
+The one place the scorecard leaves pencil-and-paper monochrome. Applies to score-vs-par **deltas** only: the live per-hole inline delta, the read-only Summary / History inline delta, and the round total-to-par `41 (+5)`. It does **not** apply to the bracketed par *label* on the hole number — that stays uncoloured.
 
 **Notation** (owned by the shared `formatToPar` helper, repeated here for the visual spec):
 - Under par: `-N` (`-1`, `-2`) — rendered in `under-par` `#2C6B3C`.
@@ -514,11 +513,11 @@ The one place the scorecard leaves pencil-and-paper monochrome. Applies to score
 - Over par: `+N` (`+1`, `+5`) — always a leading `+` — rendered in `over-par` `#9B3A24`.
 - Hole not yet scored: nothing shown. No placeholder, no `E`.
 
-**Per-hole indicator (grid + Summary + share).** A superscript trailing the score digit — `font-ui text-[0.6em] align-super font-normal`, never bold, `ml-[1px]`. Smallest legible size; the digit stays the workhorse and the delta annotates it (micro register). Superscript rather than the inline `(par)` bracket used on the hole number, because up to six player columns share a row and `3 (+1)` will not fit — this is the one deliberate divergence from the hole number's inline treatment, justified by column width.
+**Per-hole indicator (grid + Summary + share).** An inline Caption delta on the same line as the score digit, after a small gap: `9 +6`. `type-caption` (12px, medium, tracking 0.2px), rendered by the shared `ParDelta` component. It is no longer a raised superscript (redesign decision 8). The digit stays the workhorse and the delta annotates it. The bracket form is not used in the grid, because up to six player columns share a row and `3 (+1)` will not fit.
 
-**Round total-to-par (totals bar, Summary totals row, finish dialog, share).** In brackets, on the total's own line: `41 (+5)`. Not superscript. `DNF` stays as the sub-label beneath where it applies. The bracket's digits and sign take the semantic colour; the surrounding total stays `text` / `accent` as today. Before a player has scored, the bracket is omitted entirely. Summary and History used to also show an `Av. X` (average strokes) sub-line here — dropped (#70, flagged as not interesting): the bracket already carries the same total-to-par information the average line duplicated.
-- Full size (matches the total) on the surfaces with room: the Summary totals row, the finish dialog, the share image.
-- **Surface exception — the live Scorecard totals bar:** the bracket drops to `text-sm font-normal` (and the cell gets `leading-tight`). At 390px with 5–6 players the column is ~47px and a full-size `41 (+5)` wraps to two lines; the smaller bracket keeps it to one. This is the one documented size exception.
+**Round total-to-par (totals bar, Summary totals row, finish dialog, share).** In brackets, on the total's own line: `41 (+5)`, also `type-caption` (the bracket form of `ParDelta`, used in History and every totals row). Not superscript. `DNF` stays as the sub-label beneath where it applies. The bracket's digits and sign take the semantic colour; the surrounding total stays `text` / `accent` as today. Before a player has scored, the bracket is omitted entirely. Summary and History used to also show an `Av. X` (average strokes) sub-line here — dropped (#70, flagged as not interesting): the bracket already carries the same total-to-par information the average line duplicated.
+- The share image is hand-drawn and sizes its own bracket to match the total.
+- The live Scorecard totals bar uses the same Caption bracket as every other surface; there is no longer a separate size exception there.
 
 **Override rule (one sentence).** A vs-par delta keeps its semantic colour on every surface where the background is the cream ground or the card — *including* inside a winner's accent-green column, where the delta stays `under-par` / `over-par` and only a level `E` inherits the column's green — and drops the semantic colour *only* inside a filled cell (the live active cell, white-on-`accent`), where the delta takes that cell's inverted white text and the leading `+` / `-` sign carries the direction.
 

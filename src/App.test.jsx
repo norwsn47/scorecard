@@ -43,9 +43,9 @@ describe('App router — SPA navigation', () => {
 
     // Scorecard's no-game guard runs in an effect and calls App's real
     // (setState-driven) navigate — an inline call during render would throw
-    // the cross-component-update error. The "New Game" button is on Home,
+    // the cross-component-update error. The "New game" button is on Home,
     // never on the Scorecard grid.
-    expect(await screen.findByRole('button', { name: 'New Game' })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'New game' })).toBeInTheDocument()
     expect(window.location.pathname).toBe('/')
   })
 
@@ -58,7 +58,7 @@ describe('App router — SPA navigation', () => {
     // Summary's no-round guard runs in an effect. An inline navigate() during
     // render makes React log "Cannot update a component while rendering a
     // different component" - that must not happen.
-    expect(await screen.findByRole('button', { name: 'New Game' })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'New game' })).toBeInTheDocument()
     expect(window.location.pathname).toBe('/')
     const renderPhaseWarnings = errorSpy.mock.calls.filter(args =>
       args.some(a => typeof a === 'string' && a.includes('Cannot update a component')))
@@ -71,8 +71,8 @@ describe('App router — SPA navigation', () => {
     render(<App />)
 
     // Settings' signed-out guard runs in an effect and calls App's real
-    // navigate — the "New Game" button only exists on Home.
-    expect(await screen.findByRole('button', { name: 'New Game' })).toBeInTheDocument()
+    // navigate — the "New game" button only exists on Home.
+    expect(await screen.findByRole('button', { name: 'New game' })).toBeInTheDocument()
     expect(window.location.pathname).toBe('/')
   })
 
@@ -105,7 +105,7 @@ describe('App router — SPA navigation', () => {
     const before = window.history.length
 
     render(<App />)
-    expect(await screen.findByRole('button', { name: 'New Game' })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'New game' })).toBeInTheDocument()
 
     // Same number of entries, and the entry now describes Home (not /summary).
     expect(window.history.length).toBe(before)
@@ -118,7 +118,7 @@ describe('App router — SPA navigation', () => {
     const before = window.history.length
 
     render(<StrictMode><App /></StrictMode>)
-    expect(await screen.findByRole('button', { name: 'New Game' })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: 'New game' })).toBeInTheDocument()
 
     expect(window.history.length).toBe(before)
     expect(window.history.state).toMatchObject({ page: 'home', depth: 0 })
@@ -143,7 +143,7 @@ describe('App router — SPA navigation', () => {
   it('ordinary navigation still pushes a new entry and deepens the history (#109 does not change it)', async () => {
     const user = userEvent.setup()
     render(<App />)
-    const newGame = await screen.findByRole('button', { name: 'New Game' })
+    const newGame = await screen.findByRole('button', { name: 'New game' })
     const before = window.history.length
 
     await user.click(newGame)
@@ -154,7 +154,7 @@ describe('App router — SPA navigation', () => {
 
   it('restores a different page on popstate (#43)', async () => {
     render(<App />)
-    await screen.findByRole('button', { name: 'New Game' })
+    await screen.findByRole('button', { name: 'New game' })
 
     browserPopTo('info')
 
@@ -189,7 +189,7 @@ describe('App - background sync of pending rounds (#95)', () => {
 
     render(<StrictMode><App /></StrictMode>)
 
-    await screen.findByRole('button', { name: 'New Game' })
+    await screen.findByRole('button', { name: 'New game' })
     await act(async () => { await new Promise(resolve => setTimeout(resolve, 0)) })
     expect(posts()).toHaveLength(1)
     expect(getCompletedGames().find(g => g.id === 'pending-1').synced).toBe(true)
@@ -198,7 +198,7 @@ describe('App - background sync of pending rounds (#95)', () => {
   it('never posts a round when signed out', async () => {
     seedPendingRound()
     render(<App />)
-    await screen.findByRole('button', { name: 'New Game' })
+    await screen.findByRole('button', { name: 'New game' })
     await act(async () => { await new Promise(resolve => setTimeout(resolve, 0)) })
     expect(posts()).toHaveLength(0)
   })

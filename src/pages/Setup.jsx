@@ -515,7 +515,7 @@ export default function Setup({ navigate, goBack, params }) {
     <div className="h-full bg-bg flex flex-col">
 
       <PageHeader
-        title={editRound ? 'Edit Round' : pastRound ? 'Add Past Round' : 'New Game'}
+        title={editRound ? 'Edit Round' : pastRound ? 'Add past round' : 'New game'}
         backLabel={
           editRound
             ? (fromScorecard ? '← Scorecard' : '← Summary')
@@ -542,7 +542,7 @@ export default function Setup({ navigate, goBack, params }) {
       <main className="flex-1 overflow-y-auto px-5 pt-6 pb-10 w-full space-y-3">
 
         {editRound && (
-          <p className="font-ui text-xs text-muted leading-relaxed pb-1">
+          <p className="type-small text-muted pb-1">
             Rename players, add or remove one, fix the date{showCourse ? ', switch the course' : ''} or add a note here. You'll adjust hole scores on the next screen.
           </p>
         )}
@@ -558,10 +558,10 @@ export default function Setup({ navigate, goBack, params }) {
                 // dead signal on the course doesn't block a round.
                 <div className="py-4 px-4 rounded-md border border-dashed border-border bg-bg-card text-center">
                   {coursesStatus === 'loading' ? (
-                    <p className="font-ui text-sm text-muted">Loading your courses…</p>
+                    <p className="type-small text-muted">Loading your courses…</p>
                   ) : (
                     <>
-                      <p role="alert" className="font-ui text-sm text-muted mb-3">
+                      <p role="alert" className="type-small text-muted mb-3">
                         {coursesStatus === 'signedOut'
                           ? "You've been signed out, so your courses can't be loaded."
                           : "Couldn't load your courses - check your connection."}
@@ -569,11 +569,11 @@ export default function Setup({ navigate, goBack, params }) {
                       <button
                         type="button"
                         onClick={() => (coursesStatus === 'signedOut' ? navigate('login') : setCoursesReloadKey(k => k + 1))}
-                        className="py-2 px-4 rounded-sm border border-accent text-accent font-ui text-xs tracking-[0.1em] uppercase font-semibold active:bg-accent-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                        className="py-2 px-4 rounded-sm border border-accent text-accent type-strong active:bg-accent-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                       >
                         {coursesStatus === 'signedOut' ? 'Sign in' : 'Try again'}
                       </button>
-                      <p className="font-ui text-xs text-muted mt-3">
+                      <p className="type-small text-muted mt-3">
                         {editRound
                           ? 'You can still change the other details.'
                           : 'Or start below without one - Quick Play, 36 holes, all par 3.'}
@@ -592,13 +592,13 @@ export default function Setup({ navigate, goBack, params }) {
                 // logged-out Quick Play), so this state says so explicitly
                 // rather than leaving it as an undiscoverable accident (#76).
                 <div className="py-4 px-4 rounded-md border border-dashed border-border bg-bg-card text-center">
-                  <p className="font-ui text-sm text-muted mb-3">
+                  <p className="type-small text-muted mb-3">
                     No courses yet - add one to get started
                   </p>
                   <button
                     type="button"
                     onClick={startNewCourse}
-                    className="py-2 px-4 rounded-sm border border-accent text-accent font-ui text-xs tracking-[0.1em] uppercase font-semibold active:bg-accent-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                    className="py-2 px-4 rounded-sm border border-accent text-accent type-strong active:bg-accent-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                   >
                     + New course
                   </button>
@@ -610,7 +610,7 @@ export default function Setup({ navigate, goBack, params }) {
                       fresh 36-hole all-par-3 round, so the copy would be
                       wrong there (caught by code review). */}
                   {!editRound && (
-                    <p className="font-ui text-xs text-muted mt-3">Or start below without one - Quick Play, 36 holes, all par 3.</p>
+                    <p className="type-small text-muted mt-3">Or start below without one - Quick Play, 36 holes, all par 3.</p>
                   )}
                 </div>
               ) : (
@@ -619,7 +619,7 @@ export default function Setup({ navigate, goBack, params }) {
                     aria-label="Course"
                     value={selectedCourseId ?? ''}
                     onChange={e => selectCourse(e.target.value)}
-                    className="w-full min-w-0 py-3 pl-4 pr-4 rounded-md border border-field font-ui text-base bg-bg-card text-text focus:outline-none focus:ring-2 focus:ring-accent/40"
+                    className="w-full min-w-0 py-3 pl-4 pr-4 rounded-md border border-field type-body bg-bg-card text-text focus:outline-none focus:ring-2 focus:ring-accent/40"
                   >
                     {selectableCourses.map(c => (
                       <option key={c.id} value={c.id}>{c.name}</option>
@@ -635,7 +635,7 @@ export default function Setup({ navigate, goBack, params }) {
                   <button
                     type="button"
                     onClick={startNewCourse}
-                    className="inline-block mt-1.5 py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                    className="inline-block mt-1.5 py-3 -my-3 type-small-strong text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                   >
                     + New course
                   </button>
@@ -652,17 +652,17 @@ export default function Setup({ navigate, goBack, params }) {
                       onChange={e => { setNewCourseName(e.target.value.slice(0, 60)); setCourseError(null) }}
                       placeholder="Course name"
                       autoFocus
-                      className="flex-1 min-w-0 py-3 pl-4 pr-4 rounded-md border border-field font-ui text-base bg-bg-card text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40"
+                      className="flex-1 min-w-0 py-3 pl-4 pr-4 rounded-md border border-field type-body bg-bg-card text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40"
                     />
                     <button
                       onClick={cancelNewCourse}
-                      className="px-4 py-3 rounded-sm border border-border text-muted font-ui text-sm active:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                      className="px-4 py-3 rounded-sm border border-border text-muted type-small-strong active:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                     >
                       Cancel
                     </button>
                   </div>
                   {courseError && (
-                    <p role="alert" className="font-ui text-xs text-accent pl-1">{courseError}</p>
+                    <p role="alert" className="type-small text-accent pl-1">{courseError}</p>
                   )}
                 </div>
 
@@ -683,7 +683,7 @@ export default function Setup({ navigate, goBack, params }) {
                         aria-checked={newCourseHoleCount === n}
                         onClick={() => handleNewCourseHoleCount(n)}
                         className={[
-                          'flex-1 h-11 rounded-md border font-ui text-sm active:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
+                          'flex-1 h-11 rounded-md border type-small-strong active:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
                           newCourseHoleCount === n
                             ? 'border-accent text-accent'
                             : 'border-border text-text',
@@ -693,18 +693,18 @@ export default function Setup({ navigate, goBack, params }) {
                       </button>
                     ))}
                   </div>
-                  <p className="font-ui text-xs text-muted mt-1.5 pl-1">Holes — can't be changed later</p>
+                  <p className="type-small text-muted mt-1.5 pl-1">Holes — can't be changed later</p>
                 </div>
 
                 {/* Per-hole par — course creation only. Every hole starts at
                     par 3; adjust each hole with its own −/+ stepper (band 2–7). */}
                 <div className="mt-4">
-                  <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted mb-2 pl-1">Par for each hole</p>
+                  <p className="type-label-caps text-muted mb-2 pl-1">Par for each hole</p>
                   <ParStepperGrid pars={newCoursePars} onStep={stepCoursePar} />
                 </div>
               </>
             )}
-            <p className="font-ui text-xs text-muted mt-1.5 pl-1">Course</p>
+            <p className="type-small-strong text-muted mt-1.5 pl-1">Course</p>
           </div>
         )}
 
@@ -716,9 +716,9 @@ export default function Setup({ navigate, goBack, params }) {
             be confused for each other. Applies to both local and D1 rounds. */}
         {editRound && (
           <div className="pt-3 pb-1">
-            <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted mb-2 pl-1">Par for this round</p>
+            <p className="type-label-caps text-muted mb-2 pl-1">Par for this round</p>
             <ParStepperGrid pars={roundPars} onStep={stepRoundPar} />
-            <p className="font-ui text-xs text-muted mt-1.5 pl-1">
+            <p className="type-small text-muted mt-1.5 pl-1">
               Fixes the par recorded on this round only. A later change to the course's own par won't override this once you save.
             </p>
           </div>
@@ -733,18 +733,18 @@ export default function Setup({ navigate, goBack, params }) {
               value={pastDate}
               max={localDateString()}
               onChange={e => setPastDate(e.target.value)}
-              className="w-full py-3 pl-4 pr-4 rounded-md border border-field font-ui text-base bg-bg-card text-text focus:outline-none focus:ring-2 focus:ring-accent/40"
+              className="w-full py-3 pl-4 pr-4 rounded-md border border-field type-body bg-bg-card text-text focus:outline-none focus:ring-2 focus:ring-accent/40"
             />
             {pastDate === '' ? (
-              <p role="alert" className="font-ui text-xs text-accent mt-1.5 pl-1">Choose the date the round was played</p>
+              <p role="alert" className="type-small text-accent mt-1.5 pl-1">Choose the date the round was played</p>
             ) : (
-              <p className="font-ui text-xs text-muted mt-1.5 pl-1">Date played</p>
+              <p className="type-small-strong text-muted mt-1.5 pl-1">Date played</p>
             )}
           </div>
         )}
 
         {editRound && names.length > 0 && (
-          <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted pt-2 pl-1">Players</p>
+          <p className="type-small-strong text-muted pt-2 pl-1">Players</p>
         )}
 
         {names.map((name, i) => {
@@ -765,7 +765,7 @@ export default function Setup({ navigate, goBack, params }) {
                   autoComplete="off"
                   autoFocus={i === autoFocusIndex}
                   className={[
-                    'w-full py-3 pl-4 rounded-md border font-ui text-base bg-bg-card text-text',
+                    'w-full py-3 pl-4 rounded-md border type-body bg-bg-card text-text',
                     'placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40',
                     canRemove ? 'pr-12' : 'pr-4',
                     isDupe ? 'border-accent' : 'border-field',
@@ -789,7 +789,7 @@ export default function Setup({ navigate, goBack, params }) {
                 ))}
               </datalist>
               {isDupe && (
-                <p className="text-accent font-ui text-xs mt-1 pl-1">
+                <p className="text-accent type-small mt-1 pl-1">
                   Each player must have a unique name
                 </p>
               )}
@@ -800,7 +800,7 @@ export default function Setup({ navigate, goBack, params }) {
         {names.length < MAX_PLAYERS && (
           <button
             onClick={handleAddPlayer}
-            className="w-full py-3 px-4 rounded-md border border-dashed border-border bg-bg-card text-muted font-ui text-sm active:bg-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="w-full py-3 px-4 rounded-md border border-dashed border-border bg-bg-card text-muted type-small-strong active:bg-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             + Add player
           </button>
@@ -815,15 +815,15 @@ export default function Setup({ navigate, goBack, params }) {
               onChange={e => setNotes(e.target.value.slice(0, 300))}
               placeholder="Add a note about this round..."
               rows={2}
-              className="w-full px-4 py-3 rounded-md border border-field bg-bg-card font-ui text-base text-text placeholder:text-muted resize-none focus:outline-none focus:ring-2 focus:ring-accent/40"
+              className="w-full px-4 py-3 rounded-md border border-field bg-bg-card type-body text-text placeholder:text-muted resize-none focus:outline-none focus:ring-2 focus:ring-accent/40"
             />
-            <p className="font-ui text-xs text-muted mt-1.5 pl-1">Round notes - optional</p>
+            <p className="type-small-strong text-muted mt-1.5 pl-1">Round notes - optional</p>
           </div>
         )}
 
         {fromBruntsfield && (
           <div className="pt-4 pb-3 text-center">
-            <p className="font-ui text-sm text-muted leading-relaxed">
+            <p className="type-small text-muted">
               New here?{' '}
               <button
                 onClick={() => navigate('rules', { from: 'setup', bruntsfield: fromBruntsfield })}
@@ -840,7 +840,7 @@ export default function Setup({ navigate, goBack, params }) {
             onClick={handleStart}
             disabled={!ready}
             className={[
-              'w-full py-4 rounded-sm font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
+              'w-full py-4 rounded-sm type-strong shadow-btn transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
               ready
                 ? 'bg-accent text-bg active:bg-accent-hover'
                 : 'bg-accent text-bg opacity-40 cursor-not-allowed',
@@ -849,7 +849,7 @@ export default function Setup({ navigate, goBack, params }) {
             {editRound ? 'Edit hole scores' : pastRound ? 'Enter scores' : 'Start the round'}
           </button>
           {editRound && (
-            <p className="font-ui text-xs text-muted text-center mt-2 leading-relaxed">
+            <p className="type-small text-muted text-center mt-2">
               Nothing is saved until you confirm on the next screen.
             </p>
           )}
@@ -881,19 +881,19 @@ export default function Setup({ navigate, goBack, params }) {
               className="bg-bg rounded-t-2xl w-full max-w-[430px] px-6 pt-6 pb-10 shadow-card"
             >
               <div className="w-10 h-1 bg-border rounded-full mx-auto mb-6" />
-              <h2 id="course-switch-heading" className="font-display italic text-2xl text-text mb-1">{copy.heading}</h2>
-              <p className="font-ui text-xs text-muted tracking-wide mb-8">{copy.body}</p>
+              <h2 id="course-switch-heading" className="type-title text-text mb-1">{copy.heading}</h2>
+              <p className="type-body text-muted mb-8">{copy.body}</p>
               <div className="flex gap-3">
                 <button
                   ref={cancelPendingRef}
                   onClick={closePendingChange}
-                  className="flex-1 py-3 rounded-sm border border-border font-ui text-sm tracking-[0.08em] uppercase text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  className="flex-1 py-3 rounded-sm border border-border type-strong text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={confirmPendingChange}
-                  className="flex-1 py-3 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.08em] uppercase font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  className="flex-1 py-3 rounded-sm bg-accent text-bg type-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                 >
                   {copy.confirmLabel}
                 </button>

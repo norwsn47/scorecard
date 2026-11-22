@@ -33,7 +33,7 @@ export default function ParStepperGrid({ pars, onStep }) {
             aria-label={`Hole ${i + 1}, par ${par}`}
             className="flex items-center justify-between rounded-md border border-border bg-bg-card pl-3 pr-0.5"
           >
-            <span className="font-ui text-sm text-text">Hole {i + 1}</span>
+            <span className="type-small text-text">Hole {i + 1}</span>
             <span className="flex items-center">
               <button
                 type="button"
@@ -47,7 +47,7 @@ export default function ParStepperGrid({ pars, onStep }) {
               >
                 −
               </button>
-              <span className="font-ui text-sm text-text w-4 text-center tabular-nums">{par}</span>
+              <span className="type-strong text-text w-4 text-center tabular-nums">{par}</span>
               <button
                 type="button"
                 onClick={() => onStep(i, 1)}

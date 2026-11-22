@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import ExternalArrow from '../components/ExternalArrow.jsx'
 import { BRUNTSFIELD_COURSE_NAME } from '../constants.js'
+import ExternalArrow from '../components/ExternalArrow.jsx'
 import { track } from '../utils/analytics.js'
 import { formatShortDate } from '../utils/format.js'
 import { getActiveGame, getCompletedGames } from '../utils/storage.js'
@@ -61,7 +61,7 @@ export default function Home({ navigate }) {
     <div className="h-full bg-bg flex flex-col relative">
 
       {noticeCopy && (
-        <div role="status" className="sticky top-0 z-50 bg-accent text-bg text-center font-ui text-xs py-2 px-4 tracking-wide">
+        <div role="status" className="sticky top-0 z-50 bg-accent text-bg text-center type-small py-2 px-4">
           {noticeCopy}
         </div>
       )}
@@ -73,7 +73,7 @@ export default function Home({ navigate }) {
             Signed in: a settings gear (the Info page is reached from inside
             Settings, #83). Signed out: the info icon, as before. */}
         <div className="flex items-start -mr-2.5">
-          <h1 className="font-display text-[42px] italic text-text leading-[1.1] text-left flex-1">
+          <h1 className="type-display text-text text-left flex-1">
             Golf<br />Scorecard
           </h1>
           <button
@@ -99,12 +99,12 @@ export default function Home({ navigate }) {
 
         {/* Numbered list — strict two-column grid for reliable numeral alignment */}
         <div className="grid grid-cols-[1.5rem_1fr] gap-x-3 gap-y-2">
-          <span className="font-ui text-base text-accent font-semibold text-right">1</span>
-          <span className="font-ui text-base text-muted">No sign-up, no faff - just golf</span>
-          <span className="font-ui text-base text-accent font-semibold text-right">2</span>
-          <span className="font-ui text-base text-muted">Every hole, as you play it</span>
-          <span className="font-ui text-base text-accent font-semibold text-right">3</span>
-          <span className="font-ui text-base text-muted">Share your card when you're done</span>
+          <span className="type-strong text-accent text-right">1</span>
+          <span className="type-body text-muted">No sign-up, no faff - just golf</span>
+          <span className="type-strong text-accent text-right">2</span>
+          <span className="type-body text-muted">Every hole, as you play it</span>
+          <span className="type-strong text-accent text-right">3</span>
+          <span className="type-body text-muted">Share your card when you're done</span>
         </div>
       </header>
 
@@ -115,18 +115,18 @@ export default function Home({ navigate }) {
 
         <button
           onClick={() => { track('New Game Started'); navigate('setup') }}
-          className="w-full py-4 px-6 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn active:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+          className="w-full py-4 px-6 rounded-sm bg-accent text-bg type-strong shadow-btn active:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
         >
-          New Game
+          New game
         </button>
 
         {activeGame && (
           <button
             onClick={() => navigate('scorecard')}
-            className="w-full py-3 px-4 rounded-sm border border-accent text-accent font-ui text-sm tracking-[0.08em] uppercase font-medium flex items-center justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="w-full py-3 px-4 rounded-sm border border-accent text-accent type-strong flex items-center justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
-            <span>Resume Game</span>
-            <span className="text-xs text-muted normal-case tracking-normal font-normal truncate max-w-[160px]">
+            <span>Resume game</span>
+            <span className="type-small text-muted truncate max-w-[160px]">
               {activeGame.name || activeGame.players?.join(', ')}
             </span>
           </button>
@@ -137,7 +137,7 @@ export default function Home({ navigate }) {
           <div className="text-center -mt-1">
             <button
               onClick={() => navigate('summary', { game: lastGame })}
-              className="inline-block py-3 -my-3 font-ui text-xs text-muted active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="inline-block py-3 -my-3 type-small-strong text-muted active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               Last round:{' '}
               <span className="underline underline-offset-2">
@@ -149,7 +149,7 @@ export default function Home({ navigate }) {
 
         {/* Course-specific scorecards */}
         <div className="space-y-2 pt-1">
-          <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted px-1">Course specific scorecards</p>
+          <p className="type-label-caps text-muted px-1">Course specific scorecards</p>
           <button
             onClick={() => navigate('bruntsfield')}
             className="w-full px-4 py-3 rounded-md bg-bg-card border border-border text-left flex items-center gap-3 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
@@ -161,8 +161,8 @@ export default function Home({ navigate }) {
               </svg>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-ui text-xs font-semibold text-text">{BRUNTSFIELD_COURSE_NAME}</p>
-              <p className="font-ui text-xs text-muted">Course map, rules &amp; scorecard</p>
+              <p className="type-strong text-text">{BRUNTSFIELD_COURSE_NAME}</p>
+              <p className="type-small text-muted">Course map, rules &amp; scorecard</p>
             </div>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-muted shrink-0">
               <path d="M9 18l6-6-6-6" />
@@ -173,9 +173,9 @@ export default function Home({ navigate }) {
         {user && (
           <button
             onClick={() => navigate('history')}
-            className="w-full py-4 px-6 rounded-sm border border-border text-text font-ui text-sm tracking-[0.1em] uppercase font-medium active:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="w-full py-4 px-6 rounded-sm border border-border text-text type-strong active:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
-            Past Rounds
+            Past rounds
           </button>
         )}
 
@@ -184,7 +184,7 @@ export default function Home({ navigate }) {
             Settings is the header gear (#83). */}
         {user ? (
           <div className="pt-0 text-center">
-            <p className="font-ui text-xs text-muted break-words">
+            <p className="type-small text-muted break-words">
               Signed in as {user.name || user.email}
             </p>
           </div>
@@ -192,7 +192,7 @@ export default function Home({ navigate }) {
           <div className="pt-0 text-center space-y-1">
             <button
               onClick={() => navigate('login')}
-              className="inline-block py-3 -my-3 font-ui text-xs text-accent active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="inline-block py-3 -my-3 type-small-strong text-accent active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               Want to save your scores? <span className="underline underline-offset-2">Sign in</span>
             </button>
@@ -202,10 +202,10 @@ export default function Home({ navigate }) {
 
       {/* ── Footer ── */}
       <footer className="text-center pt-4 pb-10 px-6 space-y-3">
-        <p className="font-ui text-text leading-tight inline-flex items-baseline gap-1">
-          <span className="text-base font-bold">Scorecard</span>
-          <span className="text-xs text-muted font-normal"> by </span>
-          <a href="https://outbuild.uk" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 py-3 -my-3 text-xs text-muted font-normal underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40">
+        <p className="font-ui text-text inline-flex items-baseline gap-1">
+          <span className="type-strong">Scorecard</span>
+          <span className="type-small text-muted"> by </span>
+          <a href="https://outbuild.uk" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 py-3 -my-3 type-small text-muted underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40">
             Outbuild
             <ExternalArrow />
           </a>

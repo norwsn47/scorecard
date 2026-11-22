@@ -51,7 +51,7 @@ describe('Scorecard - Finish sheet', () => {
 
   it('is a labelled modal dialog with focus on Cancel', async () => {
     await open()
-    const dialog = screen.getByRole('dialog', { name: 'Finish Game?' })
+    const dialog = screen.getByRole('dialog', { name: 'Finish game?' })
     expect(dialog).toHaveAttribute('aria-modal', 'true')
     expect(within(dialog).getByRole('button', { name: 'Cancel' })).toHaveFocus()
   })

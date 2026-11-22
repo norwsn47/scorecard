@@ -139,7 +139,7 @@ describe('Setup - holding a pending round while the Edit Round screen is open', 
 
   it('a New Game screen takes no hold and asks for no sync run on unmount', async () => {
     const { unmount } = renderSetup({})
-    await screen.findByText('New Game')
+    await screen.findByText('New game')
     await settle()
     expect(isHeld('round-1')).toBe(false)
 
@@ -260,7 +260,7 @@ describe('Setup - the stranded edit guard', () => {
   it('a normal in-progress game (no _edit) triggers no sync run', async () => {
     saveActiveGame({ id: 'g2', players: ['Ann'], scores: { Ann: [3] }, holes: 2 })
     renderSetup({})
-    await screen.findByText('New Game')
+    await screen.findByText('New game')
     await settle()
     expect(syncPendingRounds).not.toHaveBeenCalled()
   })

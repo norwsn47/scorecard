@@ -168,9 +168,9 @@ export default function Summary({ navigate, params }) {
   // each hole number, matching the live Scorecard grid (item 37).
   const holePars = deriveHolePars(game.holePars, game.holesPlayed ?? game.holes ?? MAX_HOLES)
 
-  const resultBase = 'font-ui text-xs tracking-[0.12em] uppercase text-muted text-center'
-  const resultName = 'mx-1.5 font-display italic text-sm text-accent normal-case tracking-normal'
-  const resultStrokes = 'font-ui text-xs text-muted normal-case tracking-normal'
+  const resultBase = 'type-body text-muted text-center'
+  const resultName = 'mx-1.5 type-body text-accent'
+  const resultStrokes = 'type-body text-muted'
 
   // True when this round already lives somewhere permanent: a past round
   // opened from History (_fromDb), or one already POSTed to D1 (synced).
@@ -472,7 +472,7 @@ export default function Summary({ navigate, params }) {
           crowds the pinned totals row. */}
       {ownsPending && (
         <p className={[
-          'font-ui text-xs tracking-wide mt-2 px-5 text-center leading-relaxed shrink-0',
+          'type-small mt-2 px-5 text-center shrink-0',
           game.syncRejected ? 'text-accent' : 'text-muted',
         ].join(' ')}>
           {game.syncRejected
@@ -482,7 +482,7 @@ export default function Summary({ navigate, params }) {
       )}
 
       {viewingSaved && editNotice && (
-        <p role="alert" className="font-ui text-xs text-accent tracking-wide mt-2 px-5 text-center leading-relaxed shrink-0">
+        <p role="alert" className="type-small text-accent mt-2 px-5 text-center shrink-0">
           {editNotice}
         </p>
       )}
@@ -493,7 +493,7 @@ export default function Summary({ navigate, params }) {
       {(game.players?.length ?? 0) > 1 && (
         <div className="px-5 pt-3 pb-1">
           {winners.length >= 4 ? (
-            <p className={`${resultBase} block text-center leading-relaxed`}>
+            <p className={`${resultBase} block text-center`}>
               Tied <span className={resultStrokes}>- {winners.length} players level on {strokesLabel(game.winningTotal)}</span>
             </p>
           ) : (
@@ -502,13 +502,13 @@ export default function Summary({ navigate, params }) {
               {winners.length === 0 ? (
                 <p className={resultBase}>No winner</p>
               ) : winners.length === 1 ? (
-                <p className={`${resultBase} min-w-0 leading-relaxed`}>
+                <p className={`${resultBase} min-w-0`}>
                   <span>Winner -</span>
                   <span className={resultName}>{winners[0]}</span>
                   <span className={resultStrokes}>- {strokesLabel(game.winningTotal)}</span>
                 </p>
               ) : (
-                <p className={`${resultBase} min-w-0 leading-relaxed`}>
+                <p className={`${resultBase} min-w-0`}>
                   <span>Tied -</span>
                   <span className={resultName}>{tiedNames(winners)}</span>
                   <span className={resultStrokes}>- {strokesLabel(game.winningTotal)}</span>
@@ -531,7 +531,7 @@ export default function Summary({ navigate, params }) {
           <table className="w-full min-w-max border-collapse">
             <thead>
               <tr className="border-b border-border bg-bg-card">
-                <th scope="col" className="py-2 px-3 text-left font-ui text-xs tracking-[0.12em] uppercase text-muted w-16">
+                <th scope="col" className="py-2 px-3 text-left type-label-caps text-muted w-16">
                   Hole
                 </th>
                 {(game.players ?? []).map(player => (
@@ -539,15 +539,15 @@ export default function Summary({ navigate, params }) {
                     key={player}
                     scope="col"
                     className={[
-                      'py-2 px-3 text-center font-ui text-xs tracking-[0.12em] uppercase max-w-[90px]',
-                      isWinner(player) ? 'text-accent font-semibold' : 'text-muted',
+                      'py-2 px-3 text-center type-label-caps max-w-[90px]',
+                      isWinner(player) ? 'text-accent' : 'text-muted',
                     ].join(' ')}
                   >
                     <span className="flex items-center justify-center gap-0.5">
                       <span className="truncate min-w-0">{player}</span>
                       {isSignedInPlayer(player, user?.name) && <PlayerStar />}
                     </span>
-                    {isDnf(player) && <span className="block text-muted normal-case tracking-normal font-normal">DNF</span>}
+                    {isDnf(player) && <span className="block text-muted type-caption">DNF</span>}
                   </th>
                 ))}
               </tr>
@@ -557,9 +557,9 @@ export default function Summary({ navigate, params }) {
               {Array.from({ length: game.holesPlayed ?? game.holes }, (_, holeIndex) => (
                 <Fragment key={holeIndex}>
                   <tr className="border-b border-border">
-                    <td className="py-2 px-3 font-ui text-xs text-muted whitespace-nowrap">
-                      <span className="font-semibold">{holeIndex + 1}</span>
-                      <span className="font-normal ml-0.5">({holePars[holeIndex]})</span>
+                    <td className="py-2 px-3 text-muted whitespace-nowrap">
+                      <span className="type-strong">{holeIndex + 1}</span>
+                      <span className="type-caption ml-0.5">({holePars[holeIndex]})</span>
                     </td>
                     {(game.players ?? []).map(player => {
                       const score = game.scores[player]?.[holeIndex]
@@ -567,8 +567,8 @@ export default function Summary({ navigate, params }) {
                         <td
                           key={player}
                           className={[
-                            'py-2 px-3 text-center font-ui text-sm',
-                            isWinner(player) ? 'text-accent font-medium' : 'text-text',
+                            'py-2 px-3 text-center type-strong',
+                            isWinner(player) ? 'text-accent' : 'text-text',
                           ].join(' ')}
                         >
                           {score ?? '-'}
@@ -594,13 +594,13 @@ export default function Summary({ navigate, params }) {
                       automatically. */}
                   {game.holes === 18 && holeIndex === 8 && (
                     <tr className="border-t-2 border-b border-border bg-bg-card">
-                      <th scope="row" className="py-3 px-3 text-left font-ui text-xs font-semibold text-text whitespace-nowrap">
+                      <th scope="row" className="py-3 px-3 text-left type-small-strong text-text whitespace-nowrap">
                         Front 9
                       </th>
                       {(game.players ?? []).map(player => {
                         const { total, toPar } = subtotal(game.scores?.[player] ?? [], holePars, 0, 9)
                         return (
-                          <td key={player} className="py-3 px-3 text-center font-ui text-base font-semibold text-text">
+                          <td key={player} className="py-3 px-3 text-center type-strong text-text">
                             {total ?? '-'}
                             <ParDelta delta={toPar} variant="bracket" />
                           </td>
@@ -610,13 +610,13 @@ export default function Summary({ navigate, params }) {
                   )}
                   {game.holes === 18 && holeIndex === 17 && (
                     <tr className="border-t-2 border-b border-border bg-bg-card">
-                      <th scope="row" className="py-3 px-3 text-left font-ui text-xs font-semibold text-text whitespace-nowrap">
+                      <th scope="row" className="py-3 px-3 text-left type-small-strong text-text whitespace-nowrap">
                         Back 9
                       </th>
                       {(game.players ?? []).map(player => {
                         const { total, toPar } = subtotal(game.scores?.[player] ?? [], holePars, 9, 18)
                         return (
-                          <td key={player} className="py-3 px-3 text-center font-ui text-base font-semibold text-text">
+                          <td key={player} className="py-3 px-3 text-center type-strong text-text">
                             {total ?? '-'}
                             <ParDelta delta={toPar} variant="bracket" />
                           </td>
@@ -634,12 +634,12 @@ export default function Summary({ navigate, params }) {
                 over scrolled content behind it in some mobile browsers (#66). */}
             <tfoot className="sticky bottom-0 z-10">
               <tr className="border-t-2 border-border">
-                <th scope="row" className="py-3 px-3 text-left font-ui text-xs font-normal tracking-[0.12em] uppercase text-muted bg-bg-card">Total</th>
+                <th scope="row" className="py-3 px-3 text-left type-small-strong text-muted bg-bg-card">Total</th>
                 {(game.players ?? []).map(player => (
                   <td
                     key={player}
                     className={[
-                      'py-3 px-3 text-center font-ui text-base font-semibold bg-bg-card',
+                      'py-3 px-3 text-center type-strong bg-bg-card',
                       isWinner(player) ? 'text-accent' : 'text-text',
                     ].join(' ')}
                   >
@@ -650,7 +650,7 @@ export default function Summary({ navigate, params }) {
                     />
                     {/* The "Av. X" sub-line was dropped (#70, flagged as not interesting) —
                         the bracketed total-to-par above already carries that information. */}
-                    {isDnf(player) && <span className="block font-ui text-xs font-normal text-muted">DNF</span>}
+                    {isDnf(player) && <span className="block type-caption text-muted">DNF</span>}
                   </td>
                 ))}
               </tr>
@@ -667,8 +667,8 @@ export default function Summary({ navigate, params }) {
                shown as quiet static text; nothing to edit, nothing to submit. */
             game.notes ? (
               <div>
-                <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted mb-1.5">Notes</p>
-                <p className="font-ui text-sm text-muted leading-relaxed whitespace-pre-wrap">
+                <p className="type-label-caps text-muted mb-1.5">Notes</p>
+                <p className="type-small text-muted whitespace-pre-wrap">
                   {game.notes}
                 </p>
               </div>
@@ -687,7 +687,7 @@ export default function Summary({ navigate, params }) {
                     onClick={() => setNotesOpen(true)}
                     disabled={saving}
                     aria-expanded={false}
-                    className="inline-block py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2 active:opacity-70 disabled:opacity-40 disabled:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                    className="inline-block py-3 -my-3 type-small-strong text-accent underline underline-offset-2 active:opacity-70 disabled:opacity-40 disabled:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                   >
                     + Add a note
                   </button>
@@ -709,9 +709,9 @@ export default function Summary({ navigate, params }) {
                     placeholder="Add a note about this round..."
                     rows={2}
                     disabled={saving}
-                    className="w-full px-4 py-3 rounded-md border border-field bg-bg-card font-ui text-base text-text placeholder:text-muted resize-none focus:outline-none focus:ring-2 focus:ring-accent/40"
+                    className="w-full px-4 py-3 rounded-md border border-field bg-bg-card type-body text-text placeholder:text-muted resize-none focus:outline-none focus:ring-2 focus:ring-accent/40"
                   />
-                  <p className="font-ui text-xs text-muted mt-1 pl-1">
+                  <p className="type-small text-muted mt-1 pl-1">
                     Round notes - optional
                   </p>
                 </div>
@@ -724,13 +724,13 @@ export default function Summary({ navigate, params }) {
                   itself could not hold the round. */}
               {user && saveError && (
                 <div className="rounded-md border border-accent px-4 py-4 space-y-3">
-                  <p key={saveError.n} role="alert" className="font-ui text-sm text-text leading-relaxed">
+                  <p key={saveError.n} role="alert" className="type-small text-text">
                     {SAVE_ERROR_COPY[saveError.kind]}
                   </p>
                   <button
                     onClick={handleGoHome}
                     disabled={saving}
-                    className="w-full py-3 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.08em] uppercase font-semibold active:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                    className="w-full py-3 rounded-sm bg-accent text-bg type-strong active:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                   >
                     {saving ? 'Retrying…' : 'Retry'}
                   </button>
@@ -739,7 +739,7 @@ export default function Summary({ navigate, params }) {
                       <button
                         onClick={handleKeepOnDevice}
                         disabled={saving}
-                        className="inline-block py-3 -my-3 font-ui text-sm text-text underline underline-offset-2 active:opacity-70 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                        className="inline-block py-3 -my-3 type-small-strong text-text underline underline-offset-2 active:opacity-70 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                       >
                         Keep on this device and go home
                       </button>
@@ -760,7 +760,7 @@ export default function Summary({ navigate, params }) {
             <button
               onClick={handleShare}
               disabled={sharing}
-              className={`w-full ${viewingSaved ? 'py-2.5' : 'py-4'} px-3 rounded-sm border border-accent text-accent font-ui text-sm tracking-[0.1em] uppercase font-medium flex items-center justify-center gap-2 active:bg-accent-tint disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40`}
+              className={`w-full ${viewingSaved ? 'py-2.5' : 'py-4'} px-3 rounded-sm border border-accent text-accent type-strong flex items-center justify-center gap-2 active:bg-accent-tint disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40`}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 shrink-0" aria-hidden="true">
                 <path d="M12 3v12" />
@@ -773,7 +773,7 @@ export default function Summary({ navigate, params }) {
               <button
                 onClick={handleGoHome}
                 disabled={saving}
-                className="w-full py-4 px-3 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn active:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                className="w-full py-4 px-3 rounded-sm bg-accent text-bg type-strong shadow-btn active:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 {saving ? 'Saving…' : 'Done'}
               </button>
@@ -785,27 +785,27 @@ export default function Summary({ navigate, params }) {
                 ref={deleteLinkRef}
                 type="button"
                 onClick={() => setConfirmDelete(true)}
-                className="inline-block font-ui text-sm text-muted underline underline-offset-2 py-3 -my-3 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm"
+                className="inline-block type-small-strong text-muted underline underline-offset-2 py-3 -my-3 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm"
               >
                 Delete this round
               </button>
             </div>
           )}
           {!viewingSaved && canEdit && editNotice && (
-            <p role="alert" className="font-ui text-xs text-accent tracking-wide leading-relaxed text-center">
+            <p role="alert" className="type-small text-accent text-center">
               {editNotice}
             </p>
           )}
 
           {!user && (
             <div className="text-center space-y-1 pt-2">
-              <p className="font-ui text-xs text-muted leading-relaxed">
+              <p className="type-small text-muted">
                 Saved in this browser only.
               </p>
               <div>
                 <button
                   onClick={() => navigate('login')}
-                  className="inline-block py-3.5 -my-3.5 font-ui text-xs text-accent active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  className="inline-block py-3.5 -my-3.5 type-small-strong text-accent active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                 >
                   To save your rounds, <span className="underline underline-offset-2">create an account</span>
                 </button>
@@ -833,24 +833,24 @@ export default function Summary({ navigate, params }) {
             className="bg-bg rounded-t-2xl w-full max-w-[430px] px-6 pt-6 pb-10 shadow-card"
           >
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-6" />
-            <h2 id="summary-delete-round-heading" className="font-display italic text-2xl text-text mb-1">Delete this round?</h2>
-            <p className="font-ui text-xs text-muted tracking-wide mb-8">This cannot be undone.</p>
+            <h2 id="summary-delete-round-heading" className="type-title text-text mb-1">Delete this round?</h2>
+            <p className="type-small text-muted mb-8">This cannot be undone.</p>
             {deleteError && (
-              <p role="alert" className="font-ui text-xs text-accent mb-3">{deleteError}</p>
+              <p role="alert" className="type-small text-accent mb-3">{deleteError}</p>
             )}
             <div className="flex gap-3">
               <button
                 ref={cancelButtonRef}
                 onClick={closeDeleteConfirm}
                 disabled={deleting}
-                className="flex-1 py-3 rounded-sm border border-border font-ui text-sm tracking-[0.08em] uppercase text-text active:bg-bg-card disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                className="flex-1 py-3 rounded-sm border border-border type-strong text-text active:bg-bg-card disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteRound}
                 disabled={deleting}
-                className="flex-1 py-3 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.08em] uppercase font-semibold active:opacity-80 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                className="flex-1 py-3 rounded-sm bg-accent text-bg type-strong active:opacity-80 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 {deleting ? 'Deleting…' : 'Delete'}
               </button>

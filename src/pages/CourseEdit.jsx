@@ -166,19 +166,19 @@ export default function CourseEdit({ navigate, goBack, params }) {
 
         {loading && (
           <div className="text-center pt-16">
-            <p className="font-ui text-sm text-muted">Loading…</p>
+            <p className="type-small text-muted">Loading…</p>
           </div>
         )}
 
         {!loading && signedOut && (
           <div className="text-center pt-16">
-            <p className="font-display italic text-xl text-text mb-2">Your session has expired</p>
-            <p className="font-ui text-sm text-muted mb-6">
+            <p className="type-title text-text mb-2">Your session has expired</p>
+            <p className="type-small text-muted mb-6">
               Sign in again to edit this course.
             </p>
             <button
               onClick={() => navigate('login')}
-              className="py-4 px-6 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn active:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="py-4 px-6 rounded-sm bg-accent text-bg type-strong shadow-btn active:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               Sign in
             </button>
@@ -187,13 +187,13 @@ export default function CourseEdit({ navigate, goBack, params }) {
 
         {!loading && notFound && (
           <div className="text-center pt-16">
-            <p className="font-display italic text-xl text-text mb-2">We can't find that course</p>
-            <p className="font-ui text-sm text-muted mb-6">
+            <p className="type-title text-text mb-2">We can't find that course</p>
+            <p className="type-small text-muted mb-6">
               It may already have been deleted.
             </p>
             <button
               onClick={() => navigate('home')}
-              className="py-4 px-6 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn active:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="py-4 px-6 rounded-sm bg-accent text-bg type-strong shadow-btn active:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               Back to Home
             </button>
@@ -210,9 +210,9 @@ export default function CourseEdit({ navigate, goBack, params }) {
                 onChange={e => { setName(e.target.value.slice(0, 60)); setSaveError(null) }}
                 placeholder="Course name"
                 maxLength={60}
-                className="w-full py-3 pl-4 pr-4 rounded-md border border-field font-ui text-base bg-bg-card text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40"
+                className="w-full py-3 pl-4 pr-4 rounded-md border border-field type-body bg-bg-card text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40"
               />
-              <p className="font-ui text-xs text-muted mt-1.5 pl-1">Course name</p>
+              <p className="type-small-strong text-muted mt-1.5 pl-1">Course name</p>
             </div>
 
             {/* Per-hole par — reuses the same stepper as course creation and
@@ -220,17 +220,17 @@ export default function CourseEdit({ navigate, goBack, params }) {
                 fixed for the life of the course — no control for it
                 here, the grid simply renders exactly the course's own length. */}
             <div className="pt-1">
-              <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted mb-2 pl-1">Par for each hole</p>
+              <p className="type-label-caps text-muted mb-2 pl-1">Par for each hole</p>
               <ParStepperGrid pars={pars} onStep={stepCoursePar} />
               {showParCascadeWarning && (
-                <p className="font-ui text-xs text-muted mt-1.5 pl-1">
+                <p className="type-small-strong text-muted mt-1.5 pl-1">
                   This will update the par shown on {roundCount} previously recorded round{roundCount === 1 ? '' : 's'}.
                 </p>
               )}
             </div>
 
             {saveError && (
-              <p role="alert" className="font-ui text-xs text-accent pl-1">{saveError}</p>
+              <p role="alert" className="type-small text-accent pl-1">{saveError}</p>
             )}
 
             <div className="pt-3">
@@ -238,7 +238,7 @@ export default function CourseEdit({ navigate, goBack, params }) {
                 onClick={handleSave}
                 disabled={saving || !name.trim()}
                 className={[
-                  'w-full py-4 rounded-sm font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
+                  'w-full py-4 rounded-sm type-strong shadow-btn transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
                   saving || !name.trim()
                     ? 'bg-accent text-bg opacity-40 cursor-not-allowed'
                     : 'bg-accent text-bg active:bg-accent-hover',
@@ -251,12 +251,12 @@ export default function CourseEdit({ navigate, goBack, params }) {
             <div className="text-center pt-2">
               <button
                 onClick={() => { setDeleteError(null); setConfirmDelete(true) }}
-                className="inline-block py-3 -my-3 font-ui text-xs text-muted underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                className="inline-block py-3 -my-3 type-small-strong text-muted underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 Delete this course
               </button>
               {deleteError && (
-                <p role="alert" className="font-ui text-xs text-accent tracking-wide mt-2">{deleteError}</p>
+                <p role="alert" className="type-small text-accent mt-2">{deleteError}</p>
               )}
             </div>
           </>
@@ -281,21 +281,21 @@ export default function CourseEdit({ navigate, goBack, params }) {
             className="bg-bg rounded-t-2xl w-full max-w-[430px] px-6 pt-6 pb-10 shadow-card"
           >
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-6" />
-            <h2 id="delete-course-heading" className="font-display italic text-2xl text-text mb-1">Delete {course.name}?</h2>
-            <p className="font-ui text-xs text-muted tracking-wide mb-8">{roundsClause}This cannot be undone.</p>
+            <h2 id="delete-course-heading" className="type-title text-text mb-1">Delete {course.name}?</h2>
+            <p className="type-small text-muted mb-8">{roundsClause}This cannot be undone.</p>
             <div className="flex gap-3">
               <button
                 ref={cancelDeleteRef}
                 onClick={() => setConfirmDelete(false)}
                 disabled={deleting}
-                className="flex-1 py-3 rounded-sm border border-border font-ui text-sm tracking-[0.08em] uppercase text-text active:bg-bg-card disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                className="flex-1 py-3 rounded-sm border border-border type-strong text-text active:bg-bg-card disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
                 disabled={deleting}
-                className="flex-1 py-3 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.08em] uppercase font-semibold active:opacity-80 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                className="flex-1 py-3 rounded-sm bg-accent text-bg type-strong active:opacity-80 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 {deleting ? 'Deleting…' : 'Delete'}
               </button>

@@ -130,7 +130,7 @@ export default function History({ navigate }) {
         right={user ? (
           <button
             onClick={() => navigate('setup', { pastRound: true })}
-            className="min-h-[44px] px-2 -mr-2 flex items-center whitespace-nowrap font-ui text-xs tracking-[0.1em] uppercase font-semibold text-accent active:text-accent-hover rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="min-h-[44px] px-2 -mr-2 flex items-center whitespace-nowrap type-strong text-accent active:text-accent-hover rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             + Add
           </button>
@@ -140,7 +140,7 @@ export default function History({ navigate }) {
       {/* Course label (1 course) or course filter chips (2+ courses) — logged-in only */}
       {user && !loading && courses.length === 1 && (
         <div className="px-5 pt-4 pb-1 shrink-0">
-          <p className="font-ui text-xs tracking-[0.08em] uppercase text-accent">{courses[0]}</p>
+          <p className="type-label-caps text-accent">{courses[0]}</p>
         </div>
       )}
       {user && !loading && courses.length > 1 && (
@@ -148,7 +148,7 @@ export default function History({ navigate }) {
           <button
             onClick={() => setCourseFilter(null)}
             className={[
-              'shrink-0 inline-flex items-center py-1.5 px-3 rounded-full border font-ui text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
+              'shrink-0 inline-flex items-center py-1.5 px-3 rounded-full border type-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
               !courseFilter
                 ? 'bg-accent border-accent text-bg'
                 : 'border-border text-muted',
@@ -161,7 +161,7 @@ export default function History({ navigate }) {
               key={course}
               onClick={() => setCourseFilter(prev => prev === course ? null : course)}
               className={[
-                'shrink-0 inline-flex items-center py-1.5 px-3 rounded-full border font-ui text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
+                'shrink-0 inline-flex items-center py-1.5 px-3 rounded-full border type-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
                 courseFilter === course
                   ? 'bg-accent border-accent text-bg'
                   : 'border-border text-muted',
@@ -176,7 +176,7 @@ export default function History({ navigate }) {
       {/* Disclaimer — logged-out only */}
       {!user && (
         <div className="px-5 pt-4 pb-1 shrink-0">
-          <p className="font-ui text-xs text-muted leading-relaxed">
+          <p className="type-small text-muted">
             Stored on your device. Gone if you clear your browser.
           </p>
         </div>
@@ -189,7 +189,7 @@ export default function History({ navigate }) {
           <button
             onClick={() => setFilter(null)}
             className={[
-              'shrink-0 inline-flex items-center py-1.5 px-3 rounded-full border font-ui text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
+              'shrink-0 inline-flex items-center py-1.5 px-3 rounded-full border type-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
               !filter
                 ? 'bg-accent border-accent text-bg'
                 : 'border-border text-muted',
@@ -202,7 +202,7 @@ export default function History({ navigate }) {
               key={name}
               onClick={() => toggleFilter(name)}
               className={[
-                'shrink-0 inline-flex items-center gap-1 py-1.5 px-3 rounded-full border font-ui text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
+                'shrink-0 inline-flex items-center gap-1 py-1.5 px-3 rounded-full border type-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
                 filter === name
                   ? 'bg-accent border-accent text-bg'
                   : 'border-border text-muted',
@@ -220,23 +220,23 @@ export default function History({ navigate }) {
 
         {loading && (
           <div className="text-center pt-16">
-            <p className="font-ui text-sm text-muted">Loading…</p>
+            <p className="type-small text-muted">Loading…</p>
           </div>
         )}
 
         {!loading && loadError && (
           <div role="alert" className={['text-center', allGames.length > 0 ? 'pt-4 pb-2' : 'pt-16'].join(' ')}>
-            <p className="font-display italic text-xl text-text mb-2">
+            <p className="type-title text-text mb-2">
               {loadError === 'signedOut' ? "You've been signed out" : "Couldn't load your rounds"}
             </p>
-            <p className="font-ui text-sm text-muted mb-6">
+            <p className="type-body text-muted mb-6">
               {loadError === 'signedOut'
                 ? 'Sign in again to see your rounds.'
                 : 'Check your connection and try again.'}
             </p>
             <button
               onClick={() => (loadError === 'signedOut' ? navigate('login') : setReloadKey(k => k + 1))}
-              className="py-3 px-6 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="py-3 px-6 rounded-sm bg-accent text-bg type-strong shadow-btn focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               {loadError === 'signedOut' ? 'Sign in' : 'Try again'}
             </button>
@@ -244,7 +244,7 @@ export default function History({ navigate }) {
         )}
 
         {!loading && !loadError && skipped > 0 && (
-          <p role="status" className="font-ui text-xs text-muted text-center">
+          <p role="status" className="type-small text-muted text-center">
             {skipped === 1 ? "1 round couldn't be shown." : `${skipped} rounds couldn't be shown.`}
           </p>
         )}
@@ -253,28 +253,28 @@ export default function History({ navigate }) {
           <div className="text-center pt-16">
             {filter ? (
               <>
-                <p className="font-display italic text-xl text-text mb-2">No rounds found</p>
-                <p className="font-ui text-sm text-muted">
+                <p className="type-title text-text mb-2">No rounds found</p>
+                <p className="type-body text-muted">
                   {filter} hasn't played a recorded round.
                 </p>
                 <button
                   onClick={() => setFilter(null)}
-                  className="mt-4 font-ui text-sm text-accent underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  className="mt-4 type-small-strong text-accent underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                 >
                   Show all rounds
                 </button>
               </>
             ) : (
               <>
-                <p className="font-display italic text-xl text-text mb-2">No rounds yet</p>
-                <p className="font-ui text-sm text-muted mb-6">
+                <p className="type-title text-text mb-2">No rounds yet</p>
+                <p className="type-body text-muted mb-6">
                   Finish a round to see it here.
                 </p>
                 <button
                   onClick={() => navigate('setup')}
-                  className="py-3 px-6 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  className="py-3 px-6 rounded-sm bg-accent text-bg type-strong shadow-btn focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                 >
-                  New Game
+                  New game
                 </button>
               </>
             )}
@@ -308,26 +308,26 @@ export default function History({ navigate }) {
                   the server refused says so, and where it is kept. */}
               {game._pending && (
                 <div className="mb-2">
-                  <span className="inline-block rounded-full border border-accent py-0.5 px-2 font-ui text-xs font-medium text-accent">
+                  <span className="inline-block rounded-full border border-accent py-0.5 px-2 type-caption text-accent">
                     {game._rejected ? "Can't be saved" : 'Not yet saved'}
                   </span>
                   {game._rejected && (
-                    <p className="font-ui text-xs text-muted mt-1">Kept on this device only.</p>
+                    <p className="type-small text-muted mt-1">Kept on this device only.</p>
                   )}
                 </div>
               )}
 
               {/* Course name */}
               {game.courseName && !(user && courses.length === 1) && (
-                <p className="font-ui text-xs tracking-[0.08em] uppercase text-accent mb-1">{game.courseName}</p>
+                <p className="type-label-caps text-accent mb-1">{game.courseName}</p>
               )}
 
               {/* Date + holes */}
               <div className="flex justify-between items-start mb-2">
-                <span className="font-ui text-xs text-muted">
+                <span className="type-body text-muted">
                   {formatShortDate(game.completedAt)}
                 </span>
-                <span className="font-ui text-xs text-muted">
+                <span className="type-body text-muted">
                   {game.holesPlayed ?? game.holes} holes
                 </span>
               </div>
@@ -346,17 +346,17 @@ export default function History({ navigate }) {
                         onClick={() => toggleFilter(name)}
                         aria-pressed={filter === name}
                         className={[
-                          'pointer-events-auto text-left font-ui text-sm rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
-                          isWinner ? 'text-accent font-semibold' : 'text-text',
+                          'pointer-events-auto text-left rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
+                          isWinner ? 'type-strong text-accent' : 'type-body text-text',
                         ].join(' ')}
                       >
                         {name}
                         {isSignedInPlayer(name, user?.name) && <PlayerStar className="ml-0.5" />}
-                        {isDnf && <span className="text-muted font-normal"> (DNF)</span>}
+                        {isDnf && <span className="type-body text-muted"> (DNF)</span>}
                       </button>
                       {/* Total-to-par, matching Summary's totals row (#70) — was
                           "(Av. X)", the two screens now show the same stat. */}
-                      <span className="font-ui text-xs text-muted">
+                      <span className="type-body text-muted">
                         {total > 0 ? total : '-'}
                         <ParDelta delta={toPar} variant="bracket" />
                       </span>
@@ -367,12 +367,12 @@ export default function History({ navigate }) {
 
               {/* Result label — re-derived on read; hidden for solo rounds */}
               {resultLabel && (
-                <p className="font-ui text-xs text-muted mt-2 tracking-wide">{resultLabel}</p>
+                <p className="type-small text-muted mt-2">{resultLabel}</p>
               )}
 
               {/* Notes */}
               {game.notes && (
-                <p className="font-ui text-xs text-muted mt-2 italic leading-relaxed line-clamp-2">{game.notes}</p>
+                <p className="type-small text-muted mt-2 line-clamp-2">{game.notes}</p>
               )}
             </div>
           </div>

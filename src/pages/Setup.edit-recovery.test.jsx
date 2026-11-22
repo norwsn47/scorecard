@@ -66,7 +66,7 @@ describe('Setup — abandoned-edit recovery on a bounce', () => {
     )
 
     // Wait for a positive render signal, then assert the guard stayed quiet.
-    await screen.findByText('New Game')
+    await screen.findByText('New game')
     expect(navigate).not.toHaveBeenCalled()
     expect(getActiveGame()?.id).toBe('g2')
   })
