@@ -51,20 +51,20 @@ describe('Setup - pastDate seed prefers a working copy\'s own pastDate (#round-t
 })
 
 describe('Setup - back label names where "Edit game setup" was opened from', () => {
-  it('shows "← Summary" by default (opened from Summary\'s Edit)', () => {
+  it('shows "Summary" by default (opened from Summary\'s Edit)', () => {
     renderSetup({ editRound: true, game: localGame })
-    expect(screen.getByRole('button', { name: '← Summary' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: '← Scorecard' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Summary' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Scorecard' })).not.toBeInTheDocument()
   })
 
-  it('shows "← Scorecard" when opened via Scorecard\'s "Edit game setup"', () => {
+  it('shows "Scorecard" when opened via Scorecard\'s "Edit game setup"', () => {
     renderSetup({ editRound: true, game: localGame, fromScorecard: true })
-    expect(screen.getByRole('button', { name: '← Scorecard' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: '← Summary' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Scorecard' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Summary' })).not.toBeInTheDocument()
   })
 
   it('ignores fromScorecard outside edit mode (New Game never reads it)', () => {
     renderSetup({ fromScorecard: true })
-    expect(screen.queryByRole('button', { name: '← Scorecard' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Scorecard' })).not.toBeInTheDocument()
   })
 })

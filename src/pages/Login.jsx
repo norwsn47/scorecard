@@ -103,7 +103,7 @@ export default function Login({ navigate, goBack }) {
   if (sent) {
     return (
       <div className="h-full bg-bg flex flex-col">
-        <PageHeader bare backLabel="← Home" onBack={() => goBack('home')} />
+        <PageHeader bare backLabel="Home" onBack={() => goBack('home')} />
         <main className="flex-1 flex flex-col items-center justify-center px-8 text-center gap-6 pb-16">
           <div className="w-12 h-12 rounded-full bg-bg-card border border-border flex items-center justify-center">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 text-accent">
@@ -147,9 +147,9 @@ export default function Login({ navigate, goBack }) {
 
   return (
     <div className="h-full bg-bg flex flex-col">
-      <PageHeader bare backLabel="← Home" onBack={() => goBack('home')} />
+      <PageHeader bare backLabel="Home" onBack={() => goBack('home')} />
 
-      <main className="flex-1 flex flex-col px-6 pt-3 pb-8">
+      <main className="flex-1 flex flex-col px-page pt-3 pb-8">
         <div className="mb-2">
           <h1 className="type-title text-text">
             Sign in to Scorecard

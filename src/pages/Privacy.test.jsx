@@ -15,11 +15,11 @@ function renderPrivacy(params) {
 
 describe('Privacy - back button', () => {
   it.each([
-    [{ from: 'info' }, '← Info', 'info'],
-    [{ from: 'login' }, '← Login', 'login'],
-    [{}, '← Home', 'home'],
-    [undefined, '← Home', 'home'],
-    [{ from: 'somewhere-else' }, '← Home', 'somewhere-else'],
+    [{ from: 'info' }, 'Info', 'info'],
+    [{ from: 'login' }, 'Login', 'login'],
+    [{}, 'Home', 'home'],
+    [undefined, 'Home', 'home'],
+    [{ from: 'somewhere-else' }, 'Home', 'somewhere-else'],
   ])('params %j shows "%s" and goes back to "%s"', async (params, label, target) => {
     const user = userEvent.setup()
     const { goBack } = renderPrivacy(params)

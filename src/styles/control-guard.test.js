@@ -10,6 +10,7 @@ import { resolve, join, relative } from 'node:path'
 //   ring-accent/40           -> ring-accent (solid 2px focus ring)
 //   opacity-40               -> disabled:bg-disabled-surface disabled:text-disabled-text
 //   hard-coded #hex / rgba() -> colour tokens
+//   px-5, px-6               -> px-page (page horizontal padding, redesign stage 4)
 // Same approach as type-guard.test.js: comments are stripped, then whole class
 // tokens are matched (variant prefixes and `!` removed). Hex and rgba( are matched
 // on the comment-stripped line. Test files are not scanned.
@@ -20,20 +21,23 @@ const SRC = resolve(process.cwd(), 'src')
 // must have, so a stale or grown entry fails. Each is owned by a later stage,
 // which removes the entry when it moves the component onto the tokens.
 const ALLOW = [
-  // Stage 4 (app bar, header actions): PageHeader's back button.
-  { file: 'src/components/PageHeader.jsx', cls: 'ring-accent/40', count: 1, reason: 'stage 4: PageHeader back button focus ring' },
-  // Stage 4: Summary's header right-slot Edit icon button.
-  { file: 'src/pages/Summary.jsx', cls: 'rounded-md', count: 1, reason: 'stage 4: header right-slot Edit icon button' },
-  { file: 'src/pages/Summary.jsx', cls: 'opacity-40', count: 1, reason: 'stage 4: header right-slot Edit icon button' },
-  { file: 'src/pages/Summary.jsx', cls: 'ring-accent/40', count: 1, reason: 'stage 4: header right-slot Edit icon button' },
   // Stage 7: Scorecard score-cell inset rings (owner put them out of scope for stage 3).
   { file: 'src/pages/Scorecard.jsx', cls: 'ring-accent/40', count: 1, reason: 'stage 7: score-cell inset rings' },
-  // Stage 4: History "+ Add" header action.
-  { file: 'src/pages/History.jsx', cls: 'rounded-sm', count: 2, reason: 'stage 4: "+ Add" header action (line 134); stage 6: inline player-name toggle' },
-  // Stage 6 (History): filter chips (4), record card and its stretched open button, "+ Add".
-  { file: 'src/pages/History.jsx', cls: 'ring-accent/40', count: 7, reason: 'stages 4 and 6: "+ Add", filter chips (4), record card open button, player-name toggle' },
+  // Stage 6 (History): inline player-name toggle, filter chips (4), record card open button.
+  { file: 'src/pages/History.jsx', cls: 'rounded-sm', count: 1, reason: 'stage 6: inline player-name toggle' },
+  { file: 'src/pages/History.jsx', cls: 'ring-accent/40', count: 6, reason: 'stage 6: filter chips (4), record card open button, player-name toggle' },
   { file: 'src/pages/History.jsx', cls: 'rounded-md', count: 2, reason: 'stage 6: record card and its open button' },
   { file: 'src/pages/History.jsx', cls: 'shadow-card', count: 1, reason: 'stage 6: record card moves to shadow-subtle' },
+  // Stage 4: px-5 and px-6 are not page padding in these places. Page edges use px-page.
+  { file: 'src/components/Button.jsx', cls: 'px-6', count: 1, reason: 'inner padding of the large button' },
+  { file: 'src/components/CourseMapModal.jsx', cls: 'px-5', count: 4, reason: 'map modal inner padding (modal, not a page)' },
+  { file: 'src/components/CourseMapModal.lazy.jsx', cls: 'px-5', count: 2, reason: 'map modal inner padding (modal, not a page)' },
+  { file: 'src/pages/History.jsx', cls: 'px-5', count: 4, reason: 'stage 6: filter sheet inner padding' },
+  { file: 'src/pages/Setup.jsx', cls: 'px-6', count: 1, reason: 'bottom sheet inner padding' },
+  { file: 'src/pages/Summary.jsx', cls: 'px-6', count: 1, reason: 'bottom sheet inner padding' },
+  { file: 'src/pages/Settings.jsx', cls: 'px-6', count: 1, reason: 'bottom sheet inner padding' },
+  { file: 'src/pages/Scorecard.jsx', cls: 'px-6', count: 1, reason: 'bottom sheet inner padding' },
+  { file: 'src/pages/CourseEdit.jsx', cls: 'px-6', count: 1, reason: 'bottom sheet inner padding' },
 ]
 // Note: opacity-25 (circular game controls) is not matched, so needs no entry.
 
@@ -46,6 +50,8 @@ const CLASS_RULES = [
   { name: 'shadow-card', test: c => c === 'shadow-card' },
   { name: 'ring-accent/40', test: c => c === 'ring-accent/40' },
   { name: 'opacity-40', test: c => c === 'opacity-40' },
+  { name: 'px-5', test: c => c === 'px-5' },
+  { name: 'px-6', test: c => c === 'px-6' },
 ]
 // #abc, #aabbcc (and the 4 and 8 digit forms), not followed by more word chars.
 const HEX = /#[0-9a-fA-F]{3,8}\b/g
@@ -94,7 +100,7 @@ describe('control guard: controls use the redesign tokens', () => {
     expect(files.length).toBeGreaterThan(10)
   })
 
-  it('finds no banned radius, shadow, ring, opacity or hard-coded colour outside the allow-list', () => {
+  it('finds no banned radius, shadow, ring, opacity, page padding or hard-coded colour outside the allow-list', () => {
     const violations = []
     for (const file of files) {
       const text = readFileSync(resolve(process.cwd(), file), 'utf8')
@@ -122,8 +128,8 @@ describe('control guard scanner', () => {
   const tokens = s => scan(s).map(f => f.cls)
 
   it('detects banned classes, including variant-prefixed ones', () => {
-    const src = '<b className="rounded-sm md:rounded-md shadow-btn hover:shadow-btn focus-visible:ring-accent/40 disabled:opacity-40 shadow-card">'
-    expect(tokens(src)).toEqual(['rounded-sm', 'rounded-md', 'shadow-btn', 'shadow-btn', 'ring-accent/40', 'opacity-40', 'shadow-card'])
+    const src = '<b className="rounded-sm md:rounded-md shadow-btn hover:shadow-btn focus-visible:ring-accent/40 disabled:opacity-40 shadow-card px-5 md:px-6">'
+    expect(tokens(src)).toEqual(['rounded-sm', 'rounded-md', 'shadow-btn', 'shadow-btn', 'ring-accent/40', 'opacity-40', 'shadow-card', 'px-5', 'px-6'])
   })
 
   it('detects hex and rgba colours, including inside arbitrary values', () => {
@@ -134,7 +140,7 @@ describe('control guard scanner', () => {
   it('does not flag the allowed tokens or look-alikes', () => {
     const src = [
       'rounded-control rounded-sheet rounded-full rounded-lg rounded-t-md shadow-subtle',
-      'ring-accent ring-accent/20 opacity-25 opacity-400 disabled:bg-disabled-surface',
+      'ring-accent ring-accent/20 px-page px-4 px-50 opacity-25 opacity-400 disabled:bg-disabled-surface',
       'href="#main" id="#nothex" // rounded-sm #fff rgba(0,0,0,1)',
       '/* shadow-btn opacity-40 */ {/* ring-accent/40 */}',
     ].join('\n')

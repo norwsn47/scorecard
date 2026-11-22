@@ -24,7 +24,7 @@ export default function BruntsfieldCoursePage({ navigate }) {
     <div className="h-full bg-bg flex flex-col relative">
 
       {/* ── Branding ── */}
-      <header className="flex-1 flex flex-col justify-start px-6 pt-10 pb-2">
+      <header className="flex-1 flex flex-col justify-start px-page pt-10 pb-2">
 
         {/* Heading row — h1 + info icon inline, icon aligns to first line */}
         <div className="flex items-start -mr-2.5">
@@ -61,7 +61,7 @@ export default function BruntsfieldCoursePage({ navigate }) {
       </header>
 
       {/* ── Actions ── */}
-      <main className="flex flex-col gap-4 px-6 pt-6 pb-8 w-full">
+      <main className="flex flex-col gap-4 px-page pt-6 pb-8 w-full">
 
         {activeGame && (
           <Button variant="secondary" fullWidth onClick={() => navigate('scorecard')}>

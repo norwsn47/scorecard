@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import Button from '../components/Button.jsx'
 import CourseMapModal from '../components/CourseMapModal.lazy.jsx'
-import PageHeader from '../components/PageHeader.jsx'
+import PageHeader, { HeaderAction } from '../components/PageHeader.jsx'
 import ParDelta from '../components/ParDelta.jsx'
 import PlayerStar from '../components/PlayerStar.jsx'
 import { BRUNTSFIELD_COURSE_NAME, MAX_HOLES, MAX_STROKES } from '../constants.js'
@@ -126,6 +126,10 @@ export default function Scorecard({ navigate, params }) {
   // Accepted, narrow edge case — not solved here.
   const frontNineComplete = game.holes === 18 && players.length > 0
     && players.every(p => (game.scores?.[p]?.[8] ?? null) != null)
+
+  // Every hole scored for every player: Finish becomes the expected next step.
+  const allHolesScored = players.length > 0 && Array.from({ length: game.holes ?? 0 }).every((_, h) =>
+    players.every(p => (game.scores?.[p]?.[h] ?? null) !== null))
 
   // Active cell values
   const activePlayer = players[activeCell.playerIndex] ?? null
@@ -285,8 +289,10 @@ export default function Scorecard({ navigate, params }) {
         // target (History) is correct, so it gets an honest destination
         // label; the live/new-game mode doesn't clear the active game, so the
         // round survives in storage and reappears as "Resume Game" on Home —
-        // "Pause" describes that accurately, "Quit"/"← Back" would not.
-        backLabel={isEdit ? '← History' : 'Pause'}
+        // "Pause" describes that accurately, "Quit"/"Back" would not. Pause is
+        // an action, not a step back, so it gets no chevron.
+        backLabel={isEdit ? 'History' : 'Pause'}
+        backChevron={isEdit}
         onBack={() => {
           if (isEdit) {
             clearActiveGame()
@@ -300,12 +306,11 @@ export default function Scorecard({ navigate, params }) {
           }
         }}
         right={
-          <button
-            onClick={() => setShowConfirm(true)}
-            className="py-2 px-4 rounded-control border border-accent text-accent type-small-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-          >
+          // A text action, except Finish once every hole is scored for every
+          // player: then it is the expected next step, so it takes the pill.
+          <HeaderAction filled={!isEdit && allHolesScored} onClick={() => setShowConfirm(true)}>
             {isEdit ? 'Save' : 'Finish'}
-          </button>
+          </HeaderAction>
         }
       />
 
@@ -440,7 +445,7 @@ export default function Scorecard({ navigate, params }) {
         </div>
 
         {/* Floating control bar */}
-        <div className="bg-bg border-t border-border px-5 py-4">
+        <div className="bg-bg border-t border-border px-page py-4">
           <div className="flex items-center justify-between">
             {isBruntsfieldCourse ? (
               <button
@@ -497,7 +502,7 @@ export default function Scorecard({ navigate, params }) {
             state (not the initial copy) so Setup picks up whatever's already
             been scored. */}
         {isEdit && (
-          <div className="bg-bg px-5 pb-4 text-center shrink-0">
+          <div className="bg-bg px-page pb-4 text-center shrink-0">
             <button
               onClick={() => navigate('setup', { editRound: true, game, fromScorecard: true })}
               className="inline-block py-3.5 -my-3.5 type-small-strong text-muted underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"

@@ -180,22 +180,31 @@ Base unit: 4px (Tailwind default).
 
 | Context | Value |
 |---|---|
-| Page horizontal padding | `px-5` (20px) or `px-6` (24px) |
-| Page header vertical | `pt-6 pb-4` |
+| Page horizontal padding | `px-page` (16px), on every screen, the header bar and the bottom action bar alike |
+| Page header | `min-h-[4.25rem]` bar, no vertical padding (see "Page header") |
 | Primary button vertical | `py-4` (16px) |
 | Secondary / input vertical | `py-3` (12px) |
 | Items in a list | `space-y-3` (12px gap) |
 | Button group gap | `gap-3` or `gap-4` |
 | Footer safe area | `pb-10` to `pb-14` |
-| Control bar | `px-5 py-4` |
+| Control bar | `px-page py-4` |
 | Table cell (vertical) | `py-3` |
 | Table cell (horizontal) | `px-2` (hole col), `px-1` (player cols) |
 
-`pt-6 pb-4` matches what `PageHeader.jsx` ships — the code is taken as the source of truth here. (This table read `pt-12 pb-6`, then briefly `pt-10 pb-4`, in earlier passes; both were doc/reality mismatches corrected against the shipped component.)
+The header bar sets its height with `min-h-[4.25rem]` rather than vertical padding; see "Page header".
+
+**Page margin.** The 16px page margin (`px-page`) is the same on every screen. The header bar, the page body (`main`) and `BottomActionBar` all use it, so a header's back button, a page's text and the bottom bar's button share one left and right edge. `px-5` and `px-6` are banned by the control guard (`src/styles/control-guard.test.js`). The only allow-listed uses are not page margin:
+
+- `Button` Large's inner padding (`px-6`).
+- The inner padding of modals: the course map modal (`CourseMapModal.jsx` and its lazy wrapper, `px-5`).
+- The inner padding of bottom sheets (`px-6` in Setup, Summary, Settings, Scorecard and CourseEdit).
+- The History filter sheet (`px-5`), until stage 6 rebuilds it.
+
+Each entry is counted, so a stale or grown entry fails the guard.
 
 ### Spacing aliases (redesign, stage 1)
 
-Six layout aliases from the Figma Layout collection (`tokens.json`) are defined as Tailwind **spacing keys** in `tailwind.config.js`, in rem. Any spacing utility accepts them: `gap-related`, `space-y-section`, `px-page`, `p-card`, and so on. **They are defined and not yet used by any component.** The table above still describes what ships; later stages move components onto the aliases.
+Six layout aliases from the Figma Layout collection (`tokens.json`) are defined as Tailwind **spacing keys** in `tailwind.config.js`, in rem. Any spacing utility accepts them: `gap-related`, `space-y-section`, `px-page`, `p-card`, and so on. **They are in use.** Pages and components take them in place of raw numbers: `px-page` for page margin, `gap-related` and `gap-group` for stacks, `gap-section` between page sections, `space-y-field` for form fields, `p-card` inside cards. Raw `space-y-3` and `gap-3` still appear in places that predate the move (list items, button groups), so the table above remains the reference for those.
 
 | Alias | Figma variable | Value | Use |
 |---|---|---|---|
@@ -203,7 +212,7 @@ Six layout aliases from the Figma Layout collection (`tokens.json`) are defined 
 | `field` | `layout/gap/field` | 0.75rem (12px) | Gap between form fields |
 | `group` | `layout/gap/group` | 1rem (16px) | Gap between groups of content |
 | `section` | `layout/gap/section` | 1.5rem (24px) | Gap between page sections |
-| `page` | `layout/padding/page` | 1rem (16px) | Page horizontal padding (replaces `px-5` and `px-6`) |
+| `page` | `layout/padding/page` | 1rem (16px) | Page horizontal padding (replaced `px-5` and `px-6`, now guarded) |
 | `card` | `layout/padding/card` | 1rem (16px) | Padding inside a card |
 
 Note that `field` is also the name of the form-field border colour token (`border-field`). They do not clash: one is a spacing key (`gap-field`, `p-field`), the other a colour key (`border-field`).
@@ -218,12 +227,12 @@ One control radius. Two utilities come from the Figma Shape collection, in rem (
 |---|---|---|---|
 | `0.375rem` (6px) | `rounded-control` | `--radius-control` | The one control radius: buttons, fields (input, select, date, textarea), the par stepper cells and their buttons, the Map control. Replaces `rounded-sm` (4px) and `rounded-md` (8px) |
 | `1rem` (16px) | `rounded-sheet` | `--radius-sheet` | Bottom sheets, **top corners only** (`rounded-t-sheet`). Replaces `rounded-t-2xl` |
-| `50%` | `rounded-full` | none | Circular game controls (the 64px Decrement, Increment and Advance buttons) and the History filter chips, **until stage 6** rebuilds the chips as pills with a picker sheet. Nothing else uses it, apart from the sheet handle |
+| `50%` | `rounded-full` | none | Circular game controls (the 64px Decrement, Increment and Advance buttons) and the History filter chips, **until stage 6** rebuilds the chips as pills with a picker sheet. Nothing else uses it, apart from the sheet handle and the filled header action pill (Scorecard Finish) |
 | `44px` | *(CSS only)* | none | Phone frame on desktop |
 
-`rounded-sm` and `rounded-md` are no longer used for controls. The remaining uses (Summary's header Edit icon button, History's "+ Add", record cards and the player-name toggle) are on the control guard's allow-list (`src/styles/control-guard.test.js`) and move in stages 4 and 6. `rounded-lg` (12px) is defined but unused.
+`rounded-sm` and `rounded-md` are no longer used for controls. The remaining uses (History's record cards and the player-name toggle) are on the control guard's allow-list (`src/styles/control-guard.test.js`) and move in stage 6. The header action is on the tokens: its text form is `rounded-control`, and its filled pill is `rounded-full` (see "Header action"). `rounded-lg` (12px) is defined but unused.
 
-Rule: **buttons, fields and cards all take `rounded-control`. Sheets take `rounded-t-sheet`. `rounded-full` is for circular game controls and filter chips only.**
+Rule: **buttons, fields and cards all take `rounded-control`. Sheets take `rounded-t-sheet`. `rounded-full` is for circular game controls, filter chips and the filled header action pill only.**
 
 ---
 
@@ -270,7 +279,7 @@ There is one button, `src/components/Button.jsx`, with three variants (Primary, 
 
 **The heights are the implementation's choice.** `tokens.json` carries no button dimensions, so Large 48px and Medium 44px are not from Figma. Both keep the 44px minimum touch target.
 
-Shared by every variant: `border-2 rounded-control`, `type-strong` (sentence case, no uppercase or tracking), `gap-2` between an optional leading or trailing icon and the label, `transition-colors`, and a `type="button"` default. `fullWidth` adds `w-full`.
+Shared by every variant: `border rounded-control` (1px; owner call 22 November 2026, the 2px outline read too heavy), `type-strong` (sentence case, no uppercase or tracking), `gap-2` between an optional leading or trailing icon and the label, `transition-colors`, and a `type="button"` default. `fullWidth` adds `w-full`.
 
 **Flat.** Buttons carry no shadow. `shadow-btn` is retired from all components.
 
@@ -306,15 +315,28 @@ Sheet buttons are the standard Button at Large, not a separate tier. A confirmat
 
 **Settings' delete-account sheet stacks instead**, per Figma: `flex flex-col gap-3`, both `fullWidth`, with the Primary "Delete account" above the Secondary "Keep my account". The Summary delete-round sheet is the same two-button pattern, with Cancel as the initially focused control (see "Bottom sheet / confirmation modal").
 
-### Header action button (Header action tier) — Finish/Save
-```
-py-2 px-4 rounded-sm border border-accent text-accent
-font-ui text-xs tracking-[0.1em] uppercase font-semibold
-focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40
-```
-Sits inside a `PageHeader` right slot (or an equivalent compact context) — small enough not to outweigh the page title, still comfortably legible at `text-xs` because it carries a short, familiar word ("Finish", "Save"). Touch target is ~34px including border, below the 44px ideal; accepted for the same reason "Inline link tap targets" (below) accepts ~36-40px for `text-xs` inline elements — this is a deliberately quiet secondary action inside a fixed-height chrome bar, not the screen's one primary action.
+### Header action (`HeaderAction`)
 
-History's "+ Add" has dropped the border and is plain accent text (`min-h-[44px] px-2 -mr-2`, `text-xs tracking-[0.1em] uppercase font-semibold text-accent`, focus ring kept), so it meets the 44px target.
+`HeaderAction`, exported from `src/components/PageHeader.jsx`, is the one component for an action in the header's right slot. It is the Figma "App bar action". There is no bordered header button any more (CHANGELOG reversal 3).
+
+```
+Shared:  min-h-11 inline-flex items-center justify-center whitespace-nowrap type-small-strong
+         transition-colors disabled:cursor-not-allowed
+         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent
+Text (default):  -mr-3 px-3 rounded-control border-2 border-transparent bg-transparent text-accent
+                 enabled:hover:bg-accent-tint enabled:active:bg-accent-tint-hover
+                 disabled:bg-transparent disabled:text-disabled-text
+Filled (pill):   px-4 rounded-full border-2 border-transparent bg-accent text-on-accent
+                 enabled:hover:bg-accent-hover enabled:active:bg-accent-hover
+                 disabled:bg-disabled-surface disabled:text-disabled-text
+                 focus-visible:ring-offset-2 focus-visible:ring-offset-bg
+```
+
+- **Text by default.** An accent label with no border or fill at rest, and a `rounded-control` tint on hover and press. The `-mr-3` pulls the label back towards the 16px page margin, so the 44px tap area carries the inset, not the text; the transparent 2px border leaves the label ink about 18px from the page edge.
+- **Filled pill only for the expected next step.** The one place it ships is Scorecard's **Finish**, and only once every hole is scored for every player and the page is not in edit mode (`filled={!isEdit && allHolesScored}`). It is `rounded-full`, the one pill outside the circular game controls.
+- **Everything else is text.** An unscored Finish, Save in edit mode, History's "+ Add" and Summary's "Edit" are all text actions. Summary's Edit keeps `aria-label="Edit round"` (and a matching `title`), so its accessible name stays specific.
+- **Pause is not a header action.** It is the Scorecard's left-slot back button with no chevron (see "Back button" under Page header). It is muted text, not accent.
+- Every one meets the 44px target (`min-h-11`).
 
 ### Add-player button (Text button)
 ```
@@ -363,7 +385,7 @@ Disabled:     bg-disabled-surface border-border text-disabled-text
 
 **Disabled.** Buttons, fields and the par stepper buttons use `disabled-surface` and `disabled-text` (`#E8E1D6` and `#D9D0C4`), not `opacity-40`. The pair is about 1.17:1, far below 4.5:1 **by design**: disabled states are exempt from the contrast rule (see "Sunlight contrast"). A disabled Secondary or Text button has no fill and takes `text-disabled-text` for its label (and its edge, for Secondary). `cursor-not-allowed` is set on all of them. **Circular game controls keep `opacity-25`** (Decrement and Advance): they are physical controls the player is about to need again, and a light fade reads as "not reachable right now".
 
-**Focus-visible.** Every button, field and control uses a solid 2px accent ring: `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent`. Buttons add `ring-offset-2 ring-offset-bg` so the ring sits clear of the border. Fields use `focus:` rather than `focus-visible:` because a text field should show focus on tap too, and add the accent edge. `:focus-visible` on buttons only fires for keyboard, switch and assistive-tech navigation, never a touch tap, so it is invisible in normal use on this touch-only product. The old 40% ring (`ring-accent/40`) is retired. The remaining uses (PageHeader's back button, Summary's Edit icon, History's chips and "+ Add", and the Scorecard score-cell inset rings) are on the control guard's allow-list and move in stages 4, 6 and 7.
+**Focus-visible.** Every button, field and control uses a solid 2px accent ring: `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent`. Buttons add `ring-offset-2 ring-offset-bg` so the ring sits clear of the border. Fields use `focus:` rather than `focus-visible:` because a text field should show focus on tap too, and add the accent edge. `:focus-visible` on buttons only fires for keyboard, switch and assistive-tech navigation, never a touch tap, so it is invisible in normal use on this touch-only product. The old 40% ring (`ring-accent/40`) is retired. The header's back button and `HeaderAction` use the solid ring. The remaining `ring-accent/40` uses (History's chips, record card and player-name toggle, and the Scorecard score-cell inset rings) are on the control guard's allow-list and move in stages 6 and 7.
 
 **No shadow on buttons or sheets.** `shadow-btn` and the sheet `shadow-card` are gone. The one shadow, `shadow-subtle`, is for record cards only.
 
@@ -383,47 +405,69 @@ pb-[calc(1rem+env(safe-area-inset-bottom,0px))]
 
 ### Page header (PageHeader component)
 
-**One structural layout, always.** Three flex slots on a single row — left, centre, right — with no absolute positioning. This replaces the previous `absolute inset-x-0 text-center px-24` title, which floated on a layer above the side slots and overlapped them whenever a back label ran long, or a back label and a right action were both present (#85).
+**One structural layout, always.** Three flex slots on a single row (left, centre, right) with no absolute positioning. The title can never overlap a side slot, because the centre is a real flex child between them, not a layer on top (#85).
 
 ```
-header:  flex items-center gap-3 px-5 pt-6 pb-4 border-b border-border shrink-0
-left:    shrink-0 flex justify-start      /* back button, or an invisible mirror — see below */
+header:  flex items-center gap-3 px-page min-h-[4.25rem] border-b border-border shrink-0
+left:    shrink-0 flex justify-start      /* back button, or an invisible mirror */
 centre:  flex-1 min-w-0 text-center       /* <h1> + optional subtitle */
 right:   shrink-0 flex justify-end        /* the `right` prop, or an invisible mirror */
 ```
 
-- **The side slots are sized to their content and never shrink** (`shrink-0`). The back button and any right action always keep their full intrinsic width — they are never clipped, wrapped or truncated.
-- **The centre slot takes all the width the side slots leave** (`flex-1 min-w-0`). The title wraps to two lines (`line-clamp-2`) rather than clipping; the subtitle truncates to one line. Between them, this is the only place in the header where text doesn't reliably fit at its full intrinsic width.
-- **Collision is structurally impossible** — the centre is a real flex child sitting *between* the two side slots, not a layer on top of them, so it can never fall under a button.
+- **Bar height.** The bar is `min-h-[4.25rem]` (68px) and carries no vertical padding. It is a **minimum, not a fixed height**: a title that wraps to two lines (`type-title` is 30px a line), or a title plus a subtitle, grows the bar by about 10px. Nothing clips. This is an **owner decision to confirm**: either accept the growth or fix the height and clamp harder.
+- **Frame.** `px-page` (16px) on both sides, `border-b border-border`, and the title in `type-title text-text`. The subtitle is `type-caption text-muted`, one truncated line.
+- **The side slots size to their content and never shrink** (`shrink-0`). The back button and any right action keep their full width and are never clipped, wrapped or truncated.
+- **The centre slot takes the width the side slots leave** (`flex-1 min-w-0`). The `<h1>` wraps to at most two lines (`line-clamp-2`), so a long course name reads in full instead of ending in an ellipsis. `title` is optional: a falsy title skips the `<h1>` entirely, so Summary does not reserve a blank line when a course name is missing (#69).
 
-**Keeping the title centred on the header — the invisible mirror.** When a title is present and exactly one side slot has real content, the empty side renders an `aria-hidden`, `invisible`, `pointer-events-none` copy of the other side's node. The two side slots are then equal width, so the centre slot is centred on the header rather than merely in the gap between the buttons. When *both* side slots carry real content (Scorecard, History, Summary), the title centres in the space between them; on those screens the label and the title are both short, so the offset from true centre is a few pixels and is accepted. The mirror is only rendered when there is a title to centre.
+**Keeping the title centred on the header: the invisible mirror.** When the centre has a title or subtitle and exactly one side slot has real content, the empty side renders an `aria-hidden`, `invisible`, `pointer-events-none` copy of the other side's node. The two sides are then equal width and the title is centred on the header, not just in the gap. When both sides have content (Scorecard, History, Summary) the title centres in the space between them; the offset from true centre is a few pixels and is accepted.
 
-**Intended markup** (this reconciles the doc/code drift the review flagged — `truncate` was documented on the wrapper but shipped on the inner elements, and `pointer-events-none` was documented but never shipped):
+**Back button.** The left slot, when `onBack` is passed:
+
 ```
-<header className="flex items-center gap-3 px-5 pt-6 pb-4 border-b border-border shrink-0">
-  <div className="shrink-0 flex justify-start">{ back button | mirror-of-right | null }</div>
-  <div className="flex-1 min-w-0 text-center">
-    {title    && <h1 className="font-display italic text-2xl text-text line-clamp-2">{title}</h1>}
-    {subtitle && <p  className="font-ui text-xs tracking-[0.08em] uppercase text-muted mt-0.5 truncate">{subtitle}</p>}
-  </div>
-  <div className="shrink-0 flex justify-end">{ right | mirror-of-back | null }</div>
-</header>
+min-h-11 -ml-2 pl-2 pr-3 inline-flex items-center gap-1 whitespace-nowrap
+rounded-control border-2 border-transparent text-muted type-small-strong transition-colors
+hover:bg-accent-tint hover:text-accent  active:bg-accent-tint-hover active:text-accent
+focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent
 ```
-`line-clamp-2` sits on the `<h1>` — a long title (a course name) wraps to two lines instead of clipping with an ellipsis. `truncate` sits on the subtitle `<p>` only. Neither sits on the centre wrapper. There is no `pointer-events-none` in the header any more: it was only there to let taps fall through the old absolute title layer to the buttons underneath, and that layer no longer exists.
 
-- **Back button:** `py-3 min-h-[44px] flex items-center whitespace-nowrap text-muted font-ui text-sm tracking-[0.08em] uppercase active:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40` — `←` prefix, no button chrome, **never truncates, never wraps**.
-- **Right slot:** optional — a Header action button (Scorecard Finish/Save, History "+ Add") or a plain text link (Summary Edit/Done). `whitespace-nowrap`, **never truncates**; its touch target comes from whatever is passed in.
-- **Mirror spacer:** the same node as the side it mirrors, wrapped in a `<div aria-hidden="true" class="invisible pointer-events-none">`. It contributes width and nothing else.
+- A **chevron SVG** (`w-5 h-5`, 2px stroke, round caps, `aria-hidden`) sits before the label. It replaces the old "←" typed into the label text.
+- **`backLabel` is plain text.** It is the destination ("Home", "History"), or for a non-back action the action ("Pause"), and it is the button's **accessible name**. Do not type an arrow into it.
+- **`backChevron`** (default `true`) turns the chevron off. Scorecard's live Pause passes `backChevron={false}`, because Pause leaves the round in storage rather than stepping back. Scorecard in edit mode passes `true` with the label "History".
+- Muted at rest, with a tint on hover and press. The text turns accent in those same states, so muted text is never drawn on the 8% tint (`muted` on it is 4.57:1, see "Sunlight contrast").
+- The 44px target comes from `min-h-11`. The `-ml-2 pl-2` pulls the chevron's ink toward the page margin while keeping the tap area. The focus ring is the solid accent ring, no offset.
+- It **never truncates and never wraps.**
 
-**Bare variant — Login only.** `PageHeader` takes a `bare` boolean prop. `bare` drops `border-b` and the boxed vertical padding, leaving `flex items-center px-4 pt-3 shrink-0` with just the back slot. It exists for Login's two screens (the form and the "check your email" confirmation), which follow Home's borderless "back link floating above a large editorial heading" pattern rather than the boxed header bar every utility screen uses — a deliberate difference, not an oversight. Login passes `bare` + `onBack` + `backLabel` and keeps its `<h1>` in the page body. This removes Login's local `BackToHome` component, the last hand-rolled copy of the header back button (#85) — see Navigation → Known duplication.
+**Right slot.** Optional. In practice a `HeaderAction` (see "Header action"). It is `whitespace-nowrap` and never truncates.
 
-**Never truncate a header button — use a shorter accurate word instead.** A standing rule, not a one-off fix. The back/right slots used to sit behind a fixed 72px width with `truncate`, which silently clipped "← Bruntsfield" down to the meaningless "← BRUNT". The fix was not a wider box — it was renaming the destination to a word that actually fits: **"Bruntsfield" became "Course"** everywhere in the app (it's the only course today; revisit if a second course ships). The slots now carry no width cap and `whitespace-nowrap`, so a button can never clip — the corollary is that a caller must never hand it a label that's genuinely too long for the space. If a destination's real name won't fit, shorten the *word*. Never reintroduce `truncate` on a button label.
+**Mirror spacer.** The same node as the side it mirrors, wrapped in `<div aria-hidden="true" class="invisible pointer-events-none">`. It contributes width and nothing else.
 
-**Back-label length budget.** With this layout a long back label no longer collides with anything — instead it eats into the centre title's width, and on a screen whose title is a course name the title can compress to almost nothing. So the budget stays, restated against the new geometry: **after the arrow, a back label is one word where possible and two words at the most — about 12 characters including the arrow and its space.** "← Home", "← Rounds", "← History", "← Summary", "← Course", "← Settings", "← Courses" all pass. A shortened label like "← Course" still points at the right screen; it does not have to be a verbatim copy of that screen's title. The old `px-24` (96px) title clearance and the fixed ~198px title budget are both gone: the title simply takes the space the side slots leave, wrapping to a second line rather than clipping if it needs to.
+**Bare variant, Login only.** `bare` drops the bar entirely: `flex items-center px-page pt-3 shrink-0` with just the back button, no border, no title, no mirror. It is for Login's two screens (the form and "check your email"), which follow Home's borderless "back link above a large editorial heading" pattern. This is a deliberate difference, not an oversight. Login passes `bare`, `onBack` and `backLabel="Home"` and keeps its `<h1>` in the page body. It replaced Login's local `BackToHome` component, the last hand-rolled header back button (#85).
+
+**Never truncate a header button; use a shorter accurate word instead.** A standing rule. The back and right slots carry no width cap and `whitespace-nowrap`, so a button can never clip. The corollary is that a caller must never hand it a label too long for the space: shorten the word. "Bruntsfield" became "Course" everywhere (it is the only course today; revisit if a second ships). Never reintroduce `truncate` on a button label.
+
+**Back-label length.** A long back label never collides with anything, but it eats into the centre title's width, and a title that is a course name can compress to almost nothing. There is no longer a character budget tied to the arrow (the old rule counted "← " inside about 12 characters, and the arrow is no longer text). The rule is now: **a back label is a single plain destination word where possible and two words at most**, and the check is that the title still has room on a 390px screen. "Home", "Rounds", "History", "Summary", "Course", "Settings", "Courses" and "Pause" all pass. A shortened label still points at the right screen; it need not copy that screen's title.
+
+### Content-page ladder (Info, Privacy, Rules, Settings)
+
+Text-led pages share one vertical rhythm, set with the spacing aliases and no raw numbers. Info and Privacy are the reference screens.
+
+| Step | Value | Where |
+|---|---|---|
+| Name and email, one above the other | 4px (`gap-1`) | Info's Account block |
+| Related items (label, body, link) | 8px (`gap-related`) | Inside a section |
+| Blocks inside a section, and the gap between paragraphs | 16px (`gap-group`) | RulesContent's stack |
+| Sections | 24px (`gap-section`) either side of a full-width hairline | Info's sections, split by `<div className="h-px bg-border" />` |
+
+- **Page frame.** `main` is `px-page pt-6 pb-14 flex flex-col gap-section max-w-sm mx-auto w-full`, scrolling inside the page column.
+- **Section labels** are `type-label-caps`. Info and Privacy set them in `text-accent`. Settings and Home set them in `text-muted`, as in their reference screens. Do not mix the two on one screen.
+- **Body text** is `type-body text-text`. Secondary lines are `type-small text-muted`.
+- **Settings value rows** are hairline list rows, not boxed fields: `py-3.5 border-b border-border`, a muted `type-small` caption, the value in `type-body text-text`, and a helper line. The edit control is a **44px icon button** (`w-11 h-11 -mr-2.5`, a 20px pencil, `rounded-control`, `text-accent`, accent tint on press) with a specific `aria-label` ("Edit name", "Change email address"). The field opens in place only on a deliberate tap. The tap-through rows ("My courses", "Information") use the same hairline, with a chevron.
+- **Settings sign out and delete block** is centred (`flex flex-col items-center text-center gap-section`), pushed to the foot of the page by a `flex-1` spacer. Sign out is a Text button; "Delete my account" is a muted underlined `type-small-strong` link with its explanation beneath.
+- **Links.** Grow the tap area with padding and an equal negative margin (see "Inline link tap targets"), and put the link in its own wrapper `<div>` inside a `flex flex-col gap-related` section. Using flex gap instead of `space-y-*` means the negative margin is never overridden, so the link needs no extra handling. Where an item sits under another, `mt-related` gives the 8px.
 
 ### Inline link tap targets
 
-Text links inside body copy (`text-sm` / `text-xs`, underlined accent) are visually small but still need a comfortable hit area. Grow the tap target with vertical padding cancelled by an equal negative margin, so the clickable box expands without shifting surrounding layout:
+Text links inside body copy (`type-body` / `type-small`, underlined accent) are visually small but still need a comfortable hit area. Grow the tap target with vertical padding cancelled by an equal negative margin, so the clickable box expands without shifting surrounding layout:
 
 ```
 inline-block py-3 -my-3        /* default — ~44px on text-sm, ~40px on text-xs */
@@ -436,7 +480,7 @@ Match `inline-flex` instead of `inline-block` where the link already uses it (e.
 
 **Prefer giving the link its own line over accepting the reduced floor.** Where a `text-xs` link can be pulled out of flowing paragraph text (or out of a shared row with another link) onto a line of its own, do that first — it removes the adjacent-line collision that justified the reduced padding, so the link can take `py-3.5 -my-3.5` (~44px even at `text-xs`) instead of settling for `py-2.5 -my-2.5`. Fixed in this pass (#34): Login's "How we handle your data" (already its own paragraph, just needed the padding bump and a touch more margin above it), Info's "Read our privacy policy" (split out of its sentence into its own line below), and Summary's "Share scorecard" (unbulleted from "Edit round" — each link now sits in its own `<div>`, stacked with `space-y-3`, rather than sharing one row). The `py-2.5 -my-2.5` reduced variant remains available for a link that genuinely cannot be isolated this way — it is no longer used by these three.
 
-**`space-y-*` caveat:** if the link is a direct child of a `space-y-*` container, that container's `> :not([hidden]) ~ :not([hidden])` selector out-specifies `-my-*` (specificity 0,3,0 vs 0,1,0), so the negative margin is ignored and the padding shifts the layout. Fix: wrap the link in an unclassed `<div>`. The wrapper absorbs the `space-y` margin and the negative margin then resolves cleanly inside it. Links sitting inline within a `<p>`, or as the sole child of a padded container, need no wrapper.
+**`space-y-*` caveat** (content pages now avoid this by using `flex flex-col gap-related`, see the ladder above): if the link is a direct child of a `space-y-*` container, that container's `> :not([hidden]) ~ :not([hidden])` selector out-specifies `-my-*` (specificity 0,3,0 vs 0,1,0), so the negative margin is ignored and the padding shifts the layout. Fix: wrap the link in an unclassed `<div>`. The wrapper absorbs the `space-y` margin and the negative margin then resolves cleanly inside it. Links sitting inline within a `<p>`, or as the sole child of a padded container, need no wrapper.
 
 Precedent: the Setup course-rules link, Summary's "create an account" link (`py-3.5 -my-3.5`, the standalone-`text-xs`-on-its-own-line reference other fixes in this pass matched), and the inline links across Info, Login, Summary, `CourseMapModal`, and `RulesContent`.
 
@@ -639,9 +683,11 @@ scorecard / course page → course map (modal, via CourseMapModal)
 
 **History state and the params allowlist.** `popstate` restores a page's `params` from a small allowlist stamped in `history.state` at push time — `bruntsfield`, `fromHistory`, and `gameId` (a round's own id, added when a `game` param is passed to `navigate`, regardless of destination page). The mutable `game` object itself, and edit-flow flags (`editRound` / `editContext` / `pastRound`), are deliberately never persisted — a frozen snapshot would go stale, and a bounce into a half-restored edit could strand a working copy. Screens that need that state after a bounce recover it themselves: from the game's own `_edit` marker recovered from storage (Scorecard), or by re-resolving the round from storage using the persisted `gameId` (Summary — see `Summary.jsx`, #43b). This is a known, accepted limitation for a bounce onto a signed-in D1-only round with no local copy to look up (tracked in BACKLOG #43b).
 
-**Back button labels.** Every back affordance names its real destination or action rather than a generic "← Back" — `PageHeader`'s `backLabel` prop takes the exact string to render (arrow included when relevant). A button that steps back through history is labelled with the destination screen (`"← Home"`, `"← Rounds"`, `"← History"`), context-aware where the destination varies (Info, Privacy, Rules, Setup each pick their label from where they were opened). A **header** button that performs an action other than stepping back — the live Scorecard's "Pause" (which leaves the round in storage to resume, so it reappears as "Resume Game" on Home), CourseEdit's recovery-panel "Back to Home" — drops the arrow and says what it actually does. The one deliberate exception is a **foot-of-page wayfinding link**: the Bruntsfield course page has no header back button, but a discreet "← Golf Scorecard home" text link sits at the very foot of its action list (below the sign-in prompt). It keeps the leading arrow because it reads as "up to the parent screen" even though it is implemented as an explicit `navigate('home')` (not `goBack()`) so it always lands on Home regardless of how the page was reached; the phone browser's own back navigation still covers stepping back. Home itself carries no in-app back button at all (it is the app root). **"Course" replaces "Bruntsfield"** as the destination word wherever a header button needs to name it — see "Never truncate a header button" under Page header, above, for why.
+**Back button labels.** Every back affordance names its real destination or action, never a generic "Back". `PageHeader`'s `backLabel` takes the **plain** destination text ("Home", "Rounds", "History"); the chevron is drawn by the header, so no arrow is typed into the string. `backLabel` is also the button's accessible name. A button that steps back through history is labelled with the destination screen, context-aware where the destination varies (Info, Privacy, Rules, Setup each pick their label from where they were opened). A **header** button that performs an action other than stepping back turns the chevron off with `backChevron={false}`. The live Scorecard's **"Pause"** is the one case: it leaves the round in storage to resume, so it reappears as "Resume Game" on Home. It has no chevron, because it is an action, not a step back. (Scorecard in edit mode steps back to History and keeps the chevron.) CourseEdit's recovery-panel "Back to Home" also says what it does.
 
-**Back-label length budget.** Every back label must fit the budget defined under "Page header → Back-label length budget" - one word ideally, two at most, about 12 characters including the arrow. CourseEdit is now reached only from Settings > My courses, so it has a single back label, "← Courses", and Save, Back and a successful delete all return there. The earlier Setup-dependent labels ("← Edit Round", "← New Game", "← Past round") no longer exist.
+The one deliberate exception is a **foot-of-page wayfinding link**: the Bruntsfield course page has no header back button, but a discreet "← Golf Scorecard home" text link sits at the very foot of its action list (below the sign-in prompt). It is page content, not a `PageHeader` button, so it keeps its typed leading arrow because it reads as "up to the parent screen". It is an explicit `navigate('home')` (not `goBack()`), so it always lands on Home. Home itself carries no in-app back button (it is the app root). **"Course" replaces "Bruntsfield"** as the destination word wherever a header button needs to name it; see "Never truncate a header button" under Page header.
+
+**Back-label length.** Every back label follows "Page header, Back-label length": a plain destination word, two at most. CourseEdit is reached only from Settings > My courses, so it has a single label, "Courses", and Save, Back and a successful delete all return there. The earlier Setup-dependent labels ("Edit Round", "New Game", "Past round") no longer exist.
 
 **Known duplication — resolved in #85.** Every back affordance now resolves to the shared `PageHeader` back button — one definition, one set of classes:
 - Summary previously reimplemented the whole `relative flex items-center justify-between` header shell; since #69 it composes `PageHeader`, passing its conditional Edit / Done control through the `right` prop.

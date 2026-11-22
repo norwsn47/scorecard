@@ -8,7 +8,7 @@ import { formatDateOnly, localDateString } from '../utils/format.js'
 import { buildEditGame, deriveResult, isSignedInPlayer } from '../utils/game.js'
 import { tiedNames, strokesLabel } from '../utils/result.js'
 import { deriveHolePars, playerTotal, roundToPar, scoreToPar, subtotal } from '../utils/scores.js'
-import PageHeader from '../components/PageHeader.jsx'
+import PageHeader, { HeaderAction } from '../components/PageHeader.jsx'
 import ParDelta from '../components/ParDelta.jsx'
 import PlayerStar from '../components/PlayerStar.jsx'
 import { shareScorecard } from '../utils/share.js'
@@ -454,18 +454,9 @@ export default function Summary({ navigate, params }) {
         backLabel="Home"
         right={
           canEdit ? (
-            <button
-              onClick={handleEditRound}
-              disabled={saving}
-              aria-label="Edit round"
-              title="Edit round"
-              className="w-11 h-11 -mr-2.5 flex items-center justify-center rounded-md text-muted active:text-accent disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-[18px] h-[18px]" aria-hidden="true">
-                <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4z" />
-                <path d="M14.5 5.5l3 3" />
-              </svg>
-            </button>
+            <HeaderAction onClick={handleEditRound} disabled={saving} aria-label="Edit round" title="Edit round">
+              Edit
+            </HeaderAction>
           ) : null
         }
       />
@@ -475,7 +466,7 @@ export default function Summary({ navigate, params }) {
           crowds the pinned totals row. */}
       {ownsPending && (
         <p className={[
-          'type-small mt-2 px-5 text-center shrink-0',
+          'type-small mt-2 px-page text-center shrink-0',
           game.syncRejected ? 'text-accent' : 'text-muted',
         ].join(' ')}>
           {game.syncRejected
@@ -485,7 +476,7 @@ export default function Summary({ navigate, params }) {
       )}
 
       {viewingSaved && editNotice && (
-        <p role="alert" className="type-small text-accent mt-2 px-5 text-center shrink-0">
+        <p role="alert" className="type-small text-accent mt-2 px-page text-center shrink-0">
           {editNotice}
         </p>
       )}
@@ -494,7 +485,7 @@ export default function Summary({ navigate, params }) {
           read; "Tied" for a draw, all winners named up to three, a count for
           four or more. " - " is the shared separator across every surface. */}
       {(game.players?.length ?? 0) > 1 && (
-        <div className="px-5 pt-3 pb-1">
+        <div className="px-page pt-3 pb-1">
           {winners.length >= 4 ? (
             <p className={`${resultBase} block text-center`}>
               Tied <span className={resultStrokes}>- {winners.length} players level on {strokesLabel(game.winningTotal)}</span>

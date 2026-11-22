@@ -49,11 +49,11 @@ export default function Courses({ navigate, goBack }) {
 
       <PageHeader
         title="My courses"
-        backLabel="← Settings"
+        backLabel="Settings"
         onBack={() => goBack('settings')}
       />
 
-      <main className="flex-1 overflow-y-auto px-5 pt-6 pb-14 max-w-sm mx-auto w-full">
+      <main className="flex-1 overflow-y-auto px-page pt-6 pb-14 max-w-sm mx-auto w-full">
 
         <p className="type-body text-muted mb-4">
           Change a course's name or the par for each hole. New courses are added when you start a game.

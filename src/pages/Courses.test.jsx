@@ -71,7 +71,7 @@ describe('Courses (My courses)', () => {
     mockApi()
     const { goBack } = renderCourses()
 
-    await u.click(await screen.findByRole('button', { name: '← Settings' }))
+    await u.click(await screen.findByRole('button', { name: 'Settings' }))
     expect(goBack).toHaveBeenCalledWith('settings')
   })
 
