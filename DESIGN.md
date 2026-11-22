@@ -279,7 +279,7 @@ There is one button, `src/components/Button.jsx`, with three variants (Primary, 
 
 **The heights are the implementation's choice.** `tokens.json` carries no button dimensions, so Large 48px and Medium 44px are not from Figma. Both keep the 44px minimum touch target.
 
-Shared by every variant: `border-2 rounded-control`, `type-strong` (sentence case, no uppercase or tracking), `gap-2` between an optional leading or trailing icon and the label, `transition-colors`, and a `type="button"` default. `fullWidth` adds `w-full`.
+Shared by every variant: `border rounded-control` (1px; owner call 22 November 2026, the 2px outline read too heavy), `type-strong` (sentence case, no uppercase or tracking), `gap-2` between an optional leading or trailing icon and the label, `transition-colors`, and a `type="button"` default. `fullWidth` adds `w-full`.
 
 **Flat.** Buttons carry no shadow. `shadow-btn` is retired from all components.
 

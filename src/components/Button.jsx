@@ -8,7 +8,7 @@ import { forwardRef } from 'react'
 // restyle colour, radius or type through it.
 
 const BASE =
-  'inline-flex items-center justify-center gap-2 border-2 rounded-control ' +
+  'inline-flex items-center justify-center gap-2 border rounded-control ' +
   'type-strong text-center transition-colors ' +
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' +
   'focus-visible:ring-offset-2 focus-visible:ring-offset-bg ' +
