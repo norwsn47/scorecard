@@ -83,7 +83,8 @@
     --color-accent-tint-hover: rgb(var(--color-accent) / 0.15); /* color/accent/subtle-hover - defined, not yet applied */
     --color-on-accent:    #FFFFFF;   /* color/accent/on-accent - defined, not yet applied */
     --color-surface-disabled: #E8E1D6; /* color/surface/disabled - defined, not yet applied */
-    --color-text-disabled:    #D9D0C4; /* color/text/disabled - defined, not yet applied. Below 4.5:1 by design: disabled states are exempt (DESIGN.md "Sunlight contrast") */
+    --color-text-disabled:    #A39A90; /* Owner override of Figma color/text/disabled (#D9D0C4, 1.17:1 on the disabled fill, unreadable outdoors), 22 November 2026. About 2.1:1 on surface-disabled, 2.5:1 on bg: readable, still plainly disabled. Disabled states are exempt from 4.5:1 (DESIGN.md "Sunlight contrast") */
+    --color-error:            #9B3A24; /* color/status/error/text - field error edge and message. Same value as over-par, kept as its own token so over-par stays deltas-only */
     --color-under-par:   #2C6B3C;   /* score-vs-par delta — under par; deltas only, never chrome (DESIGN.md "Score vs par") */
     --color-over-par:     #9B3A24;   /* score-vs-par delta — over par; deltas only, never chrome (DESIGN.md "Score vs par") */
 

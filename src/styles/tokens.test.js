@@ -92,8 +92,25 @@ const colourMap = {
   '--color-accent-tint-hover': ['color/accent/subtle-hover'],
   '--color-on-accent': ['color/accent/on-accent', 'color/text/inverse'],
   '--color-surface-disabled': ['color/surface/disabled'],
-  '--color-text-disabled': ['color/text/disabled'],
+  '--color-error': ['color/status/error/text', 'color/status/error/fill'],
 }
+
+// Deliberate owner overrides of a Figma value (22 November 2026). Each is
+// pinned here so a change is a conscious decision, not drift.
+const ownerOverrides = {
+  // Figma #D9D0C4 is 1.17:1 on the disabled fill: unreadable outdoors.
+  '--color-text-disabled': { figma: 'color/text/disabled', value: '#A39A90' },
+}
+
+describe('owner overrides of Figma values', () => {
+  for (const [cssName, { figma, value }] of Object.entries(ownerOverrides)) {
+    it(`${cssName} is the agreed override of ${figma}`, () => {
+      const code = parseColour(cssVar(cssName))
+      expect(code.rgb.map(Math.round)).toEqual(parseColour(value).rgb.map(Math.round))
+      expect(code.rgb.map(Math.round)).not.toEqual(figmaColour(figma).rgb)
+    })
+  }
+})
 
 describe('colour tokens match tokens.json', () => {
   for (const [cssName, figmaNames] of Object.entries(colourMap)) {

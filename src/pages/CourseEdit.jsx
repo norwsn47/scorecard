@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import Button from '../components/Button.jsx'
+import { Input } from '../components/Field.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import ParStepperGrid, { stepPar as stepParArray } from '../components/ParStepperGrid.jsx'
 import { deriveHolePars } from '../utils/scores.js'
@@ -176,12 +178,7 @@ export default function CourseEdit({ navigate, goBack, params }) {
             <p className="type-small text-muted mb-6">
               Sign in again to edit this course.
             </p>
-            <button
-              onClick={() => navigate('login')}
-              className="py-4 px-6 rounded-sm bg-accent text-bg type-strong shadow-btn active:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-            >
-              Sign in
-            </button>
+            <Button onClick={() => navigate('login')}>Sign in</Button>
           </div>
         )}
 
@@ -191,28 +188,20 @@ export default function CourseEdit({ navigate, goBack, params }) {
             <p className="type-small text-muted mb-6">
               It may already have been deleted.
             </p>
-            <button
-              onClick={() => navigate('home')}
-              className="py-4 px-6 rounded-sm bg-accent text-bg type-strong shadow-btn active:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-            >
-              Back to Home
-            </button>
+            <Button onClick={() => navigate('home')}>Back to Home</Button>
           </div>
         )}
 
         {!loading && course && (
           <>
             <div className="pb-1">
-              <input
-                type="text"
-                aria-label="Course name"
+              <Input
+                label="Course name"
                 value={name}
                 onChange={e => { setName(e.target.value.slice(0, 60)); setSaveError(null) }}
                 placeholder="Course name"
                 maxLength={60}
-                className="w-full py-3 pl-4 pr-4 rounded-md border border-field type-body bg-bg-card text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40"
               />
-              <p className="type-small-strong text-muted mt-1.5 pl-1">Course name</p>
             </div>
 
             {/* Per-hole par — reuses the same stepper as course creation and
@@ -234,24 +223,15 @@ export default function CourseEdit({ navigate, goBack, params }) {
             )}
 
             <div className="pt-3">
-              <button
-                onClick={handleSave}
-                disabled={saving || !name.trim()}
-                className={[
-                  'w-full py-4 rounded-sm type-strong shadow-btn transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
-                  saving || !name.trim()
-                    ? 'bg-accent text-bg opacity-40 cursor-not-allowed'
-                    : 'bg-accent text-bg active:bg-accent-hover',
-                ].join(' ')}
-              >
+              <Button fullWidth onClick={handleSave} disabled={saving || !name.trim()}>
                 {saving ? 'Saving…' : 'Save changes'}
-              </button>
+              </Button>
             </div>
 
             <div className="text-center pt-2">
               <button
                 onClick={() => { setDeleteError(null); setConfirmDelete(true) }}
-                className="inline-block py-3 -my-3 type-small-strong text-muted underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                className="inline-block py-3 -my-3 type-small-strong text-muted underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
                 Delete this course
               </button>
@@ -278,27 +258,24 @@ export default function CourseEdit({ navigate, goBack, params }) {
             aria-modal="true"
             aria-labelledby="delete-course-heading"
             onClick={e => e.stopPropagation()}
-            className="bg-bg rounded-t-2xl w-full max-w-[430px] px-6 pt-6 pb-10 shadow-card"
+            className="bg-bg rounded-t-sheet w-full max-w-[430px] px-6 pt-6 pb-10"
           >
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-6" />
             <h2 id="delete-course-heading" className="type-title text-text mb-1">Delete {course.name}?</h2>
             <p className="type-small text-muted mb-8">{roundsClause}This cannot be undone.</p>
             <div className="flex gap-3">
-              <button
+              <Button
                 ref={cancelDeleteRef}
+                variant="secondary"
+                className="flex-1"
                 onClick={() => setConfirmDelete(false)}
                 disabled={deleting}
-                className="flex-1 py-3 rounded-sm border border-border type-strong text-text active:bg-bg-card disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 Cancel
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={deleting}
-                className="flex-1 py-3 rounded-sm bg-accent text-bg type-strong active:opacity-80 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-              >
+              </Button>
+              <Button className="flex-1" onClick={handleDelete} disabled={deleting}>
                 {deleting ? 'Deleting…' : 'Delete'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

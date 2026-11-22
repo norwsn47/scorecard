@@ -61,7 +61,7 @@ export default function Info({ navigate, goBack, params }) {
               <div>
                 <button
                   onClick={() => navigate('rules', { from: 'info' })}
-                  className="inline-flex items-center gap-1 py-3 -my-3 type-body text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  className="inline-flex items-center gap-1 py-3 -my-3 type-body text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 >
                   View full course rules
                   <ExternalArrow />
@@ -84,7 +84,7 @@ export default function Info({ navigate, goBack, params }) {
               href="https://outbuild.uk"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 py-3 -my-3 type-body text-accent underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="inline-flex items-center gap-1 py-3 -my-3 type-body text-accent underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             >
               outbuild.uk
               <ExternalArrow />
@@ -96,7 +96,7 @@ export default function Info({ navigate, goBack, params }) {
           <div>
             <a
               href="mailto:scorecard@outbuild.uk"
-              className="inline-block py-3 -my-3 type-body text-accent underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="inline-block py-3 -my-3 type-body text-accent underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             >
               scorecard@outbuild.uk
             </a>
@@ -114,7 +114,7 @@ export default function Info({ navigate, goBack, params }) {
             <div>
               <button
                 onClick={() => navigate('settings', { from: 'info' })}
-                className="inline-block py-3 -my-3 type-body text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                className="inline-block py-3 -my-3 type-body text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
                 Edit your name, change your email or delete your account
               </button>
@@ -131,7 +131,7 @@ export default function Info({ navigate, goBack, params }) {
                     setLogoutError(true)
                   }
                 }}
-                className="inline-block py-3 -my-3 type-body text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                className="inline-block py-3 -my-3 type-body text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
                 Sign out
               </button>
@@ -151,7 +151,7 @@ export default function Info({ navigate, goBack, params }) {
             <div>
               <button
                 onClick={() => navigate('login')}
-                className="inline-block py-3 -my-3 type-body text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                className="inline-block py-3 -my-3 type-body text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
                 Sign in or create account
               </button>
@@ -166,7 +166,7 @@ export default function Info({ navigate, goBack, params }) {
           <p>
             <button
               onClick={() => navigate('privacy', { from: 'info' })}
-              className="inline-block py-3.5 -my-3.5 type-small text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="inline-block py-3.5 -my-3.5 type-small text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             >
               Read our privacy policy
             </button>

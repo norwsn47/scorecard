@@ -1,4 +1,7 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
+import BottomActionBar from '../components/BottomActionBar.jsx'
+import Button from '../components/Button.jsx'
+import { Textarea } from '../components/Field.jsx'
 import { MAX_HOLES } from '../constants.js'
 import { track } from '../utils/analytics.js'
 import { formatDateOnly, localDateString } from '../utils/format.js'
@@ -658,8 +661,10 @@ export default function Summary({ navigate, params }) {
           </table>
         </div>
 
-        {/* Actions */}
-        <div className="px-5 pt-4 pb-6 space-y-3 max-w-sm mx-auto w-full">
+        {/* Actions: the bottom action bar (Figma c17). Share and Done are the
+            bar's buttons; the notes, save error, delete link and sign-in nudge
+            keep their existing order inside it. */}
+        <BottomActionBar className="space-y-field">
 
           {viewingSaved ? (
             /* A past round is read-only here — editing happens via the header
@@ -682,22 +687,24 @@ export default function Summary({ navigate, params }) {
                   link, and opens already expanded when the round has a note. */}
               {user && !notesOpen && (
                 <div>
-                  <button
-                    type="button"
+                  <Button
+                    variant="text"
+                    size="medium"
+                    className="-ml-4"
                     onClick={() => setNotesOpen(true)}
                     disabled={saving}
                     aria-expanded={false}
-                    className="inline-block py-3 -my-3 type-small-strong text-accent underline underline-offset-2 active:opacity-70 disabled:opacity-40 disabled:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                   >
                     + Add a note
-                  </button>
+                  </Button>
                 </div>
               )}
               {user && notesOpen && (
                 <div>
-                  <textarea
+                  <Textarea
                     ref={notesRef}
-                    aria-label="Round notes"
+                    label="Round notes"
+                    optional
                     value={notes}
                     onChange={e => {
                       const value = e.target.value.slice(0, 300)
@@ -709,11 +716,7 @@ export default function Summary({ navigate, params }) {
                     placeholder="Add a note about this round..."
                     rows={2}
                     disabled={saving}
-                    className="w-full px-4 py-3 rounded-md border border-field bg-bg-card type-body text-text placeholder:text-muted resize-none focus:outline-none focus:ring-2 focus:ring-accent/40"
                   />
-                  <p className="type-small text-muted mt-1 pl-1">
-                    Round notes - optional
-                  </p>
                 </div>
               )}
 
@@ -723,26 +726,28 @@ export default function Summary({ navigate, params }) {
                   browser either way. Keep is not offered when the device
                   itself could not hold the round. */}
               {user && saveError && (
-                <div className="rounded-md border border-accent px-4 py-4 space-y-3">
+                <div className="rounded-control border border-accent px-4 py-4 space-y-3">
                   <p key={saveError.n} role="alert" className="type-small text-text">
                     {SAVE_ERROR_COPY[saveError.kind]}
                   </p>
-                  <button
+                  <Button
+                    size="medium"
+                    fullWidth
                     onClick={handleGoHome}
                     disabled={saving}
-                    className="w-full py-3 rounded-sm bg-accent text-bg type-strong active:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                   >
                     {saving ? 'Retrying…' : 'Retry'}
-                  </button>
+                  </Button>
                   {saveError.kind !== 'deviceFull' && (
                     <div className="text-center">
-                      <button
+                      <Button
+                        variant="text"
+                        size="medium"
                         onClick={handleKeepOnDevice}
                         disabled={saving}
-                        className="inline-block py-3 -my-3 type-small-strong text-text underline underline-offset-2 active:opacity-70 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                       >
                         Keep on this device and go home
-                      </button>
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -757,26 +762,26 @@ export default function Summary({ navigate, params }) {
               of the screen for the scorecard. Edit lives in the header
               (pencil icon) on both flows. */}
           <div className={viewingSaved ? '' : 'grid grid-cols-2 gap-3'}>
-            <button
+            <Button
+              variant="secondary"
+              size={viewingSaved ? 'medium' : 'large'}
+              fullWidth
               onClick={handleShare}
               disabled={sharing}
-              className={`w-full ${viewingSaved ? 'py-2.5' : 'py-4'} px-3 rounded-sm border border-accent text-accent type-strong flex items-center justify-center gap-2 active:bg-accent-tint disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40`}
+              leadingIcon={(
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 shrink-0" aria-hidden="true">
+                  <path d="M12 3v12" />
+                  <path d="M7 8l5-5 5 5" />
+                  <path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" />
+                </svg>
+              )}
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 shrink-0" aria-hidden="true">
-                <path d="M12 3v12" />
-                <path d="M7 8l5-5 5 5" />
-                <path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" />
-              </svg>
               {sharing ? 'Generating…' : 'Share'}
-            </button>
+            </Button>
             {!viewingSaved && (
-              <button
-                onClick={handleGoHome}
-                disabled={saving}
-                className="w-full py-4 px-3 rounded-sm bg-accent text-bg type-strong shadow-btn active:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-              >
+              <Button fullWidth onClick={handleGoHome} disabled={saving}>
                 {saving ? 'Saving…' : 'Done'}
-              </button>
+              </Button>
             )}
           </div>
           {canDelete && (
@@ -785,7 +790,7 @@ export default function Summary({ navigate, params }) {
                 ref={deleteLinkRef}
                 type="button"
                 onClick={() => setConfirmDelete(true)}
-                className="inline-block type-small-strong text-muted underline underline-offset-2 py-3 -my-3 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 rounded-sm"
+                className="inline-block type-small-strong text-muted underline underline-offset-2 py-3 -my-3 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-control"
               >
                 Delete this round
               </button>
@@ -805,7 +810,7 @@ export default function Summary({ navigate, params }) {
               <div>
                 <button
                   onClick={() => navigate('login')}
-                  className="inline-block py-3.5 -my-3.5 type-small-strong text-accent active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  className="inline-block py-3.5 -my-3.5 type-small-strong text-accent active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 >
                   To save your rounds, <span className="underline underline-offset-2">create an account</span>
                 </button>
@@ -813,7 +818,7 @@ export default function Summary({ navigate, params }) {
             </div>
           )}
 
-        </div>
+        </BottomActionBar>
       </main>
 
       {/* Delete confirmation - role="dialog", aria-modal, aria-labelledby,
@@ -830,7 +835,7 @@ export default function Summary({ navigate, params }) {
             aria-modal="true"
             aria-labelledby="summary-delete-round-heading"
             onClick={e => e.stopPropagation()}
-            className="bg-bg rounded-t-2xl w-full max-w-[430px] px-6 pt-6 pb-10 shadow-card"
+            className="bg-bg rounded-t-sheet w-full max-w-[430px] px-6 pt-6 pb-10"
           >
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-6" />
             <h2 id="summary-delete-round-heading" className="type-title text-text mb-1">Delete this round?</h2>
@@ -839,21 +844,22 @@ export default function Summary({ navigate, params }) {
               <p role="alert" className="type-small text-accent mb-3">{deleteError}</p>
             )}
             <div className="flex gap-3">
-              <button
+              <Button
                 ref={cancelButtonRef}
+                variant="secondary"
+                className="flex-1"
                 onClick={closeDeleteConfirm}
                 disabled={deleting}
-                className="flex-1 py-3 rounded-sm border border-border type-strong text-text active:bg-bg-card disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                className="flex-1"
                 onClick={handleDeleteRound}
                 disabled={deleting}
-                className="flex-1 py-3 rounded-sm bg-accent text-bg type-strong active:opacity-80 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 {deleting ? 'Deleting…' : 'Delete'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

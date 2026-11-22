@@ -20,6 +20,13 @@ export function stepPar(pars, index, delta) {
   })
 }
 
+// Stepper cell buttons. Disabled at the 2-7 band edge uses the disabled tokens
+// (no opacity), and the pressed fill only applies while enabled.
+const STEP_BUTTON =
+  'w-11 h-11 flex items-center justify-center rounded-control font-ui text-lg text-text ' +
+  'enabled:active:bg-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ' +
+  'disabled:bg-disabled-surface disabled:text-disabled-text disabled:cursor-not-allowed'
+
 export default function ParStepperGrid({ pars, onStep }) {
   return (
     <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
@@ -31,7 +38,7 @@ export default function ParStepperGrid({ pars, onStep }) {
             key={i}
             role="group"
             aria-label={`Hole ${i + 1}, par ${par}`}
-            className="flex items-center justify-between rounded-md border border-border bg-bg-card pl-3 pr-0.5"
+            className="flex items-center justify-between rounded-control border border-border bg-bg-card pl-3 pr-0.5"
           >
             <span className="type-small text-text">Hole {i + 1}</span>
             <span className="flex items-center">
@@ -40,10 +47,7 @@ export default function ParStepperGrid({ pars, onStep }) {
                 onClick={() => onStep(i, -1)}
                 disabled={atMin}
                 aria-label={`Decrease par for hole ${i + 1}`}
-                className={[
-                  'w-11 h-11 flex items-center justify-center rounded-md font-ui text-lg text-text active:bg-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
-                  atMin ? 'opacity-40' : '',
-                ].join(' ')}
+                className={STEP_BUTTON}
               >
                 −
               </button>
@@ -53,10 +57,7 @@ export default function ParStepperGrid({ pars, onStep }) {
                 onClick={() => onStep(i, 1)}
                 disabled={atMax}
                 aria-label={`Increase par for hole ${i + 1}`}
-                className={[
-                  'w-11 h-11 flex items-center justify-center rounded-md font-ui text-lg text-text active:bg-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
-                  atMax ? 'opacity-40' : '',
-                ].join(' ')}
+                className={STEP_BUTTON}
               >
                 +
               </button>

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import Button from './Button.jsx'
 import { BRUNTSFIELD_COURSE_NAME } from '../constants.js'
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch'
 import RulesContent from './RulesContent.jsx'
@@ -51,7 +52,7 @@ export default function CourseMapModal({ onClose }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="course-map-heading"
-        className="bg-bg rounded-2xl w-[360px] shadow-card overflow-hidden max-h-[80vh] flex flex-col"
+        className="bg-bg rounded-2xl w-[360px] overflow-hidden max-h-[80vh] flex flex-col"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -66,7 +67,7 @@ export default function CourseMapModal({ onClose }) {
             ref={closeButtonRef}
             onClick={onClose}
             aria-label="Close"
-            className="absolute top-1.5 right-2.5 w-11 h-11 flex items-center justify-center text-muted active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="absolute top-1.5 right-2.5 w-11 h-11 flex items-center justify-center text-muted active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
             ✕
           </button>
@@ -121,12 +122,14 @@ export default function CourseMapModal({ onClose }) {
 
         {/* Footer toggle */}
         <div className="border-t border-border px-5 py-3 shrink-0">
-          <button
+          <Button
+            variant="text"
+            size="medium"
+            className="-ml-4"
             onClick={() => setShowRules(r => !r)}
-            className="inline-block py-3 -my-3 type-small-strong text-accent underline underline-offset-2 active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             {showRules ? '← Back to map' : 'Course rules'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

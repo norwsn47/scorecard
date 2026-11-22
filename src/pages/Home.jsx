@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import Button from '../components/Button.jsx'
 import ExternalArrow from '../components/ExternalArrow.jsx'
 import { track } from '../utils/analytics.js'
 import { formatShortDate } from '../utils/format.js'
@@ -60,7 +61,7 @@ export default function Home({ navigate }) {
     <div className="h-full bg-bg flex flex-col relative">
 
       {noticeCopy && (
-        <div role="status" className="sticky top-0 z-50 bg-accent text-bg text-center type-small py-2 px-4">
+        <div role="status" className="sticky top-0 z-50 bg-accent text-on-accent text-center type-small py-2 px-4">
           {noticeCopy}
         </div>
       )}
@@ -78,7 +79,7 @@ export default function Home({ navigate }) {
           <button
             onClick={() => (user ? navigate('settings', { from: 'home' }) : navigate('info'))}
             aria-label={user ? 'Settings' : 'Information'}
-            className="text-muted active:text-accent p-2.5 flex-shrink-0 mt-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="text-muted active:text-accent p-2.5 flex-shrink-0 mt-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
             {user ? (
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6">
@@ -112,23 +113,15 @@ export default function Home({ navigate }) {
       {/* ── Actions ── */}
       <main className="flex flex-col gap-4 px-6 pt-6 pb-8 w-full">
 
-        <button
-          onClick={() => { track('New Game Started'); navigate('setup') }}
-          className="w-full py-4 px-6 rounded-sm bg-accent text-bg type-strong shadow-btn active:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-        >
+        <Button fullWidth onClick={() => { track('New Game Started'); navigate('setup') }}>
           New game
-        </button>
+        </Button>
 
         {activeGame && (
-          <button
-            onClick={() => navigate('scorecard')}
-            className="w-full py-3 px-4 rounded-sm border border-accent text-accent type-strong flex items-center justify-between focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-          >
-            <span>Resume game</span>
-            <span className="type-small text-muted truncate max-w-[160px]">
-              {activeGame.name || activeGame.players?.join(', ')}
-            </span>
-          </button>
+          <Button variant="secondary" fullWidth onClick={() => navigate('scorecard')}>
+            Resume game
+            {(activeGame.name || activeGame.players?.join(', ')) ? ` · ${activeGame.name || activeGame.players?.join(', ')}` : ''}
+          </Button>
         )}
 
         {/* Last completed round — logged-out only */}
@@ -136,7 +129,7 @@ export default function Home({ navigate }) {
           <div className="text-center -mt-1">
             <button
               onClick={() => navigate('summary', { game: lastGame })}
-              className="inline-block py-3 -my-3 type-small-strong text-muted active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="inline-block py-3 -my-3 type-small-strong text-muted active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             >
               Last round:{' '}
               <span className="underline underline-offset-2">
@@ -151,7 +144,7 @@ export default function Home({ navigate }) {
           <p className="type-label-caps text-muted px-1">Course specific scorecards</p>
           <button
             onClick={() => navigate('bruntsfield')}
-            className="w-full px-4 py-3 rounded-md bg-bg-card border border-border text-left flex items-center gap-3 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="w-full px-4 py-3 rounded-control bg-bg-card border border-border text-left flex items-center gap-3 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
             <div className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-accent-tint">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-accent">
@@ -170,12 +163,9 @@ export default function Home({ navigate }) {
         </div>
 
         {user && (
-          <button
-            onClick={() => navigate('history')}
-            className="w-full py-4 px-6 rounded-sm border border-border text-text type-strong active:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-          >
+          <Button variant="secondary" fullWidth onClick={() => navigate('history')}>
             Past rounds
-          </button>
+          </Button>
         )}
 
         {/* Foot of the actions: signed-out sees the sign-in nudge (unchanged);
@@ -191,7 +181,7 @@ export default function Home({ navigate }) {
           <div className="pt-0 text-center space-y-1">
             <button
               onClick={() => navigate('login')}
-              className="inline-block py-3 -my-3 type-small-strong text-accent active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="inline-block py-3 -my-3 type-small-strong text-accent active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             >
               Want to save your scores? <span className="underline underline-offset-2">Sign in</span>
             </button>
@@ -204,7 +194,7 @@ export default function Home({ navigate }) {
         <p className="font-ui text-text inline-flex items-baseline gap-1">
           <span className="type-strong">Scorecard</span>
           <span className="type-small text-muted"> by </span>
-          <a href="https://outbuild.uk" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 py-3 -my-3 type-small text-muted underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40">
+          <a href="https://outbuild.uk" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 py-3 -my-3 type-small text-muted underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
             Outbuild
             <ExternalArrow />
           </a>

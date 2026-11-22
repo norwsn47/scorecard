@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import Button from '../components/Button.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import { useAuth } from '../hooks/useAuth.jsx'
 
@@ -63,24 +64,24 @@ export default function Courses({ navigate, goBack }) {
         )}
 
         {failed && (
-          <div className="py-4 px-4 rounded-md border border-dashed border-border bg-bg-card text-center">
+          <div className="py-4 px-4 rounded-control border border-dashed border-border bg-bg-card text-center">
             <p role="alert" className="type-small text-muted mb-3">
               {status === 'signedOut'
                 ? "You've been signed out, so your courses can't be loaded."
                 : "Couldn't load your courses - check your connection."}
             </p>
-            <button
-              type="button"
+            <Button
+              variant="secondary"
+              size="medium"
               onClick={() => (status === 'signedOut' ? navigate('login') : setReloadKey(k => k + 1))}
-              className="min-h-[44px] py-2 px-4 rounded-sm border border-accent text-accent type-strong active:bg-accent-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               {status === 'signedOut' ? 'Sign in' : 'Try again'}
-            </button>
+            </Button>
           </div>
         )}
 
         {status === 'ready' && courses.length === 0 && (
-          <div className="py-4 px-4 rounded-md border border-dashed border-border bg-bg-card text-center">
+          <div className="py-4 px-4 rounded-control border border-dashed border-border bg-bg-card text-center">
             <p className="type-small text-muted">
               No courses yet - add one when you start your next game.
             </p>
@@ -96,7 +97,7 @@ export default function Courses({ navigate, goBack }) {
                   <button
                     type="button"
                     onClick={() => navigate('courseEdit', { courseId: c.id })}
-                    className="w-full min-h-[56px] py-2 flex items-center justify-between gap-3 border-b border-border text-left active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                    className="w-full min-h-[56px] py-2 flex items-center justify-between gap-3 border-b border-border text-left active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                   >
                     <span className="min-w-0">
                       <span className="block type-strong text-text break-words">{c.name}</span>

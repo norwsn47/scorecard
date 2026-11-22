@@ -47,7 +47,8 @@ All tokens are defined as CSS custom properties in `src/styles/index.css` and al
 | `accent-tint-hover` | `--color-accent-tint-hover` | accent at 15% (`rgb(var(--color-accent) / 0.15)`) | Pressed or hover state of an `accent-tint` fill. Figma `color/accent/subtle-hover` |
 | `on-accent` | `--color-on-accent` | `#FFFFFF` | Text and icons on a solid `accent` fill. Figma `color/accent/on-accent`. White on `accent` is 11.2:1 |
 | `disabled-surface` | `--color-surface-disabled` | `#E8E1D6` | Fill of a disabled control. Figma `color/surface/disabled` |
-| `disabled-text` | `--color-text-disabled` | `#D9D0C4` | Text of a disabled control. Figma `color/text/disabled` |
+| `disabled-text` | `--color-text-disabled` | `#A39A90` | Text of a disabled control. **Owner override** of Figma `color/text/disabled` (`#D9D0C4`, 1.17:1 on the disabled fill, unreadable outdoors): about 2.1:1 on `disabled-surface`, 2.5:1 on `bg` - readable, still plainly disabled |
+| `error` | `--color-error` | `#9B3A24` | Field error edge and message. Figma `color/status/error/text`. Same value as `over-par`, separate token so `over-par` stays deltas-only |
 
 `disabled-text` on `disabled-surface` is **below 4.5:1 by design**. Disabled states are exempt from the contrast rule (see "Sunlight contrast"). Until these tokens are applied, disabled buttons keep the shipped `opacity-40` described under Component patterns.
 
@@ -62,7 +63,7 @@ Two border tokens, split by **job**, not by size or importance:
 
 Why not darken `border` itself: it draws every rule on every screen. Darkening it would turn the scorecard's quiet printed-rule feel into a grid of grey lines (flatness and restraint, `OUTBUILD-DESIGN-LANGUAGE.md` §4 and §9). A field earns a firmer edge; a divider does not.
 
-Not a state colour. `field` is the *resting* edge of a field. Error / duplicate stays `border-accent` (about 10:1, unmistakable against a grey edge); the focus ring stays `ring-accent/40`. There is no dark theme, so there is a single value. The Tailwind key is `field` (not `border-field`) so the class reads `border-field` rather than `border-border-field`; do not use it for `bg-` or `text-`.
+Not a state colour. `field` is the *resting* edge of a field. Error / duplicate takes `border-error` (`--color-error` `#9B3A24`, Figma `color/status/error/text`, about 6.1:1 on `bg-card`); the focus ring stays `ring-accent/40`. There is no dark theme, so there is a single value. The Tailwind key is `field` (not `border-field`) so the class reads `border-field` rather than `border-border-field`; do not use it for `bg-` or `text-`.
 
 ### The two score-vs-par colours are a scoped exception
 
@@ -211,27 +212,18 @@ Note that `field` is also the name of the form-field border colour token (`borde
 
 ## Border radius
 
-| Value | Tailwind | Use |
-|---|---|---|
-| `4px` | `rounded-sm` | Primary and secondary CTA buttons — sharp, printed-document feel |
-| `8px` | `rounded-md` | All other interactive controls: inputs, cards, list rows |
-| `12px` | `rounded-lg` | (Available — larger panels) |
-| `50%` | `rounded-full` | Circular control bar buttons (64×64); also filter chips — see "Filter chips" |
-| `16px top` | `rounded-t-2xl` | Bottom sheet / confirmation modal |
-| `44px` | *(CSS only)* | Phone frame on desktop |
-
-**Redesign radii (stage 1, defined, not yet applied).** Two new radius utilities come from the Figma Shape collection, in rem (the desktop frame's root is 18px):
+One control radius. Two utilities come from the Figma Shape collection, in rem (the desktop frame's root is 18px):
 
 | Value | Tailwind | CSS var | Use |
 |---|---|---|---|
-| `0.375rem` (6px) | `rounded-control` | `--radius-control` | The one control radius: buttons, inputs, selects, cards. Replaces `rounded-sm` (4px) and `rounded-md` (8px) |
-| `1rem` (16px) | `rounded-sheet` | `--radius-sheet` | Bottom sheets, **top corners only**. Replaces `rounded-t-2xl` |
+| `0.375rem` (6px) | `rounded-control` | `--radius-control` | The one control radius: buttons, fields (input, select, date, textarea), the par stepper cells and their buttons, the Map control. Replaces `rounded-sm` (4px) and `rounded-md` (8px) |
+| `1rem` (16px) | `rounded-sheet` | `--radius-sheet` | Bottom sheets, **top corners only** (`rounded-t-sheet`). Replaces `rounded-t-2xl` |
+| `50%` | `rounded-full` | none | Circular game controls (the 64px Decrement, Increment and Advance buttons) and the History filter chips, **until stage 6** rebuilds the chips as pills with a picker sheet. Nothing else uses it, apart from the sheet handle |
+| `44px` | *(CSS only)* | none | Phone frame on desktop |
 
-`rounded-sm`, `rounded-md` and `rounded-lg` remain in use until stage 3 moves components over. `rounded-full` (chips, round controls) is unchanged.
+`rounded-sm` and `rounded-md` are no longer used for controls. The remaining uses (Summary's header Edit icon button, History's "+ Add", record cards and the player-name toggle) are on the control guard's allow-list (`src/styles/control-guard.test.js`) and move in stages 4 and 6. `rounded-lg` (12px) is defined but unused.
 
-Primary button exception: uses `rounded-sm` (4px) for a sharp, printed-document feel. Secondary/outlined buttons also use `rounded-sm`. All other interactive controls retain `rounded-md` (8px).
-
-Rule: **Exception: primary and secondary CTA buttons use `rounded-sm` (4px) — sharp corners signal a printed document.** All other interactive elements in the page flow use `rounded-md`. Floating elements (modals, sheets) use `rounded-t-2xl`. Circular controls, and filter chips, use `rounded-full`.
+Rule: **buttons, fields and cards all take `rounded-control`. Sheets take `rounded-t-sheet`. `rounded-full` is for circular game controls and filter chips only.**
 
 ---
 
@@ -269,64 +261,50 @@ All other screens retain their existing centred or page-header layout.
 
 ### Button size system
 
-Every button in the app belongs to one of three sizes. The tier says how much weight the decision carries and how much room it has to sit in — it is independent of colour treatment (filled / outline), which is decided per pattern below. This system was reverse-engineered from three variants already shipping without a name; naming them now so the next new button picks a tier deliberately instead of copying whichever existing button looks closest.
+There is one button, `src/components/Button.jsx`, with three variants (Primary, Secondary, Text) and two sizes (Large, Medium). Colour treatment comes from the variant, weight and room from the size. Do not hand-roll a button with its own classes: use the component. `className` is for layout only (`flex-1`, `mt-4`, `shrink-0`); never restyle colour, radius or type through it.
 
-| Tier | Says | Padding / type | Where it's used |
+| Size | Minimum height | Padding | Where it's used |
 |---|---|---|---|
-| **Full CTA** | "This is the one thing to do on this screen" | `py-4 px-6`, `text-sm tracking-[0.1em] uppercase font-semibold` (filled) / `font-medium` (outline) | Home primary/secondary, Bruntsfield course page, Login submit, Setup "Start Game" |
-| **Dialog button** | "Choose one of two things, right now" | `py-3 px-4` full-width standalone, or `flex-1 py-3` paired in a row; `text-sm tracking-[0.08em] uppercase font-medium` (outline) / `font-semibold` (filled) | Resume Game, course-map link (standalone); Scorecard finish-confirm, Summary delete-confirm (paired) |
-| **Header action** | "A secondary action that shouldn't outweigh the page title" | `py-2 px-4`, `text-xs tracking-[0.1em] uppercase font-semibold` | Scorecard header Finish/Save (bordered); History "+ Add" is plain accent text, no border |
+| **Large** (default) | `min-h-12` (48px) | `px-6 py-2` | The one main action on a screen: Home, Bruntsfield course page, Login send, Setup "Start the round", Summary home action, sheet buttons |
+| **Medium** | `min-h-11` (44px) | `px-4 py-2` | Secondary actions inside a screen: History empty-state actions, Settings account actions, Setup course controls, Summary actions on a saved round |
 
-**Disabled state — every tier, no exceptions: `opacity-40`.** Circular control-bar buttons (Increment/Decrement/Advance) are a different affordance and keep their own already-documented `opacity-25` — see "Control bar buttons" below for why.
+**The heights are the implementation's choice.** `tokens.json` carries no button dimensions, so Large 48px and Medium 44px are not from Figma. Both keep the 44px minimum touch target.
 
-**Focus-visible ring — new in this pass.** Every button gets:
-```
-focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40
-```
-using the same token as the input focus ring. `:focus-visible` only fires for keyboard/switch/assistive-tech navigation — never for a touch tap, never for a mouse click — so on this touch-only, one-handed, outdoor product it is invisible during every normal interaction (per `OUTBUILD-PRINCIPLES.md`, "human first, device second"). It replaces the browser's default (usually blue, off-brand) focus outline for the rare keyboard/assistive-tech user at zero visual cost to everyone else. **Decision: add it**, everywhere a button exists — Full CTA, Dialog button, Header action, filter chips, the segmented toggle, and the circular control-bar buttons. This is a systemic addition, not itemised per file below.
+Shared by every variant: `border-2 rounded-control`, `type-strong` (sentence case, no uppercase or tracking), `gap-2` between an optional leading or trailing icon and the label, `transition-colors`, and a `type="button"` default. `fullWidth` adds `w-full`.
 
-### Primary button (Full CTA — filled)
-```
-bg-accent text-bg rounded-sm py-4 px-6
-font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn
-active:bg-accent-hover
-focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40
-disabled: opacity-40 cursor-not-allowed
-```
+**Flat.** Buttons carry no shadow. `shadow-btn` is retired from all components.
 
-### Secondary / outline button (Full CTA — outline)
-```
-border border-border text-text rounded-sm py-4 px-6
-font-ui text-sm tracking-[0.1em] uppercase font-medium
-active:bg-bg-card
-focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40
-```
+**Disabled.** Disabled buttons use the disabled tokens, never `opacity-40`: see "Disabled and focus-visible" below. Hover and pressed fills use the `enabled:` variant, so a disabled button never picks one up.
 
-### Accent outline button (Dialog tier, standalone) — Resume Game, course map link
+### Primary button
 ```
-border border-accent text-accent rounded-sm py-3 px-4
-font-ui text-sm tracking-[0.08em] uppercase font-medium
-focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40
+bg-accent border-transparent text-on-accent
+enabled:hover:bg-accent-hover enabled:active:bg-accent-hover
+disabled: bg-disabled-surface border-transparent text-disabled-text
 ```
-The Dialog tier's single-button form — a full-width accent-outline action rather than a paired confirm/cancel. Same padding and type scale as the paired dialog buttons below, just standalone rather than `flex-1` in a row.
+The one filled button. Text on the accent is white (`text-on-accent`). Use it for the expected next step on a screen, and keep it to one per screen where possible.
 
-**Doc bug fixed in this pass:** this entry used to also name "Finish header button" as an example, with this same spec. It doesn't match — the shipped Scorecard Finish/Save button is `py-2 px-4`, `text-xs`, `font-semibold`, `tracking-[0.1em]` (the Header action tier, below), not this one. The doc had apparently never matched the shipped code. Resume Game and the course-map link are the only confirmed members of this pattern.
-
-### Dialog buttons — paired (Dialog tier)
+### Secondary button
 ```
-Cancel / neutral: flex-1 py-3 rounded-sm border border-border text-text
-                  font-ui text-sm tracking-[0.08em] uppercase
-                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40
-                  disabled: opacity-40
-
-Confirm / filled: flex-1 py-3 rounded-sm bg-accent text-bg
-                  font-ui text-sm tracking-[0.08em] uppercase font-semibold
-                  focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40
-                  disabled: opacity-40
+bg-transparent border-accent text-accent
+enabled:hover:bg-accent-tint enabled:active:bg-accent-tint-hover
+disabled: bg-transparent border-disabled-text text-disabled-text
 ```
-Used in Scorecard's finish-confirm sheet and Summary's delete-confirm sheet (opened from the "Delete this round" link below Share, shown only on a saved round that is reliably identified).
+Accent outline on a transparent fill. It is also what "Resume game" (Home) and the course-map link (Bruntsfield page) are: the old one-off accent outline button is removed, and they use this variant at Large.
 
-**Disabled opacity standardised to `opacity-40` in this pass.** Scorecard's confirm button shipped with `disabled:opacity-60` and no documented reason — **`src/pages/Scorecard.jsx` line 412 needs a code change** to bring it in line with every other disabled button in the app.
+### Text button
+```
+bg-transparent border-transparent text-accent
+enabled:hover:bg-accent-tint enabled:active:bg-accent-tint-hover
+disabled: bg-transparent border-transparent text-disabled-text
+```
+No outline and no fill, an accent label. It is the "+ Add player" button on Setup (below) and the quiet action on screens such as Settings and Summary. Same sizes as the other variants, so it keeps the 44px minimum height.
+
+### Dialog buttons (paired confirm and cancel)
+
+Sheet buttons are the standard Button at Large, not a separate tier. A confirmation sheet pairs a Secondary (the cancel or neutral choice) with a Primary (the confirm), in a `flex gap-3` row with `className="flex-1"` on each. Order is Cancel then Confirm. Used in Scorecard's finish-confirm sheet, CourseEdit's delete-course sheet and Setup's course-switch sheet.
+
+**Settings' delete-account sheet stacks instead**, per Figma: `flex flex-col gap-3`, both `fullWidth`, with the Primary "Delete account" above the Secondary "Keep my account". The Summary delete-round sheet is the same two-button pattern, with Cancel as the initially focused control (see "Bottom sheet / confirmation modal").
 
 ### Header action button (Header action tier) — Finish/Save
 ```
@@ -338,37 +316,70 @@ Sits inside a `PageHeader` right slot (or an equivalent compact context) — sma
 
 History's "+ Add" has dropped the border and is plain accent text (`min-h-[44px] px-2 -mr-2`, `text-xs tracking-[0.1em] uppercase font-semibold text-accent`, focus ring kept), so it meets the 44px target.
 
-### Add-player button (dashed ghost)
+### Add-player button (Text button)
 ```
-border border-dashed border-border bg-bg-card text-muted rounded-md py-3 px-4
-font-ui text-sm
-active:bg-border
+<Button variant="text" onClick={handleAddPlayer}>+ Add player</Button>
 ```
+The Text button at Large, grouped under the player fields. The dashed ghost button (`border-dashed bg-bg-card`) is removed.
 
 ### Control bar buttons (circular 64×64)
 
 | Button | Classes |
 |---|---|
-| Map | `w-16 h-16 rounded-md text-muted flex-col` - no ring; map glyph over an 11px uppercase "Map" caption (muted, so the caption clears 4.5:1). Steps back from the three scoring controls; same 64px tap area |
+| Map | `w-16 h-16 rounded-control text-muted flex-col` - no ring; map glyph over an 11px uppercase "Map" caption (muted, so the caption clears 4.5:1). Steps back from the three scoring controls; same 64px tap area |
 | Decrement (−) | `rounded-full border-2 border-control-warm text-control-warm text-2xl` — disabled: `opacity-25` |
 | Increment (+) | `rounded-full bg-accent border-2 border-accent text-bg text-2xl` |
 | Advance (→) | `rounded-full bg-control-warm border-2 border-control-warm text-bg` — disabled: `opacity-25` |
 
-These are physical game controls, not text buttons, which is why they keep their own `opacity-25` disabled state rather than the button system's `opacity-40` above — a lighter fade reads as "not reachable right now" (e.g. can't decrement below hole 1) rather than "unavailable," which suits a control the player is about to need again a moment later.
+These are physical game controls, not text buttons, which is why they keep their own `opacity-25` disabled state rather than the button system's disabled tokens — a lighter fade reads as "not reachable right now" (e.g. can't decrement below hole 1) rather than "unavailable," which suits a control the player is about to need again a moment later.
 
-### Text input
+### Text input (Field component)
+
+`src/components/Field.jsx` is the one form field. It exports `Input`, `Select`, `DateField` and `Textarea`, all built on one `Field` and all forwarding their ref to the native control, so `autoFocus` and `ref.current.focus()` work as on a bare element. `className` styles the wrapper for layout only.
+
+Anatomy, top to bottom: a visible **label above** the control (`type-small-strong`, `text-text`, `mb-1.5`; `text-muted` when disabled), the control, then optional **helper text** or **error message** below (`type-small`, `mt-1.5`).
+
 ```
-w-full py-3 pl-4 rounded-md border font-ui text-base bg-bg-card text-text
-placeholder:text-muted
-focus:outline-none focus:ring-2 focus:ring-[rgba(26,67,41,0.4)]
-normal border: border-field   (NOT border-border - see "border vs field")
-error border: border-accent
-with remove button: pr-12   without: pr-4   (the remove control is a 44px tap target)
+Control:  block w-full min-w-0 py-3 pl-4 pr-4 rounded-control border type-body
+          bg-bg-card text-text placeholder:text-muted
+          focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent
+Resting edge: border-field   (NOT border-border - see "border vs field")
+Error edge:   border-error  (#9B3A24, Figma error colour; message in text-error)
+Disabled:     bg-disabled-surface border-border text-disabled-text
+              placeholder:text-disabled-text cursor-not-allowed
 ```
 
-The same `border-field` edge applies to the other two native field types, with the same fill, radius and focus ring: `<textarea>` (Setup and Summary round notes, `resize-none`, `px-4 py-3`) and `<select>` (Setup course picker). The date input (`type="date"`) counts as a text input here. A field's **fill** stays `bg-bg-card`; only the resting edge changes.
+- **Focus** is a solid 2px accent ring plus an accent edge. The ring is not 40% any more.
+- **Error** gives the control `border-error` and `aria-invalid`, and shows the message below in `type-small text-error`. `--color-error` has the same value as `over-par` but is its own token, so `over-par` stays deltas-only. Pass `error` as a string for edge plus message (rendered with `role="alert"` unless `errorRole={null}`), or as plain `true` for an edge-only error whose message lives elsewhere. An error message replaces the helper text.
+- **Helper text** is `type-small text-muted` (`text-disabled-text` when disabled), tied to the control with `aria-describedby`.
+- **Optional** appends a muted "- optional" after the label for sighted users, and an `sr-only` "Optional" tied by `aria-describedby`.
+- **Remove slot.** `trailing` renders inside the control's `relative` wrapper and adds `pr-12`, making room for a 44px remove button (Setup's player rows). Without it the control has `pr-4`.
+- **`hideLabel`** keeps the label in the DOM but visually hidden (`sr-only`), still tied by `htmlFor` and `id`, so the control keeps its accessible name. Used where a heading already names the group (Setup's player rows sit under "Players").
+- **Select** is `appearance-none pr-10 truncate` with its own chevron (`text-text`, `text-disabled-text` when disabled). **Textarea** is `resize-none`. **DateField** is `type="date"`.
 
-**Every field needs an accessible name** - a placeholder is not one. Use a `<label htmlFor>` tied to the input `id`, or an `aria-label` where the visible caption sits elsewhere (e.g. `aria-label="Player 2 name"`, `"Date played"`, `"Round notes"`). The caption text under a field is decoration for sighted users, not the name.
+**Every field needs an accessible name.** The Field component supplies it: the label is always rendered and tied to the control with `htmlFor` and an auto-generated `id` (or the `id` you pass). A placeholder is not a name.
+
+### Disabled and focus-visible
+
+**Disabled.** Buttons, fields and the par stepper buttons use `disabled-surface` and `disabled-text` (`#E8E1D6` and `#D9D0C4`), not `opacity-40`. The pair is about 1.17:1, far below 4.5:1 **by design**: disabled states are exempt from the contrast rule (see "Sunlight contrast"). A disabled Secondary or Text button has no fill and takes `text-disabled-text` for its label (and its edge, for Secondary). `cursor-not-allowed` is set on all of them. **Circular game controls keep `opacity-25`** (Decrement and Advance): they are physical controls the player is about to need again, and a light fade reads as "not reachable right now".
+
+**Focus-visible.** Every button, field and control uses a solid 2px accent ring: `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent`. Buttons add `ring-offset-2 ring-offset-bg` so the ring sits clear of the border. Fields use `focus:` rather than `focus-visible:` because a text field should show focus on tap too, and add the accent edge. `:focus-visible` on buttons only fires for keyboard, switch and assistive-tech navigation, never a touch tap, so it is invisible in normal use on this touch-only product. The old 40% ring (`ring-accent/40`) is retired. The remaining uses (PageHeader's back button, Summary's Edit icon, History's chips and "+ Add", and the Scorecard score-cell inset rings) are on the control guard's allow-list and move in stages 4, 6 and 7.
+
+**No shadow on buttons or sheets.** `shadow-btn` and the sheet `shadow-card` are gone. The one shadow, `shadow-subtle`, is for record cards only.
+
+### Bottom action bar (BottomActionBar)
+
+`src/components/BottomActionBar.jsx` holds a page's main action in the thumb zone. Used by Setup (Start the round) and Summary (the main action and the links that belong with it).
+
+```
+shrink-0 w-full bg-bg border-t border-border px-page pt-group
+pb-[calc(1rem+env(safe-area-inset-bottom,0px))]
+```
+
+- **In flow, not fixed.** It is the last child of the page's `h-full flex flex-col` column, after the scroll area (`main`), and never shrinks. Because it is not `position: fixed`, it cannot cover the last field, it stays inside the desktop phone frame, and when the iOS keyboard opens it stays at the bottom of the layout while the focused field scrolls into view above it.
+- **Hairline** (`border-t border-border`) across the top, the page background behind, **no shadow**.
+- **Safe area.** Bottom padding is 1rem plus `env(safe-area-inset-bottom)`, so the button clears the home indicator. The env value is 0 on desktop and in the frame.
+- `children` is a Button, a two-column grid of Buttons, and any small text that belongs with them. `className` is for layout only (Summary adds `space-y-field`).
 
 ### Page header (PageHeader component)
 

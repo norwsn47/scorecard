@@ -28,6 +28,8 @@ export default {
         'on-accent':         'var(--color-on-accent)',
         'disabled-surface':  'var(--color-surface-disabled)',
         'disabled-text':     'var(--color-text-disabled)',
+        // Field error edge and message (Figma color/status/error/text).
+        error:               'var(--color-error)',
         'under-par':      'var(--color-under-par)',
         'over-par':       'var(--color-over-par)',
       },
