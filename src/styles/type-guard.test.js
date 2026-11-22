@@ -19,7 +19,7 @@ const SRC = resolve(process.cwd(), 'src')
 // it must appear, so a stale or grown entry fails below.
 const ALLOW = [
   { file: 'src/pages/Scorecard.jsx', cls: 'text-2xl', count: 2, reason: 'glyph size of the +/- on the 64px round control buttons, not text' },
-  { file: 'src/components/ParStepperGrid.jsx', cls: 'text-lg', count: 2, reason: 'glyph size of the +/- stepper symbols, not text' },
+  { file: 'src/components/ParStepperGrid.jsx', cls: 'text-lg', count: 1, reason: 'glyph size of the +/- stepper symbols, not text (one shared constant)' },
 ]
 
 // ---------- scanner ----------

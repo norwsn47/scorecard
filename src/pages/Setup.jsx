@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
+import BottomActionBar from '../components/BottomActionBar.jsx'
+import Button from '../components/Button.jsx'
+import { DateField, Input, Select, Textarea } from '../components/Field.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import ParStepperGrid, { stepPar as stepParArray } from '../components/ParStepperGrid.jsx'
 import { BRUNTSFIELD_COURSE_NAME, BRUNTSFIELD_HOLE_COUNT, BRUNTSFIELD_HOLE_PARS, QUICK_PLAY_COURSE_NAME } from '../constants.js'
@@ -539,24 +542,30 @@ export default function Setup({ navigate, goBack, params }) {
         }
       />
 
-      <main className="flex-1 overflow-y-auto px-5 pt-6 pb-10 w-full space-y-3">
+      <main className="flex-1 min-h-0 overflow-y-auto px-page pt-section pb-section w-full space-y-section">
 
         {editRound && (
-          <p className="type-small text-muted pb-1">
+          <p className="type-small text-muted">
             Rename players, add or remove one, fix the date{showCourse ? ', switch the course' : ''} or add a note here. You'll adjust hole scores on the next screen.
           </p>
         )}
 
         {/* Course selector — logged-in only; not shown for local-round edits */}
         {showCourse && (
-          <div className="pb-1">
+          <div>
+            {/* The select carries its own "Course" label; every other state of
+                this block (loading, failed, no courses, naming a new course)
+                gets the same heading so the block is always named. */}
+            {(creatingCourse || coursesStatus !== 'ready' || selectableCourses.length === 0) && (
+              <p className="type-small-strong text-text mb-1.5">Course</p>
+            )}
             {!creatingCourse ? (
               coursesStatus !== 'ready' ? (
                 // Not loaded, or the load failed / the session expired. Never
                 // shown as "No courses yet": that would read as an empty
                 // account (#99). Starting without a course stays possible so a
                 // dead signal on the course doesn't block a round.
-                <div className="py-4 px-4 rounded-md border border-dashed border-border bg-bg-card text-center">
+                <div className="py-4 px-4 rounded-control border border-dashed border-border bg-bg-card text-center">
                   {coursesStatus === 'loading' ? (
                     <p className="type-small text-muted">Loading your courses…</p>
                   ) : (
@@ -566,13 +575,13 @@ export default function Setup({ navigate, goBack, params }) {
                           ? "You've been signed out, so your courses can't be loaded."
                           : "Couldn't load your courses - check your connection."}
                       </p>
-                      <button
-                        type="button"
+                      <Button
+                        variant="secondary"
+                        size="medium"
                         onClick={() => (coursesStatus === 'signedOut' ? navigate('login') : setCoursesReloadKey(k => k + 1))}
-                        className="py-2 px-4 rounded-sm border border-accent text-accent type-strong active:bg-accent-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                       >
                         {coursesStatus === 'signedOut' ? 'Sign in' : 'Try again'}
-                      </button>
+                      </Button>
                       <p className="type-small text-muted mt-3">
                         {editRound
                           ? 'You can still change the other details.'
@@ -591,17 +600,13 @@ export default function Setup({ navigate, goBack, params }) {
                 // no-course, 36-hole, all-par-3 round (the same shape as
                 // logged-out Quick Play), so this state says so explicitly
                 // rather than leaving it as an undiscoverable accident (#76).
-                <div className="py-4 px-4 rounded-md border border-dashed border-border bg-bg-card text-center">
+                <div className="py-4 px-4 rounded-control border border-dashed border-border bg-bg-card text-center">
                   <p className="type-small text-muted mb-3">
                     No courses yet - add one to get started
                   </p>
-                  <button
-                    type="button"
-                    onClick={startNewCourse}
-                    className="py-2 px-4 rounded-sm border border-accent text-accent type-strong active:bg-accent-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-                  >
+                  <Button variant="secondary" size="medium" onClick={startNewCourse}>
                     + New course
-                  </button>
+                  </Button>
                   {/* Only true for a genuinely new round (New Game / Add Past
                       Round) — an editRound detour through this same empty
                       state (editing an existing no-course D1 round while the
@@ -615,16 +620,15 @@ export default function Setup({ navigate, goBack, params }) {
                 </div>
               ) : (
                 <div>
-                  <select
-                    aria-label="Course"
+                  <Select
+                    label="Course"
                     value={selectedCourseId ?? ''}
                     onChange={e => selectCourse(e.target.value)}
-                    className="w-full min-w-0 py-3 pl-4 pr-4 rounded-md border border-field type-body bg-bg-card text-text focus:outline-none focus:ring-2 focus:ring-accent/40"
                   >
                     {selectableCourses.map(c => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
-                  </select>
+                  </Select>
                   {/* "+ New course" used to be a sentinel option inside the
                       select (value="__new__") - picking it didn't select a
                       course, it flipped the UI into creation mode. That
@@ -632,37 +636,32 @@ export default function Setup({ navigate, goBack, params }) {
                       reads oddly as a select option, so it is a separate text
                       link under the select. Editing an existing course lives
                       in Settings > My courses, not here. */}
-                  <button
-                    type="button"
-                    onClick={startNewCourse}
-                    className="inline-block mt-1.5 py-3 -my-3 type-small-strong text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-                  >
+                  <Button variant="text" className="mt-related" onClick={startNewCourse}>
                     + New course
-                  </button>
+                  </Button>
                 </div>
               )
             ) : (
               <>
                 <div className="space-y-1">
                   <div className="flex gap-2">
-                    <input
-                      type="text"
-                      aria-label="Course name"
+                    <Input
+                      label="Course name"
+                      hideLabel
+                      className="flex-1 min-w-0"
                       value={newCourseName}
                       onChange={e => { setNewCourseName(e.target.value.slice(0, 60)); setCourseError(null) }}
                       placeholder="Course name"
                       autoFocus
-                      className="flex-1 min-w-0 py-3 pl-4 pr-4 rounded-md border border-field type-body bg-bg-card text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40"
+                      error={courseError ? true : undefined}
+                      aria-describedby={courseError ? 'course-error' : undefined}
                     />
-                    <button
-                      onClick={cancelNewCourse}
-                      className="px-4 py-3 rounded-sm border border-border text-muted type-small-strong active:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-                    >
+                    <Button variant="secondary" size="medium" className="shrink-0" onClick={cancelNewCourse}>
                       Cancel
-                    </button>
+                    </Button>
                   </div>
                   {courseError && (
-                    <p role="alert" className="type-small text-accent pl-1">{courseError}</p>
+                    <p id="course-error" role="alert" className="type-small text-error pl-1">{courseError}</p>
                   )}
                 </div>
 
@@ -683,7 +682,7 @@ export default function Setup({ navigate, goBack, params }) {
                         aria-checked={newCourseHoleCount === n}
                         onClick={() => handleNewCourseHoleCount(n)}
                         className={[
-                          'flex-1 h-11 rounded-md border type-small-strong active:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
+                          'flex-1 h-11 rounded-control border type-small-strong active:bg-bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent',
                           newCourseHoleCount === n
                             ? 'border-accent text-accent'
                             : 'border-border text-text',
@@ -704,7 +703,6 @@ export default function Setup({ navigate, goBack, params }) {
                 </div>
               </>
             )}
-            <p className="type-small-strong text-muted mt-1.5 pl-1">Course</p>
           </div>
         )}
 
@@ -715,7 +713,7 @@ export default function Setup({ navigate, goBack, params }) {
             visually adjacent-looking to the Course block, so the two can't
             be confused for each other. Applies to both local and D1 rounds. */}
         {editRound && (
-          <div className="pt-3 pb-1">
+          <div>
             <p className="type-label-caps text-muted mb-2 pl-1">Par for this round</p>
             <ParStepperGrid pars={roundPars} onStep={stepRoundPar} />
             <p className="type-small text-muted mt-1.5 pl-1">
@@ -726,108 +724,93 @@ export default function Setup({ navigate, goBack, params }) {
 
         {/* Date picker — past rounds and edits */}
         {showDate && (
-          <div className="pb-1">
-            <input
-              type="date"
-              aria-label="Date played"
+          <div>
+            <DateField
+              label="Date played"
               value={pastDate}
               max={localDateString()}
               onChange={e => setPastDate(e.target.value)}
-              className="w-full py-3 pl-4 pr-4 rounded-md border border-field type-body bg-bg-card text-text focus:outline-none focus:ring-2 focus:ring-accent/40"
+              error={pastDate === '' ? 'Choose the date the round was played' : undefined}
             />
-            {pastDate === '' ? (
-              <p role="alert" className="type-small text-accent mt-1.5 pl-1">Choose the date the round was played</p>
-            ) : (
-              <p className="type-small-strong text-muted mt-1.5 pl-1">Date played</p>
-            )}
           </div>
         )}
 
-        {editRound && names.length > 0 && (
-          <p className="type-small-strong text-muted pt-2 pl-1">Players</p>
-        )}
+        {/* Players group (Figma 02-setup): one "Players" heading over the name
+            fields, with "+ Add player" grouped under them. Each input keeps its
+            own accessible name ("Player 1 name") through the hidden label. */}
+        <section aria-labelledby="setup-players-heading">
+          <h2 id="setup-players-heading" className="type-small-strong text-text mb-1.5">Players</h2>
+          <div className="space-y-field">
+            {names.map((name, i) => {
+              const listId = `player-suggestions-${i}`
+              const isDupe = dupeIndices.includes(i)
+              const canRemove = names.length > 1
+              return (
+                <div key={i}>
+                  <Input
+                    label={`Player ${i + 1} name`}
+                    hideLabel
+                    value={name}
+                    onChange={e => handleNameChange(i, e.target.value)}
+                    placeholder={`Player ${i + 1}`}
+                    list={listId}
+                    maxLength={30}
+                    autoComplete="off"
+                    autoFocus={i === autoFocusIndex}
+                    error={isDupe ? 'Each player must have a unique name' : undefined}
+                    errorRole={null}
+                    trailing={canRemove ? (
+                      <button
+                        onClick={() => handleRemovePlayer(i)}
+                        aria-label={`Remove player ${i + 1}`}
+                        className="absolute right-1 top-1/2 -translate-y-1/2 p-3.5 text-muted active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    ) : null}
+                  />
+                  <datalist id={listId}>
+                    {suggestionsFor(i).map(n => (
+                      <option key={n} value={n} />
+                    ))}
+                  </datalist>
+                </div>
+              )
+            })}
+          </div>
 
-        {names.map((name, i) => {
-          const listId = `player-suggestions-${i}`
-          const isDupe = dupeIndices.includes(i)
-          const canRemove = names.length > 1
-          return (
-            <div key={i}>
-              <div className="relative">
-                <input
-                  type="text"
-                  aria-label={`Player ${i + 1} name`}
-                  value={name}
-                  onChange={e => handleNameChange(i, e.target.value)}
-                  placeholder={`Player ${i + 1}`}
-                  list={listId}
-                  maxLength={30}
-                  autoComplete="off"
-                  autoFocus={i === autoFocusIndex}
-                  className={[
-                    'w-full py-3 pl-4 rounded-md border type-body bg-bg-card text-text',
-                    'placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40',
-                    canRemove ? 'pr-12' : 'pr-4',
-                    isDupe ? 'border-accent' : 'border-field',
-                  ].join(' ')}
-                />
-                {canRemove && (
-                  <button
-                    onClick={() => handleRemovePlayer(i)}
-                    aria-label={`Remove player ${i + 1}`}
-                    className="absolute right-1 top-1/2 -translate-y-1/2 p-3.5 text-muted active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-                  >
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                )}
-              </div>
-              <datalist id={listId}>
-                {suggestionsFor(i).map(n => (
-                  <option key={n} value={n} />
-                ))}
-              </datalist>
-              {isDupe && (
-                <p className="text-accent type-small mt-1 pl-1">
-                  Each player must have a unique name
-                </p>
-              )}
+          {names.length < MAX_PLAYERS && (
+            <div className="mt-related">
+              <Button variant="text" onClick={handleAddPlayer}>
+                + Add player
+              </Button>
             </div>
-          )
-        })}
-
-        {names.length < MAX_PLAYERS && (
-          <button
-            onClick={handleAddPlayer}
-            className="w-full py-3 px-4 rounded-md border border-dashed border-border bg-bg-card text-muted type-small-strong active:bg-border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-          >
-            + Add player
-          </button>
-        )}
+          )}
+        </section>
 
         {/* Notes — edit mode only */}
         {editRound && (
-          <div className="pt-2 pb-1">
-            <textarea
-              aria-label="Round notes"
+          <div>
+            <Textarea
+              label="Round notes"
+              optional
               value={notes}
               onChange={e => setNotes(e.target.value.slice(0, 300))}
               placeholder="Add a note about this round..."
               rows={2}
-              className="w-full px-4 py-3 rounded-md border border-field bg-bg-card type-body text-text placeholder:text-muted resize-none focus:outline-none focus:ring-2 focus:ring-accent/40"
             />
-            <p className="type-small-strong text-muted mt-1.5 pl-1">Round notes - optional</p>
           </div>
         )}
 
         {fromBruntsfield && (
-          <div className="pt-4 pb-3 text-center">
+          <div className="text-center">
             <p className="type-small text-muted">
               New here?{' '}
               <button
                 onClick={() => navigate('rules', { from: 'setup', bruntsfield: fromBruntsfield })}
-                className="inline-block py-3 -my-3 text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                className="inline-block py-3 -my-3 text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
                 Read the course rules before you start
               </button>
@@ -835,27 +818,19 @@ export default function Setup({ navigate, goBack, params }) {
           </div>
         )}
 
-        <div className="pt-3">
-          <button
-            onClick={handleStart}
-            disabled={!ready}
-            className={[
-              'w-full py-4 rounded-sm type-strong shadow-btn transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
-              ready
-                ? 'bg-accent text-bg active:bg-accent-hover'
-                : 'bg-accent text-bg opacity-40 cursor-not-allowed',
-            ].join(' ')}
-          >
-            {editRound ? 'Edit hole scores' : pastRound ? 'Enter scores' : 'Start the round'}
-          </button>
-          {editRound && (
-            <p className="type-small text-muted text-center mt-2">
-              Nothing is saved until you confirm on the next screen.
-            </p>
-          )}
-        </div>
-
       </main>
+
+      {/* Bottom action bar (Figma c17), in the flow under the scroll area. */}
+      <BottomActionBar>
+        <Button fullWidth onClick={handleStart} disabled={!ready}>
+          {editRound ? 'Edit hole scores' : pastRound ? 'Enter scores' : 'Start the round'}
+        </Button>
+        {editRound && (
+          <p className="type-small text-muted text-center mt-related">
+            Nothing is saved until you confirm on the next screen.
+          </p>
+        )}
+      </BottomActionBar>
 
       {/* Shrink confirmation — mirrors History.jsx's delete-round sheet:
           role="dialog", aria-modal, aria-labelledby, autofocus on the
@@ -878,25 +853,23 @@ export default function Setup({ navigate, goBack, params }) {
               aria-modal="true"
               aria-labelledby="course-switch-heading"
               onClick={e => e.stopPropagation()}
-              className="bg-bg rounded-t-2xl w-full max-w-[430px] px-6 pt-6 pb-10 shadow-card"
+              className="bg-bg rounded-t-sheet w-full max-w-[430px] px-6 pt-6 pb-10"
             >
               <div className="w-10 h-1 bg-border rounded-full mx-auto mb-6" />
               <h2 id="course-switch-heading" className="type-title text-text mb-1">{copy.heading}</h2>
               <p className="type-body text-muted mb-8">{copy.body}</p>
               <div className="flex gap-3">
-                <button
+                <Button
                   ref={cancelPendingRef}
+                  variant="secondary"
+                  className="flex-1"
                   onClick={closePendingChange}
-                  className="flex-1 py-3 rounded-sm border border-border type-strong text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                 >
                   Cancel
-                </button>
-                <button
-                  onClick={confirmPendingChange}
-                  className="flex-1 py-3 rounded-sm bg-accent text-bg type-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-                >
+                </Button>
+                <Button className="flex-1" onClick={confirmPendingChange}>
                   {copy.confirmLabel}
-                </button>
+                </Button>
               </div>
             </div>
           </div>

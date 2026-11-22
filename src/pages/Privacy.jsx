@@ -6,7 +6,7 @@ const ExternalLink = ({ href, children }) => (
     href={href}
     target="_blank"
     rel="noopener noreferrer"
-    className="inline-flex items-center gap-1 py-3 -my-3 type-small-strong text-accent underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+    className="inline-flex items-center gap-1 py-3 -my-3 type-small-strong text-accent underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
   >
     {children}
     <ExternalArrow />
@@ -79,7 +79,7 @@ export default function Privacy({ goBack, params }) {
           </p>
           <p className="type-body text-muted">
             You can delete your account yourself at any time from Settings. It removes your account and every round and course saved to it straight away, and it can't be undone. Quick-play scores saved locally on your device aren't part of your account and aren't affected. If you can't sign in, email{' '}
-            <a href="mailto:scorecard@outbuild.uk" className="text-accent underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40">scorecard@outbuild.uk</a>{' '}
+            <a href="mailto:scorecard@outbuild.uk" className="text-accent underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">scorecard@outbuild.uk</a>{' '}
             and we'll do it for you.
           </p>
         </section>
@@ -93,7 +93,7 @@ export default function Privacy({ goBack, params }) {
           </p>
           <p className="type-body text-muted">
             To exercise any of these rights, email{' '}
-            <a href="mailto:scorecard@outbuild.uk" className="text-accent underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40">scorecard@outbuild.uk</a>.
+            <a href="mailto:scorecard@outbuild.uk" className="text-accent underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">scorecard@outbuild.uk</a>.
             If you're unhappy with how we handle your data, you can complain to the ICO at{' '}
             <ExternalLink href="https://ico.org.uk">ico.org.uk</ExternalLink>.
           </p>
@@ -105,7 +105,7 @@ export default function Privacy({ goBack, params }) {
           <p className="type-label-caps text-muted">About this notice</p>
           <p className="type-body text-muted">
             Scorecard is made by Outbuild, a small design collective based in Edinburgh. This notice covers the Scorecard app. Questions:{' '}
-            <a href="mailto:scorecard@outbuild.uk" className="text-accent underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40">scorecard@outbuild.uk</a>
+            <a href="mailto:scorecard@outbuild.uk" className="text-accent underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">scorecard@outbuild.uk</a>
           </p>
           <ExternalLink href="https://outbuild.uk">outbuild.uk</ExternalLink>
         </section>

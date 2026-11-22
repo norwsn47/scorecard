@@ -39,7 +39,7 @@ function LoadFailed({ onClose }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="course-map-failed-heading"
-        className="bg-bg rounded-2xl w-[360px] shadow-card overflow-hidden"
+        className="bg-bg rounded-2xl w-[360px] overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
         <div className="relative px-5 py-4 border-b border-border">
@@ -50,7 +50,7 @@ function LoadFailed({ onClose }) {
             ref={closeRef}
             onClick={onClose}
             aria-label="Close"
-            className="absolute top-1.5 right-2.5 w-11 h-11 flex items-center justify-center text-muted active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="absolute top-1.5 right-2.5 w-11 h-11 flex items-center justify-center text-muted active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
             ✕
           </button>

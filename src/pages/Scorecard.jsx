@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
+import Button from '../components/Button.jsx'
 import CourseMapModal from '../components/CourseMapModal.lazy.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import ParDelta from '../components/ParDelta.jsx'
@@ -268,7 +269,7 @@ export default function Scorecard({ navigate, params }) {
     <div className="relative h-full bg-bg flex flex-col">
 
       {saveError && (
-        <div role="alert" className="bg-accent text-bg text-center type-small py-2 px-4">
+        <div role="alert" className="bg-accent text-on-accent text-center type-small py-2 px-4">
           {isEdit
             ? "Couldn't save your changes – check your connection and try again"
             : "Couldn't save – storage may be full"}
@@ -301,7 +302,7 @@ export default function Scorecard({ navigate, params }) {
         right={
           <button
             onClick={() => setShowConfirm(true)}
-            className="py-2 px-4 rounded-sm border border-accent text-accent type-small-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="py-2 px-4 rounded-control border border-accent text-accent type-small-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
             {isEdit ? 'Save' : 'Finish'}
           </button>
@@ -449,7 +450,7 @@ export default function Scorecard({ navigate, params }) {
                 // from the three per-shot scoring controls beside it. Same 64px
                 // tap area; a small "Map" caption replaces the circle as the cue.
                 // Muted (not control-warm) so the 11px caption clears 4.5:1.
-                className="w-16 h-16 rounded-md text-muted flex flex-col items-center justify-center gap-1 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                className="w-16 h-16 rounded-control text-muted flex flex-col items-center justify-center gap-1 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.159.69.159 1.006 0z" />
@@ -461,14 +462,14 @@ export default function Scorecard({ navigate, params }) {
               onClick={handleDecrement}
               disabled={activeScore === null}
               aria-label="Decrease score"
-              className="w-16 h-16 rounded-full border-2 border-control-warm font-ui text-2xl text-control-warm flex items-center justify-center disabled:opacity-25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="w-16 h-16 rounded-full border-2 border-control-warm font-ui text-2xl text-control-warm flex items-center justify-center disabled:opacity-25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             >
               −
             </button>
             <button
               onClick={handleIncrement}
               aria-label="Increase score"
-              className="w-16 h-16 rounded-full bg-accent border-2 border-accent text-bg font-ui text-2xl flex items-center justify-center active:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="w-16 h-16 rounded-full bg-accent border-2 border-accent text-bg font-ui text-2xl flex items-center justify-center active:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             >
               +
             </button>
@@ -476,7 +477,7 @@ export default function Scorecard({ navigate, params }) {
               onClick={handleAdvance}
               disabled={activeCell.holeIndex === displayedHoles - 1 && activeCell.playerIndex === players.length - 1}
               aria-label="Advance to next player"
-              className="w-16 h-16 rounded-full bg-control-warm border-2 border-control-warm text-bg flex items-center justify-center disabled:opacity-25 active:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="w-16 h-16 rounded-full bg-control-warm border-2 border-control-warm text-bg flex items-center justify-center disabled:opacity-25 active:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-6 h-6">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6" />
@@ -499,7 +500,7 @@ export default function Scorecard({ navigate, params }) {
           <div className="bg-bg px-5 pb-4 text-center shrink-0">
             <button
               onClick={() => navigate('setup', { editRound: true, game, fromScorecard: true })}
-              className="inline-block py-3.5 -my-3.5 type-small-strong text-muted underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="inline-block py-3.5 -my-3.5 type-small-strong text-muted underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             >
               Edit game setup
             </button>
@@ -522,7 +523,7 @@ export default function Scorecard({ navigate, params }) {
             aria-modal="true"
             aria-labelledby="finish-heading"
             onClick={e => e.stopPropagation()}
-            className="bg-bg rounded-t-2xl w-full max-w-[430px] px-6 pt-6 pb-10 shadow-card"
+            className="bg-bg rounded-t-sheet w-full max-w-[430px] px-6 pt-6 pb-10"
           >
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-6" />
             <h2 id="finish-heading" className="type-title text-text mb-1">
@@ -546,21 +547,22 @@ export default function Scorecard({ navigate, params }) {
               ))}
             </div>
             <div className="flex gap-3">
-              <button
+              <Button
                 ref={cancelFinishRef}
+                variant="secondary"
+                className="flex-1"
                 onClick={() => setShowConfirm(false)}
                 disabled={finishing}
-                className="flex-1 py-3 rounded-sm border border-border type-strong text-text disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                className="flex-1"
                 onClick={handleConfirmFinish}
                 disabled={finishing}
-                className="flex-1 py-3 rounded-sm bg-accent text-bg type-strong disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 {isEdit ? (finishing ? 'Saving…' : 'Save changes') : 'Confirm'}
-              </button>
+              </Button>
             </div>
           </div>
         </div>

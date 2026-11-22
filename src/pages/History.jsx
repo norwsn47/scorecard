@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import Button from '../components/Button.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import ParDelta from '../components/ParDelta.jsx'
 import PlayerStar from '../components/PlayerStar.jsx'
@@ -234,12 +235,12 @@ export default function History({ navigate }) {
                 ? 'Sign in again to see your rounds.'
                 : 'Check your connection and try again.'}
             </p>
-            <button
+            <Button
+              size="medium"
               onClick={() => (loadError === 'signedOut' ? navigate('login') : setReloadKey(k => k + 1))}
-              className="py-3 px-6 rounded-sm bg-accent text-bg type-strong shadow-btn focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               {loadError === 'signedOut' ? 'Sign in' : 'Try again'}
-            </button>
+            </Button>
           </div>
         )}
 
@@ -257,12 +258,14 @@ export default function History({ navigate }) {
                 <p className="type-body text-muted">
                   {filter} hasn't played a recorded round.
                 </p>
-                <button
+                <Button
+                  variant="text"
+                  size="medium"
+                  className="mt-4"
                   onClick={() => setFilter(null)}
-                  className="mt-4 type-small-strong text-accent underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                 >
                   Show all rounds
-                </button>
+                </Button>
               </>
             ) : (
               <>
@@ -270,12 +273,9 @@ export default function History({ navigate }) {
                 <p className="type-body text-muted mb-6">
                   Finish a round to see it here.
                 </p>
-                <button
-                  onClick={() => navigate('setup')}
-                  className="py-3 px-6 rounded-sm bg-accent text-bg type-strong shadow-btn focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-                >
+                <Button size="medium" onClick={() => navigate('setup')}>
                   New game
-                </button>
+                </Button>
               </>
             )}
           </div>

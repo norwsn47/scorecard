@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
+import Button from '../components/Button.jsx'
+import { Input } from '../components/Field.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import PlayerStar from '../components/PlayerStar.jsx'
 import { useAuth } from '../hooks/useAuth.jsx'
@@ -206,9 +208,6 @@ export default function Settings({ navigate }) {
     }
   }
 
-  const fieldClass =
-    'w-full py-3 pl-4 pr-4 rounded-md border border-field type-body bg-bg-card text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40'
-
   return (
     <div className="h-full bg-bg flex flex-col">
 
@@ -246,18 +245,17 @@ export default function Settings({ navigate }) {
                 onClick={() => { setNameSaved(false); setNameEditing(true) }}
                 aria-label="Edit name"
                 aria-expanded={false}
-                className="w-11 h-11 -mr-2.5 shrink-0 flex items-center justify-center rounded-md text-accent active:bg-accent-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                className="w-11 h-11 -mr-2.5 shrink-0 flex items-center justify-center rounded-control text-accent active:bg-accent-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
                 <PencilIcon />
               </button>
             </div>
           ) : (
             <div className="py-3.5 border-b border-border space-y-2.5">
-              <label htmlFor="settings-name" className="type-small-strong text-muted block">Name</label>
-              <input
+              <Input
+                label="Name"
                 id="settings-name"
                 ref={nameInputRef}
-                type="text"
                 value={name}
                 onChange={e => { setName(e.target.value.slice(0, 60)); setNameError(null); setNameSaved(false) }}
                 onKeyDown={e => {
@@ -266,29 +264,27 @@ export default function Settings({ navigate }) {
                 }}
                 placeholder="Your name"
                 maxLength={60}
-                className={fieldClass}
               />
               <p className="type-small text-muted">
                 Fills in your name at the start of a new round and marks you with a small star on the scorecard. Leave it blank if you would rather not.
               </p>
               {nameError && <p role="alert" className="type-small text-accent pl-1">{nameError}</p>}
               <div className="flex items-center gap-5">
-                <button
-                  type="button"
+                <Button
+                  size="medium"
                   onClick={handleSaveName}
                   disabled={savingName || nameUnchanged}
-                  className="min-h-[44px] py-2.5 px-5 rounded-sm bg-accent text-bg type-strong active:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                 >
                   {savingName ? 'Saving…' : 'Save'}
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  variant="text"
+                  size="medium"
                   onClick={closeNameEdit}
                   disabled={savingName}
-                  className="inline-block py-3 -my-3 type-small-strong text-muted underline underline-offset-2 active:opacity-70 disabled:opacity-40 disabled:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                 >
                   Cancel
-                </button>
+                </Button>
               </div>
             </div>
           )}
@@ -309,7 +305,7 @@ export default function Settings({ navigate }) {
                   onClick={() => setEmailFormOpen(true)}
                   aria-label="Change email address"
                   aria-expanded={false}
-                  className="w-11 h-11 -mr-2.5 shrink-0 flex items-center justify-center rounded-md text-accent active:bg-accent-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  className="w-11 h-11 -mr-2.5 shrink-0 flex items-center justify-center rounded-control text-accent active:bg-accent-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 >
                   <PencilIcon />
                 </button>
@@ -317,7 +313,7 @@ export default function Settings({ navigate }) {
             </div>
 
             {user.pending_email && (
-              <div className="rounded-md border border-border bg-bg-card px-4 py-3">
+              <div className="rounded-control border border-border bg-bg-card px-4 py-3">
                 <p className="type-body text-text break-words">
                   Waiting for confirmation of <span className="type-strong">{user.pending_email}</span>.
                 </p>
@@ -329,15 +325,15 @@ export default function Settings({ navigate }) {
 
             {emailFormOpen && (
               <form onSubmit={handleSaveEmail} className="space-y-3">
-                <input
+                <Input
                   ref={emailInputRef}
                   type="email"
+                  label="New email address"
+                  hideLabel
                   value={newEmail}
                   onChange={e => { setNewEmail(e.target.value); setEmailError(null); setEmailSent(false) }}
                   placeholder="you@example.com"
                   autoComplete="email"
-                  aria-label="New email address"
-                  className={fieldClass}
                 />
                 {emailError && <p role="alert" className="type-small text-accent pl-1">{emailError}</p>}
                 {emailSent && (
@@ -345,26 +341,24 @@ export default function Settings({ navigate }) {
                     Check the new inbox for a confirmation link. Your address only changes once you open it.
                   </p>
                 )}
-                <button
+                <Button
                   type="submit"
+                  variant="secondary"
+                  fullWidth
                   disabled={savingEmail || !newEmail.trim()}
-                  className={[
-                    'w-full py-3 px-4 rounded-sm border border-accent text-accent type-strong',
-                    'active:bg-accent-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
-                    (savingEmail || !newEmail.trim()) ? 'opacity-40 cursor-not-allowed' : '',
-                  ].join(' ')}
                 >
                   {savingEmail ? 'Sending…' : 'Send confirmation link'}
-                </button>
+                </Button>
                 <div>
-                  <button
-                    type="button"
+                  <Button
+                    variant="text"
+                    size="medium"
+                    className="-ml-4"
                     onClick={closeEmailForm}
                     disabled={savingEmail}
-                    className="inline-block py-3 -my-3 type-small-strong text-muted underline underline-offset-2 active:opacity-70 disabled:opacity-40 disabled:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                   >
                     Keep my current email
-                  </button>
+                  </Button>
                 </div>
               </form>
             )}
@@ -375,7 +369,7 @@ export default function Settings({ navigate }) {
           <button
             type="button"
             onClick={() => navigate('courses', {})}
-            className="w-full min-h-[56px] py-2 flex items-center justify-between gap-3 border-b border-border text-left active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="w-full min-h-[56px] py-2 flex items-center justify-between gap-3 border-b border-border text-left active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
             <span className="min-w-0">
               <span className="block type-strong text-text">My courses</span>
@@ -395,7 +389,7 @@ export default function Settings({ navigate }) {
           <button
             type="button"
             onClick={() => navigate('info', { from: 'settings' })}
-            className="w-full min-h-[48px] py-2 flex items-center justify-between gap-3 border-b border-border text-left active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="w-full min-h-[48px] py-2 flex items-center justify-between gap-3 border-b border-border text-left active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
             <span className="type-strong text-text">Information</span>
             <span className="flex items-center gap-1.5 type-small text-muted">
@@ -412,14 +406,15 @@ export default function Settings({ navigate }) {
         {/* ── Sign out and Delete account ── */}
         <section className="space-y-6">
           <div>
-            <button
-              type="button"
+            <Button
+              variant="text"
+              size="medium"
+              className="-ml-4"
               onClick={handleSignOut}
               disabled={signingOut}
-              className="inline-block py-3 -my-3 type-small-strong text-accent underline underline-offset-2 active:opacity-70 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               {signingOut ? 'Signing out…' : 'Sign out'}
-            </button>
+            </Button>
             {signOutError && (
               <p role="alert" className="type-small text-accent mt-3">
                 Couldn't sign out - check your connection and try again.
@@ -431,7 +426,7 @@ export default function Settings({ navigate }) {
             <button
               type="button"
               onClick={() => { setDeleteError(null); setDeleteWord(''); setConfirmDelete(true) }}
-              className="inline-block py-3 -my-3 type-small-strong text-muted underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="inline-block py-3 -my-3 type-small-strong text-muted underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             >
               Delete my account
             </button>
@@ -459,7 +454,7 @@ export default function Settings({ navigate }) {
             aria-modal="true"
             aria-labelledby="delete-account-heading"
             onClick={e => e.stopPropagation()}
-            className="bg-bg rounded-t-2xl w-full max-w-[430px] px-6 pt-6 pb-10 shadow-card"
+            className="bg-bg rounded-t-sheet w-full max-w-[430px] px-6 pt-6 pb-10"
           >
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-6" />
             <h2 id="delete-account-heading" className="type-title text-text mb-1">Delete your account?</h2>
@@ -467,39 +462,37 @@ export default function Settings({ navigate }) {
               All your rounds, all your courses and the account itself are removed for good. Quick-play history on this device is not affected.
             </p>
 
-            <label htmlFor="delete-confirm" className="type-small-strong text-muted block mb-2">
-              Type DELETE to confirm
-            </label>
-            <input
+            <Input
+              label="Type DELETE to confirm"
               id="delete-confirm"
               ref={deleteInputRef}
-              type="text"
               value={deleteWord}
               onChange={e => setDeleteWord(e.target.value)}
               autoComplete="off"
               autoCapitalize="characters"
-              className="w-full py-3 pl-4 pr-4 rounded-md border border-field type-body bg-bg-card text-text focus:outline-none focus:ring-2 focus:ring-accent/40 mb-3"
+              className="mb-3"
             />
 
             {deleteError && (
               <p role="alert" className="type-small text-accent mb-3">{deleteError}</p>
             )}
 
-            <div className="flex gap-3">
-              <button
-                onClick={() => setConfirmDelete(false)}
-                disabled={deleting}
-                className="flex-1 py-3 rounded-sm border border-border type-strong text-text active:bg-bg-card disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-              >
-                Keep my account
-              </button>
-              <button
+            <div className="flex flex-col gap-3">
+              <Button
+                fullWidth
                 onClick={handleDelete}
                 disabled={deleting || deleteWord !== 'DELETE'}
-                className="flex-1 py-3 rounded-sm bg-accent text-bg type-strong active:opacity-80 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 {deleting ? 'Deleting…' : 'Delete account'}
-              </button>
+              </Button>
+              <Button
+                variant="secondary"
+                fullWidth
+                onClick={() => setConfirmDelete(false)}
+                disabled={deleting}
+              >
+                Keep my account
+              </Button>
             </div>
           </div>
         </div>
