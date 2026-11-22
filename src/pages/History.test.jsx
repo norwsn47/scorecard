@@ -199,3 +199,59 @@ describe('History - signed-in star (#91)', () => {
     expect(screen.queryByRole('img', { name: 'You' })).not.toBeInTheDocument()
   })
 })
+
+describe('History - record cards (redesign)', () => {
+  const twoPlayerRound = () => round('g1', ['Ann', 'Bo'], '2026-08-01T10:00:00.000Z')
+
+  it('each round card is a Card: the shared surface with the soft shadow, never the old one', async () => {
+    seedLocalGames([twoPlayerRound(), round('g2', ['Cy'], '2026-08-02T10:00:00.000Z')])
+    renderHistory()
+    const buttons = await screen.findAllByRole('button', { name: /^Open round/ })
+    expect(buttons).toHaveLength(2)
+    for (const open of buttons) {
+      expect(open.parentElement).toHaveClass('shadow-subtle', 'rounded-control', 'bg-bg-card')
+      expect(open.parentElement).not.toHaveClass('shadow-card', 'rounded-md')
+    }
+  })
+
+  it('shows no winner line and no winner highlight; names carry equal weight', async () => {
+    seedLocalGames([twoPlayerRound()])
+    renderHistory()
+    await screen.findByRole('button', { name: /^Open round/ })
+    const main = screen.getByRole('main')
+    expect(within(main).queryByText(/Winner/)).not.toBeInTheDocument()
+    expect(within(main).queryByText(/Tied/)).not.toBeInTheDocument()
+    const ann = within(main).getByRole('button', { name: 'Ann' })
+    const bo = within(main).getByRole('button', { name: 'Bo' })
+    expect(ann.className).toBe(bo.className)
+    for (const el of [ann, bo]) {
+      expect(el).toHaveClass('type-body', 'text-text')
+      expect(el).not.toHaveClass('type-strong')
+      expect(el).not.toHaveClass('text-accent')
+    }
+  })
+
+  it('keeps the total beside the name: name can shrink, total cannot', async () => {
+    seedLocalGames([round('g1', ['A very long player name indeed'], '2026-08-01T10:00:00.000Z')])
+    renderHistory()
+    await screen.findByRole('button', { name: /^Open round/ })
+    const name = screen.getByRole('button', { name: 'A very long player name indeed' })
+    expect(name).toHaveClass('min-w-0', 'break-words', 'pointer-events-auto')
+    expect(name.nextElementSibling).toHaveClass('shrink-0')
+    expect(name.nextElementSibling).toHaveTextContent('6 (E)')
+  })
+})
+
+describe('History - error state on EmptyState', () => {
+  it('keeps role="alert" and the Try again action when the load fails', async () => {
+    global.fetch = vi.fn(url => {
+      if (url.includes('/api/auth/me')) return Promise.resolve({ ok: true, json: async () => ({ user: { id: 'u1', email: 'a@example.com', name: 'Ann' } }) })
+      return Promise.resolve({ ok: false, status: 500, json: async () => ({}) })
+    })
+    renderHistory()
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveClass('text-center', 'pt-16')
+    expect(alert).toHaveTextContent("Couldn't load your rounds")
+    expect(within(alert).getByRole('button', { name: 'Try again' })).toBeInTheDocument()
+  })
+})

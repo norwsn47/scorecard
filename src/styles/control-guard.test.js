@@ -24,10 +24,7 @@ const ALLOW = [
   // Stage 7: Scorecard score-cell inset rings (owner put them out of scope for stage 3).
   { file: 'src/pages/Scorecard.jsx', cls: 'ring-accent/40', count: 1, reason: 'stage 7: score-cell inset rings' },
   // Stage 6 (History): inline player-name toggle, filter chips (4), record card open button.
-  { file: 'src/pages/History.jsx', cls: 'rounded-sm', count: 1, reason: 'stage 6: inline player-name toggle' },
-  { file: 'src/pages/History.jsx', cls: 'ring-accent/40', count: 6, reason: 'stage 6: filter chips (4), record card open button, player-name toggle' },
-  { file: 'src/pages/History.jsx', cls: 'rounded-md', count: 2, reason: 'stage 6: record card and its open button' },
-  { file: 'src/pages/History.jsx', cls: 'shadow-card', count: 1, reason: 'stage 6: record card moves to shadow-subtle' },
+  { file: 'src/pages/History.jsx', cls: 'ring-accent/40', count: 5, reason: 'stage 6: filter chips (4), player-name toggle' },
   // Stage 4: px-5 and px-6 are not page padding in these places. Page edges use px-page.
   { file: 'src/components/Button.jsx', cls: 'px-6', count: 1, reason: 'inner padding of the large button' },
   { file: 'src/components/CourseMapModal.jsx', cls: 'px-5', count: 4, reason: 'map modal inner padding (modal, not a page)' },

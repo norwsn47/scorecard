@@ -149,3 +149,18 @@ describe('Home — ?email= confirm-email banner', () => {
     expect(window.location.search).toBe('?email=weird')
   })
 })
+
+describe('Home - the course card', () => {
+  it('is one button named by its copy, carries the card shadow, and opens the Bruntsfield page', async () => {
+    const user = userEvent.setup()
+    mountFetch(null)
+    const { navigate } = renderHome()
+
+    const card = await screen.findByRole('button', { name: 'Bruntsfield Short Hole Course Course map, rules & scorecard' })
+    expect(card.parentElement).toHaveClass('shadow-subtle', 'rounded-control')
+    expect(screen.getByText('Bruntsfield Short Hole Course')).toBeVisible()
+    expect(screen.getByText('Course map, rules & scorecard')).toBeVisible()
+    await user.click(card)
+    expect(navigate).toHaveBeenCalledWith('bruntsfield')
+  })
+})

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import Button from '../components/Button.jsx'
+import Card from '../components/Card.jsx'
 import ExternalArrow from '../components/ExternalArrow.jsx'
 import { track } from '../utils/analytics.js'
 import { formatShortDate } from '../utils/format.js'
@@ -28,6 +29,11 @@ function emailNoticeCopy(flag, signedIn) {
       return null
   }
 }
+
+// The course card's copy. The card's accessible name is these two joined, as it
+// was when the whole card was one button.
+const COURSE_NAME = 'Bruntsfield Short Hole Course'
+const COURSE_BLURB = 'Course map, rules & scorecard'
 
 export default function Home({ navigate }) {
   const { user, emailNotice, setEmailNotice } = useAuth()
@@ -142,24 +148,26 @@ export default function Home({ navigate }) {
         {/* Course-specific scorecards */}
         <div className="flex flex-col gap-related pt-1">
           <p className="type-label-caps text-muted">Course specific scorecards</p>
-          <button
-            onClick={() => navigate('bruntsfield')}
-            className="w-full p-card rounded-control bg-bg-card border border-border text-left flex items-center gap-3 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          <Card
+            onOpen={() => navigate('bruntsfield')}
+            openLabel={`${COURSE_NAME} ${COURSE_BLURB}`}
           >
-            <div className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-accent-tint">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-accent">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                <circle cx="12" cy="10" r="3" />
+            <div className="flex items-center gap-3">
+              <div className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-accent-tint">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-accent">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="type-strong text-text">{COURSE_NAME}</p>
+                <p className="type-small text-muted">{COURSE_BLURB}</p>
+              </div>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-muted shrink-0">
+                <path d="M9 18l6-6-6-6" />
               </svg>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="type-strong text-text">Bruntsfield Short Hole Course</p>
-              <p className="type-small text-muted">Course map, rules &amp; scorecard</p>
-            </div>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-muted shrink-0">
-              <path d="M9 18l6-6-6-6" />
-            </svg>
-          </button>
+          </Card>
         </div>
 
         {user && (
