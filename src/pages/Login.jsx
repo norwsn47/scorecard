@@ -110,25 +110,25 @@ export default function Login({ navigate, goBack }) {
             </svg>
           </div>
           <div className="space-y-2">
-            <h1 className="font-display text-3xl italic text-text">Check your email</h1>
-            <p className="font-ui text-sm text-muted">We've sent a sign-in link to</p>
-            <p className="font-ui text-sm text-text font-medium">{email}</p>
+            <h1 className="type-title text-text">Check your email</h1>
+            <p className="type-small text-muted">We've sent a sign-in link to</p>
+            <p className="type-small-strong text-text">{email}</p>
           </div>
-          <p className="font-ui text-xs text-muted leading-relaxed">
+          <p className="type-small text-muted">
             Tap the link in your email to sign in.<br />It expires in 15 minutes.
           </p>
 
           <div className="w-full max-w-[260px] flex flex-col items-stretch gap-3">
             {resendError && (
               <div role="alert" className="px-4 py-3 rounded-md bg-bg-card border border-border">
-                <p className="font-ui text-xs text-accent">{resendError}</p>
+                <p className="type-small text-accent">{resendError}</p>
               </div>
             )}
             <button
               type="button"
               onClick={handleResend}
               disabled={cooldown > 0 || resending}
-              className="w-full border border-accent text-accent rounded-sm py-3 px-4 font-ui text-sm tracking-[0.08em] uppercase font-medium disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="w-full border border-accent text-accent rounded-sm py-3 px-4 type-strong disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               {resending
                 ? 'Sending…'
@@ -148,18 +148,18 @@ export default function Login({ navigate, goBack }) {
 
       <main className="flex-1 flex flex-col px-6 pt-3 pb-8">
         <div className="mb-2">
-          <h1 className="font-display text-2xl italic text-text leading-tight">
+          <h1 className="type-title text-text">
             Sign in to Scorecard
           </h1>
         </div>
 
-        <p className="font-ui text-sm text-muted leading-relaxed mb-5">
+        <p className="type-body text-muted mb-5">
           Keep a proper record of your rounds and courses, across devices.
         </p>
 
         {error && (
           <div role="alert" className="mb-5 px-4 py-3 rounded-md bg-bg-card border border-border">
-            <p className="font-ui text-xs text-accent">
+            <p className="type-small text-accent">
               {error === 'expired'
                 ? 'Your link has expired. Request a new one.'
                 : error === 'error'
@@ -171,7 +171,7 @@ export default function Login({ navigate, goBack }) {
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
-            <label htmlFor="login-email" className="font-ui text-xs tracking-[0.12em] uppercase text-muted block mb-2">
+            <label htmlFor="login-email" className="type-label-caps text-muted block mb-2">
               Email address
             </label>
             <input
@@ -183,22 +183,22 @@ export default function Login({ navigate, goBack }) {
               required
               autoFocus
               autoComplete="email"
-              className="w-full px-4 py-3 rounded-md bg-bg-card border border-field font-ui text-base text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40"
+              className="w-full px-4 py-3 rounded-md bg-bg-card border border-field type-body text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40"
             />
           </div>
           <button
             type="submit"
             disabled={sending}
-            className="w-full py-4 px-6 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn active:bg-accent-hover disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="w-full py-4 px-6 rounded-sm bg-accent text-bg type-strong shadow-btn active:bg-accent-hover disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             {sending ? 'Sending…' : 'Send sign-in link'}
           </button>
         </form>
 
-        <p className="font-ui text-xs text-muted mt-6 text-center">
+        <p className="type-small text-muted mt-6 text-center">
           No password. We'll send a link to your inbox.
         </p>
-        <p className="font-ui text-xs text-muted mt-3 text-center">
+        <p className="type-small text-muted mt-3 text-center">
           <button
             type="button"
             onClick={() => navigate('privacy', { from: 'login' })}

@@ -54,17 +54,17 @@ export default function Courses({ navigate, goBack }) {
 
       <main className="flex-1 overflow-y-auto px-5 pt-6 pb-14 max-w-sm mx-auto w-full">
 
-        <p className="font-ui text-sm text-muted leading-relaxed mb-4">
+        <p className="type-body text-muted mb-4">
           Change a course's name or the par for each hole. New courses are added when you start a game.
         </p>
 
         {status === 'loading' && (
-          <p className="font-ui text-sm text-muted text-center pt-8">Loading your courses…</p>
+          <p className="type-small text-muted text-center pt-8">Loading your courses…</p>
         )}
 
         {failed && (
           <div className="py-4 px-4 rounded-md border border-dashed border-border bg-bg-card text-center">
-            <p role="alert" className="font-ui text-sm text-muted mb-3">
+            <p role="alert" className="type-small text-muted mb-3">
               {status === 'signedOut'
                 ? "You've been signed out, so your courses can't be loaded."
                 : "Couldn't load your courses - check your connection."}
@@ -72,7 +72,7 @@ export default function Courses({ navigate, goBack }) {
             <button
               type="button"
               onClick={() => (status === 'signedOut' ? navigate('login') : setReloadKey(k => k + 1))}
-              className="min-h-[44px] py-2 px-4 rounded-sm border border-accent text-accent font-ui text-xs tracking-[0.1em] uppercase font-semibold active:bg-accent-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="min-h-[44px] py-2 px-4 rounded-sm border border-accent text-accent type-strong active:bg-accent-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               {status === 'signedOut' ? 'Sign in' : 'Try again'}
             </button>
@@ -81,7 +81,7 @@ export default function Courses({ navigate, goBack }) {
 
         {status === 'ready' && courses.length === 0 && (
           <div className="py-4 px-4 rounded-md border border-dashed border-border bg-bg-card text-center">
-            <p className="font-ui text-sm text-muted">
+            <p className="type-small text-muted">
               No courses yet - add one when you start your next game.
             </p>
           </div>
@@ -99,8 +99,8 @@ export default function Courses({ navigate, goBack }) {
                     className="w-full min-h-[56px] py-2 flex items-center justify-between gap-3 border-b border-border text-left active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                   >
                     <span className="min-w-0">
-                      <span className="block font-ui text-base text-text break-words">{c.name}</span>
-                      <span className="block font-ui text-xs text-muted">
+                      <span className="block type-strong text-text break-words">{c.name}</span>
+                      <span className="block type-small text-muted">
                         {c.holes} holes · {n} {n === 1 ? 'round' : 'rounds'}
                         {c.is_default ? ' · default' : ''}
                       </span>

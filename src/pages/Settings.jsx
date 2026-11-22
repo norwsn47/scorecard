@@ -207,7 +207,7 @@ export default function Settings({ navigate }) {
   }
 
   const fieldClass =
-    'w-full py-3 pl-4 pr-4 rounded-md border border-field font-ui text-base bg-bg-card text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40'
+    'w-full py-3 pl-4 pr-4 rounded-md border border-field type-body bg-bg-card text-text placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent/40'
 
   return (
     <div className="h-full bg-bg flex flex-col">
@@ -226,19 +226,19 @@ export default function Settings({ navigate }) {
 
         {/* ── Account: name and email ── */}
         <section>
-          <h2 className="font-ui text-xs tracking-[0.12em] uppercase text-muted mb-1">Account</h2>
+          <h2 className="type-label-caps text-muted mb-1">Account</h2>
 
           {!nameEditing ? (
             <div className="flex items-center gap-3 py-3.5 border-b border-border">
               <div className="flex-1 min-w-0 space-y-1">
-                <p className="font-ui text-xs text-muted">Name</p>
-                <p className="font-ui text-base text-text break-words">
+                <p className="type-small text-muted">Name</p>
+                <p className="type-body text-text break-words">
                   {user.name
                     ? <>{user.name}<PlayerStar className="ml-1 text-accent" /></>
                     : <span className="text-muted">Not set</span>}
                 </p>
-                <p className="font-ui text-xs text-muted leading-relaxed">Fills in new rounds and adds your star.</p>
-                {nameSaved && <p role="status" className="font-ui text-xs text-muted">Saved.</p>}
+                <p className="type-small text-muted">Fills in new rounds and adds your star.</p>
+                {nameSaved && <p role="status" className="type-small text-muted">Saved.</p>}
               </div>
               <button
                 ref={nameTriggerRef}
@@ -253,7 +253,7 @@ export default function Settings({ navigate }) {
             </div>
           ) : (
             <div className="py-3.5 border-b border-border space-y-2.5">
-              <label htmlFor="settings-name" className="font-ui text-xs text-muted block">Name</label>
+              <label htmlFor="settings-name" className="type-small-strong text-muted block">Name</label>
               <input
                 id="settings-name"
                 ref={nameInputRef}
@@ -268,16 +268,16 @@ export default function Settings({ navigate }) {
                 maxLength={60}
                 className={fieldClass}
               />
-              <p className="font-ui text-xs text-muted leading-relaxed">
+              <p className="type-small text-muted">
                 Fills in your name at the start of a new round and marks you with a small star on the scorecard. Leave it blank if you would rather not.
               </p>
-              {nameError && <p role="alert" className="font-ui text-xs text-accent pl-1">{nameError}</p>}
+              {nameError && <p role="alert" className="type-small text-accent pl-1">{nameError}</p>}
               <div className="flex items-center gap-5">
                 <button
                   type="button"
                   onClick={handleSaveName}
                   disabled={savingName || nameUnchanged}
-                  className="min-h-[44px] py-2.5 px-5 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold active:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  className="min-h-[44px] py-2.5 px-5 rounded-sm bg-accent text-bg type-strong active:bg-accent-hover disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                 >
                   {savingName ? 'Saving…' : 'Save'}
                 </button>
@@ -285,7 +285,7 @@ export default function Settings({ navigate }) {
                   type="button"
                   onClick={closeNameEdit}
                   disabled={savingName}
-                  className="inline-block py-3 -my-3 font-ui text-sm text-muted underline underline-offset-2 active:opacity-70 disabled:opacity-40 disabled:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  className="inline-block py-3 -my-3 type-small-strong text-muted underline underline-offset-2 active:opacity-70 disabled:opacity-40 disabled:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                 >
                   Cancel
                 </button>
@@ -298,9 +298,9 @@ export default function Settings({ navigate }) {
           <div className="py-3.5 border-b border-border space-y-3">
             <div className="flex items-center gap-3">
               <div className="flex-1 min-w-0 space-y-1">
-                <p className="font-ui text-xs text-muted">Email</p>
-                <p className="font-ui text-base text-text break-all">{user.email}</p>
-                <p className="font-ui text-xs text-muted">Used to sign in.</p>
+                <p className="type-small text-muted">Email</p>
+                <p className="type-body text-text break-all">{user.email}</p>
+                <p className="type-small text-muted">Used to sign in.</p>
               </div>
               {!emailFormOpen && (
                 <button
@@ -318,10 +318,10 @@ export default function Settings({ navigate }) {
 
             {user.pending_email && (
               <div className="rounded-md border border-border bg-bg-card px-4 py-3">
-                <p className="font-ui text-sm text-text break-words">
-                  Waiting for confirmation of <span className="font-medium">{user.pending_email}</span>.
+                <p className="type-body text-text break-words">
+                  Waiting for confirmation of <span className="type-strong">{user.pending_email}</span>.
                 </p>
-                <p className="font-ui text-xs text-muted mt-1 leading-relaxed">
+                <p className="type-small text-muted mt-1">
                   Open the link we sent to that inbox to switch over. Until then you stay signed in with {user.email}.
                 </p>
               </div>
@@ -339,9 +339,9 @@ export default function Settings({ navigate }) {
                   aria-label="New email address"
                   className={fieldClass}
                 />
-                {emailError && <p role="alert" className="font-ui text-xs text-accent pl-1">{emailError}</p>}
+                {emailError && <p role="alert" className="type-small text-accent pl-1">{emailError}</p>}
                 {emailSent && (
-                  <p role="status" className="font-ui text-xs text-muted pl-1 leading-relaxed">
+                  <p role="status" className="type-small text-muted pl-1">
                     Check the new inbox for a confirmation link. Your address only changes once you open it.
                   </p>
                 )}
@@ -349,7 +349,7 @@ export default function Settings({ navigate }) {
                   type="submit"
                   disabled={savingEmail || !newEmail.trim()}
                   className={[
-                    'w-full py-3 px-4 rounded-sm border border-accent text-accent font-ui text-sm tracking-[0.08em] uppercase font-medium',
+                    'w-full py-3 px-4 rounded-sm border border-accent text-accent type-strong',
                     'active:bg-accent-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
                     (savingEmail || !newEmail.trim()) ? 'opacity-40 cursor-not-allowed' : '',
                   ].join(' ')}
@@ -361,7 +361,7 @@ export default function Settings({ navigate }) {
                     type="button"
                     onClick={closeEmailForm}
                     disabled={savingEmail}
-                    className="inline-block py-3 -my-3 font-ui text-sm text-muted underline underline-offset-2 active:opacity-70 disabled:opacity-40 disabled:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                    className="inline-block py-3 -my-3 type-small-strong text-muted underline underline-offset-2 active:opacity-70 disabled:opacity-40 disabled:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                   >
                     Keep my current email
                   </button>
@@ -378,8 +378,8 @@ export default function Settings({ navigate }) {
             className="w-full min-h-[56px] py-2 flex items-center justify-between gap-3 border-b border-border text-left active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             <span className="min-w-0">
-              <span className="block font-ui text-base text-text">My courses</span>
-              <span className="block font-ui text-xs text-muted">Names and par for each hole</span>
+              <span className="block type-strong text-text">My courses</span>
+              <span className="block type-small text-muted">Names and par for each hole</span>
             </span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 shrink-0 text-muted" aria-hidden="true">
               <path d="M9 6l6 6-6 6" />
@@ -391,14 +391,14 @@ export default function Settings({ navigate }) {
         {/* The header gear replaced the info icon for signed-in users (#83), so
             the Information page (rules, privacy, contact) is reached from here. */}
         <section>
-          <h2 className="font-ui text-xs tracking-[0.12em] uppercase text-muted mb-1">About</h2>
+          <h2 className="type-label-caps text-muted mb-1">About</h2>
           <button
             type="button"
             onClick={() => navigate('info', { from: 'settings' })}
             className="w-full min-h-[48px] py-2 flex items-center justify-between gap-3 border-b border-border text-left active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
-            <span className="font-ui text-base text-text">Information</span>
-            <span className="flex items-center gap-1.5 font-ui text-xs text-muted">
+            <span className="type-strong text-text">Information</span>
+            <span className="flex items-center gap-1.5 type-small text-muted">
               Rules, privacy, contact
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4" aria-hidden="true">
                 <path d="M9 6l6 6-6 6" />
@@ -416,12 +416,12 @@ export default function Settings({ navigate }) {
               type="button"
               onClick={handleSignOut}
               disabled={signingOut}
-              className="inline-block py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2 active:opacity-70 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="inline-block py-3 -my-3 type-small-strong text-accent underline underline-offset-2 active:opacity-70 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               {signingOut ? 'Signing out…' : 'Sign out'}
             </button>
             {signOutError && (
-              <p role="alert" className="font-ui text-xs text-accent mt-3">
+              <p role="alert" className="type-small text-accent mt-3">
                 Couldn't sign out - check your connection and try again.
               </p>
             )}
@@ -431,15 +431,15 @@ export default function Settings({ navigate }) {
             <button
               type="button"
               onClick={() => { setDeleteError(null); setDeleteWord(''); setConfirmDelete(true) }}
-              className="inline-block py-3 -my-3 font-ui text-sm text-muted underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="inline-block py-3 -my-3 type-small-strong text-muted underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               Delete my account
             </button>
-            <p className="font-ui text-xs text-muted leading-relaxed pt-1">
+            <p className="type-small text-muted pt-1">
               Removes your account and every round and course saved to it, on every device. This cannot be undone. Quick-play scores saved on this device are not part of your account and stay put.
             </p>
             {deleteError && !confirmDelete && (
-              <p role="alert" className="font-ui text-xs text-accent pl-1">{deleteError}</p>
+              <p role="alert" className="type-small text-accent pl-1">{deleteError}</p>
             )}
           </div>
         </section>
@@ -462,12 +462,12 @@ export default function Settings({ navigate }) {
             className="bg-bg rounded-t-2xl w-full max-w-[430px] px-6 pt-6 pb-10 shadow-card"
           >
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-6" />
-            <h2 id="delete-account-heading" className="font-display italic text-2xl text-text mb-1">Delete your account?</h2>
-            <p className="font-ui text-xs text-muted tracking-wide mb-6 leading-relaxed">
+            <h2 id="delete-account-heading" className="type-title text-text mb-1">Delete your account?</h2>
+            <p className="type-body text-muted mb-6">
               All your rounds, all your courses and the account itself are removed for good. Quick-play history on this device is not affected.
             </p>
 
-            <label htmlFor="delete-confirm" className="font-ui text-xs tracking-[0.12em] uppercase text-muted block mb-2">
+            <label htmlFor="delete-confirm" className="type-small-strong text-muted block mb-2">
               Type DELETE to confirm
             </label>
             <input
@@ -478,25 +478,25 @@ export default function Settings({ navigate }) {
               onChange={e => setDeleteWord(e.target.value)}
               autoComplete="off"
               autoCapitalize="characters"
-              className="w-full py-3 pl-4 pr-4 rounded-md border border-field font-ui text-base bg-bg-card text-text focus:outline-none focus:ring-2 focus:ring-accent/40 mb-3"
+              className="w-full py-3 pl-4 pr-4 rounded-md border border-field type-body bg-bg-card text-text focus:outline-none focus:ring-2 focus:ring-accent/40 mb-3"
             />
 
             {deleteError && (
-              <p role="alert" className="font-ui text-xs text-accent mb-3">{deleteError}</p>
+              <p role="alert" className="type-small text-accent mb-3">{deleteError}</p>
             )}
 
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirmDelete(false)}
                 disabled={deleting}
-                className="flex-1 py-3 rounded-sm border border-border font-ui text-sm tracking-[0.08em] uppercase text-text active:bg-bg-card disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                className="flex-1 py-3 rounded-sm border border-border type-strong text-text active:bg-bg-card disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 Keep my account
               </button>
               <button
                 onClick={handleDelete}
                 disabled={deleting || deleteWord !== 'DELETE'}
-                className="flex-1 py-3 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.08em] uppercase font-semibold active:opacity-80 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                className="flex-1 py-3 rounded-sm bg-accent text-bg type-strong active:opacity-80 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 {deleting ? 'Deleting…' : 'Delete account'}
               </button>

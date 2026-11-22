@@ -56,10 +56,10 @@ export default function CourseMapModal({ onClose }) {
       >
         {/* Header */}
         <div className="relative px-5 py-4 border-b border-border shrink-0">
-          <p id="course-map-heading" className="font-display italic text-xl text-text leading-tight">
+          <p id="course-map-heading" className="type-title text-text">
             {BRUNTSFIELD_COURSE_NAME}
           </p>
-          <p className="font-ui text-xs tracking-[0.15em] uppercase text-muted mt-0.5">
+          <p className="type-label-caps text-muted mt-0.5">
             {showRules ? 'Course Rules' : 'Winter Course Map'}
           </p>
           <button
@@ -75,7 +75,7 @@ export default function CourseMapModal({ onClose }) {
         {/* Map view */}
         {!showRules && mapState === 'error' && (
           <div className="flex items-center justify-center min-h-[240px] px-5 text-center">
-            <p className="font-ui text-xs text-accent tracking-wide">
+            <p className="type-small text-accent">
               The course map couldn't load. Check your connection and reopen this.
             </p>
           </div>
@@ -87,7 +87,7 @@ export default function CourseMapModal({ onClose }) {
           <div className={`relative ${mapState === 'loaded' ? '' : 'min-h-[240px]'}`}>
             {mapState !== 'loaded' && (
               <div className="absolute inset-0 flex items-center justify-center">
-                <p className="font-ui text-sm text-muted">Loading map…</p>
+                <p className="type-small text-muted">Loading map…</p>
               </div>
             )}
             <TransformWrapper
@@ -123,7 +123,7 @@ export default function CourseMapModal({ onClose }) {
         <div className="border-t border-border px-5 py-3 shrink-0">
           <button
             onClick={() => setShowRules(r => !r)}
-            className="inline-block py-3 -my-3 font-ui text-xs text-accent underline underline-offset-2 active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="inline-block py-3 -my-3 type-small-strong text-accent underline underline-offset-2 active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             {showRules ? '← Back to map' : 'Course rules'}
           </button>

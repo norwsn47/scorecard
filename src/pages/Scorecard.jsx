@@ -268,7 +268,7 @@ export default function Scorecard({ navigate, params }) {
     <div className="relative h-full bg-bg flex flex-col">
 
       {saveError && (
-        <div role="alert" className="bg-accent text-bg text-center font-ui text-xs py-2 px-4 tracking-wide">
+        <div role="alert" className="bg-accent text-bg text-center type-small py-2 px-4">
           {isEdit
             ? "Couldn't save your changes – check your connection and try again"
             : "Couldn't save – storage may be full"}
@@ -301,7 +301,7 @@ export default function Scorecard({ navigate, params }) {
         right={
           <button
             onClick={() => setShowConfirm(true)}
-            className="py-2 px-4 rounded-sm border border-accent text-accent font-ui text-xs tracking-[0.1em] uppercase font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="py-2 px-4 rounded-sm border border-accent text-accent type-small-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             {isEdit ? 'Save' : 'Finish'}
           </button>
@@ -319,11 +319,11 @@ export default function Scorecard({ navigate, params }) {
 
             <thead className="sticky top-0 z-10">
               <tr className="border-b border-border bg-bg-card">
-                <th className="py-2 px-2 text-center font-ui text-xs tracking-[0.12em] uppercase text-muted">
+                <th className="py-2 px-2 text-center type-label-caps text-muted">
                   Hole
                 </th>
                 {players.map(player => (
-                  <th key={player} className="py-2 px-1 text-center font-ui text-xs tracking-[0.12em] uppercase text-muted">
+                  <th key={player} className="py-2 px-1 text-center type-label-caps text-muted">
                     <span className="flex items-center justify-center gap-0.5 px-1">
                       <span className="truncate min-w-0">{player}</span>
                       {isSignedInPlayer(player, user?.name) && <PlayerStar />}
@@ -346,11 +346,11 @@ export default function Scorecard({ navigate, params }) {
                       ].join(' ')}
                     >
                       <td className={[
-                        'py-3 px-2 text-center font-ui text-xs whitespace-nowrap',
-                        isActiveRow ? 'text-accent font-semibold' : 'text-muted',
+                        'py-3 px-2 text-center whitespace-nowrap',
+                        isActiveRow ? 'text-accent' : 'text-muted',
                       ].join(' ')}>
-                        <span className="font-semibold">{holeIndex + 1}</span>
-                        <span className="font-normal ml-0.5">({holePars[holeIndex]})</span>
+                        <span className="type-strong">{holeIndex + 1}</span>
+                        <span className="type-caption ml-0.5">({holePars[holeIndex]})</span>
                       </td>
                       {players.map((player, playerIndex) => {
                         const score    = (game.scores?.[player] ?? [])[holeIndex] ?? null
@@ -359,8 +359,8 @@ export default function Scorecard({ navigate, params }) {
                           <td
                             key={player}
                             className={[
-                              'p-0 text-center font-ui text-sm select-none transition-colors',
-                              isActive ? 'bg-accent text-white font-semibold' : 'text-text',
+                              'p-0 text-center type-strong select-none transition-colors',
+                              isActive ? 'bg-accent text-white' : 'text-text',
                             ].join(' ')}
                           >
                             {/* A real button filling the cell, so a keyboard, switch
@@ -401,15 +401,15 @@ export default function Scorecard({ navigate, params }) {
                             so if "Front 9" doesn't fit on one
                             line at the narrowest width it wraps onto two
                             rather than bleeding into the player columns. */}
-                        <td className="py-3 px-2 text-center font-ui text-xs leading-tight text-text font-semibold">
+                        <td className="py-3 px-2 text-center type-small-strong text-text">
                           Front 9
                         </td>
                         {players.map(player => {
                           const { total, toPar } = subtotal(game.scores?.[player] ?? [], holePars, 0, 9)
                           return (
-                            <td key={player} className="py-3 px-1 text-center font-ui text-base font-semibold text-text leading-tight">
+                            <td key={player} className="py-3 px-1 text-center type-strong text-text">
                               {total ?? '–'}
-                              <ParDelta delta={toPar} variant="bracket" className="text-sm font-normal" />
+                              <ParDelta delta={toPar} variant="bracket" />
                             </td>
                           )
                         })}
@@ -424,16 +424,15 @@ export default function Scorecard({ navigate, params }) {
 
         {/* Totals bar — always visible */}
         <div className="bg-bg-card border-t-2 border-border flex">
-          <div className="w-14 py-3 px-2 font-ui text-xs tracking-[0.12em] uppercase text-muted flex items-center justify-center">
+          <div className="w-14 py-3 px-2 type-small-strong text-muted flex items-center justify-center">
             Total
           </div>
           {players.map(player => (
-            <div key={player} className="flex-1 py-3 px-1 text-center font-ui text-base font-semibold text-text leading-tight">
+            <div key={player} className="flex-1 py-3 px-1 text-center type-strong text-text">
               {playerTotal(game.scores, player) || '–'}
               <ParDelta
                 delta={roundToPar((game.scores?.[player] ?? []).slice(0, holePars.length), holePars)}
                 variant="bracket"
-                className="text-sm font-normal"
               />
             </div>
           ))}
@@ -455,7 +454,7 @@ export default function Scorecard({ navigate, params }) {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 6.75V15m6-6v8.25m.503 3.498 4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 0 0-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.159.69.159 1.006 0z" />
                 </svg>
-                <span aria-hidden="true" className="font-ui text-[11px] leading-none tracking-[0.08em] uppercase">Map</span>
+                <span aria-hidden="true" className="type-caption">Map</span>
               </button>
             ) : <div className="w-16" />}
             <button
@@ -500,7 +499,7 @@ export default function Scorecard({ navigate, params }) {
           <div className="bg-bg px-5 pb-4 text-center shrink-0">
             <button
               onClick={() => navigate('setup', { editRound: true, game, fromScorecard: true })}
-              className="inline-block py-3.5 -my-3.5 font-ui text-xs text-muted underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="inline-block py-3.5 -my-3.5 type-small-strong text-muted underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               Edit game setup
             </button>
@@ -526,20 +525,20 @@ export default function Scorecard({ navigate, params }) {
             className="bg-bg rounded-t-2xl w-full max-w-[430px] px-6 pt-6 pb-10 shadow-card"
           >
             <div className="w-10 h-1 bg-border rounded-full mx-auto mb-6" />
-            <h2 id="finish-heading" className="font-display italic text-2xl text-text mb-1">
-              {isEdit ? 'Save changes?' : 'Finish Game?'}
+            <h2 id="finish-heading" className="type-title text-text mb-1">
+              {isEdit ? 'Save changes?' : 'Finish game?'}
             </h2>
-            <p className="font-ui text-xs text-muted tracking-wide mb-6">
+            <p className="type-small text-muted mb-6">
               {isEdit ? 'This replaces the saved round. Winner and totals update.' : 'Scores are final'}
             </p>
             <div className="space-y-2 mb-8">
               {players.map(player => (
-                <div key={player} className="flex justify-between font-ui text-sm text-text">
+                <div key={player} className="flex justify-between type-body text-text">
                   <span>
                     {player}
                     {isSignedInPlayer(player, user?.name) && <PlayerStar className="ml-0.5" />}
                   </span>
-                  <span className="font-semibold">
+                  <span className="type-strong">
                     {playerTotal(game.scores, player) || '–'}
                     <ParDelta delta={roundToPar((game.scores?.[player] ?? []).slice(0, holePars.length), holePars)} variant="bracket" />
                   </span>
@@ -551,14 +550,14 @@ export default function Scorecard({ navigate, params }) {
                 ref={cancelFinishRef}
                 onClick={() => setShowConfirm(false)}
                 disabled={finishing}
-                className="flex-1 py-3 rounded-sm border border-border font-ui text-sm tracking-[0.08em] uppercase text-text disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                className="flex-1 py-3 rounded-sm border border-border type-strong text-text disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmFinish}
                 disabled={finishing}
-                className="flex-1 py-3 rounded-sm bg-accent text-bg font-ui text-sm tracking-[0.08em] uppercase font-semibold disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                className="flex-1 py-3 rounded-sm bg-accent text-bg type-strong disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 {isEdit ? (finishing ? 'Saving…' : 'Save changes') : 'Confirm'}
               </button>

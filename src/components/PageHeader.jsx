@@ -37,7 +37,7 @@ export default function PageHeader({ title, subtitle, onBack, backLabel = '← B
   const backButton = onBack ? (
     <button
       onClick={onBack}
-      className="py-3 min-h-[44px] flex items-center whitespace-nowrap text-muted font-ui text-sm tracking-[0.08em] uppercase active:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+      className="py-3 min-h-[44px] flex items-center whitespace-nowrap text-muted type-small-strong active:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
     >
       {backLabel}
     </button>
@@ -69,10 +69,10 @@ export default function PageHeader({ title, subtitle, onBack, backLabel = '← B
 
       <div className="flex-1 min-w-0 text-center">
         {title ? (
-          <h1 className="font-display italic text-2xl text-text line-clamp-2">{title}</h1>
+          <h1 className="type-title text-text line-clamp-2">{title}</h1>
         ) : null}
         {subtitle && (
-          <p className="font-ui text-xs tracking-[0.08em] uppercase text-muted mt-0.5 truncate">{subtitle}</p>
+          <p className="type-caption text-muted mt-0.5 truncate">{subtitle}</p>
         )}
       </div>
 

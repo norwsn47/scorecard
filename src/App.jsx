@@ -31,11 +31,11 @@ class ErrorBoundary extends Component {
     if (this.state.error) {
       return (
         <div className="h-full bg-bg flex flex-col items-center justify-center px-8 text-center gap-4">
-          <p className="font-display italic text-2xl text-text">Something went wrong</p>
-          <p className="font-ui text-sm text-muted">Try refreshing the page. Your scores are saved.</p>
+          <p className="type-title text-text">Something went wrong</p>
+          <p className="type-body text-muted">Try refreshing the page. Your scores are saved.</p>
           <button
             onClick={() => { this.setState({ error: null }); window.location.reload() }}
-            className="py-3 px-6 rounded-md bg-accent text-bg font-ui text-sm tracking-[0.1em] uppercase font-semibold shadow-btn focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="py-3 px-6 rounded-md bg-accent text-bg type-strong shadow-btn focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
           >
             Reload
           </button>
@@ -176,7 +176,7 @@ function AppContent() {
     <>
       <div className="app-shell max-w-[430px] mx-auto h-dvh overflow-hidden bg-bg flex flex-col">
         {!storageOk && (
-          <div role="alert" className="sticky top-0 z-50 bg-accent text-bg text-center font-ui text-xs py-2 px-4 tracking-wide">
+          <div role="alert" className="sticky top-0 z-50 bg-accent text-bg text-center type-small py-2 px-4">
             Scores won't save – storage is blocked. Using private browsing?
           </div>
         )}

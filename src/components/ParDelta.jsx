@@ -15,13 +15,13 @@ import { formatToPar } from '../utils/scores.js'
 //                +/- sign carries the direction. A winner's accent-green
 //                column is NOT inverted — deltas there stay semantic.
 //
+// Both variants are Caption (12px, medium) via `type-caption`, never a
+// superscript (redesign decision 8, plan 5f).
 // variant:
-//   'superscript' — trails a score digit in a grid cell (#38)
-//   'bracket'     — full size, in brackets, on a total's line: `(+5)` (#52)
-// className is appended to the rendered span — used to size the bracket down
-// on space-constrained surfaces (the live totals bar drops it to text-sm so
-// `41 (+5)` doesn't wrap at six players — a documented DESIGN.md exception).
-export default function ParDelta({ delta, variant = 'superscript', inverted = false, className = '' }) {
+//   'inline'  — beside a score in a grid cell, same line, small gap: `9 +6`
+//   'bracket' — in brackets on a total's line: `55 (+22)`
+// className is appended to the rendered span.
+export default function ParDelta({ delta, variant = 'inline', inverted = false, className = '' }) {
   const label = formatToPar(delta)
   if (!label) return null
 
@@ -33,11 +33,11 @@ export default function ParDelta({ delta, variant = 'superscript', inverted = fa
         : 'text-over-par'
 
   if (variant === 'bracket') {
-    return <span className={[semantic, className].join(' ')}> ({label})</span>
+    return <span className={['type-caption', semantic, className].join(' ')}> ({label})</span>
   }
 
   return (
-    <span className={['font-ui text-[0.6em] align-super font-normal ml-[1px]', semantic, className].join(' ')}>
+    <span className={['type-caption ml-1', semantic, className].join(' ')}>
       {label}
     </span>
   )

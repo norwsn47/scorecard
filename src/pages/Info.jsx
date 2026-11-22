@@ -22,8 +22,8 @@ export default function Info({ navigate, goBack, params }) {
 
         {/* Why we made this */}
         <section className="space-y-3">
-          <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted">Why we made this</p>
-          <p className="font-ui text-sm text-muted leading-relaxed">
+          <p className="type-label-caps text-muted">Why we made this</p>
+          <p className="type-body text-muted">
             We created Scorecard around one idea: the fewest possible taps to log a score, so you can focus on the game and your phone goes back in your pocket.
           </p>
         </section>
@@ -34,8 +34,8 @@ export default function Info({ navigate, goBack, params }) {
         {fromBruntsfield && (
           <>
             <section className="space-y-3">
-              <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted">Bruntsfield Short Hole Golf Club</p>
-              <p className="font-ui text-sm text-muted leading-relaxed">
+              <p className="type-label-caps text-muted">Bruntsfield Short Hole Golf Club</p>
+              <p className="type-body text-muted">
                 One of the world's oldest golf links, Bruntsfield Short Hole Golf Club has been a fixture in Edinburgh since 1895. The 36-hole course features par-3 holes of 45–90 yards – unique to world golf.
               </p>
               <div>
@@ -43,7 +43,7 @@ export default function Info({ navigate, goBack, params }) {
                   href="https://www.bruntsfieldshortholegolfclub.co.uk"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2"
+                  className="inline-flex items-center gap-1 py-3 -my-3 type-body text-accent underline underline-offset-2"
                 >
                   bruntsfieldshortholegolfclub.co.uk
                   <ExternalArrow />
@@ -54,14 +54,14 @@ export default function Info({ navigate, goBack, params }) {
             <div className="w-8 h-0.5 bg-border" />
 
             <section className="space-y-3">
-              <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted">Course rules</p>
-              <p className="font-ui text-sm text-muted leading-relaxed">
+              <p className="type-label-caps text-muted">Course rules</p>
+              <p className="type-body text-muted">
                 Please read the rules before playing.
               </p>
               <div>
                 <button
                   onClick={() => navigate('rules', { from: 'info' })}
-                  className="inline-flex items-center gap-1 py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  className="inline-flex items-center gap-1 py-3 -my-3 type-body text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                 >
                   View full course rules
                   <ExternalArrow />
@@ -75,8 +75,8 @@ export default function Info({ navigate, goBack, params }) {
 
         {/* About */}
         <section className="space-y-3">
-          <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted">About Outbuild</p>
-          <p className="font-ui text-sm text-muted leading-relaxed">
+          <p className="type-label-caps text-muted">About Outbuild</p>
+          <p className="type-body text-muted">
             Scorecard is made by Outbuild, a small design collective based in Edinburgh.
           </p>
           <div>
@@ -84,19 +84,19 @@ export default function Info({ navigate, goBack, params }) {
               href="https://outbuild.uk"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="inline-flex items-center gap-1 py-3 -my-3 type-body text-accent underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               outbuild.uk
               <ExternalArrow />
             </a>
           </div>
-          <p className="font-ui text-sm text-muted leading-relaxed">
+          <p className="type-body text-muted">
             Questions or feedback? Get in touch.
           </p>
           <div>
             <a
               href="mailto:scorecard@outbuild.uk"
-              className="inline-block py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="inline-block py-3 -my-3 type-body text-accent underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               scorecard@outbuild.uk
             </a>
@@ -108,13 +108,13 @@ export default function Info({ navigate, goBack, params }) {
         {/* Account */}
         {user ? (
           <section className="space-y-3">
-            <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted">Account</p>
-            {user.name && <p className="font-ui text-sm text-text">{user.name}</p>}
-            <p className="font-ui text-sm text-muted break-words">{user.email}</p>
+            <p className="type-label-caps text-muted">Account</p>
+            {user.name && <p className="type-body text-text">{user.name}</p>}
+            <p className="type-body text-muted break-words">{user.email}</p>
             <div>
               <button
                 onClick={() => navigate('settings', { from: 'info' })}
-                className="inline-block py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                className="inline-block py-3 -my-3 type-body text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 Edit your name, change your email or delete your account
               </button>
@@ -131,12 +131,12 @@ export default function Info({ navigate, goBack, params }) {
                     setLogoutError(true)
                   }
                 }}
-                className="inline-block py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                className="inline-block py-3 -my-3 type-body text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 Sign out
               </button>
               {logoutError && (
-                <p role="alert" className="font-ui text-xs text-accent mt-3">
+                <p role="alert" className="type-small text-accent mt-3">
                   Couldn't sign out - check your connection and try again.
                 </p>
               )}
@@ -144,14 +144,14 @@ export default function Info({ navigate, goBack, params }) {
           </section>
         ) : (
           <section className="space-y-3">
-            <p className="font-ui text-xs tracking-[0.12em] uppercase text-muted">Account</p>
-            <p className="font-ui text-sm text-muted leading-relaxed">
+            <p className="type-label-caps text-muted">Account</p>
+            <p className="type-body text-muted">
               Sign in to save your rounds across devices and keep your history.
             </p>
             <div>
               <button
                 onClick={() => navigate('login')}
-                className="inline-block py-3 -my-3 font-ui text-sm text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                className="inline-block py-3 -my-3 type-body text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 Sign in or create account
               </button>
@@ -160,13 +160,13 @@ export default function Info({ navigate, goBack, params }) {
         )}
 
         <div className="space-y-1.5">
-          <p className="font-ui text-xs text-muted leading-relaxed">
+          <p className="type-small text-muted">
             Your data is handled under UK GDPR.
           </p>
           <p>
             <button
               onClick={() => navigate('privacy', { from: 'info' })}
-              className="inline-block py-3.5 -my-3.5 font-ui text-xs text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="inline-block py-3.5 -my-3.5 type-small text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               Read our privacy policy
             </button>

@@ -34,18 +34,21 @@ describe('ParDelta', () => {
     expect(el).not.toHaveClass('text-under-par')
   })
 
-  it('superscript variant is small and non-bold; bracket variant wraps in ( )', () => {
-    const { rerender } = render(<ParDelta delta={-1} variant="superscript" />)
-    const sup = screen.getByText('-1')
-    expect(sup).toHaveClass('align-super')
-    expect(sup).toHaveClass('font-normal')
+  it('inline variant is Caption beside the score, not a superscript; bracket variant wraps in ( )', () => {
+    const { rerender } = render(<ParDelta delta={-1} variant="inline" />)
+    const inline = screen.getByText('-1')
+    expect(inline).toHaveClass('type-caption')
+    expect(inline).not.toHaveClass('align-super')
+    expect(inline.className).not.toMatch(/text-\[0\.6em\]/)
 
     rerender(<ParDelta delta={-1} variant="bracket" />)
-    expect(screen.getByText('(-1)')).toBeInTheDocument()
+    const bracket = screen.getByText('(-1)')
+    expect(bracket).toBeInTheDocument()
+    expect(bracket).toHaveClass('type-caption')
   })
 
-  it('appends a passed className (used to shrink the totals-bar bracket)', () => {
-    render(<ParDelta delta={5} variant="bracket" className="text-sm" />)
-    expect(screen.getByText('(+5)')).toHaveClass('text-sm')
+  it('appends a passed className', () => {
+    render(<ParDelta delta={5} variant="bracket" className="ml-2" />)
+    expect(screen.getByText('(+5)')).toHaveClass('ml-2')
   })
 })

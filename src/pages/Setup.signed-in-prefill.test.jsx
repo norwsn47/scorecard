@@ -73,7 +73,7 @@ describe('Setup — signed-in name pre-fill on New Game', () => {
 
     expect(await screen.findByDisplayValue('Alice')).toBeInTheDocument()
     // Confirm this really is the Add Past Round flow, not New Game.
-    expect(screen.getByText('Add Past Round')).toBeInTheDocument()
+    expect(screen.getByText('Add past round')).toBeInTheDocument()
   })
 
   it('does not pre-fill the first slot when editing an existing round', async () => {

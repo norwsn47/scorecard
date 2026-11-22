@@ -43,7 +43,7 @@ function LoadFailed({ onClose }) {
         onClick={e => e.stopPropagation()}
       >
         <div className="relative px-5 py-4 border-b border-border">
-          <p id="course-map-failed-heading" className="font-display italic text-xl text-text leading-tight">
+          <p id="course-map-failed-heading" className="type-title text-text">
             {BRUNTSFIELD_COURSE_NAME}
           </p>
           <button
@@ -56,7 +56,7 @@ function LoadFailed({ onClose }) {
           </button>
         </div>
         <div className="flex items-center justify-center min-h-[160px] px-5 text-center">
-          <p role="alert" className="font-ui text-xs text-accent tracking-wide">
+          <p role="alert" className="type-small text-accent">
             The course map couldn't load. Check your connection and reopen this.
           </p>
         </div>

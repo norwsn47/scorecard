@@ -119,13 +119,13 @@ describe('PageHeader invisible mirror (#85)', () => {
     // CourseEdit during its course == null load: title is undefined but the
     // "Edit course" subtitle is already showing, with only onBack populated.
     const { container } = render(
-      <PageHeader title={undefined} subtitle="Edit course" onBack={vi.fn()} backLabel="← New Game" />,
+      <PageHeader title={undefined} subtitle="Edit course" onBack={vi.fn()} backLabel="← New game" />,
     )
     const header = container.querySelector('header')
     expect(header.children).toHaveLength(3)
     const mirror = container.querySelector('[aria-hidden="true"]')
     expect(mirror).not.toBeNull()
-    expect(mirror.textContent).toBe('← New Game')
+    expect(mirror.textContent).toBe('← New game')
     expect(screen.getByText('Edit course')).toBeInTheDocument()
   })
 

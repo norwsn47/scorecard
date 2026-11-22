@@ -17,7 +17,7 @@ describe('Rules - back button', () => {
   it.each([
     [{ from: 'info' }, '← Info', 'info'],
     [{ from: 'bruntsfield' }, '← Course', 'bruntsfield'],
-    [{ from: 'setup' }, '← New Game', 'setup'],
+    [{ from: 'setup' }, '← New game', 'setup'],
     [{}, '← Home', 'home'],
     [undefined, '← Home', 'home'],
   ])('params %j shows "%s" and goes back to "%s"', async (params, label, target) => {
