@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
 import Button from '../components/Button.jsx'
+import Card, { CARD_INNER_CONTROL } from '../components/Card.jsx'
+import EmptyState from '../components/EmptyState.jsx'
+import Tag from '../components/Tag.jsx'
 import PageHeader, { HeaderAction } from '../components/PageHeader.jsx'
 import ParDelta from '../components/ParDelta.jsx'
 import PlayerStar from '../components/PlayerStar.jsx'
@@ -8,7 +11,6 @@ import { isSignedInPlayer } from '../utils/game.js'
 import { playerTotal, roundToPar } from '../utils/scores.js'
 import { getCompletedGames, getPendingCompletedGames } from '../utils/storage.js'
 import { mergePendingGames, normalizeDbGame, normalizeLocalGame, normalizePendingGame } from '../utils/history.js'
-import { historyResultLabel } from '../utils/result.js'
 import { subscribeToSync } from '../utils/sync.js'
 import { useAuth } from '../hooks/useAuth.jsx'
 
@@ -223,22 +225,22 @@ export default function History({ navigate }) {
         )}
 
         {!loading && loadError && (
-          <div role="alert" className={['text-center', allGames.length > 0 ? 'pt-4 pb-2' : 'pt-16'].join(' ')}>
-            <p className="type-title text-text mb-2">
-              {loadError === 'signedOut' ? "You've been signed out" : "Couldn't load your rounds"}
-            </p>
-            <p className="type-body text-muted mb-6">
-              {loadError === 'signedOut'
-                ? 'Sign in again to see your rounds.'
-                : 'Check your connection and try again.'}
-            </p>
-            <Button
-              size="medium"
-              onClick={() => (loadError === 'signedOut' ? navigate('login') : setReloadKey(k => k + 1))}
-            >
-              {loadError === 'signedOut' ? 'Sign in' : 'Try again'}
-            </Button>
-          </div>
+          <EmptyState
+            role="alert"
+            className={allGames.length > 0 ? 'pt-4 pb-2' : 'pt-16'}
+            title={loadError === 'signedOut' ? "You've been signed out" : "Couldn't load your rounds"}
+            body={loadError === 'signedOut'
+              ? 'Sign in again to see your rounds.'
+              : 'Check your connection and try again.'}
+            action={
+              <Button
+                size="medium"
+                onClick={() => (loadError === 'signedOut' ? navigate('login') : setReloadKey(k => k + 1))}
+              >
+                {loadError === 'signedOut' ? 'Sign in' : 'Try again'}
+              </Button>
+            }
+          />
         )}
 
         {!loading && !loadError && skipped > 0 && (
@@ -265,116 +267,87 @@ export default function History({ navigate }) {
                 </Button>
               </>
             ) : (
-              <>
-                <p className="type-title text-text mb-2">No rounds yet</p>
-                <p className="type-body text-muted mb-6">
-                  Finish a round to see it here.
-                </p>
-                <Button size="medium" onClick={() => navigate('setup')}>
-                  New game
-                </Button>
-              </>
+              <EmptyState
+                title="No rounds yet"
+                body="Finish a round to see it here."
+                action={<Button size="medium" onClick={() => navigate('setup')}>New game</Button>}
+              />
             )}
           </div>
         )}
 
-        {!loading && displayed.map(game => {
-          const resultLabel = historyResultLabel(game)
-          const winners     = game.winners ?? []
-          return (
-          <div
+        {!loading && displayed.map(game => (
+          <Card
             key={game.id}
-            className="relative bg-bg-card rounded-md border border-border shadow-card"
+            onOpen={() => navigate('summary', { game, fromHistory: true })}
+            openLabel={`Open round: ${formatShortDate(game.completedAt)}, ${(game.players ?? []).join(', ')}${game._rejected ? ", can't be saved, kept on this device only" : game._pending ? ', not yet saved' : ''}`}
           >
-            {/* Opens the round. A real button behind the card content (rather
-                the card being one big button) so the player names inside can be
-                real buttons of their own without nesting one button in another. */}
-            <button
-              type="button"
-              onClick={() => navigate('summary', { game, fromHistory: true })}
-              aria-label={`Open round: ${formatShortDate(game.completedAt)}, ${(game.players ?? []).join(', ')}${game._rejected ? ", can't be saved, kept on this device only" : game._pending ? ', not yet saved' : ''}`}
-              className="absolute inset-0 w-full h-full rounded-md active:bg-accent-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-            />
-
-            {/* Card content sits above the open button; clicks pass through to it
-                except on the player-name buttons. */}
-            <div className="relative pointer-events-none text-left px-4 pt-4 pb-4">
-              {/* A round whose save to the account is still outstanding. Quiet
-                  accent pill (the app's "attention" treatment, no new colour);
-                  real text, so a screen reader reads it with the card. A round
-                  the server refused says so, and where it is kept. */}
-              {game._pending && (
-                <div className="mb-2">
-                  <span className="inline-block rounded-full border border-accent py-0.5 px-2 type-caption text-accent">
+            {/* Top row: the course name leads (hidden when the page already
+                names the one course); a round whose save is outstanding carries
+                its Tag at the right. A round the server refused says so, and
+                where it is kept. */}
+            {((game.courseName && !(user && courses.length === 1)) || game._pending) && (
+              <div className="flex items-start justify-between gap-3 mb-1">
+                {game.courseName && !(user && courses.length === 1) && (
+                  <p className="type-label-caps text-accent min-w-0 break-words">{game.courseName}</p>
+                )}
+                {game._pending && (
+                  <Tag className="shrink-0 ml-auto">
                     {game._rejected ? "Can't be saved" : 'Not yet saved'}
-                  </span>
-                  {game._rejected && (
-                    <p className="type-small text-muted mt-1">Kept on this device only.</p>
-                  )}
-                </div>
-              )}
-
-              {/* Course name */}
-              {game.courseName && !(user && courses.length === 1) && (
-                <p className="type-label-caps text-accent mb-1">{game.courseName}</p>
-              )}
-
-              {/* Date + holes */}
-              <div className="flex justify-between items-start mb-2">
-                <span className="type-body text-muted">
-                  {formatShortDate(game.completedAt)}
-                </span>
-                <span className="type-body text-muted">
-                  {game.holesPlayed ?? game.holes} holes
-                </span>
+                  </Tag>
+                )}
               </div>
+            )}
+            {game._pending && game._rejected && (
+              <p className="type-small text-muted mb-1">Kept on this device only.</p>
+            )}
 
-              {/* Players */}
-              <div className="space-y-1">
-                {(game.players ?? []).map(name => {
-                  const isWinner  = winners.includes(name)
-                  const isDnf     = game.dnf?.includes(name)
-                  const total     = playerTotal(game.scores, name)
-                  const toPar     = roundToPar((game.scores?.[name] ?? []).slice(0, game.holePars.length), game.holePars)
-                  return (
-                    <div key={name} className="flex items-center justify-between">
-                      <button
-                        type="button"
-                        onClick={() => toggleFilter(name)}
-                        aria-pressed={filter === name}
-                        className={[
-                          'pointer-events-auto text-left rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
-                          isWinner ? 'type-strong text-accent' : 'type-body text-text',
-                        ].join(' ')}
-                      >
-                        {name}
-                        {isSignedInPlayer(name, user?.name) && <PlayerStar className="ml-0.5" />}
-                        {isDnf && <span className="type-body text-muted"> (DNF)</span>}
-                      </button>
-                      {/* Total-to-par, matching Summary's totals row (#70) — was
-                          "(Av. X)", the two screens now show the same stat. */}
-                      <span className="type-body text-muted">
-                        {total > 0 ? total : '-'}
-                        <ParDelta delta={toPar} variant="bracket" />
-                      </span>
-                    </div>
-                  )
-                })}
-              </div>
-
-              {/* Result label — re-derived on read; hidden for solo rounds */}
-              {resultLabel && (
-                <p className="type-small text-muted mt-2">{resultLabel}</p>
-              )}
-
-              {/* Notes */}
-              {game.notes && (
-                <p className="type-small text-muted mt-2 line-clamp-2">{game.notes}</p>
-              )}
+            {/* Date + holes */}
+            <div className="flex justify-between items-start gap-3 mb-2">
+              <span className="type-body text-muted">
+                {formatShortDate(game.completedAt)}
+              </span>
+              <span className="type-body text-muted shrink-0">
+                {game.holesPlayed ?? game.holes} holes
+              </span>
             </div>
-          </div>
-          )
-        })}
+
+            {/* Players: equal weight, no winner highlight (redesign decision 9) */}
+            <div className="space-y-1">
+              {(game.players ?? []).map(name => {
+                const isDnf = game.dnf?.includes(name)
+                const total = playerTotal(game.scores, name)
+                const toPar = roundToPar((game.scores?.[name] ?? []).slice(0, game.holePars.length), game.holePars)
+                return (
+                  <div key={name} className="flex items-start justify-between gap-3">
+                    <button
+                      type="button"
+                      onClick={() => toggleFilter(name)}
+                      aria-pressed={filter === name}
+                      className={`${CARD_INNER_CONTROL} min-w-0 break-words text-left rounded-control type-body text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40`}
+                    >
+                      {name}
+                      {isSignedInPlayer(name, user?.name) && <PlayerStar className="ml-0.5" />}
+                      {isDnf && <span className="type-body text-muted"> (DNF)</span>}
+                    </button>
+                    {/* Total-to-par, matching Summary's totals row (#70). The
+                        bracket is top-aligned beside the total, as in the
+                        Figma History card; still a 12px Caption, not a superscript. */}
+                    <span className="type-body text-muted shrink-0 flex items-start">
+                      <span>{total > 0 ? total : '-'}</span>
+                      <ParDelta delta={toPar} variant="bracket" className="ml-1" />
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Notes */}
+            {game.notes && (
+              <p className="type-small text-muted mt-2 line-clamp-2">{game.notes}</p>
+            )}
+          </Card>
+        ))}
 
       </main>
 

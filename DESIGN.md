@@ -230,7 +230,7 @@ One control radius. Two utilities come from the Figma Shape collection, in rem (
 | `50%` | `rounded-full` | none | Circular game controls (the 64px Decrement, Increment and Advance buttons) and the History filter chips, **until stage 6** rebuilds the chips as pills with a picker sheet. Nothing else uses it, apart from the sheet handle and the filled header action pill (Scorecard Finish) |
 | `44px` | *(CSS only)* | none | Phone frame on desktop |
 
-`rounded-sm` and `rounded-md` are no longer used for controls. The remaining uses (History's record cards and the player-name toggle) are on the control guard's allow-list (`src/styles/control-guard.test.js`) and move in stage 6. The header action is on the tokens: its text form is `rounded-control`, and its filled pill is `rounded-full` (see "Header action"). `rounded-lg` (12px) is defined but unused.
+`rounded-sm` and `rounded-md` are no longer used for controls. None remain in `src/**/*.jsx` (History's record cards are `Card`, stage 5). The header action is on the tokens: its text form is `rounded-control`, and its filled pill is `rounded-full` (see "Header action"). `rounded-lg` (12px) is defined but unused.
 
 Rule: **buttons, fields and cards all take `rounded-control`. Sheets take `rounded-t-sheet`. `rounded-full` is for circular game controls, filter chips and the filled header action pill only.**
 
@@ -238,18 +238,14 @@ Rule: **buttons, fields and cards all take `rounded-control`. Sheets take `round
 
 ## Shadows
 
-Used sparingly — only on elements genuinely floating above page flow.
+One shadow, for **record cards only** (CHANGELOG reversal 7).
 
 | Token | Value | Use |
 |---|---|---|
-| `--shadow-card` | `0 1px 3px rgba(26,26,24,0.08), 0 1px 2px rgba(26,26,24,0.04)` | Modals, bottom sheets |
-| `--shadow-btn` | `0 1px 2px rgba(26,26,24,0.12)` | Primary CTA button only |
-| `--shadow-subtle` | `0 0.0625rem 0.125rem rgba(28,27,25,0.06)` (`0 1px 2px` `#1C1B19` at 6%) | Figma `Shadow/Subtle`. **Defined, not yet applied.** Record cards only (History round cards, Home course card), from a later stage. Tailwind: `shadow-subtle` |
-| Phone frame | `0 0 0 10px #1C1B19, 0 0 0 11px rgba(255,255,255,0.06), 0 32px 80px rgba(26,26,24,0.45)` | Desktop wrapper |
+| `--shadow-subtle` | `0 0.0625rem 0.125rem rgba(28,27,25,0.06)` (`0 1px 2px` `#1C1B19` at 6%) | Figma `Shadow/Subtle`. Applied by the `Card` component (History round cards, Home course card) and nowhere else. Tailwind: `shadow-subtle` |
+| Phone frame | `0 0 0 10px #1C1B19, 0 0 0 11px rgba(255,255,255,0.06), 0 32px 80px rgba(26,26,24,0.45)` | Desktop wrapper (CSS, not a token) |
 
-`shadow-card` and `shadow-btn` remain as shipped for now. Later stages drop them once `shadow-subtle` is applied and the button shadow is retired.
-
-Static surfaces in the page flow carry no shadow (until record cards move onto `shadow-subtle`).
+Buttons, sheets, inputs and every other surface are flat. `shadow-card` and `shadow-btn` are banned in `src/**/*.jsx` with no exceptions (`src/styles/control-guard.test.js`). Their CSS variables and Tailwind keys are still defined and are removed in stage 9.
 
 ---
 
@@ -385,7 +381,7 @@ Disabled:     bg-disabled-surface border-border text-disabled-text
 
 **Disabled.** Buttons, fields and the par stepper buttons use `disabled-surface` and `disabled-text` (`#E8E1D6` and `#D9D0C4`), not `opacity-40`. The pair is about 1.17:1, far below 4.5:1 **by design**: disabled states are exempt from the contrast rule (see "Sunlight contrast"). A disabled Secondary or Text button has no fill and takes `text-disabled-text` for its label (and its edge, for Secondary). `cursor-not-allowed` is set on all of them. **Circular game controls keep `opacity-25`** (Decrement and Advance): they are physical controls the player is about to need again, and a light fade reads as "not reachable right now".
 
-**Focus-visible.** Every button, field and control uses a solid 2px accent ring: `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent`. Buttons add `ring-offset-2 ring-offset-bg` so the ring sits clear of the border. Fields use `focus:` rather than `focus-visible:` because a text field should show focus on tap too, and add the accent edge. `:focus-visible` on buttons only fires for keyboard, switch and assistive-tech navigation, never a touch tap, so it is invisible in normal use on this touch-only product. The old 40% ring (`ring-accent/40`) is retired. The header's back button and `HeaderAction` use the solid ring. The remaining `ring-accent/40` uses (History's chips, record card and player-name toggle, and the Scorecard score-cell inset rings) are on the control guard's allow-list and move in stages 6 and 7.
+**Focus-visible.** Every button, field and control uses a solid 2px accent ring: `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent`. Buttons add `ring-offset-2 ring-offset-bg` so the ring sits clear of the border. Fields use `focus:` rather than `focus-visible:` because a text field should show focus on tap too, and add the accent edge. `:focus-visible` on buttons only fires for keyboard, switch and assistive-tech navigation, never a touch tap, so it is invisible in normal use on this touch-only product. The old 40% ring (`ring-accent/40`) is retired. The header's back button and `HeaderAction` use the solid ring. The remaining `ring-accent/40` uses (History's chips and player-name toggle, and the Scorecard score-cell inset rings) are on the control guard's allow-list and move in stages 6 and 7.
 
 **No shadow on buttons or sheets.** `shadow-btn` and the sheet `shadow-card` are gone. The one shadow, `shadow-subtle`, is for record cards only.
 
@@ -539,7 +535,27 @@ Subtext:   font-ui text-xs text-muted tracking-wide
 
 Shipped in `Settings.jsx` (delete-account), `Summary.jsx` (delete-round, moved from History; brought up to parity in #80), `Scorecard.jsx` (Finish/Save sheet), `CourseEdit.jsx` (delete-course sheet) and `Setup.jsx` (the edit-mode course-switch confirmation, added when BACKLOG #56 was reversed - no async gap, so no in-flight guard needed on the Escape handler). `CourseMapModal.jsx` is a centred modal, not a sheet, but follows the same rules: `role="dialog"`, `aria-labelledby` its course heading, focus on the Close button, Escape and backdrop dismiss, focus returned to the Map control (it reads `onClose` through a ref so a parent re-render never re-grabs focus).
 
-**A card that is tappable and also holds tappable parts** (History rounds) is never a button containing buttons. The card is a `div`; the "open this round" action is a real `<button>` stretched behind the content (`absolute inset-0`), the content sits above it with `pointer-events-none`, and each inner control (a player-name toggle with `aria-pressed`) is its own real button with `pointer-events-auto`.
+**A card that is tappable and also holds tappable parts** (History rounds) is never a button containing buttons. This is the interactive form of `Card` (see "Card" below): the card is a `div`; the "open this round" action is a real `<button>` stretched behind the content (`absolute inset-0`), the content sits above it with `pointer-events-none`, and each inner control (a player-name toggle with `aria-pressed`) is its own real button with `pointer-events-auto` (the exported `CARD_INNER_CONTROL`).
+
+### Card (`src/components/Card.jsx`)
+
+The shared record-card surface, and the only place `shadow-subtle` is used: `bg-bg-card border border-border rounded-control shadow-subtle p-card`. Used by History's round cards and the Home course card.
+
+- **Static:** `<Card>` is a `div`.
+- **Interactive:** `<Card onOpen={fn} openLabel="...">` adds `relative` and the stretched-button pattern above. `openLabel` is the button's whole accessible name (History passes its "Open round: date, players, ..." string; Home passes the course name and subline). Inner controls get `CARD_INNER_CONTROL`; buttons are never nested. `className` is for layout only. `as` changes the root element.
+- **Feedback is a border change, not a tint.** Hover gives an accent 1px edge, press adds a 1px accent ring (reads as 2px), keyboard focus is the solid `ring-2 ring-accent`. The stretched button sits behind muted copy, so a tint would put muted text on it, and muted on the 8% tint over `bg-card` is 4.39:1 and on the 15% pressed tint 3.88:1, both below AA (on `bg-card` alone it is 5.02:1). Never add an `accent-tint` fill to a card. Feedback follows the open button (`peer`), so pressing an inner control does not light the whole card.
+
+### History round card
+
+Order, top to bottom: the course name (`type-label-caps text-accent`, hidden when a signed-in user has only one course, as before) with the pending `Tag` at the right; date left and holes right (`type-body text-muted`); one row per player, the name as an `aria-pressed` filter toggle (`type-body text-text`, the same for every player, with the signed-in star and "(DNF)") and the total with its `ParDelta` bracket (`type-body text-muted`, the bracket a 12px Caption, top-aligned beside the total as in the Figma card); the note (`type-small text-muted`, two lines). **There is no "Winner: ..." line and no winner highlight** (CHANGELOG reversal 9): names carry equal weight and the course leads. Summary keeps its winner line. A long name wraps (`min-w-0 break-words`); the total never shrinks.
+
+### Tag (`src/components/Tag.jsx`)
+
+A small status label: `inline-block rounded-full bg-accent-tint px-3 py-1 type-caption text-accent`. Real text, no role, so a screen reader reads it with the card. Used for History's "Not yet saved" and "Can't be saved". Accent on the 8% tint is **8.53:1** over `bg-card` (8.89:1 over `bg`). Never set muted text on it (4.39:1 on `bg-card`). Padding is the implementation's choice: `tokens.json` has no tag dimensions.
+
+### EmptyState (`src/components/EmptyState.jsx`)
+
+A centred block: `title` (`type-title text-text`, a `p` by default, `titleAs` for a heading), optional `body` (`type-body text-muted`, 8px above), and an optional `action` or children (24px above, usually a Button). `role` passes through: History's "could not load" and "signed out" states use `role="alert"`, and a load failure is never shown as an empty state. Used for History "No rounds yet" and the load-failure block. Stage 6 reuses it for the no-match state. Setup's course-area and Courses' dashed boxes are compact inline notices without a title and stay as they are (stage 8 may revisit).
 
 ### Scorecard table
 ```
@@ -597,7 +613,7 @@ On the Home screen the rule is left-aligned: `ml-0` replaces `mx-auto`.
 sticky top-0 z-50 bg-accent text-bg text-center font-ui text-xs py-2 px-4 tracking-wide
 ```
 
-**Load-failure states.** When a list or selector cannot load, show that, never an empty state. History uses a centred block (`font-display italic text-xl` heading, `font-ui text-sm text-muted` sentence, a full accent button: **Try again**, or **Sign in** for a 401) with `role="alert"`; Setup's course area uses the dashed empty-state box with the same wording and a small outline button. An empty state ("No rounds yet", "No courses yet") is only for a load that succeeded and returned nothing.
+**Load-failure states.** When a list or selector cannot load, show that, never an empty state. History uses `EmptyState` (title, sentence, a button: **Try again**, or **Sign in** for a 401) with `role="alert"`; Setup's course area uses the dashed empty-state box with the same wording and a small outline button. An empty state ("No rounds yet", "No courses yet") is only for a load that succeeded and returned nothing.
 
 **Announce messages.** An error banner or inline error line carries `role="alert"`; a neutral confirmation ("Saved.", "Check the new inbox...") carries `role="status"`. Neither is put on a per-second countdown (e.g. "Resend in 29s") - that would be read out every tick.
 
