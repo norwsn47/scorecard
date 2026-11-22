@@ -182,6 +182,65 @@ describe('History cards', () => {
   })
 })
 
+describe('History - filter picker sheet', () => {
+  const row = (id, course, players) => ({
+    id, played_at: '2026-08-01T10:00:00.000Z', holes_played: 2, course_id: null, course_name: course,
+    notes: null, hole_pars: '[3,3]',
+    player_data: JSON.stringify(players.map(name => ({ name, scores: [3, 3], total: 6 }))),
+  })
+
+  async function open() {
+    mockFetch({ user: SIGNED_IN, games: [row('a', 'Links', ['Ann', 'Bo']), row('b', 'Swanston', ['Ann'])] })
+    const user = userEvent.setup()
+    render(<AuthProvider><History navigate={vi.fn()} goBack={vi.fn()} /></AuthProvider>)
+    await screen.findAllByRole('button', { name: /^Open round/ })
+    const pill = screen.getByRole('button', { name: 'Course' })
+    await user.click(pill)
+    return { user, pill }
+  }
+
+  it('is a labelled modal dialog with focus on the chosen row', async () => {
+    await open()
+    const dialog = screen.getByRole('dialog', { name: 'Course' })
+    expect(dialog).toHaveAttribute('aria-modal', 'true')
+    expect(dialog).toHaveAttribute('aria-labelledby')
+    expect(within(dialog).getByRole('radio', { name: /^All courses/ })).toHaveFocus()
+  })
+
+  it('Escape closes it and hands focus back to the pill', async () => {
+    const { user, pill } = await open()
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(pill).toHaveFocus()
+  })
+
+  it('a tap on the backdrop closes it, but a tap inside the sheet does not', async () => {
+    const { user, pill } = await open()
+    const dialog = screen.getByRole('dialog')
+    await user.click(within(dialog).getByRole('heading', { name: 'Course' }))
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    await user.click(dialog.parentElement)
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(pill).toHaveFocus()
+  })
+
+  it('traps Tab and Shift+Tab inside the sheet, and pulls stray focus back in', async () => {
+    const { user } = await open()
+    const dialog = screen.getByRole('dialog')
+    for (let i = 0; i < 3; i += 1) {
+      await user.tab()
+      expect(dialog).toContainElement(document.activeElement)
+    }
+    await user.tab({ shift: true })
+    expect(dialog).toContainElement(document.activeElement)
+
+    // Focus that has strayed outside comes back in on the next Tab.
+    screen.getByRole('button', { name: 'Home' }).focus()
+    await user.tab()
+    expect(dialog).toContainElement(document.activeElement)
+  })
+})
+
 describe('Settings - focus return', () => {
   it('collapsing the email form hands focus back to "Change email address"', async () => {
     const user = userEvent.setup()

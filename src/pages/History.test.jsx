@@ -109,13 +109,13 @@ describe('History — Home fallback on depth 0 (#89 fix-forward)', () => {
 })
 
 describe('History — player filter (#51 / #61)', () => {
-  it('shows no player-filter row when only one player appears across rounds', () => {
+  it('shows no player pill when only one player appears across rounds', () => {
     seedLocalGames([round('g1', ['Ann'], '2026-08-01T10:00:00.000Z')])
     renderHistory()
-    expect(screen.queryByRole('button', { name: 'All players' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^Player/ })).not.toBeInTheDocument()
   })
 
-  it('shows a chip per distinct player once two or more appear, and filters the list on tap', async () => {
+  it('shows a Player pill once two or more players appear; its sheet has a row per player and filters the list', async () => {
     const user = userEvent.setup()
     seedLocalGames([
       round('g1', ['Ann', 'Bo'], '2026-08-02T10:00:00.000Z'),
@@ -123,27 +123,30 @@ describe('History — player filter (#51 / #61)', () => {
     ])
     renderHistory()
 
-    const chips = screen.getByRole('group', { name: 'Filter by player' })
     const list = screen.getByRole('main')
-    expect(within(chips).getByRole('button', { name: 'All players' })).toBeInTheDocument()
 
     // Both rounds in the list: Cass's row (g2) is present.
     expect(within(list).getByText('Cass')).toBeInTheDocument()
 
+    await user.click(screen.getByRole('button', { name: 'Player' }))
+    const sheet = screen.getByRole('dialog', { name: 'Player' })
+    expect(within(sheet).getByRole('radio', { name: /^All players/ })).toBeInTheDocument()
+
     // Filter to Bo — only g1 (Ann + Bo) matches, so g2 (Ann + Cass) leaves the list.
-    await user.click(within(chips).getByRole('button', { name: 'Bo' }))
+    await user.click(within(sheet).getByRole('radio', { name: /^Bo/ }))
     expect(within(list).queryByText('Cass')).not.toBeInTheDocument()
     expect(within(list).getByText('Bo')).toBeInTheDocument()
 
     // "All players" clears the filter — g2 is back.
-    await user.click(within(chips).getByRole('button', { name: 'All players' }))
+    await user.click(screen.getByRole('button', { name: 'Player: Bo' }))
+    await user.click(within(screen.getByRole('dialog')).getByRole('radio', { name: /^All players/ }))
     expect(within(list).getByText('Cass')).toBeInTheDocument()
   })
 })
 
 // Signed-in identity star (BACKLOG #91). A signed-in user's History
 // reads from D1, so this mocks /api/games as well as /api/auth/me. The star
-// shows on the player's filter chip and on their name in each round row.
+// shows in the player picker sheet and on their name in each round row.
 describe('History - signed-in star (#91)', () => {
   const dbRound = {
     id: 'db1',
@@ -174,16 +177,18 @@ describe('History - signed-in star (#91)', () => {
     await act(async () => { await Promise.resolve() })
   }
 
-  it('stars the matching player on their filter chip and in the round row, and nobody else', async () => {
+  it('stars the matching player in the player picker and in the round row, and nobody else', async () => {
     await renderSignedIn('ann')
 
-    const chips = screen.getByRole('group', { name: 'Filter by player' })
     const list = screen.getByRole('main')
-    expect(within(chips).getAllByRole('img', { name: 'You' })).toHaveLength(1)
     expect(within(list).getAllByRole('img', { name: 'You' })).toHaveLength(1)
 
-    expect(within(within(chips).getByRole('button', { name: /^Ann/ })).getByRole('img', { name: 'You' })).toBeInTheDocument()
-    expect(within(within(chips).getByRole('button', { name: /^Bo/ })).queryByRole('img', { name: 'You' })).not.toBeInTheDocument()
+    // The star shows on the player's row in the picker sheet, and on nobody else's.
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Player' }))
+    const sheet = screen.getByRole('dialog', { name: 'Player' })
+    expect(within(sheet).getAllByRole('img', { name: 'You' })).toHaveLength(1)
+    expect(within(within(sheet).getByRole('radio', { name: /^Ann/ })).getByRole('img', { name: 'You' })).toBeInTheDocument()
+    expect(within(within(sheet).getByRole('radio', { name: /^Bo/ })).queryByRole('img', { name: 'You' })).not.toBeInTheDocument()
   })
 
   it('shows no star when the signed-in user has no name set', async () => {
