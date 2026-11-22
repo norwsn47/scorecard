@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { BRUNTSFIELD_COURSE_NAME } from '../constants.js'
 import ExternalArrow from '../components/ExternalArrow.jsx'
 import { track } from '../utils/analytics.js'
 import { formatShortDate } from '../utils/format.js'
@@ -161,7 +160,7 @@ export default function Home({ navigate }) {
               </svg>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="type-strong text-text">{BRUNTSFIELD_COURSE_NAME}</p>
+              <p className="type-strong text-text">Bruntsfield Short Hole Course</p>
               <p className="type-small text-muted">Course map, rules &amp; scorecard</p>
             </div>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-muted shrink-0">
