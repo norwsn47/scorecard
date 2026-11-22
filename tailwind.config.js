@@ -23,6 +23,11 @@ export default {
         field:           'var(--color-border-field)',
         'control-warm':  'var(--color-control-warm)',
         'accent-tint':   'var(--color-accent-tint)',
+        // Redesign tokens, defined and not yet applied (stage 1).
+        'accent-tint-hover': 'var(--color-accent-tint-hover)',
+        'on-accent':         'var(--color-on-accent)',
+        'disabled-surface':  'var(--color-surface-disabled)',
+        'disabled-text':     'var(--color-text-disabled)',
         'under-par':      'var(--color-under-par)',
         'over-par':       'var(--color-over-par)',
       },
@@ -34,10 +39,23 @@ export default {
         sm: 'var(--radius-sm)',
         md: 'var(--radius-md)',
         lg: 'var(--radius-lg)',
+        control: 'var(--radius-control)',
+        sheet:   'var(--radius-sheet)',
       },
       boxShadow: {
         card: 'var(--shadow-card)',
         btn:  'var(--shadow-btn)',
+        subtle: 'var(--shadow-subtle)',
+      },
+      // Figma layout tokens (plan 5c), in rem. Gives gap-related, px-page,
+      // p-card, space-y-section and so on. Not yet used by components.
+      spacing: {
+        related: '0.5rem',   // layout/gap/related 8
+        field:   '0.75rem',  // layout/gap/field 12
+        group:   '1rem',     // layout/gap/group 16
+        section: '1.5rem',   // layout/gap/section 24
+        page:    '1rem',     // layout/padding/page 16
+        card:    '1rem',     // layout/padding/card 16
       },
     },
   },

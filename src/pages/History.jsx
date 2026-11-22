@@ -296,7 +296,7 @@ export default function History({ navigate }) {
               type="button"
               onClick={() => navigate('summary', { game, fromHistory: true })}
               aria-label={`Open round: ${formatShortDate(game.completedAt)}, ${(game.players ?? []).join(', ')}${game._rejected ? ", can't be saved, kept on this device only" : game._pending ? ', not yet saved' : ''}`}
-              className="absolute inset-0 w-full h-full rounded-md active:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="absolute inset-0 w-full h-full rounded-md active:bg-accent-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             />
 
             {/* Card content sits above the open button; clicks pass through to it

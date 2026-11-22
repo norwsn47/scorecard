@@ -1,8 +1,10 @@
 # Design
 ## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
-Last updated: 8 November 2026
+Last updated: 22 November 2026
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
+
+> **Redesign in progress (from 22 November 2026).** `docs/redesign/reference/tokens.json` (read from Figma) is the source of truth for the redesign and wins over this file wherever they differ. Stage 1 updated the token-level sections only (Colour tokens, Overlays, Border radius, Shadows, and the new token notes under Typography and Spacing). The **component sections still describe the shipped app** until stage 9 rewrites them, so expect them to mention values (uppercase button labels, `rounded-sm` and `rounded-md`, the 5% row tint, `px-5` page padding) that the redesign decisions in `CHANGELOG.md` (22 November 2026) replace.
 
 ---
 
@@ -28,8 +30,9 @@ All tokens are defined as CSS custom properties in `src/styles/index.css` and al
 | `bg-card` | `--color-bg-card` | `#F5EFE3` | Surface — slightly warmer cream for cards, inputs |
 | `text` | `--color-text` | `#1A1A18` | Primary text — near-black charcoal |
 | `muted` | `--color-text-muted` | `#6B6560` | Muted text — warm grey |
-| `accent` | `--color-accent` | `#1A4329` | Brand colour — deep historic Scottish green; all interactive highlights, active cell, winner |
-| `accent-hover` | `--color-accent-hover` | `#142f1e` | Accent on press |
+| `accent` | `--color-accent` | `#1A4329` | Brand colour — deep historic Scottish green; all interactive highlights, active cell, winner. The CSS var holds the RGB channels (`26 67 41`), not a hex string, so opacity modifiers compile |
+| `accent-hover` | `--color-accent-hover` | `#142f1e` | Accent on press (Figma accent hover and pressed) |
+| `accent-tint` | `--color-accent-tint` | accent at 8% (`rgb(var(--color-accent) / 0.08)`) | The one tint: active row, selected states and soft fills. Figma `color/accent/subtle`. Replaces the old 5% row tint and the `bg-accent/10` soft tint (all `bg-accent/10` uses were swapped). **Must not be raised:** `muted` text on it is 4.57:1, so any more opacity falls below AA 4.5:1. Guarded by `src/styles/tokens.test.js` |
 | `border` | `--color-border` | `#D9D0C4` | Hairlines, dividers, card and outline-button edges — warm light, decorative (1.39:1 on `bg`, deliberately below the 3:1 graphics floor) |
 | `field` | `--color-border-field` | `#827970` | Boundary of **form fields only** — text inputs, textareas, selects. Used as `border-field`. Warm mid-grey, ~3.7:1 on `bg-card` (see "Sunlight contrast") |
 | `control-warm` | `--color-control-warm` | `#7D746C` | Warm grey for secondary game controls: Decrement outline and glyph, Advance fill |
@@ -37,7 +40,18 @@ All tokens are defined as CSS custom properties in `src/styles/index.css` and al
 | `over-par` | `--color-over-par` | `#9B3A24` | Score-vs-par **delta** when over par (`+1`, `+5` …). Deltas only — never chrome, never interactive |
 | *(desktop only)* | — | `#E8E2D6` | Background behind phone frame on desktop |
 
-`tailwind.config.js` carries matching aliases for these two tokens: `'under-par': 'var(--color-under-par)'`, `'over-par': 'var(--color-over-par)'`.
+**Defined in stage 1, applied in a later stage.** These exist in `src/styles/index.css` and `tailwind.config.js` now but no component uses them yet. Each comes straight from `tokens.json`.
+
+| Token | CSS var | Value | Role |
+|---|---|---|---|
+| `accent-tint-hover` | `--color-accent-tint-hover` | accent at 15% (`rgb(var(--color-accent) / 0.15)`) | Pressed or hover state of an `accent-tint` fill. Figma `color/accent/subtle-hover` |
+| `on-accent` | `--color-on-accent` | `#FFFFFF` | Text and icons on a solid `accent` fill. Figma `color/accent/on-accent`. White on `accent` is 11.2:1 |
+| `disabled-surface` | `--color-surface-disabled` | `#E8E1D6` | Fill of a disabled control. Figma `color/surface/disabled` |
+| `disabled-text` | `--color-text-disabled` | `#D9D0C4` | Text of a disabled control. Figma `color/text/disabled` |
+
+`disabled-text` on `disabled-surface` is **below 4.5:1 by design**. Disabled states are exempt from the contrast rule (see "Sunlight contrast"). Until these tokens are applied, disabled buttons keep the shipped `opacity-40` described under Component patterns.
+
+`tailwind.config.js` carries matching aliases for these tokens, for example `'under-par': 'var(--color-under-par)'`, `'over-par': 'var(--color-over-par)'`, `'accent-tint': 'var(--color-accent-tint)'`, and `'disabled-surface'` and `'disabled-text'` pointing at the two disabled vars above.
 
 ### `border` vs `field` — which edge to use
 
@@ -67,12 +81,13 @@ This keeps within the Outbuild allowance of "no more than two accents beyond the
 |---|---|---|
 | `--overlay-modal` | `rgba(26,26,24,0.55)` | Full modal backdrop |
 | `--overlay-backdrop` | `rgba(26,26,24,0.4)` | Bottom sheet backdrop |
-| Active row tint | `rgba(26,67,41,0.05)` | Scorecard active row background |
+| `accent-tint` | accent at 8% (`--color-accent-tint`) | Scorecard active row background, selected states, soft fills. One value for all three: the old 5% row tint (`rgba(26,67,41,0.05)`) and the 10% soft tint (`bg-accent/10`) no longer exist as values. Never raise it (muted text on it is 4.57:1) |
+| `accent-tint-hover` | accent at 15% (`--color-accent-tint-hover`) | Pressed state of a tinted fill. Defined, applied in a later stage |
 | Focus ring | `rgba(26,67,41,0.4)` | Input focus ring (always-on, since focus on an input follows a deliberate tap into it); also the token for the new button `focus-visible` ring — see "Button size system" |
 
 ### Sunlight contrast — the score-vs-par colours
 
-**Rule:** Anything a golfer reads or taps outdoors: text at least 4.5:1, icons, rings and fills at least 3:1 (aim for 4:1). `muted` is the lightest permitted text colour. Only disabled states and decorative hairlines (`border`) may fall below. The edge of a form field is not a hairline: it takes `field`.
+**Rule:** Anything a golfer reads or taps outdoors: text at least 4.5:1, icons, rings and fills at least 3:1 (aim for 4:1). `muted` is the lightest permitted text colour. Only disabled states and decorative hairlines (`border`) may fall below. The edge of a form field is not a hairline: it takes `field`. Disabled states are exempt, so `disabled-text` on `disabled-surface` is allowed to sit below 4.5:1.
 
 The app is used outdoors on a phone in bright light, so both delta colours were chosen to clear **WCAG AA for small text (4.5:1)** against every surface a delta can sit on, with headroom for glare. Ratios:
 
@@ -80,12 +95,14 @@ The app is used outdoors on a phone in bright light, so both delta colours were 
 |---|---|---|---|
 | `under-par` `#2C6B3C` | **5.8 : 1** ✓ | **5.6 : 1** ✓ | 1.7 : 1 ✗ |
 | `over-par` `#9B3A24` | **6.3 : 1** ✓ | **6.1 : 1** ✓ | 1.6 : 1 ✗ |
-| white `#FFFFFF` (active-cell text) | — | — | **11.2 : 1** ✓ |
+| white `#FFFFFF` (active-cell text, `on-accent`) | — | — | **11.2 : 1** ✓ |
 | `accent` `#1A4329` (winner column text) | 10.2 : 1 ✓ | 9.8 : 1 ✓ | — |
 | `control-warm` `#7D746C` (Decrement outline and glyph, Advance fill) | 4.2 : 1 ✓ | 4.0 : 1 ✓ | — |
 | `muted` `#6B6560` (secondary text, inactive hole numbers, placeholders) | 5.2 : 1 ✓ | 5.0 : 1 ✓ | — |
 | `field` `#827970` (text input, textarea, select edge) | 3.9 : 1 ✓ | 3.7 : 1 ✓ | — |
 | `border` `#D9D0C4` (decorative hairlines only) | 1.39 : 1 (exempt) | 1.33 : 1 (exempt) | — |
+
+`muted` on the 8% `accent-tint` is **4.57 : 1** (the figure from `tokens.json`, guarded by `src/styles/tokens.test.js`). That is the reason the tint is capped at 8%: any stronger and muted text on the active row drops below 4.5:1. The table above has no column for the tint, so this one ratio is stated here rather than as a row.
 
 The `field` and `border` rows are **hand-computed from WCAG relative luminance** (sRGB channels linearised, ratio = `(L1 + 0.05) / (L2 + 0.05)`), not measured in a browser. Relative luminance: `bg` 0.906, `bg-card` 0.867, `field` 0.196, `border` 0.638.
 
@@ -108,6 +125,23 @@ Two registers. The display font is used once, deliberately, for a specific edito
 | `Cormorant Garamond` | `--font-display` | Editorial: app name, page titles, course name and section headings |
 | `Inter` | `--font-ui` | All UI: buttons, labels, table cells, inputs, body text |
 | `Caveat` | *(no token)* | Desktop wrapper note only — never inside the app |
+
+### Type utilities (redesign, stage 1)
+
+Eight type utilities are defined in `src/styles/index.css` (in `@layer components`), taken from the `textStyles` in `tokens.json`. Sizes, line heights and tracking are in **rem**, so they scale with the 18px root used in the desktop frame. **They are defined and not yet used by any component.** Stage 2 replaces the ad hoc type classes below with them. Serif is for Display and Title only.
+
+| Utility | Font | Weight | Size / line height | Tracking | Case |
+|---|---|---|---|---|---|
+| `type-display` | Cormorant Garamond italic | 400 | 2.625rem / 2.875rem (42 / 46px) | 0 | as typed |
+| `type-title` | Cormorant Garamond italic | 500 | 1.5rem / 1.875rem (24 / 30px) | 0 | as typed |
+| `type-body` | Inter | 400 | 1rem / 1.5rem (16 / 24px) | 0 | as typed |
+| `type-strong` | Inter | 500 | 1rem / 1.5rem (16 / 24px) | 0 | as typed |
+| `type-small` | Inter | 400 | 0.875rem / 1.25rem (14 / 20px) | 0 | as typed |
+| `type-small-strong` | Inter | 500 | 0.875rem / 1.25rem (14 / 20px) | 0 | as typed |
+| `type-caption` | Inter | 500 | 0.75rem / 1rem (12 / 16px) | 0.0125rem (0.2px) | as typed |
+| `type-label-caps` | Inter | 600 | 0.875rem / 1.25rem (14 / 20px) | 0.06875rem (1.1px) | uppercase |
+
+The two font-weight ranges loaded (Cormorant Garamond 400 to 600, Inter 400 to 600) already cover every weight above.
 
 ### Editorial register — Cormorant Garamond italic
 
@@ -159,6 +193,21 @@ Base unit: 4px (Tailwind default).
 
 `pt-6 pb-4` matches what `PageHeader.jsx` ships — the code is taken as the source of truth here. (This table read `pt-12 pb-6`, then briefly `pt-10 pb-4`, in earlier passes; both were doc/reality mismatches corrected against the shipped component.)
 
+### Spacing aliases (redesign, stage 1)
+
+Six layout aliases from the Figma Layout collection (`tokens.json`) are defined as Tailwind **spacing keys** in `tailwind.config.js`, in rem. Any spacing utility accepts them: `gap-related`, `space-y-section`, `px-page`, `p-card`, and so on. **They are defined and not yet used by any component.** The table above still describes what ships; later stages move components onto the aliases.
+
+| Alias | Figma variable | Value | Use |
+|---|---|---|---|
+| `related` | `layout/gap/related` | 0.5rem (8px) | Gap between closely related items |
+| `field` | `layout/gap/field` | 0.75rem (12px) | Gap between form fields |
+| `group` | `layout/gap/group` | 1rem (16px) | Gap between groups of content |
+| `section` | `layout/gap/section` | 1.5rem (24px) | Gap between page sections |
+| `page` | `layout/padding/page` | 1rem (16px) | Page horizontal padding (replaces `px-5` and `px-6`) |
+| `card` | `layout/padding/card` | 1rem (16px) | Padding inside a card |
+
+Note that `field` is also the name of the form-field border colour token (`border-field`). They do not clash: one is a spacing key (`gap-field`, `p-field`), the other a colour key (`border-field`).
+
 ---
 
 ## Border radius
@@ -171,6 +220,15 @@ Base unit: 4px (Tailwind default).
 | `50%` | `rounded-full` | Circular control bar buttons (64×64); also filter chips — see "Filter chips" |
 | `16px top` | `rounded-t-2xl` | Bottom sheet / confirmation modal |
 | `44px` | *(CSS only)* | Phone frame on desktop |
+
+**Redesign radii (stage 1, defined, not yet applied).** Two new radius utilities come from the Figma Shape collection, in rem (the desktop frame's root is 18px):
+
+| Value | Tailwind | CSS var | Use |
+|---|---|---|---|
+| `0.375rem` (6px) | `rounded-control` | `--radius-control` | The one control radius: buttons, inputs, selects, cards. Replaces `rounded-sm` (4px) and `rounded-md` (8px) |
+| `1rem` (16px) | `rounded-sheet` | `--radius-sheet` | Bottom sheets, **top corners only**. Replaces `rounded-t-2xl` |
+
+`rounded-sm`, `rounded-md` and `rounded-lg` remain in use until stage 3 moves components over. `rounded-full` (chips, round controls) is unchanged.
 
 Primary button exception: uses `rounded-sm` (4px) for a sharp, printed-document feel. Secondary/outlined buttons also use `rounded-sm`. All other interactive controls retain `rounded-md` (8px).
 
@@ -186,9 +244,12 @@ Used sparingly — only on elements genuinely floating above page flow.
 |---|---|---|
 | `--shadow-card` | `0 1px 3px rgba(26,26,24,0.08), 0 1px 2px rgba(26,26,24,0.04)` | Modals, bottom sheets |
 | `--shadow-btn` | `0 1px 2px rgba(26,26,24,0.12)` | Primary CTA button only |
+| `--shadow-subtle` | `0 0.0625rem 0.125rem rgba(28,27,25,0.06)` (`0 1px 2px` `#1C1B19` at 6%) | Figma `Shadow/Subtle`. **Defined, not yet applied.** Record cards only (History round cards, Home course card), from a later stage. Tailwind: `shadow-subtle` |
 | Phone frame | `0 0 0 10px #1C1B19, 0 0 0 11px rgba(255,255,255,0.06), 0 32px 80px rgba(26,26,24,0.45)` | Desktop wrapper |
 
-Static surfaces in the page flow carry no shadow.
+`shadow-card` and `shadow-btn` remain as shipped for now. Later stages drop them once `shadow-subtle` is applied and the button shadow is retired.
+
+Static surfaces in the page flow carry no shadow (until record cards move onto `shadow-subtle`).
 
 ---
 
