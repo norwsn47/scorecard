@@ -246,7 +246,7 @@ export default function Settings({ navigate }) {
                 onClick={() => { setNameSaved(false); setNameEditing(true) }}
                 aria-label="Edit name"
                 aria-expanded={false}
-                className="w-11 h-11 -mr-2.5 shrink-0 flex items-center justify-center rounded-md text-accent active:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                className="w-11 h-11 -mr-2.5 shrink-0 flex items-center justify-center rounded-md text-accent active:bg-accent-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
               >
                 <PencilIcon />
               </button>
@@ -309,7 +309,7 @@ export default function Settings({ navigate }) {
                   onClick={() => setEmailFormOpen(true)}
                   aria-label="Change email address"
                   aria-expanded={false}
-                  className="w-11 h-11 -mr-2.5 shrink-0 flex items-center justify-center rounded-md text-accent active:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+                  className="w-11 h-11 -mr-2.5 shrink-0 flex items-center justify-center rounded-md text-accent active:bg-accent-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                 >
                   <PencilIcon />
                 </button>
@@ -350,7 +350,7 @@ export default function Settings({ navigate }) {
                   disabled={savingEmail || !newEmail.trim()}
                   className={[
                     'w-full py-3 px-4 rounded-sm border border-accent text-accent font-ui text-sm tracking-[0.08em] uppercase font-medium',
-                    'active:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
+                    'active:bg-accent-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
                     (savingEmail || !newEmail.trim()) ? 'opacity-40 cursor-not-allowed' : '',
                   ].join(' ')}
                 >

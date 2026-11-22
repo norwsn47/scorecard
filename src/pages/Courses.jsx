@@ -72,7 +72,7 @@ export default function Courses({ navigate, goBack }) {
             <button
               type="button"
               onClick={() => (status === 'signedOut' ? navigate('login') : setReloadKey(k => k + 1))}
-              className="min-h-[44px] py-2 px-4 rounded-sm border border-accent text-accent font-ui text-xs tracking-[0.1em] uppercase font-semibold active:bg-accent/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+              className="min-h-[44px] py-2 px-4 rounded-sm border border-accent text-accent font-ui text-xs tracking-[0.1em] uppercase font-semibold active:bg-accent-tint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               {status === 'signedOut' ? 'Sign in' : 'Try again'}
             </button>

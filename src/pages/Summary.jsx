@@ -760,7 +760,7 @@ export default function Summary({ navigate, params }) {
             <button
               onClick={handleShare}
               disabled={sharing}
-              className={`w-full ${viewingSaved ? 'py-2.5' : 'py-4'} px-3 rounded-sm border border-accent text-accent font-ui text-sm tracking-[0.1em] uppercase font-medium flex items-center justify-center gap-2 active:bg-accent/10 disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40`}
+              className={`w-full ${viewingSaved ? 'py-2.5' : 'py-4'} px-3 rounded-sm border border-accent text-accent font-ui text-sm tracking-[0.1em] uppercase font-medium flex items-center justify-center gap-2 active:bg-accent-tint disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40`}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 shrink-0" aria-hidden="true">
                 <path d="M12 3v12" />
