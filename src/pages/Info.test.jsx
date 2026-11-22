@@ -26,15 +26,15 @@ describe('Info - back button (#83)', () => {
   it('goes back to Home by default', async () => {
     const user = userEvent.setup()
     const { goBack } = renderInfo()
-    expect(screen.getByRole('button', { name: '← Home' })).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: '← Home' }))
+    expect(screen.getByRole('button', { name: 'Home' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Home' }))
     expect(goBack).toHaveBeenCalledWith('home')
   })
 
   it('goes back to Settings when opened from the Settings About row', async () => {
     const user = userEvent.setup()
     const { goBack } = renderInfo({ from: 'settings' })
-    await user.click(screen.getByRole('button', { name: '← Settings' }))
+    await user.click(screen.getByRole('button', { name: 'Settings' }))
     expect(goBack).toHaveBeenCalledWith('settings')
   })
 })

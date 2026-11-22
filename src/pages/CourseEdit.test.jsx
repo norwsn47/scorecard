@@ -94,7 +94,7 @@ describe('CourseEdit (#54/#71)', () => {
     render(<CourseEdit navigate={vi.fn()} goBack={goBack} params={{ courseId: 'c1' }} />)
     await screen.findByDisplayValue('Bruntsfield')
 
-    await user.click(screen.getByRole('button', { name: '← Courses' }))
+    await user.click(screen.getByRole('button', { name: 'Courses' }))
     expect(goBack).toHaveBeenCalledWith('courses')
   })
 

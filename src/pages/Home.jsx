@@ -67,7 +67,7 @@ export default function Home({ navigate }) {
       )}
 
       {/* ── Branding ── */}
-      <header className="flex flex-col justify-start px-6 pt-10 pb-2">
+      <header className="flex flex-col justify-start px-page pt-10 pb-2">
 
         {/* Heading row — h1 + header icon inline, icon aligns to first line.
             Signed in: a settings gear (the Info page is reached from inside
@@ -111,7 +111,7 @@ export default function Home({ navigate }) {
       <div className="flex-1" />
 
       {/* ── Actions ── */}
-      <main className="flex flex-col gap-4 px-6 pt-6 pb-8 w-full">
+      <main className="flex flex-col gap-group px-page pt-6 pb-8 w-full">
 
         <Button fullWidth onClick={() => { track('New Game Started'); navigate('setup') }}>
           New game
@@ -140,11 +140,11 @@ export default function Home({ navigate }) {
         )}
 
         {/* Course-specific scorecards */}
-        <div className="space-y-2 pt-1">
-          <p className="type-label-caps text-muted px-1">Course specific scorecards</p>
+        <div className="flex flex-col gap-related pt-1">
+          <p className="type-label-caps text-muted">Course specific scorecards</p>
           <button
             onClick={() => navigate('bruntsfield')}
-            className="w-full px-4 py-3 rounded-control bg-bg-card border border-border text-left flex items-center gap-3 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="w-full p-card rounded-control bg-bg-card border border-border text-left flex items-center gap-3 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
             <div className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-accent-tint">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4 text-accent">
@@ -190,7 +190,7 @@ export default function Home({ navigate }) {
       </main>
 
       {/* ── Footer ── */}
-      <footer className="text-center pt-4 pb-10 px-6 space-y-3">
+      <footer className="text-center pt-4 pb-10 px-page space-y-3">
         <p className="font-ui text-text inline-flex items-baseline gap-1">
           <span className="type-strong">Scorecard</span>
           <span className="type-small text-muted"> by </span>

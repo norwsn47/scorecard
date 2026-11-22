@@ -1,6 +1,6 @@
 export default function RulesContent() {
   return (
-    <div className="space-y-4 type-body text-muted">
+    <div className="flex flex-col gap-group type-body text-text">
 
       <p>
         <span className="type-strong text-text">1)</span> ALL PLAYERS are liable for their own actions on the
@@ -9,7 +9,7 @@ export default function RulesContent() {
 
       <div>
         <p><span className="type-strong text-text underline">2) RULES OF PLAY:</span></p>
-        <ul className="mt-1.5 space-y-1 pl-4">
+        <ul className="mt-related space-y-related pl-4">
           <li>a) Play each hole <span className="type-strong">only</span> from the designated Teeing areas</li>
           <li>b) <span className="type-strong">DO NOT</span> hit balls <span className="type-strong">over</span> footpaths (Out of Bounds)</li>
           <li>c) <span className="type-strong">DO NOT</span> hit balls off, <span className="type-strong">from on the greens</span></li>
@@ -30,21 +30,21 @@ export default function RulesContent() {
 
       <div>
         <p><span className="type-strong text-text underline">5) COURTESY on the Course:</span></p>
-        <ul className="mt-1.5 space-y-1 pl-4">
+        <ul className="mt-related space-y-related pl-4">
           <li>a) PLAY WITHOUT ANY UNDUE DELAY</li>
           <li>b) ALLOW faster playing groups to play through</li>
           <li>c) KEEP the course clean and tidy – place all your litter in the litter bins provided around the course.</li>
         </ul>
       </div>
 
-      <p className="pt-2 type-strong text-text">
+      <p className="type-strong text-text">
         Many thanks for your <span className="whitespace-nowrap">co-operation</span>
       </p>
       <p className="type-strong text-text">
         Enjoy your game
       </p>
 
-      <p className="pt-4 type-small text-muted">
+      <p className="mt-related type-small text-muted">
         Rules provided by the{' '}
         <a
           href="https://www.bruntsfieldshortholegolfclub.co.uk"

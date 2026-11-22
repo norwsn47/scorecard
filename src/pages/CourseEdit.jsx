@@ -162,9 +162,9 @@ export default function CourseEdit({ navigate, goBack, params }) {
   return (
     <div className="h-full bg-bg flex flex-col">
 
-      <PageHeader title={course?.name} subtitle="Edit course" backLabel="← Courses" onBack={backToCourses} />
+      <PageHeader title={course?.name} subtitle="Edit course" backLabel="Courses" onBack={backToCourses} />
 
-      <main className="flex-1 overflow-y-auto px-5 pt-6 pb-10 w-full space-y-3">
+      <main className="flex-1 overflow-y-auto px-page pt-6 pb-10 w-full space-y-3">
 
         {loading && (
           <div className="text-center pt-16">

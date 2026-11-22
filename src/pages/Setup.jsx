@@ -521,10 +521,10 @@ export default function Setup({ navigate, goBack, params }) {
         title={editRound ? 'Edit Round' : pastRound ? 'Add past round' : 'New game'}
         backLabel={
           editRound
-            ? (fromScorecard ? '← Scorecard' : '← Summary')
+            ? (fromScorecard ? 'Scorecard' : 'Summary')
             : pastRound
-              ? '← History'
-              : `← ${fromBruntsfield ? 'Course' : 'Home'}`
+              ? 'History'
+              : fromBruntsfield ? 'Course' : 'Home'
         }
         onBack={() =>
           // Cancelling an edit now steps back through real history instead of

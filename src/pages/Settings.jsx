@@ -221,11 +221,11 @@ export default function Settings({ navigate }) {
           a quiet row with a small pencil rather than a full-width form; the
           field opens only on a deliberate tap. Sign out and Delete sit at the
           foot as plain links. */}
-      <main className="flex-1 overflow-y-auto px-5 pt-6 pb-14 max-w-sm mx-auto w-full flex flex-col gap-9">
+      <main className="flex-1 overflow-y-auto px-page pt-6 pb-14 max-w-sm mx-auto w-full flex flex-col gap-section">
 
         {/* ── Account: name and email ── */}
         <section>
-          <h2 className="type-label-caps text-muted mb-1">Account</h2>
+          <h2 className="type-label-caps text-muted mb-related">Account</h2>
 
           {!nameEditing ? (
             <div className="flex items-center gap-3 py-3.5 border-b border-border">
@@ -251,7 +251,7 @@ export default function Settings({ navigate }) {
               </button>
             </div>
           ) : (
-            <div className="py-3.5 border-b border-border space-y-2.5">
+            <div className="py-3.5 border-b border-border space-y-related">
               <Input
                 label="Name"
                 id="settings-name"
@@ -291,7 +291,7 @@ export default function Settings({ navigate }) {
 
           {/* Email - the new-email form stays collapsed behind the pencil (#84)
               and reveals in place on a deliberate tap. */}
-          <div className="py-3.5 border-b border-border space-y-3">
+          <div className="py-3.5 border-b border-border space-y-group">
             <div className="flex items-center gap-3">
               <div className="flex-1 min-w-0 space-y-1">
                 <p className="type-small text-muted">Email</p>
@@ -324,7 +324,7 @@ export default function Settings({ navigate }) {
             )}
 
             {emailFormOpen && (
-              <form onSubmit={handleSaveEmail} className="space-y-3">
+              <form onSubmit={handleSaveEmail} className="space-y-field">
                 <Input
                   ref={emailInputRef}
                   type="email"
@@ -385,7 +385,7 @@ export default function Settings({ navigate }) {
         {/* The header gear replaced the info icon for signed-in users (#83), so
             the Information page (rules, privacy, contact) is reached from here. */}
         <section>
-          <h2 className="type-label-caps text-muted mb-1">About</h2>
+          <h2 className="type-label-caps text-muted mb-related">About</h2>
           <button
             type="button"
             onClick={() => navigate('info', { from: 'settings' })}
@@ -404,25 +404,24 @@ export default function Settings({ navigate }) {
         <div className="flex-1" />
 
         {/* ── Sign out and Delete account ── */}
-        <section className="space-y-6">
-          <div>
+        <section className="flex flex-col items-center text-center gap-section">
+          <div className="flex flex-col items-center">
             <Button
               variant="text"
               size="medium"
-              className="-ml-4"
               onClick={handleSignOut}
               disabled={signingOut}
             >
               {signingOut ? 'Signing out…' : 'Sign out'}
             </Button>
             {signOutError && (
-              <p role="alert" className="type-small text-accent mt-3">
+              <p role="alert" className="type-small text-accent mt-related">
                 Couldn't sign out - check your connection and try again.
               </p>
             )}
           </div>
 
-          <div className="space-y-1.5">
+          <div className="flex flex-col items-center gap-related">
             <button
               type="button"
               onClick={() => { setDeleteError(null); setDeleteWord(''); setConfirmDelete(true) }}
@@ -430,11 +429,11 @@ export default function Settings({ navigate }) {
             >
               Delete my account
             </button>
-            <p className="type-small text-muted pt-1">
+            <p className="type-small text-muted">
               Removes your account and every round and course saved to it, on every device. This cannot be undone. Quick-play scores saved on this device are not part of your account and stay put.
             </p>
             {deleteError && !confirmDelete && (
-              <p role="alert" className="type-small text-accent pl-1">{deleteError}</p>
+              <p role="alert" className="type-small text-accent">{deleteError}</p>
             )}
           </div>
         </section>

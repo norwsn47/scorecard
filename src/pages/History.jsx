@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import Button from '../components/Button.jsx'
-import PageHeader from '../components/PageHeader.jsx'
+import PageHeader, { HeaderAction } from '../components/PageHeader.jsx'
 import ParDelta from '../components/ParDelta.jsx'
 import PlayerStar from '../components/PlayerStar.jsx'
 import { formatShortDate } from '../utils/format.js'
@@ -129,12 +129,9 @@ export default function History({ navigate }) {
         onBack={showHomeLink ? () => navigate('home') : undefined}
         backLabel="Home"
         right={user ? (
-          <button
-            onClick={() => navigate('setup', { pastRound: true })}
-            className="min-h-[44px] px-2 -mr-2 flex items-center whitespace-nowrap type-strong text-accent active:text-accent-hover rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-          >
+          <HeaderAction onClick={() => navigate('setup', { pastRound: true })}>
             + Add
-          </button>
+          </HeaderAction>
         ) : null}
       />
 
@@ -217,7 +214,7 @@ export default function History({ navigate }) {
       )}
 
       {/* Game list */}
-      <main className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
+      <main className="flex-1 overflow-y-auto px-page py-4 space-y-3">
 
         {loading && (
           <div className="text-center pt-16">

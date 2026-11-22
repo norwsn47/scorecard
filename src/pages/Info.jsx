@@ -14,28 +14,28 @@ export default function Info({ navigate, goBack, params }) {
 
       <PageHeader
         title="Information"
-        backLabel={fromBruntsfield ? '← Course' : fromSettings ? '← Settings' : '← Home'}
+        backLabel={fromBruntsfield ? 'Course' : fromSettings ? 'Settings' : 'Home'}
         onBack={() => goBack(fromBruntsfield ? 'bruntsfield' : fromSettings ? 'settings' : 'home')}
       />
 
-      <main className="flex-1 overflow-y-auto px-5 pt-6 pb-14 space-y-8 max-w-sm mx-auto w-full">
+      <main className="flex-1 overflow-y-auto px-page pt-6 pb-14 flex flex-col gap-section max-w-sm mx-auto w-full">
 
         {/* Why we made this */}
-        <section className="space-y-3">
-          <p className="type-label-caps text-muted">Why we made this</p>
-          <p className="type-body text-muted">
+        <section className="flex flex-col gap-related">
+          <p className="type-label-caps text-accent">Why we made this</p>
+          <p className="type-body text-text">
             We created Scorecard around one idea: the fewest possible taps to log a score, so you can focus on the game and your phone goes back in your pocket.
           </p>
         </section>
 
-        <div className="w-8 h-0.5 bg-border" />
+        <div className="h-px bg-border" />
 
         {/* Bruntsfield-specific sections — only shown when accessed from the Bruntsfield page */}
         {fromBruntsfield && (
           <>
-            <section className="space-y-3">
-              <p className="type-label-caps text-muted">Bruntsfield Short Hole Golf Club</p>
-              <p className="type-body text-muted">
+            <section className="flex flex-col gap-related">
+              <p className="type-label-caps text-accent">Bruntsfield Short Hole Golf Club</p>
+              <p className="type-body text-text">
                 One of the world's oldest golf links, Bruntsfield Short Hole Golf Club has been a fixture in Edinburgh since 1895. The 36-hole course features par-3 holes of 45–90 yards – unique to world golf.
               </p>
               <div>
@@ -51,11 +51,11 @@ export default function Info({ navigate, goBack, params }) {
               </div>
             </section>
 
-            <div className="w-8 h-0.5 bg-border" />
+            <div className="h-px bg-border" />
 
-            <section className="space-y-3">
-              <p className="type-label-caps text-muted">Course rules</p>
-              <p className="type-body text-muted">
+            <section className="flex flex-col gap-related">
+              <p className="type-label-caps text-accent">Course rules</p>
+              <p className="type-body text-text">
                 Please read the rules before playing.
               </p>
               <div>
@@ -69,14 +69,14 @@ export default function Info({ navigate, goBack, params }) {
               </div>
             </section>
 
-            <div className="w-8 h-0.5 bg-border" />
+            <div className="h-px bg-border" />
           </>
         )}
 
         {/* About */}
-        <section className="space-y-3">
-          <p className="type-label-caps text-muted">About Outbuild</p>
-          <p className="type-body text-muted">
+        <section className="flex flex-col gap-related">
+          <p className="type-label-caps text-accent">About Outbuild</p>
+          <p className="type-body text-text">
             Scorecard is made by Outbuild, a small design collective based in Edinburgh.
           </p>
           <div>
@@ -90,7 +90,7 @@ export default function Info({ navigate, goBack, params }) {
               <ExternalArrow />
             </a>
           </div>
-          <p className="type-body text-muted">
+          <p className="type-body text-text mt-related">
             Questions or feedback? Get in touch.
           </p>
           <div>
@@ -103,15 +103,17 @@ export default function Info({ navigate, goBack, params }) {
           </div>
         </section>
 
-        <div className="w-8 h-0.5 bg-border" />
+        <div className="h-px bg-border" />
 
         {/* Account */}
         {user ? (
-          <section className="space-y-3">
-            <p className="type-label-caps text-muted">Account</p>
-            {user.name && <p className="type-body text-text">{user.name}</p>}
-            <p className="type-body text-muted break-words">{user.email}</p>
-            <div>
+          <section className="flex flex-col gap-related">
+            <p className="type-label-caps text-accent">Account</p>
+            <div className="flex flex-col gap-1">
+              {user.name && <p className="type-body text-text">{user.name}</p>}
+              <p className="type-body text-muted break-words">{user.email}</p>
+            </div>
+            <div className="mt-related">
               <button
                 onClick={() => navigate('settings', { from: 'info' })}
                 className="inline-block py-3 -my-3 type-body text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
@@ -119,7 +121,7 @@ export default function Info({ navigate, goBack, params }) {
                 Edit your name, change your email or delete your account
               </button>
             </div>
-            <div>
+            <div className="mt-related">
               <button
                 onClick={async () => {
                   setLogoutError(false)
@@ -136,16 +138,16 @@ export default function Info({ navigate, goBack, params }) {
                 Sign out
               </button>
               {logoutError && (
-                <p role="alert" className="type-small text-accent mt-3">
+                <p role="alert" className="type-small text-accent mt-related">
                   Couldn't sign out - check your connection and try again.
                 </p>
               )}
             </div>
           </section>
         ) : (
-          <section className="space-y-3">
-            <p className="type-label-caps text-muted">Account</p>
-            <p className="type-body text-muted">
+          <section className="flex flex-col gap-related">
+            <p className="type-label-caps text-accent">Account</p>
+            <p className="type-body text-text">
               Sign in to save your rounds across devices and keep your history.
             </p>
             <div>
@@ -159,7 +161,7 @@ export default function Info({ navigate, goBack, params }) {
           </section>
         )}
 
-        <div className="space-y-1.5">
+        <div className="flex flex-col gap-related">
           <p className="type-small text-muted">
             Your data is handled under UK GDPR.
           </p>
