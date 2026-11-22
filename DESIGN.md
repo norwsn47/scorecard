@@ -58,8 +58,8 @@ All tokens are defined as CSS custom properties in `src/styles/index.css` and al
 
 Two border tokens, split by **job**, not by size or importance:
 
-- **`border-field`** - the edge of something you type or choose into: `<input>`, `<textarea>`, `<select>` (including the date input). That edge is the only thing telling a golfer where the field is, so it is a control boundary and must clear 3:1 (WCAG 1.4.11). Nothing else takes it.
-- **`border-border`** - everything decorative: header and table rules, list dividers, card edges, the dashed empty-state and add-player boxes, and (for now) outline buttons, chips, the 9/18 toggle and par stepper cells. If removing the line would not stop someone finding a control, it is a hairline and stays light.
+- **`border-field`** - the edge of something you type or choose into: `<input>`, `<textarea>`, `<select>` (including the date input). That edge is the only thing telling a golfer where the field is, so it is a control boundary and must clear 3:1 (WCAG 1.4.11). Nothing else takes it, with one deliberate exception: the History filter pills (see "Filter pills"), which are a control with no other boundary and take `border-field` so the pill reads as tappable.
+- **`border-border`** - everything decorative: header and table rules, list dividers, card edges, the dashed empty-state and add-player boxes, and (for now) outline buttons, the 9/18 toggle and par stepper cells. If removing the line would not stop someone finding a control, it is a hairline and stays light.
 
 Why not darken `border` itself: it draws every rule on every screen. Darkening it would turn the scorecard's quiet printed-rule feel into a grid of grey lines (flatness and restraint, `OUTBUILD-DESIGN-LANGUAGE.md` §4 and §9). A field earns a firmer edge; a divider does not.
 
@@ -198,7 +198,6 @@ The header bar sets its height with `min-h-[4.25rem]` rather than vertical paddi
 - `Button` Large's inner padding (`px-6`).
 - The inner padding of modals: the course map modal (`CourseMapModal.jsx` and its lazy wrapper, `px-5`).
 - The inner padding of bottom sheets (`px-6` in Setup, Summary, Settings, Scorecard and CourseEdit).
-- The History filter sheet (`px-5`), until stage 6 rebuilds it.
 
 Each entry is counted, so a stale or grown entry fails the guard.
 
@@ -227,12 +226,12 @@ One control radius. Two utilities come from the Figma Shape collection, in rem (
 |---|---|---|---|
 | `0.375rem` (6px) | `rounded-control` | `--radius-control` | The one control radius: buttons, fields (input, select, date, textarea), the par stepper cells and their buttons, the Map control. Replaces `rounded-sm` (4px) and `rounded-md` (8px) |
 | `1rem` (16px) | `rounded-sheet` | `--radius-sheet` | Bottom sheets, **top corners only** (`rounded-t-sheet`). Replaces `rounded-t-2xl` |
-| `50%` | `rounded-full` | none | Circular game controls (the 64px Decrement, Increment and Advance buttons) and the History filter chips, **until stage 6** rebuilds the chips as pills with a picker sheet. Nothing else uses it, apart from the sheet handle and the filled header action pill (Scorecard Finish) |
+| `50%` | `rounded-full` | none | Circular game controls (the 64px Decrement, Increment and Advance buttons) and the History filter pills (stage 6). Nothing else uses it, apart from the sheet handle and the filled header action pill (Scorecard Finish) |
 | `44px` | *(CSS only)* | none | Phone frame on desktop |
 
 `rounded-sm` and `rounded-md` are no longer used for controls. None remain in `src/**/*.jsx` (History's record cards are `Card`, stage 5). The header action is on the tokens: its text form is `rounded-control`, and its filled pill is `rounded-full` (see "Header action"). `rounded-lg` (12px) is defined but unused.
 
-Rule: **buttons, fields and cards all take `rounded-control`. Sheets take `rounded-t-sheet`. `rounded-full` is for circular game controls, filter chips and the filled header action pill only.**
+Rule: **buttons, fields and cards all take `rounded-control`. Sheets take `rounded-t-sheet`. `rounded-full` is for circular game controls, the History filter pills and the filled header action pill only.**
 
 ---
 
@@ -381,7 +380,7 @@ Disabled:     bg-disabled-surface border-border text-disabled-text
 
 **Disabled.** Buttons, fields and the par stepper buttons use `disabled-surface` and `disabled-text` (`#E8E1D6` and `#D9D0C4`), not `opacity-40`. The pair is about 1.17:1, far below 4.5:1 **by design**: disabled states are exempt from the contrast rule (see "Sunlight contrast"). A disabled Secondary or Text button has no fill and takes `text-disabled-text` for its label (and its edge, for Secondary). `cursor-not-allowed` is set on all of them. **Circular game controls keep `opacity-25`** (Decrement and Advance): they are physical controls the player is about to need again, and a light fade reads as "not reachable right now".
 
-**Focus-visible.** Every button, field and control uses a solid 2px accent ring: `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent`. Buttons add `ring-offset-2 ring-offset-bg` so the ring sits clear of the border. Fields use `focus:` rather than `focus-visible:` because a text field should show focus on tap too, and add the accent edge. `:focus-visible` on buttons only fires for keyboard, switch and assistive-tech navigation, never a touch tap, so it is invisible in normal use on this touch-only product. The old 40% ring (`ring-accent/40`) is retired. The header's back button and `HeaderAction` use the solid ring. The remaining `ring-accent/40` uses (History's chips and player-name toggle, and the Scorecard score-cell inset rings) are on the control guard's allow-list and move in stages 6 and 7.
+**Focus-visible.** Every button, field and control uses a solid 2px accent ring: `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent`. Buttons add `ring-offset-2 ring-offset-bg` so the ring sits clear of the border. Fields use `focus:` rather than `focus-visible:` because a text field should show focus on tap too, and add the accent edge. `:focus-visible` on buttons only fires for keyboard, switch and assistive-tech navigation, never a touch tap, so it is invisible in normal use on this touch-only product. The old 40% ring (`ring-accent/40`) is retired. The header's back button and `HeaderAction` use the solid ring. The only remaining `ring-accent/40` use (the Scorecard score-cell inset rings) is on the control guard's allow-list and moves in stage 7.
 
 **No shadow on buttons or sheets.** `shadow-btn` and the sheet `shadow-card` are gone. The one shadow, `shadow-subtle`, is for record cards only.
 
@@ -490,28 +489,68 @@ Reached from a "My courses" row in Settings' Account section (full-width tap-thr
 
 **Hole-count toggle (9 / 18):** two equal buttons, `flex gap-2`, each `flex-1 h-11 rounded-md border font-ui text-sm`. Active = `border-accent text-accent`; inactive = `border-border text-text`; `active:bg-bg-card`. Labelled "9 holes" / "18 holes", default 9. Single-select: `role="radiogroup"` on the wrapper, `role="radio"` + `aria-checked` on each button. Caption below in the standard form-caption style (`font-ui text-xs text-muted mt-1.5 pl-1`): "Holes — can't be changed later". Same segmented-control language as the old "set every hole to" row it partly replaces.
 
-This toggle's **outline** active state is a deliberate choice, not a leftover — see "Selection-state language: outline vs fill" below, which compares it directly with the filter chips' fill active state.
+This toggle's **outline** active state is a deliberate choice, not a leftover — see "Selection-state language: outline vs fill" below, which compares it directly with the filter pills' fill applied state.
 
 **Par stepper row (two-column list):** `grid grid-cols-2 gap-x-3 gap-y-1.5`, one cell per hole. Each cell: `flex items-center justify-between rounded-md border border-border bg-bg-card pl-3 pr-0.5`, holding a `Hole {n}` label (`font-ui text-sm text-text`) and a `−  {par}  +` stepper. Stepper buttons are `w-11 h-11` (44px), `rounded-md`, `font-ui text-lg`, `active:bg-border`; the par value between them is `font-ui text-sm w-4 text-center tabular-nums`. At the 2–7 band edge the relevant button is `disabled` + `opacity-40` and does nothing (no wraparound). Each row carries `role="group" aria-label="Hole {n}, par {par}"`; the buttons carry `aria-label="Decrease/Increase par for hole {n}"`. Heading above the grid: the standard micro-label (`font-ui text-xs tracking-[0.12em] uppercase text-muted`), "Par for each hole". No "set every hole to N" control, no tap-to-cycle grid.
 
-### Filter chips (History)
-```
-rounded-full border py-1.5 px-3 font-ui text-xs font-medium
-active:   bg-accent border-accent text-bg
-inactive: border-border text-muted
-```
-Used for History's course-filter row (shown when 2+ distinct courses exist) and player-filter row (shown when 2+ distinct players exist), both `role="group"`, horizontally scrollable (`overflow-x-auto no-scrollbar`), with an "All" / "All players" chip first. Tapping a player's name inline in the round list toggles the same filter state — the chip and the inline name are two entry points into one selection and must always agree on which is "on."
+### Filter pills (History)
 
-**Not documented until this pass**, despite shipping live with #51/#61. No visual change — this closes the doc gap.
+`src/pages/History.jsx` (the local `FilterPill`), from Figma "Chip" (`c09-chip.png`, `05`, `17`, `18`, `20`). Two pills, **Course** then **Player**, replace the old chip rows (CHANGELOG reversal 6). Each opens a `FilterSheet` (below). The course pill shows only for a signed-in user with 2+ courses, the player pill for 2+ players (signed in or not), and neither while the list loads. A signed-in user with exactly one course still sees that course named as a `type-label-caps text-accent` label, and a signed-out visitor still sees the "Stored on your device" disclaimer. The pills sit in one wrapping row (`flex flex-wrap gap-related px-page`), so two long values drop to a second line at 320px rather than scroll.
+
+```
+Shape:    inline-flex max-w-full rounded-full border min-h-11   (44px target)
+Default:  border-field text-text, "Course" or "Player" plus a small caret
+          hover bg-accent-tint
+Open:     border-field bg-accent-tint text-text  (the sheet is up; aria-expanded="true")
+Applied:  border-accent bg-accent text-on-accent, the chosen value (truncated) plus a cross
+          hover bg-accent-hover
+Focus:    ring-2 ring-accent ring-offset-2 ring-offset-bg on the whole pill (has-[:focus-visible])
+```
+
+- **Two buttons when applied.** The main button always opens the sheet (`aria-haspopup="dialog"`, `aria-expanded`). Its accessible name is the visible label at rest ("Course") and `Course: {value}` once applied, so a truncated value is still read in full. The cross is its own 44px button, named "Clear course filter" or "Clear player filter", and clears just that filter without opening the sheet. After a clear, focus stays on the pill's main button.
+- **Edge.** `border-field`, not `border-border`: `c09-chip.png` shows a clearly firmer edge than a card hairline, and the pill is a control with no other boundary.
+- **Open has no PNG.** The tint is the Figma hover look, reused so the pill reads as "pressed in" while its sheet is up.
+- **One selection, two entry points.** The inline player-name toggles on the round cards, the player pill and the player sheet all read and write the same `filter` state, so they always agree. Single choice per pill, "All ..." clears, and the two pills combine (course AND player).
+- **The star.** The signed-in player keeps the `PlayerStar` on their applied pill and on their row in the sheet.
+
+**Applied state** (`18-history-filters-applied.png`). When any filter is applied and at least one round matches, a row under the pills shows `Showing {n} of {m} rounds` (`type-small text-muted`, `role="status"`, so a change is announced politely; "round" when m is 1) with a **Clear filters** Text button at the right, which clears both filters and puts focus on the first pill. `m` is every round loaded, `n` the rounds on screen. The row is not rendered when no filter is applied.
+
+**No-match state** (`20-history-no-match.png`). When the filters leave no rounds, the status row is replaced by an `EmptyState` (`role="status"`): "No rounds found", then "{name} hasn't played a recorded round." for a player filter, "{name} hasn't played a recorded round at {course}." for a course and player together (a pairing the signed-in player can now reach), and a Text action that clears every filter ("Show all rounds", or "Clear filters" for the pairing). "No rounds yet" is unchanged and only shows with no filter applied.
+
+### FilterSheet (`src/components/FilterSheet.jsx`)
+
+The picker behind each pill (`17-history-picker-open.png`, rows from List row `c15`). A bottom sheet in the shared pattern, with the focus trap added.
+
+```
+<FilterSheet title allLabel allCount options selected onSelect onClose />
+  options: [{ value, label, count, suffix? }]    selected: a value, or null for "All"
+  onSelect(value | null)    onClose()            mount it to open it, unmount to close
+Sheet:   role="dialog" aria-modal="true" aria-labelledby={title id} (on the sheet, not the backdrop)
+         bg-bg rounded-t-sheet w-full max-w-[430px] max-h-[85vh] px-page pt-3, no shadow
+Handle:  w-10 h-1 bg-border rounded-full mx-auto mb-group
+Title:   h2 type-title text-text
+Rows:    role="radiogroup" > button role="radio" aria-checked, w-full min-h-11 py-group (56px)
+         border-b border-border type-body, label left, "{n} rounds" (text-muted) and a check at the right
+Chosen:  text-accent label, a 20px check, no tint
+Press:   active:bg-accent-tint (muted count on 8% is 4.57:1)
+Focus:   ring-2 ring-inset ring-accent
+```
+
+- **Order and counts.** The "All ..." row first ("All courses", "All players"), then one row per option. Each count is what choosing the row would leave on screen, so it reflects the **other** active filter (a course's count respects the player filter and the reverse). A count can be 0: the row still works and leads to the no-match state. Singular "1 round".
+- **Choosing applies and closes.** There is no Done button. Tapping the chosen row again keeps it and closes.
+- **Keyboard.** Roving tabindex: Tab reaches the chosen row (the "All ..." row when nothing is chosen). Arrow keys, Home and End move focus without choosing (a bare radiogroup would choose on arrow, but choosing closes this sheet). Enter or Space chooses.
+- **Focus trap.** While the sheet is open Tab and Shift+Tab wrap inside it, and a Tab with focus outside the sheet pulls it back in. Open, close and focus return follow "Bottom sheet / confirmation modal" below.
+- **Long names** wrap in the row (`min-w-0 break-words`); the count never shrinks.
 
 ### Selection-state language: outline vs fill (a decision, not an accident)
 
-Two different "this is currently selected" idioms exist in the app side by side. This pass makes the split a named decision rather than something that happened by accident:
+Two different "this is currently selected" idioms exist in the app side by side:
 
-- **Segmented control** (9/18 hole-count toggle): active = **outline** (`border-accent text-accent`), inactive = `border-border text-text`. This is a fixed, mutually-exclusive *setting* chosen once while building something (a course) — closer to a radio button than a switch. Quiet, because it's describing a configuration, not an in-the-moment action.
-- **Filter chip** (History course/player row): active = **fill** (`bg-accent border-accent text-bg`), inactive = `border-border text-muted`. This is a transient, removable *criterion* layered over a list you're currently looking at — closer to a toggle switch. Bold, because a filled chip means "this is live and shaping what's on screen right now," and that should be unmissable at a glance.
+- **Segmented control** (9/18 hole-count toggle): active = **outline** (`border-accent text-accent`), inactive = `border-border text-text`. This is a fixed, mutually-exclusive *setting* chosen once while building something (a course) - closer to a radio button than a switch. Quiet, because it describes a configuration, not an in-the-moment action.
+- **Filter pill** (History): applied = **fill** (`bg-accent border-accent text-on-accent`, with the value and a cross), at rest = `border-field text-text` with a caret. This is a transient, removable *criterion* layered over a list you are looking at - closer to a toggle switch. Bold, because a filled pill means "this is live and shaping what is on screen right now", and that should be unmissable at a glance.
+- **Inside the picker sheet**, the chosen row is **accent text plus a check, no tint**: a quiet marker, because the sheet is about to close and the pill carries the loud state.
 
-The split tracks a distinction the app already makes on radius (`rounded-md` for anchored controls, `rounded-full` for chips — Outbuild design language §5): an anchored control you set once stays quiet with an outline; a chip actively narrowing your view earns the bolder fill. Keep the two languages apart — don't reach for fill on a future segmented control, or outline on a future filter chip, without a reason as specific as this one.
+The split tracks a distinction the app already makes on radius (`rounded-control` for anchored controls, `rounded-full` for pills - Outbuild design language section 5): an anchored control you set once stays quiet with an outline; a pill actively narrowing your view earns the bolder fill. Keep the two languages apart - don't reach for fill on a future segmented control, or outline on a future filter pill, without a reason as specific as this one.
 
 ### Bottom sheet / confirmation modal
 ```
@@ -531,9 +570,10 @@ Subtext:   font-ui text-xs text-muted tracking-wide
 - **Escape dismisses** — the same effect adds a `keydown` listener while the sheet is open (removed on cleanup) that closes it on `Escape`, equivalent to tapping the non-destructive action. Skip this while a destructive action is genuinely in flight (Settings' sheet checks its own `deleting` flag) so an in-progress delete can't be abandoned mid-request; a sheet with no async gap doesn't need the guard.
 - **Backdrop click dismisses** — `onClick` on the backdrop `div` closes the sheet; the sheet itself carries `onClick={e => e.stopPropagation()}` so a tap inside it doesn't bubble up and immediately close it.
 - **Focus returns to the opener on close** - the open effect captures `document.activeElement` before moving focus in and restores it in its cleanup. The focus effect is keyed on the open state only (never on a `deleting`/`finishing` flag, which would re-pull focus mid-action); the Escape listener is a second effect that also depends on that flag and is skipped while an action is in flight.
+- **Focus trap (FilterSheet only, so far).** Tab and Shift+Tab wrap inside the sheet, and a Tab with focus outside pulls it back in. The older confirmation sheets below do not trap yet; `FilterSheet` is the reference implementation if they are brought up to it.
 - Close logic lives in one named function (`closeDelete`, `closeDeleteConfirm`, etc.) reused by the backdrop click, the Escape handler, and the sheet's own Cancel/dismiss button, so the three paths can never drift apart.
 
-Shipped in `Settings.jsx` (delete-account), `Summary.jsx` (delete-round, moved from History; brought up to parity in #80), `Scorecard.jsx` (Finish/Save sheet), `CourseEdit.jsx` (delete-course sheet) and `Setup.jsx` (the edit-mode course-switch confirmation, added when BACKLOG #56 was reversed - no async gap, so no in-flight guard needed on the Escape handler). `CourseMapModal.jsx` is a centred modal, not a sheet, but follows the same rules: `role="dialog"`, `aria-labelledby` its course heading, focus on the Close button, Escape and backdrop dismiss, focus returned to the Map control (it reads `onClose` through a ref so a parent re-render never re-grabs focus).
+Shipped in `Settings.jsx` (delete-account), `Summary.jsx` (delete-round, moved from History; brought up to parity in #80), `Scorecard.jsx` (Finish/Save sheet), `CourseEdit.jsx` (delete-course sheet), `FilterSheet.jsx` (History's course and player pickers, stage 6: `rounded-t-sheet`, `px-page`, no shadow, with the focus trap) and `Setup.jsx` (the edit-mode course-switch confirmation, added when BACKLOG #56 was reversed - no async gap, so no in-flight guard needed on the Escape handler). `CourseMapModal.jsx` is a centred modal, not a sheet, but follows the same rules: `role="dialog"`, `aria-labelledby` its course heading, focus on the Close button, Escape and backdrop dismiss, focus returned to the Map control (it reads `onClose` through a ref so a parent re-render never re-grabs focus).
 
 **A card that is tappable and also holds tappable parts** (History rounds) is never a button containing buttons. This is the interactive form of `Card` (see "Card" below): the card is a `div`; the "open this round" action is a real `<button>` stretched behind the content (`absolute inset-0`), the content sits above it with `pointer-events-none`, and each inner control (a player-name toggle with `aria-pressed`) is its own real button with `pointer-events-auto` (the exported `CARD_INNER_CONTROL`).
 
@@ -555,7 +595,7 @@ A small status label: `inline-block rounded-full bg-accent-tint px-3 py-1 type-c
 
 ### EmptyState (`src/components/EmptyState.jsx`)
 
-A centred block: `title` (`type-title text-text`, a `p` by default, `titleAs` for a heading), optional `body` (`type-body text-muted`, 8px above), and an optional `action` or children (24px above, usually a Button). `role` passes through: History's "could not load" and "signed out" states use `role="alert"`, and a load failure is never shown as an empty state. Used for History "No rounds yet" and the load-failure block. Stage 6 reuses it for the no-match state. Setup's course-area and Courses' dashed boxes are compact inline notices without a title and stay as they are (stage 8 may revisit).
+A centred block: `title` (`type-title text-text`, a `p` by default, `titleAs` for a heading), optional `body` (`type-body text-muted`, 8px above), and an optional `action` or children (24px above, usually a Button). `role` passes through: History's "could not load" and "signed out" states use `role="alert"`, and a load failure is never shown as an empty state. Used for History "No rounds yet" and the load-failure block. History's no-match state also uses it ("No rounds found", with `role="status"`). Setup's course-area and Courses' dashed boxes are compact inline notices without a title and stay as they are (stage 8 may revisit).
 
 ### Scorecard table
 ```
@@ -720,7 +760,7 @@ Inline SVGs throughout — no icon library dependency.
 - Standard `strokeWidth`: `1.5` (general UI), `2` (close/X), `2.5` (advance chevron)
 - Sizes: `w-2.5 h-2.5` (external link ↗), `w-4 h-4` (close ✕), `w-6 h-6` (map, chevron)
 
-**Signed-in identity star (`src/components/PlayerStar.jsx`)** — a small star badge trailing a player's name wherever players are listed (live Scorecard, Summary, History player rows and filter chips) when that name matches the signed-in user's own `users.name`. Stroke-based like the rest of the set, `w-2.5 h-2.5` — the same size tier as the external-link ↗ annotation, since the role is identical (a small glyph beside text, not a standalone control). Deliberately carries no colour of its own — it renders in `currentColor` and inherits whatever colour its surrounding name already has (muted header, accent winner name, text-on-accent filter chip), so it never introduces a competing colour rule or implies the signed-in player outranks guests in the round. Never shown on the share image — that's a static export for a recipient who may not be signed in.
+**Signed-in identity star (`src/components/PlayerStar.jsx`)** — a small star badge trailing a player's name wherever players are listed (live Scorecard, Summary, History player rows, the applied player pill and the player picker) when that name matches the signed-in user's own `users.name`. Stroke-based like the rest of the set, `w-2.5 h-2.5` — the same size tier as the external-link ↗ annotation, since the role is identical (a small glyph beside text, not a standalone control). Deliberately carries no colour of its own — it renders in `currentColor` and inherits whatever colour its surrounding name already has (muted header, accent winner name, on-accent applied pill), so it never introduces a competing colour rule or implies the signed-in player outranks guests in the round. Never shown on the share image — that's a static export for a recipient who may not be signed in.
 
 ---
 
@@ -731,7 +771,7 @@ Inline SVGs throughout — no icon library dependency.
 - Score-vs-par (`under-par`, `over-par`) is the single deliberate exception to the one-colour rule — two accents, fenced to vs-par **deltas only**, never touching chrome or interaction, within the Outbuild "no more than two accents in precisely defined contexts" allowance. It is a context-rooted decision: golfers read a card in green/level/red
 - Two typographic registers (editorial Cormorant Garamond + micro Inter) are clearly distinct
 - Flatness maintained — shadows only on floating elements (modals, primary CTA)
-- Two radius families: `rounded-md` for controls, `rounded-full` for circular controls and filter chips
+- Two radius families: `rounded-md` for controls, `rounded-full` for circular controls and filter pills
 - Phone-frame desktop wrapper correctly implemented per Outbuild mobile-only pattern
 - Caveat font used exclusively in desktop wrapper note — never inside the app
 - Outbuild attribution mark present on home screen, links to outbuild.uk
@@ -746,6 +786,6 @@ Inline SVGs throughout — no icon library dependency.
 
 **Field edges (#108, decided 19 September 2026).** Intended state: every text input, textarea and select uses `border-field` (`#827970`, about 3.7:1 on `bg-card`, computed), fixing the 1.39:1 resting edge that sat below WCAG 1.4.11's 3:1 for a control boundary. The decision was scoped to form fields only, so hairlines and dividers did not move. The token, its Tailwind alias and this documentation landed on 21 September 2026; the classes on the inputs are applied in the same branch (`fix/input-border-contrast`).
 
-**Known gap, accepted (scoped out 19 September 2026).** Non-field controls still draw their edge in `border-border` (1.39:1): the outline buttons (Full CTA outline, paired Dialog "Cancel", Setup's small Cancel), the inactive 9/18 toggle, inactive filter chips and the par stepper cells. Their text labels carry the affordance (`text` / `muted`, 4.5:1 or better), so a golfer can still find and read them, but the boundary itself is below 3:1. Revisit as its own decision. The lever would be `border-field` on outline buttons, which darkens every secondary button on Home and the Bruntsfield page, so it is a visible change to weigh, not a token tweak.
+**Known gap, accepted (scoped out 19 September 2026).** Non-field controls still draw their edge in `border-border` (1.39:1): the outline buttons (Full CTA outline, paired Dialog "Cancel", Setup's small Cancel), the inactive 9/18 toggle, and the par stepper cells. Their text labels carry the affordance (`text` / `muted`, 4.5:1 or better), so a golfer can still find and read them, but the boundary itself is below 3:1. Revisit as its own decision. The lever would be `border-field` on outline buttons, which darkens every secondary button on Home and the Bruntsfield page, so it is a visible change to weigh, not a token tweak.
 
 **No other outstanding divergences.** The four items found in the #44 button-size pass are all fixed in code: dialog and submit buttons use `disabled:opacity-40`, the History "+ Add" header action matched the Header action tier (it is now plain accent text), and every button carries the `focus-visible` ring.

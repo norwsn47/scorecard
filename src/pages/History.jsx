@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Button from '../components/Button.jsx'
 import Card, { CARD_INNER_CONTROL } from '../components/Card.jsx'
 import EmptyState from '../components/EmptyState.jsx'
+import FilterSheet from '../components/FilterSheet.jsx'
 import Tag from '../components/Tag.jsx'
 import PageHeader, { HeaderAction } from '../components/PageHeader.jsx'
 import ParDelta from '../components/ParDelta.jsx'
@@ -28,6 +29,64 @@ function readPending(userId) {
   return list
 }
 
+// One filter pill (Figma Chip, c09-chip.png): "Course" or "Player" with a small
+// caret at rest, the chosen value with a clear cross once applied. The main
+// button always opens the picker sheet (aria-haspopup, aria-expanded); the cross
+// is its own button so clearing never needs the sheet. 44px tall, truncates a
+// long value (the full value is in the accessible name).
+const PILL_BASE =
+  'inline-flex max-w-full items-stretch rounded-full border min-h-11 transition-colors ' +
+  'has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent ' +
+  'has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-offset-bg'
+const PILL_DEFAULT = 'border-field text-text hover:bg-accent-tint'
+const PILL_OPEN = 'border-field bg-accent-tint text-text'
+const PILL_APPLIED = 'border-accent bg-accent text-on-accent hover:bg-accent-hover'
+
+function FilterPill({ label, value, star, open, onOpen, onClear, pillRef }) {
+  const applied = value !== null
+  const state = applied ? PILL_APPLIED : open ? PILL_OPEN : PILL_DEFAULT
+  return (
+    <span className={`${PILL_BASE} ${state}`}>
+      <button
+        ref={pillRef}
+        type="button"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-label={applied ? `${label}: ${value}` : undefined}
+        // Focus first, so the sheet can hand focus back here even where a tap
+        // does not focus a button (Safari).
+        onClick={e => { e.currentTarget.focus(); onOpen() }}
+        className={[
+          'inline-flex min-w-0 items-center gap-related min-h-11 rounded-full type-strong focus:outline-none',
+          applied ? 'pl-4 pr-2' : 'px-4',
+        ].join(' ')}
+      >
+        <span className="truncate">{applied ? value : label}</span>
+        {applied && star}
+        {!applied && (
+          <svg viewBox="0 0 10 10" aria-hidden="true" className="w-2.5 h-2.5 shrink-0" fill="currentColor">
+            <path d="M1.5 3h7L5 7.5z" />
+          </svg>
+        )}
+      </button>
+      {applied && (
+        <button
+          type="button"
+          aria-label={`Clear ${label.toLowerCase()} filter`}
+          onClick={onClear}
+          className="inline-flex w-11 -ml-2 shrink-0 items-center justify-center rounded-full focus:outline-none"
+        >
+          <svg viewBox="0 0 10 10" aria-hidden="true" className="w-2.5 h-2.5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+            <path d="M2 2l6 6M8 2L2 8" />
+          </svg>
+        </button>
+      )}
+    </span>
+  )
+}
+
+const roundsWord = n => (n === 1 ? 'round' : 'rounds')
+
 export default function History({ navigate }) {
   const { user } = useAuth()
 
@@ -39,6 +98,12 @@ export default function History({ navigate }) {
   const [loading, setLoading]         = useState(!!user)
   const [filter, setFilter]           = useState(null)
   const [courseFilter, setCourseFilter] = useState(null)
+  // Which picker sheet is open: null | 'course' | 'player'.
+  const [sheet, setSheet]           = useState(null)
+  const coursePillRef = useRef(null)
+  const playerPillRef = useRef(null)
+  const pillsRef = useRef(null)
+  const refocusPills = useRef(false)
   // Load state for the signed-in list: null | 'failed' | 'signedOut'. A failed
   // load must not read as "No rounds yet" (#99). `skipped` counts stored rounds
   // that couldn't be read, so one bad row no longer blanks the whole list.
@@ -115,9 +180,42 @@ export default function History({ navigate }) {
   const players = [...new Set(allGames.flatMap(g => g.players ?? []))]
     .sort((a, b) => playerRoundCounts[b] - playerRoundCounts[a] || a.localeCompare(b))
 
-  const displayed = allGames
-    .filter(g => !courseFilter || g.courseName === courseFilter)
-    .filter(g => !filter || g.players?.includes(filter))
+  const matchesCourse = g => !courseFilter || g.courseName === courseFilter
+  const matchesPlayer = g => !filter || g.players?.includes(filter)
+  const displayed = allGames.filter(matchesCourse).filter(matchesPlayer)
+  const anyFilter = Boolean(filter || courseFilter)
+  // The status line is for a filtered list that still has rounds in it; an empty
+  // result gets the no-match block instead.
+  const showStatus = anyFilter && displayed.length > 0
+
+  // Picker counts show what choosing a row would leave on screen, so each count
+  // reflects the other filter (the course counts respect the player filter and
+  // the player counts respect the course filter).
+  const courseOptions = courses.map(name => ({
+    value: name,
+    label: name,
+    count: allGames.filter(g => g.courseName === name && matchesPlayer(g)).length,
+  }))
+  const playerOptions = players.map(name => ({
+    value: name,
+    label: name,
+    count: allGames.filter(g => g.players?.includes(name) && matchesCourse(g)).length,
+    suffix: isSignedInPlayer(name, user?.name) ? <PlayerStar className="ml-1" /> : null,
+  }))
+
+  function clearFilters() {
+    refocusPills.current = true
+    setFilter(null)
+    setCourseFilter(null)
+  }
+
+  // Clearing from the status line or the no-match block removes the button that
+  // had focus, so hand focus to the first pill (if there is one) rather than lose it.
+  useEffect(() => {
+    if (!refocusPills.current) return
+    refocusPills.current = false
+    pillsRef.current?.querySelector('button')?.focus()
+  }, [filter, courseFilter])
 
   function toggleFilter(name) {
     setFilter(prev => (prev === name ? null : name))
@@ -137,81 +235,61 @@ export default function History({ navigate }) {
         ) : null}
       />
 
-      {/* Course label (1 course) or course filter chips (2+ courses) — logged-in only */}
+      {/* Course label - one course, logged-in only. With 2+ courses the course pill below takes over. */}
       {user && !loading && courses.length === 1 && (
-        <div className="px-5 pt-4 pb-1 shrink-0">
+        <div className="px-page pt-4 pb-1 shrink-0">
           <p className="type-label-caps text-accent">{courses[0]}</p>
         </div>
       )}
-      {user && !loading && courses.length > 1 && (
-        <div role="group" aria-label="Filter by course" className="px-5 pt-3 pb-1 shrink-0 flex gap-2 overflow-x-auto no-scrollbar">
-          <button
-            onClick={() => setCourseFilter(null)}
-            className={[
-              'shrink-0 inline-flex items-center py-1.5 px-3 rounded-full border type-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
-              !courseFilter
-                ? 'bg-accent border-accent text-bg'
-                : 'border-border text-muted',
-            ].join(' ')}
-          >
-            All
-          </button>
-          {courses.map(course => (
-            <button
-              key={course}
-              onClick={() => setCourseFilter(prev => prev === course ? null : course)}
-              className={[
-                'shrink-0 inline-flex items-center py-1.5 px-3 rounded-full border type-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
-                courseFilter === course
-                  ? 'bg-accent border-accent text-bg'
-                  : 'border-border text-muted',
-              ].join(' ')}
-            >
-              {course}
-            </button>
-          ))}
-        </div>
-      )}
 
-      {/* Disclaimer — logged-out only */}
+      {/* Disclaimer - logged-out only */}
       {!user && (
-        <div className="px-5 pt-4 pb-1 shrink-0">
+        <div className="px-page pt-4 pb-1 shrink-0">
           <p className="type-small text-muted">
             Stored on your device. Gone if you clear your browser.
           </p>
         </div>
       )}
 
-      {/* Player filter chips — mirrors the course row above; shown whenever
-          two or more distinct players appear across the saved rounds. */}
-      {!loading && players.length > 1 && (
-        <div role="group" aria-label="Filter by player" className="px-5 pt-3 pb-1 shrink-0 flex gap-2 overflow-x-auto no-scrollbar">
-          <button
-            onClick={() => setFilter(null)}
-            className={[
-              'shrink-0 inline-flex items-center py-1.5 px-3 rounded-full border type-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
-              !filter
-                ? 'bg-accent border-accent text-bg'
-                : 'border-border text-muted',
-            ].join(' ')}
-          >
-            All players
-          </button>
-          {players.map(name => (
-            <button
-              key={name}
-              onClick={() => toggleFilter(name)}
-              className={[
-                'shrink-0 inline-flex items-center gap-1 py-1.5 px-3 rounded-full border type-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
-                filter === name
-                  ? 'bg-accent border-accent text-bg'
-                  : 'border-border text-muted',
-              ].join(' ')}
-            >
-              {name}
-              {isSignedInPlayer(name, user?.name) && <PlayerStar />}
-            </button>
-          ))}
+      {/* Filter pills: the course pill needs a signed-in user with 2+ courses, the
+          player pill needs 2+ players. Each opens a picker sheet; the inline
+          player names on the cards drive the same `filter` state. */}
+      {!loading && ((user && courses.length > 1) || players.length > 1) && (
+        <div ref={pillsRef} className="px-page pt-3 pb-1 shrink-0 flex flex-wrap gap-related">
+          {user && courses.length > 1 && (
+            <FilterPill
+              label="Course"
+              value={courseFilter}
+              open={sheet === 'course'}
+              pillRef={coursePillRef}
+              onOpen={() => setSheet('course')}
+              onClear={() => { coursePillRef.current?.focus(); setCourseFilter(null) }}
+            />
+          )}
+          {players.length > 1 && (
+            <FilterPill
+              label="Player"
+              value={filter}
+              star={isSignedInPlayer(filter, user?.name) ? <PlayerStar /> : null}
+              open={sheet === 'player'}
+              pillRef={playerPillRef}
+              onOpen={() => setSheet('player')}
+              onClear={() => { playerPillRef.current?.focus(); setFilter(null) }}
+            />
+          )}
+        </div>
+      )}
+
+      {/* Applied filters: how many rounds are showing, and one way to clear them
+          all. A polite status, so a change to the count is announced. */}
+      {!loading && showStatus && (
+        <div className="px-page pt-related shrink-0 flex items-center justify-between gap-group">
+          <p role="status" className="type-small text-muted">
+            Showing {displayed.length} of {allGames.length} {roundsWord(allGames.length)}
+          </p>
+          <Button variant="text" size="medium" className="shrink-0" onClick={clearFilters}>
+            Clear filters
+          </Button>
         </div>
       )}
 
@@ -251,21 +329,23 @@ export default function History({ navigate }) {
 
         {!loading && !loadError && displayed.length === 0 && (
           <div className="text-center pt-16">
-            {filter ? (
-              <>
-                <p className="type-title text-text mb-2">No rounds found</p>
-                <p className="type-body text-muted">
-                  {filter} hasn't played a recorded round.
-                </p>
-                <Button
-                  variant="text"
-                  size="medium"
-                  className="mt-4"
-                  onClick={() => setFilter(null)}
-                >
-                  Show all rounds
-                </Button>
-              </>
+            {anyFilter ? (
+              <EmptyState
+                role="status"
+                title="No rounds found"
+                body={
+                  filter && courseFilter
+                    ? `${filter} hasn't played a recorded round at ${courseFilter}.`
+                    : filter
+                      ? `${filter} hasn't played a recorded round.`
+                      : `${courseFilter} has no recorded rounds.`
+                }
+                action={
+                  <Button variant="text" size="medium" onClick={clearFilters}>
+                    {filter && courseFilter ? 'Clear filters' : 'Show all rounds'}
+                  </Button>
+                }
+              />
             ) : (
               <EmptyState
                 title="No rounds yet"
@@ -324,7 +404,7 @@ export default function History({ navigate }) {
                       type="button"
                       onClick={() => toggleFilter(name)}
                       aria-pressed={filter === name}
-                      className={`${CARD_INNER_CONTROL} min-w-0 break-words text-left rounded-control type-body text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40`}
+                      className={`${CARD_INNER_CONTROL} min-w-0 break-words text-left rounded-control type-body text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent`}
                     >
                       {name}
                       {isSignedInPlayer(name, user?.name) && <PlayerStar className="ml-0.5" />}
@@ -350,6 +430,29 @@ export default function History({ navigate }) {
         ))}
 
       </main>
+
+      {sheet === 'course' && (
+        <FilterSheet
+          title="Course"
+          allLabel="All courses"
+          allCount={allGames.filter(matchesPlayer).length}
+          options={courseOptions}
+          selected={courseFilter}
+          onSelect={setCourseFilter}
+          onClose={() => setSheet(null)}
+        />
+      )}
+      {sheet === 'player' && (
+        <FilterSheet
+          title="Player"
+          allLabel="All players"
+          allCount={allGames.filter(matchesCourse).length}
+          options={playerOptions}
+          selected={filter}
+          onSelect={setFilter}
+          onClose={() => setSheet(null)}
+        />
+      )}
 
     </div>
   )

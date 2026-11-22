@@ -233,27 +233,29 @@ describe('History - merging pending rounds with the saved list', () => {
     expect(openButtons()).toHaveLength(1)
   })
 
-  it('includes pending rounds\' players in the player filter chips, and filters on them', async () => {
+  it('includes pending rounds\' players in the player picker, and filters on them', async () => {
     const user = userEvent.setup()
     seed('p1', '2026-08-02T10:00:00.000Z', ['Ann', 'Cass'], { pendingFor: 'u1' })
     mockApi({ games: [dbRow('d1', '2026-08-01T10:00:00.000Z', ['Ann', 'Bo'])] })
     await renderHistory()
 
-    const chips = screen.getByRole('group', { name: 'Filter by player' })
-    expect(within(chips).getByRole('button', { name: /^Cass/ })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Player' }))
+    const sheet = screen.getByRole('dialog', { name: 'Player' })
+    expect(within(sheet).getByRole('radio', { name: /^Cass/ })).toBeInTheDocument()
 
-    await user.click(within(chips).getByRole('button', { name: /^Cass/ }))
+    await user.click(within(sheet).getByRole('radio', { name: /^Cass/ }))
     expect(openButtons()).toHaveLength(1)
     expect(openNames()[0]).toMatch(/not yet saved/)
   })
 
-  it('includes a pending round\'s course in the course filter', async () => {
+  it('includes a pending round\'s course in the course picker', async () => {
+    const user = userEvent.setup()
     seed('p1', '2026-08-02T10:00:00.000Z', ['Ann'], { pendingFor: 'u1', courseName: 'Elsewhere' })
     mockApi({ games: [dbRow('d1', '2026-08-01T10:00:00.000Z', ['Ann'], { course_name: 'Bruntsfield' })] })
     await renderHistory()
 
-    const chips = screen.getByRole('group', { name: 'Filter by course' })
-    expect(within(chips).getByRole('button', { name: 'Elsewhere' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Course' }))
+    expect(within(screen.getByRole('dialog', { name: 'Course' })).getByRole('radio', { name: /^Elsewhere/ })).toBeInTheDocument()
   })
 })
 

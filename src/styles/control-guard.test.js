@@ -23,13 +23,10 @@ const SRC = resolve(process.cwd(), 'src')
 const ALLOW = [
   // Stage 7: Scorecard score-cell inset rings (owner put them out of scope for stage 3).
   { file: 'src/pages/Scorecard.jsx', cls: 'ring-accent/40', count: 1, reason: 'stage 7: score-cell inset rings' },
-  // Stage 6 (History): inline player-name toggle, filter chips (4), record card open button.
-  { file: 'src/pages/History.jsx', cls: 'ring-accent/40', count: 5, reason: 'stage 6: filter chips (4), player-name toggle' },
   // Stage 4: px-5 and px-6 are not page padding in these places. Page edges use px-page.
   { file: 'src/components/Button.jsx', cls: 'px-6', count: 1, reason: 'inner padding of the large button' },
   { file: 'src/components/CourseMapModal.jsx', cls: 'px-5', count: 4, reason: 'map modal inner padding (modal, not a page)' },
   { file: 'src/components/CourseMapModal.lazy.jsx', cls: 'px-5', count: 2, reason: 'map modal inner padding (modal, not a page)' },
-  { file: 'src/pages/History.jsx', cls: 'px-5', count: 4, reason: 'stage 6: filter sheet inner padding' },
   { file: 'src/pages/Setup.jsx', cls: 'px-6', count: 1, reason: 'bottom sheet inner padding' },
   { file: 'src/pages/Summary.jsx', cls: 'px-6', count: 1, reason: 'bottom sheet inner padding' },
   { file: 'src/pages/Settings.jsx', cls: 'px-6', count: 1, reason: 'bottom sheet inner padding' },
