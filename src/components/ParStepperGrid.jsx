@@ -28,8 +28,10 @@ const STEP_BUTTON =
   'disabled:bg-disabled-surface disabled:text-disabled-text disabled:cursor-not-allowed'
 
 export default function ParStepperGrid({ pars, onStep }) {
+  // One column below 360px: at 320px two columns left no room for
+  // "Hole 18" beside its stepper, so the label wrapped (stage 8).
   return (
-    <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+    <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-x-3 gap-y-1.5">
       {pars.map((par, i) => {
         const atMin = par <= PAR_MIN
         const atMax = par >= PAR_MAX

@@ -61,7 +61,7 @@ export default function CourseMapModal({ onClose }) {
             {BRUNTSFIELD_COURSE_NAME}
           </p>
           <p className="type-label-caps text-muted mt-0.5">
-            {showRules ? 'Course Rules' : 'Winter Course Map'}
+            {showRules ? 'Course rules' : 'Winter course map'}
           </p>
           <button
             ref={closeButtonRef}
@@ -127,8 +127,14 @@ export default function CourseMapModal({ onClose }) {
             size="medium"
             className="-ml-4"
             onClick={() => setShowRules(r => !r)}
+            leadingIcon={showRules ? (
+              // Same chevron as the PageHeader back button (stage 8).
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 shrink-0" aria-hidden="true">
+                <path d="M15 6l-6 6 6 6" />
+              </svg>
+            ) : null}
           >
-            {showRules ? '← Back to map' : 'Course rules'}
+            {showRules ? 'Back to map' : 'Course rules'}
           </Button>
         </div>
       </div>
