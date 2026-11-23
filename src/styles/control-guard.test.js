@@ -25,11 +25,7 @@ const ALLOW = [
   { file: 'src/components/Button.jsx', cls: 'px-6', count: 1, reason: 'inner padding of the large button' },
   { file: 'src/components/CourseMapModal.jsx', cls: 'px-5', count: 4, reason: 'map modal inner padding (modal, not a page)' },
   { file: 'src/components/CourseMapModal.lazy.jsx', cls: 'px-5', count: 2, reason: 'map modal inner padding (modal, not a page)' },
-  { file: 'src/pages/Setup.jsx', cls: 'px-6', count: 1, reason: 'bottom sheet inner padding' },
-  { file: 'src/pages/Summary.jsx', cls: 'px-6', count: 1, reason: 'bottom sheet inner padding' },
-  { file: 'src/pages/Settings.jsx', cls: 'px-6', count: 1, reason: 'bottom sheet inner padding' },
-  { file: 'src/pages/Scorecard.jsx', cls: 'px-6', count: 1, reason: 'bottom sheet inner padding' },
-  { file: 'src/pages/CourseEdit.jsx', cls: 'px-6', count: 1, reason: 'bottom sheet inner padding' },
+  { file: 'src/components/ConfirmSheet.jsx', cls: 'px-6', count: 1, reason: 'confirmation sheet inner padding (one shared sheet)' },
 ]
 // Note: opacity-25 (circular game controls) is not matched, so needs no entry.
 

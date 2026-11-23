@@ -31,7 +31,7 @@ function LoadFailed({ onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-5"
+      className="absolute inset-0 z-50 flex items-center justify-center p-5"
       style={{ background: 'var(--overlay-modal)' }}
       onClick={onClose}
     >
@@ -43,7 +43,7 @@ function LoadFailed({ onClose }) {
         onClick={e => e.stopPropagation()}
       >
         <div className="relative px-5 py-4 border-b border-border">
-          <p id="course-map-failed-heading" className="type-title text-text">
+          <p id="course-map-failed-heading" className="type-title text-text pr-9">
             {BRUNTSFIELD_COURSE_NAME}
           </p>
           <button

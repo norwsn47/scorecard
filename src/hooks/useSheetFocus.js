@@ -8,21 +8,24 @@ import { useEffect, useRef } from 'react'
 // unmount it to close it. `onClose` is read through a ref, so a parent
 // re-render with a new function never re-runs the open effect.
 //
-// Shared by FilterSheet and FilterMenu.
+// `returnFocusRef` (optional) names the element to hand focus back to, for
+// openers Safari does not focus on tap; otherwise it is whatever had focus.
+//
+// Shared by FilterSheet, FilterMenu and ConfirmSheet.
 
 const FOCUSABLE = [
   'button:not([disabled])', '[href]', 'input:not([disabled])', 'select:not([disabled])',
   'textarea:not([disabled])', '[tabindex]',
 ].map(s => `${s}:not([tabindex="-1"])`).join(', ')
 
-export default function useSheetFocus(sheetRef, onClose, initialFocus) {
+export default function useSheetFocus(sheetRef, onClose, initialFocus, returnFocusRef) {
   const onCloseRef = useRef(onClose)
   onCloseRef.current = onClose
   const initialRef = useRef(initialFocus)
   initialRef.current = initialFocus
 
   useEffect(() => {
-    const opener = document.activeElement
+    const opener = returnFocusRef?.current ?? document.activeElement
     const target = initialRef.current?.()
     if (target) target.focus()
     else sheetRef.current?.focus()

@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import BottomActionBar from '../components/BottomActionBar.jsx'
 import Button from '../components/Button.jsx'
+import ConfirmSheet from '../components/ConfirmSheet.jsx'
 import { Textarea } from '../components/Field.jsx'
 import { MAX_HOLES } from '../constants.js'
 import { track } from '../utils/analytics.js'
@@ -111,23 +112,6 @@ export default function Summary({ navigate, params }) {
     setConfirmDelete(false)
   }
 
-  useEffect(() => {
-    if (!confirmDelete) return
-    const opener = deleteLinkRef.current
-    cancelButtonRef.current?.focus()
-    return () => opener?.focus?.()
-  }, [confirmDelete])
-  useEffect(() => {
-    if (!confirmDelete || deleting) return
-    function onKey(e) {
-      if (e.key === 'Escape') {
-        setDeleteError(null)
-        setConfirmDelete(false)
-      }
-    }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [confirmDelete, deleting])
 
   // Leaving by any route other than Keep or a successful save (the back
   // gesture, an unmount for any reason): release the hold and, if this screen
@@ -435,7 +419,7 @@ export default function Summary({ navigate, params }) {
   }
 
   return (
-    <div className="h-full bg-bg flex flex-col">
+    <div className="relative h-full bg-bg flex flex-col">
 
       {/* Header right slot: an "Edit round" pencil icon on both flows (when the
           round can be edited). Editing a finished round is an occasional fix,
@@ -839,20 +823,13 @@ export default function Summary({ navigate, params }) {
           autofocus on Cancel, Escape and backdrop dismiss (DESIGN.md "Dialog
           semantics"). Locked while the delete is in flight. */}
       {confirmDelete && canDelete && (
-        <div
-          className="fixed inset-0 flex items-end justify-center z-50"
-          style={{ background: 'var(--overlay-backdrop)' }}
-          onClick={closeDeleteConfirm}
+        <ConfirmSheet
+          title="Delete this round?"
+          onClose={closeDeleteConfirm}
+          locked={deleting}
+          initialFocusRef={cancelButtonRef}
+          returnFocusRef={deleteLinkRef}
         >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="summary-delete-round-heading"
-            onClick={e => e.stopPropagation()}
-            className="bg-bg rounded-t-sheet w-full max-w-[430px] px-6 pt-6 pb-10"
-          >
-            <div className="w-10 h-1 bg-border rounded-full mx-auto mb-6" />
-            <h2 id="summary-delete-round-heading" className="type-title text-text mb-1">Delete this round?</h2>
             <p className="type-small text-muted mb-8">This cannot be undone.</p>
             {deleteError && (
               <p role="alert" className="type-small text-error mb-3">{deleteError}</p>
@@ -875,8 +852,7 @@ export default function Summary({ navigate, params }) {
                 {deleting ? 'Deleting…' : 'Delete'}
               </Button>
             </div>
-          </div>
-        </div>
+        </ConfirmSheet>
       )}
 
     </div>

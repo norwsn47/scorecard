@@ -180,7 +180,7 @@ Base unit: 4px (Tailwind default).
 | Button | `min-h-12 px-6 py-2` Large, `min-h-11 px-4 py-2` Medium (see "Button size system") |
 | Form field | `py-3 px-4` (see "Text input") |
 | Button group gap | `gap-3` (paired sheet buttons) or `gap-group` (stacked page buttons) |
-| Footer safe area | `pb-10` to `pb-14` (page foot), `pb-10` (sheets); the bottom action bar adds `env(safe-area-inset-bottom)` |
+| Footer safe area | `pb-10` to `pb-14` (page foot); sheets and the bottom action bar add `env(safe-area-inset-bottom)` |
 | Control bar (live Scorecard) | `px-page py-4` |
 | Table row height | `h-12` (48px) live grid, `h-9` (36px) Summary; band rows `h-11` or `h-14` (dense). See "Scorecard table" |
 | Table cell (horizontal) | `pl-3 pr-1` (hole col, labels left-aligned), `px-0.5` or `px-1` (player cols) |
@@ -552,29 +552,31 @@ Two different "this is currently selected" idioms exist in the app side by side:
 Keep the segmented control's outline language for settings chosen once; don't reach for fill on a future segmented control without a reason.
 
 ### Bottom sheet / confirmation modal
+`src/components/ConfirmSheet.jsx` is the one confirmation sheet; every confirmation uses it, so the five can never drift apart.
 ```
-Backdrop:  fixed inset-0 flex items-end justify-center z-50, background: var(--overlay-backdrop)
-           onClick={close}: tapping the backdrop dismisses the sheet
-Sheet:     role="dialog" aria-modal="true" aria-labelledby="{heading-id}"
+<ConfirmSheet title onClose locked? initialFocusRef? returnFocusRef?>{body and buttons}</ConfirmSheet>
+Backdrop:  absolute inset-0 flex items-end justify-center z-50, background: var(--overlay-backdrop)
+           inside the page's `relative` root, so the desktop phone frame contains it
+           onClick: tapping the backdrop dismisses the sheet (not while `locked`)
+Sheet:     role="dialog" aria-modal="true" aria-labelledby={heading id}
            onClick={e => e.stopPropagation()}: stops the backdrop's onClick firing
-           bg-bg rounded-t-sheet w-full max-w-[430px] px-6 pt-6 pb-10, no shadow
+           bg-bg rounded-t-sheet w-full max-w-[430px] px-6 pt-6
+           pb-[calc(2.5rem+env(safe-area-inset-bottom))], no shadow
 Handle:    w-10 h-1 bg-border rounded-full mx-auto mb-6
-Heading:   type-title text-text mb-1, id="{heading-id}" (matches the sheet's aria-labelledby)
+Heading:   type-title text-text mb-1 (the `title` prop)
 Subtext:   type-small text-muted (type-body for the longer Settings delete explanation)
 ```
 
-These are the confirmation sheets (Scorecard, Summary, Settings, Setup, CourseEdit). `FilterSheet` uses the same shell with `px-page pt-3` and its own row layout (see above).
+Used by the Scorecard (Finish or Save), Summary (Delete round), Settings (Delete account, buttons stacked), Setup (the course switch that would drop scores, no async gap so never locked) and Course edit (Delete course). `FilterSheet` and `FilterMenu` (History) use the same shell with `px-page pt-3` and their own row layout (see above).
 
-**Dialog semantics — every bottom sheet, no exceptions (#80).** A confirmation sheet is a real modal dialog, not just a styled panel, and needs the behaviour to match:
-- `role="dialog"`, `aria-modal="true"`, `aria-labelledby` pointing at the heading's own `id` — on the sheet element itself, not the backdrop.
-- **Autofocus on open** — a `useEffect` keyed on the sheet's open state moves focus onto the sheet's most useful control the moment it mounts: the confirmation text input if the sheet has one (Settings' delete-account sheet, which gates on a typed "DELETE"), otherwise the non-destructive button (Summary's delete-round sheet focuses "Cancel", not "Delete" — a stray Enter keypress should never confirm a destructive action).
-- **Escape dismisses** — the same effect adds a `keydown` listener while the sheet is open (removed on cleanup) that closes it on `Escape`, equivalent to tapping the non-destructive action. Skip this while a destructive action is genuinely in flight (Settings' sheet checks its own `deleting` flag) so an in-progress delete can't be abandoned mid-request; a sheet with no async gap doesn't need the guard.
-- **Backdrop click dismisses** — `onClick` on the backdrop `div` closes the sheet; the sheet itself carries `onClick={e => e.stopPropagation()}` so a tap inside it doesn't bubble up and immediately close it.
-- **Focus returns to the opener on close** - the open effect captures `document.activeElement` before moving focus in and restores it in its cleanup. The focus effect is keyed on the open state only (never on a `deleting`/`finishing` flag, which would re-pull focus mid-action); the Escape listener is a second effect that also depends on that flag and is skipped while an action is in flight.
-- **Focus trap (FilterSheet only, so far).** Tab and Shift+Tab wrap inside the sheet, and a Tab with focus outside pulls it back in. The older confirmation sheets below do not trap yet; `FilterSheet` is the reference implementation if they are brought up to it.
-- Close logic lives in one named function (`closeDelete`, `closeDeleteConfirm`, etc.) reused by the backdrop click, the Escape handler, and the sheet's own Cancel/dismiss button, so the three paths can never drift apart.
+**Dialog semantics, every sheet (#80).** All of it comes from `src/hooks/useSheetFocus.js`, shared by `ConfirmSheet`, `FilterSheet` and `FilterMenu`:
+- `role="dialog"`, `aria-modal="true"`, `aria-labelledby` pointing at the heading, on the sheet element itself, not the backdrop.
+- **Focus in on open**, keyed on mount only (never on a `deleting` or `finishing` flag, which would re-pull focus mid-action): the sheet's most useful control, passed as `initialFocusRef`. That is the confirmation input if the sheet has one (Settings' typed "DELETE"), otherwise the non-destructive button ("Cancel", never "Delete", so a stray Enter never confirms a destructive action).
+- **Escape and the backdrop dismiss**, equivalent to the non-destructive action, except while `locked` (an action in flight), so an in-progress delete or save can't be abandoned mid-request.
+- **Focus trap.** Tab and Shift+Tab wrap inside the sheet, and a Tab with focus outside pulls it back in.
+- **Focus returns to the opener on close**: whatever had focus when the sheet opened, or `returnFocusRef` where a tap does not focus the opener in Safari (Summary's delete link).
 
-Shipped in `Settings.jsx` (delete-account), `Summary.jsx` (delete-round, moved from History; brought up to parity in #80), `Scorecard.jsx` (Finish/Save sheet), `CourseEdit.jsx` (delete-course sheet), `FilterSheet.jsx` (History's course and player pickers: `rounded-t-sheet`, `px-page`, no shadow, with the focus trap) and `Setup.jsx` (the edit-mode course-switch confirmation, added when BACKLOG #56 was reversed - no async gap, so no in-flight guard needed on the Escape handler). `CourseMapModal.jsx` is a centred modal, not a sheet, but follows the same rules: `role="dialog"`, `aria-labelledby` its course heading, focus on the Close button, Escape and backdrop dismiss, focus returned to the Map control (it reads `onClose` through a ref so a parent re-render never re-grabs focus).
+`CourseMapModal.jsx` is a centred modal, not a sheet, but follows the same rules: `role="dialog"`, `aria-labelledby` its course heading, focus on the Close button, Escape and backdrop dismiss, focus returned to the Map control. It is also `absolute inset-0` inside its page, so it stays inside the desktop frame.
 
 **A card that is tappable and also holds tappable parts** (History rounds) is never a button containing buttons. This is the interactive form of `Card` (see "Card" below): the card is a `div`; the "open this round" action is a real `<button>` stretched behind the content (`absolute inset-0`), the content sits above it with `pointer-events-none`, and each inner control (a player-name toggle with `aria-pressed`) is its own real button with `pointer-events-auto` (the exported `CARD_INNER_CONTROL`).
 

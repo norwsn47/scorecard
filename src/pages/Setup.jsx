@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import BottomActionBar from '../components/BottomActionBar.jsx'
 import Button from '../components/Button.jsx'
+import ConfirmSheet from '../components/ConfirmSheet.jsx'
 import { DateField, Input, Select, Textarea } from '../components/Field.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import ParStepperGrid, { stepPar as stepParArray } from '../components/ParStepperGrid.jsx'
@@ -219,20 +220,6 @@ export default function Setup({ navigate, goBack, params }) {
   // return focus to the opener on close, Escape dismisses. There's no async
   // gap here (confirming only updates local state — any course POST happens
   // later, at Start), so no in-flight guard is needed.
-  useEffect(() => {
-    if (!pendingChange) return
-    const opener = document.activeElement
-    cancelPendingRef.current?.focus()
-    return () => opener?.focus?.()
-  }, [pendingChange])
-  useEffect(() => {
-    if (!pendingChange) return
-    function onKey(e) {
-      if (e.key === 'Escape') setPendingChange(null)
-    }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [pendingChange])
 
   function closePendingChange() {
     setPendingChange(null)
@@ -515,7 +502,7 @@ export default function Setup({ navigate, goBack, params }) {
   }
 
   return (
-    <div className="h-full bg-bg flex flex-col">
+    <div className="relative h-full bg-bg flex flex-col">
 
       <PageHeader
         title={editRound ? 'Edit round' : pastRound ? 'Add past round' : 'New game'}
@@ -843,36 +830,22 @@ export default function Setup({ navigate, goBack, params }) {
         const copy = pendingChangeCopy(pendingChange)
         if (!copy) return null
         return (
-          <div
-            className="fixed inset-0 flex items-end justify-center z-50"
-            style={{ background: 'var(--overlay-backdrop)' }}
-            onClick={closePendingChange}
-          >
-            <div
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="course-switch-heading"
-              onClick={e => e.stopPropagation()}
-              className="bg-bg rounded-t-sheet w-full max-w-[430px] px-6 pt-6 pb-10"
-            >
-              <div className="w-10 h-1 bg-border rounded-full mx-auto mb-6" />
-              <h2 id="course-switch-heading" className="type-title text-text mb-1">{copy.heading}</h2>
-              <p className="type-body text-muted mb-8">{copy.body}</p>
-              <div className="flex gap-3">
-                <Button
-                  ref={cancelPendingRef}
-                  variant="secondary"
-                  className="flex-1"
-                  onClick={closePendingChange}
-                >
-                  Cancel
-                </Button>
-                <Button className="flex-1" onClick={confirmPendingChange}>
-                  {copy.confirmLabel}
-                </Button>
-              </div>
+          <ConfirmSheet title={copy.heading} onClose={closePendingChange} initialFocusRef={cancelPendingRef}>
+            <p className="type-body text-muted mb-8">{copy.body}</p>
+            <div className="flex gap-3">
+              <Button
+                ref={cancelPendingRef}
+                variant="secondary"
+                className="flex-1"
+                onClick={closePendingChange}
+              >
+                Cancel
+              </Button>
+              <Button className="flex-1" onClick={confirmPendingChange}>
+                {copy.confirmLabel}
+              </Button>
             </div>
-          </div>
+          </ConfirmSheet>
         )
       })()}
     </div>

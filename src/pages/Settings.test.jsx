@@ -249,7 +249,7 @@ describe('Settings (#4)', () => {
     // Re-open, then dismiss by clicking the backdrop.
     await user.click(screen.getByRole('button', { name: 'Delete my account' }))
     await screen.findByRole('dialog')
-    await user.click(document.querySelector('.fixed.inset-0'))
+    await user.click(screen.getByRole('dialog').parentElement)
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 

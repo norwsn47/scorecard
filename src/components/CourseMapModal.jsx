@@ -44,7 +44,7 @@ export default function CourseMapModal({ onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-5"
+      className="absolute inset-0 z-50 flex items-center justify-center p-5"
       style={{ background: 'var(--overlay-modal)' }}
       onClick={onClose}
     >
@@ -57,7 +57,7 @@ export default function CourseMapModal({ onClose }) {
       >
         {/* Header */}
         <div className="relative px-5 py-4 border-b border-border shrink-0">
-          <p id="course-map-heading" className="type-title text-text">
+          <p id="course-map-heading" className="type-title text-text pr-9">
             {BRUNTSFIELD_COURSE_NAME}
           </p>
           <p className="type-label-caps text-muted mt-0.5">
