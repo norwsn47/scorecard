@@ -330,8 +330,12 @@ export default function History({ navigate }) {
               </span>
             </div>
 
-            {/* Players: equal weight, no winner highlight (redesign decision 9) */}
-            <div className="space-y-1">
+            {/* Players: equal weight, no winner highlight (redesign decision 9).
+                Each name is a filter toggle with a 44px tall tap area (py-2.5
+                -my-2.5, the DESIGN.md pattern for tight lines) and at least
+                44px wide, without changing the visible layout. The 8px row gap
+                keeps one name's tap area from covering the name above. */}
+            <div className="space-y-2">
               {(game.players ?? []).map(name => {
                 const isDnf = game.dnf?.includes(name)
                 const total = playerTotal(game.scores, name)
@@ -342,7 +346,7 @@ export default function History({ navigate }) {
                       type="button"
                       onClick={() => toggleFilter(name)}
                       aria-pressed={filter === name}
-                      className={`${CARD_INNER_CONTROL} min-w-0 break-words text-left rounded-control type-body text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent`}
+                      className={`${CARD_INNER_CONTROL} min-w-11 py-2.5 -my-2.5 break-words text-left rounded-control type-body text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent`}
                     >
                       {name}
                       {isSignedInPlayer(name, user?.name) && <PlayerStar className="ml-0.5" />}
