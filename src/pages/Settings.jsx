@@ -5,6 +5,7 @@ import { Input } from '../components/Field.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import PlayerStar from '../components/PlayerStar.jsx'
 import { useAuth } from '../hooks/useAuth.jsx'
+import TextLink from '../components/TextLink.jsx'
 
 // Self-serve profile and account controls for a signed-in user (#4).
 // Reachable only when signed in — from the Home header gear (#83) or the
@@ -407,13 +408,9 @@ export default function Settings({ navigate }) {
           </div>
 
           <div className="flex flex-col items-center gap-related">
-            <button
-              type="button"
-              onClick={() => { setDeleteError(null); setDeleteWord(''); setConfirmDelete(true) }}
-              className="inline-block py-3 -my-3 type-small-strong text-muted underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-            >
+            <TextLink size="small-strong" tone="muted" onClick={() => { setDeleteError(null); setDeleteWord(''); setConfirmDelete(true) }}>
               Delete my account
-            </button>
+            </TextLink>
             <p className="type-small text-muted">
               Removes your account and every round and course saved to it, on every device. This cannot be undone. Quick-play scores saved on this device are not part of your account and stay put.
             </p>

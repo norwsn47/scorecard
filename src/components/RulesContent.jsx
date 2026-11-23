@@ -1,4 +1,4 @@
-import ExternalArrow from './ExternalArrow.jsx'
+import TextLink from './TextLink.jsx'
 
 // The Bruntsfield Short Hole Golf Club's course rules, laid out on the
 // content-page ladder Information uses (DESIGN.md): one section per rule with
@@ -72,15 +72,9 @@ export default function RulesContent() {
         <p>Many thanks for your <span className="whitespace-nowrap">co-operation</span>. Enjoy your game.</p>
         <p className="type-small text-muted">
           Rules provided by the{' '}
-          <a
-            href="https://www.bruntsfieldshortholegolfclub.co.uk"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 py-3 -my-3 text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-          >
+          <TextLink external href="https://www.bruntsfieldshortholegolfclub.co.uk">
             Bruntsfield Short Hole Golf Club
-            <ExternalArrow />
-          </a>
+          </TextLink>
         </p>
       </section>
 

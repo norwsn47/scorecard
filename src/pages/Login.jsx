@@ -3,6 +3,7 @@ import Button from '../components/Button.jsx'
 import { Input } from '../components/Field.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import { useAuth } from '../hooks/useAuth.jsx'
+import TextLink from '../components/TextLink.jsx'
 
 // Login keeps the editorial, borderless "back link floating above a big
 // heading" pattern Home uses rather than the boxed header bar every utility
@@ -195,13 +196,9 @@ export default function Login({ navigate, goBack }) {
           No password. We'll send a link to your inbox.
         </p>
         <p className="type-small text-muted mt-3 text-center">
-          <button
-            type="button"
-            onClick={() => navigate('privacy', { from: 'login' })}
-            className="inline-block py-3.5 -my-3.5 text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-          >
+          <TextLink pad="lg" onClick={() => navigate('privacy', { from: 'login' })}>
             How we handle your data
-          </button>
+          </TextLink>
         </p>
       </main>
     </div>

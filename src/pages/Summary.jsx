@@ -17,6 +17,7 @@ import { clearActiveCell, getActiveGame, getCompletedGames, markCompletedGamePen
 import { deleteRound, DELETE_FAILED_MESSAGE, SAVING_MESSAGE } from '../utils/deleteRound.js'
 import { holdRound, isSyncing, postRound, syncPendingRounds } from '../utils/sync.js'
 import { useAuth } from '../hooks/useAuth.jsx'
+import TextLink from '../components/TextLink.jsx'
 
 const SAVE_ERROR_COPY = {
   failed: "Couldn't save this round. Check your signal and try again, or keep it on this device for now.",
@@ -784,14 +785,9 @@ export default function Summary({ navigate, params }) {
           </div>
           {canDelete && (
             <div className="text-center">
-              <button
-                ref={deleteLinkRef}
-                type="button"
-                onClick={() => setConfirmDelete(true)}
-                className="inline-block type-small-strong text-muted underline underline-offset-2 py-3 -my-3 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-control"
-              >
+              <TextLink size="small-strong" tone="muted" ref={deleteLinkRef} onClick={() => setConfirmDelete(true)}>
                 Delete this round
-              </button>
+              </TextLink>
             </div>
           )}
           {!viewingSaved && canEdit && editNotice && (
