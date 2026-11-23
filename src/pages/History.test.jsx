@@ -146,6 +146,16 @@ describe('History — player filter (#51 / #61)', () => {
   })
 })
 
+describe('History - player-name toggles meet the 44px tap target', () => {
+  it('gives each name toggle a 44px tall tap area (py-2.5 -my-2.5) at least 44px wide', () => {
+    seedLocalGames([round('g1', ['Ann', 'Bo'], '2026-08-01T10:00:00.000Z')])
+    renderHistory()
+    for (const toggle of within(screen.getByRole('main')).getAllByRole('button', { pressed: false })) {
+      expect(toggle).toHaveClass('py-2.5', '-my-2.5', 'min-w-11')
+    }
+  })
+})
+
 // Signed-in identity star (BACKLOG #91). A signed-in user's History
 // reads from D1, so this mocks /api/games as well as /api/auth/me. The star
 // shows in the player picker sheet and on their name in each round row.
@@ -245,7 +255,9 @@ describe('History - record cards (redesign)', () => {
     renderHistory()
     await screen.findByRole('button', { name: /^Open round/ })
     const name = screen.getByRole('button', { name: 'A very long player name indeed' })
-    expect(name).toHaveClass('min-w-0', 'break-words', 'pointer-events-auto')
+    // min-w-11 (not min-w-0): the name still shrinks and wraps, but never
+    // below the 44px tap-target width.
+    expect(name).toHaveClass('min-w-11', 'break-words', 'pointer-events-auto')
     expect(name.nextElementSibling).toHaveClass('shrink-0')
     expect(name.nextElementSibling).toHaveTextContent('6 (E)')
   })
