@@ -33,7 +33,7 @@ describe('Rules - content', () => {
   it('shows the page title and the rules text', () => {
     renderRules({})
     expect(screen.getByRole('heading', { name: 'Course rules' })).toBeInTheDocument()
-    expect(screen.getByText(/2\) RULES OF PLAY/)).toBeInTheDocument()
-    expect(screen.getByText(/MAXIMUM GROUP SIZE/)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Rules of play' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Maximum group size: four-ball' })).toBeInTheDocument()
   })
 })
