@@ -45,7 +45,7 @@ Context: the Scorecard was redesigned in Figma (file "Outbuild", board "Scorecar
 2. **One 6px control radius.** Replaces `rounded-sm` (4px, buttons) and `rounded-md` (8px, inputs, cards). Reverses the "sharp printed-document" button rule. `rounded-full` (chips, round controls) and `rounded-t-2xl` (sheets) stay.
 3. **Header actions are text actions.** Reverses the bordered "Header action" button (Finish, Save, + Add). A filled pill is used only when the action is the expected next step (for example Finish once every hole is scored).
 4. **"+ Add player" and "Resume game" use the standard buttons.** Removes the dashed ghost button and the one-off accent outline button.
-5. **Page padding 16px, header fixed at 68px.** Replaces `px-5` and `px-6` page padding and the `pt-6 pb-4` header. The header keeps its three-slot layout and invisible mirror.
+5. **Page padding 16px, header fixed at 68px** (built as a 68px minimum; see 23 November). Replaces `px-5` and `px-6` page padding and the `pt-6 pb-4` header. The header keeps its three-slot layout and invisible mirror.
 6. **History filters become two pills with a picker sheet.** Replaces the course and player chip rows. The course pill appears only with two or more courses, the player pill only with two or more players (unchanged rules).
 7. **Record cards carry the card shadow.** Reverses "static surfaces carry no shadow" for History round cards and the Home course card only.
 8. **Score-vs-par delta is a fixed 12px caption.** Reverses the `0.6em` superscript (about 10px, below the 12px minimum used elsewhere). Colours are unchanged (`under-par` `#2C6B3C`, `over-par` `#9B3A24`).

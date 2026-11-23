@@ -158,7 +158,7 @@ export default function Summary({ navigate, params }) {
   // each hole number, matching the live Scorecard grid (item 37).
   const holePars = deriveHolePars(game.holePars, game.holesPlayed ?? game.holes ?? MAX_HOLES)
 
-  // Dense mode (5 or 6 players, plan 5f): Caption column headers instead of
+  // Dense mode (5 or 6 players, DESIGN.md "Scorecard table"): Caption column headers instead of
   // Label caps, and a total stacks above its bracket (56px band rows instead
   // of 44px). Mirrors the live Scorecard grid.
   const density    = tableDensity(game.players?.length ?? 0)
@@ -421,9 +421,9 @@ export default function Summary({ navigate, params }) {
   return (
     <div className="relative h-full bg-bg flex flex-col">
 
-      {/* Header right slot: an "Edit round" pencil icon on both flows (when the
+      {/* Header right slot: an "Edit" text action on both flows (when the
           round can be edited). Editing a finished round is an occasional fix,
-          so it is a quiet icon rather than text; "Done" (saves + goes home)
+          so it is a quiet header action rather than a button; "Done" (saves + goes home)
           moved down to the action bar beside Share, where it gets the weight
           an every-round action deserves. Post-finish: no back slot — this
           flow always arrives straight from Scorecard (depth > 0), where native
@@ -641,7 +641,7 @@ export default function Summary({ navigate, params }) {
           </table>
         </div>
 
-        {/* Actions: the bottom action bar (Figma c17). Share and Done are the
+        {/* Actions: the bottom action bar (Figma "Bottom action bar"). Share and Done are the
             bar's buttons; the notes, save error, delete link and sign-in nudge
             keep their existing order inside it. */}
         <BottomActionBar className="space-y-field">
@@ -740,7 +740,7 @@ export default function Summary({ navigate, params }) {
               it is the primary button. A round opened from History has nothing
               to save, so Share takes the full width and is slimmer, leaving more
               of the screen for the scorecard. Edit lives in the header
-              (pencil icon) on both flows. */}
+              (a text action) on both flows. */}
           <div className={viewingSaved ? '' : 'grid grid-cols-2 gap-3'}>
             <Button
               variant="secondary"

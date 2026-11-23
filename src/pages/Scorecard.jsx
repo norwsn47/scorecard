@@ -88,7 +88,7 @@ export default function Scorecard({ navigate, params }) {
   const displayedHoles = computeDisplayedHoles(players, game.scores ?? {}, game.holes)
   const holePars      = deriveHolePars(game.holePars, game.holes ?? MAX_HOLES)
 
-  // Dense mode (5 or 6 players, plan 5f): at 390px six columns are about 56px
+  // Dense mode (5 or 6 players, DESIGN.md "Scorecard table"): at 390px six columns are about 56px
   // wide, so column headers drop from Label caps to Caption and a total stacks
   // above its bracket instead of sitting beside it. Scores never shrink.
   const density       = tableDensity(players.length)
@@ -455,7 +455,7 @@ export default function Scorecard({ navigate, params }) {
                 // No ring: the map is glanced at now and then, so it steps back
                 // from the three per-shot scoring controls beside it. Same 64px
                 // tap area; a small "Map" caption replaces the circle as the cue.
-                // Muted (not control-warm) so the 11px caption clears 4.5:1.
+                // Muted (not control-warm) so the 12px Caption clears 4.5:1.
                 className="w-16 h-16 rounded-control text-muted flex flex-col items-center justify-center gap-1 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-6 h-6" aria-hidden="true">

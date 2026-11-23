@@ -1,6 +1,6 @@
 import { forwardRef } from 'react'
 
-// The one button. Figma "Button" (c01-button.png): Primary, Secondary and Text
+// The one button (Figma "Button"): Primary, Secondary and Text
 // variants, Large and Medium sizes. Colours, radius and states come from the
 // stage 1 tokens; there is no shadow. Labels are sentence case, type-strong.
 //

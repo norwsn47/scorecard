@@ -2,7 +2,7 @@
 // own name — an identity marker only, never a score or winner
 // style. Deliberately colourless: it renders in `currentColor`, so it always
 // takes on whatever colour its surrounding context already applies to that
-// name (muted column header, accent winner name, text-on-accent filter chip)
+// name (muted column header, accent winner name in the result line, the player picker row)
 // rather than introducing a colour rule of its own. That keeps it inert with
 // respect to the vs-par colour system and the winner treatment.
 //

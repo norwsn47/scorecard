@@ -805,7 +805,7 @@ export default function Setup({ navigate, goBack, params }) {
 
       </main>
 
-      {/* Bottom action bar (Figma c17), in the flow under the scroll area. */}
+      {/* Bottom action bar (Figma "Bottom action bar"), in the flow under the scroll area. */}
       <BottomActionBar>
         <Button fullWidth onClick={handleStart} disabled={!ready}>
           {editRound ? 'Edit hole scores' : pastRound ? 'Enter scores' : 'Start the round'}

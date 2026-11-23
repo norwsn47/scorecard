@@ -16,7 +16,7 @@ import { formatToPar } from '../utils/scores.js'
 //                column is NOT inverted — deltas there stay semantic.
 //
 // Both variants are Caption (12px, medium) via `type-caption`, never a
-// superscript (redesign decision 8, plan 5f).
+// superscript (redesign decision 8, DESIGN.md "Scorecard table").
 // variant:
 //   'inline'  — beside a score in a grid cell, same line, small gap: `9 +6`
 //   'bracket' — in brackets on a total's line: `55 (+22)`

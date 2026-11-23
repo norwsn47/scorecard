@@ -11,9 +11,10 @@ export default {
         'bg-card':   'var(--color-bg-card)',
         text:        'var(--color-text)',
         muted:       'var(--color-text-muted)',
-        // rgb(var(...) / <alpha-value>) form (not a plain var()) so opacity
-        // modifiers like bg-accent/10 or ring-accent/40 actually compile —
-        // requires --color-accent to hold RGB channels, not a hex string.
+        // rgb(var(...) / <alpha-value>) form (not a plain var()), so the
+        // mapping compiles from the RGB channels --color-accent holds. The app
+        // uses no accent/NN opacity classes: tints come from the accent-tint
+        // tokens.
         accent:      'rgb(var(--color-accent) / <alpha-value>)',
         'accent-hover':  'var(--color-accent-hover)',
         border:          'var(--color-border)',
@@ -42,7 +43,7 @@ export default {
       boxShadow: {
         subtle: 'var(--shadow-subtle)',
       },
-      // Figma layout tokens (plan 5c), in rem. Gives gap-related, px-page,
+      // Figma layout tokens (DESIGN.md "Spacing"), in rem. Gives gap-related, px-page,
       // p-card, space-y-section and so on.
       spacing: {
         related: '0.5rem',   // layout/gap/related 8

@@ -1,4 +1,4 @@
-// The bottom action bar. Figma "Bottom action bar" (c17): a hairline across the
+// The bottom action bar. Figma "Bottom action bar": a hairline across the
 // top, the page background behind, the primary action (or a Cancel and Save
 // pair) in the thumb zone, then the home-indicator space. No shadow.
 //

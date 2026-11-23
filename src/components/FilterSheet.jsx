@@ -1,8 +1,8 @@
 import { useId, useRef } from 'react'
 import useSheetFocus from '../hooks/useSheetFocus.js'
 
-// Bottom-sheet picker for one History filter (Figma "History / picker open",
-// 17-history-picker-open.png; rows follow the List row, c15). Single choice:
+// Bottom-sheet picker for one History filter (Figma "History / picker open";
+// rows follow the Figma List row), opened from the Filter rounds sheet. Single choice:
 // an "All ..." row first, then one row per option, the chosen row in accent
 // text with a check mark and no tint. Choosing a row applies it and closes the
 // sheet (the PNG shows no Done button).

@@ -219,13 +219,13 @@ One control radius. Two utilities come from the Figma Shape collection, in rem (
 | Value | Tailwind | CSS var | Use |
 |---|---|---|---|
 | `0.375rem` (6px) | `rounded-control` | `--radius-control` | The one control radius: buttons, fields (input, select, date, textarea), cards, the par stepper cells and their buttons, the Map control, the hole-count options, the back button and the text header action |
-| `1rem` (16px) | `rounded-sheet` | `--radius-sheet` | Bottom sheets, **top corners only** (`rounded-t-sheet`) |
+| `1rem` (16px) | `rounded-sheet` | `--radius-sheet` | Bottom sheets, **top corners only** (`rounded-t-sheet`); the centred course-map modal, all four corners (`rounded-sheet`) |
 | `50%` | `rounded-full` | none | Circular game controls (the 64px Decrement, Increment and Advance buttons), the History filter button and its badge, the `Tag`, the filled header action pill (Scorecard Finish), the sheet handle and the Home course-card icon disc |
 | `44px` | *(CSS only)* | none | Phone frame on desktop |
 
 `rounded-sm`, `rounded-md` and `rounded-lg` are banned in `src/**/*.jsx` by `src/styles/control-guard.test.js`. The old 4px, 8px and 12px radius variables are gone, so those classes would fall back to Tailwind's own sizes, not the app's.
 
-Rule: **buttons, fields and cards all take `rounded-control`. Sheets take `rounded-t-sheet`. `rounded-full` is for circular game controls, pills and tags, and the filled header action pill only.**
+Rule: **buttons, fields and cards all take `rounded-control`. Sheets take `rounded-t-sheet` (the centred map modal, `rounded-sheet`). `rounded-full` is for circular game controls, pills and tags, and the filled header action pill only.**
 
 ---
 
@@ -461,6 +461,8 @@ Every underlined text link in the app is `TextLink`, so the look, press state an
 ```
 <TextLink onClick | href [external] [size] [tone] [pad] [className]>
 Shared:  underline underline-offset-2 rounded-control active:opacity-70
+         (opacity is the press state for text links and the round controls, active:opacity-80;
+          buttons, cards and rows use the fill or edge changes described with them)
          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent
 size:    body | small | small-strong | (omitted: inherit the surrounding text)
 tone:    accent (default) | muted (secondary actions: Edit game setup, Delete this round, Delete my account)

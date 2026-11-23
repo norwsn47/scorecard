@@ -5,7 +5,7 @@ import ParDelta from './ParDelta.jsx'
 // (Summary.jsx, which History's detail view reuses), so the two can never
 // drift apart (DESIGN.md "Scorecard table").
 
-// Dense mode (plan 5f): with 5 or 6 players the column headers drop from Label
+// Dense mode (DESIGN.md "Scorecard table"): with 5 or 6 players the column headers drop from Label
 // caps to Caption, and a total stacks its bracket below it, so the band rows
 // grow from 44px to 56px.
 export function tableDensity(playerCount) {
