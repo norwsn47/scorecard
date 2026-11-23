@@ -99,6 +99,13 @@ export default function Scorecard({ navigate, params }) {
   const displayedHoles = computeDisplayedHoles(players, game.scores ?? {}, game.holes)
   const holePars      = deriveHolePars(game.holePars, game.holes ?? MAX_HOLES)
 
+  // Dense mode (5 or 6 players, plan 5f): at 390px six columns are about 56px
+  // wide, so column headers drop from Label caps to Caption and a total stacks
+  // above its bracket instead of sitting beside it. Scores never shrink.
+  const dense         = players.length >= 5
+  const headCls       = dense ? 'type-caption' : 'type-label-caps'
+  const bandRowCls    = dense ? 'h-14' : 'h-11'
+
   // Whether the active game's course is actually Bruntsfield — matched by
   // the game itself, not by which route it was started from (#1, reverses
   // the earlier route-only gate). Gated on sign-in state first, because a
@@ -325,12 +332,12 @@ export default function Scorecard({ navigate, params }) {
 
             <thead className="sticky top-0 z-10">
               <tr className="border-b border-border bg-bg-card">
-                <th className="py-2 px-2 text-center type-label-caps text-muted">
+                <th className={`h-9 py-2 pl-3 pr-1 text-left text-muted ${headCls}`}>
                   Hole
                 </th>
                 {players.map(player => (
-                  <th key={player} className="py-2 px-1 text-center type-label-caps text-muted">
-                    <span className="flex items-center justify-center gap-0.5 px-1">
+                  <th key={player} className={`h-9 py-2 px-1 text-center text-muted ${headCls}`}>
+                    <span className="flex items-center justify-center gap-0.5 min-w-0">
                       <span className="truncate min-w-0">{player}</span>
                       {isSignedInPlayer(player, user?.name) && <PlayerStar />}
                     </span>
@@ -351,12 +358,19 @@ export default function Scorecard({ navigate, params }) {
                         isActiveRow ? 'bg-accent-tint' : '',
                       ].join(' ')}
                     >
+                      {/* Hole column: the deeper cream fill, left-aligned, no
+                          hairline against the scores. In the active row the cell
+                          paints no fill of its own, so the row's 8% tint shows
+                          uniformly across the whole row (as in the Figma frames).
+                          Hole number and bracket are accent there (muted on the
+                          tint is only 4.39:1 over the card, below AA); in the
+                          other rows the number is text and the bracket muted. */}
                       <td className={[
-                        'py-3 px-2 text-center whitespace-nowrap',
-                        isActiveRow ? 'text-accent' : 'text-muted',
+                        'h-12 pl-3 pr-1 text-left whitespace-nowrap',
+                        isActiveRow ? 'text-accent' : 'bg-bg-card',
                       ].join(' ')}>
-                        <span className="type-strong">{holeIndex + 1}</span>
-                        <span className="type-caption ml-0.5">({holePars[holeIndex]})</span>
+                        <span className={['type-strong', isActiveRow ? '' : 'text-text'].join(' ')}>{holeIndex + 1}</span>
+                        <span className={['type-caption ml-0.5', isActiveRow ? '' : 'text-muted'].join(' ')}>({holePars[holeIndex]})</span>
                       </td>
                       {players.map((player, playerIndex) => {
                         const score    = (game.scores?.[player] ?? [])[holeIndex] ?? null
@@ -366,20 +380,22 @@ export default function Scorecard({ navigate, params }) {
                             key={player}
                             className={[
                               'p-0 text-center type-strong select-none transition-colors',
-                              isActive ? 'bg-accent text-white' : 'text-text',
+                              isActive ? 'bg-accent text-on-accent' : 'text-text',
                             ].join(' ')}
                           >
-                            {/* A real button filling the cell, so a keyboard, switch
-                                or screen-reader user can jump to any hole to correct
-                                a score, not just step forward with Advance (#96). */}
+                            {/* A real button filling the cell (the whole 48px cell is
+                                the tap target), so a keyboard, switch or screen-reader
+                                user can jump to any hole to correct a score, not just
+                                step forward with Advance (#96). whitespace-nowrap keeps
+                                the score and its delta on one line. */}
                             <button
                               type="button"
                               onClick={() => moveToCell({ holeIndex, playerIndex })}
                               aria-label={`Hole ${holeIndex + 1}, par ${holePars[holeIndex]}, ${player}: ${score ?? 'no score yet'}`}
                               aria-current={isActive ? 'true' : undefined}
                               className={[
-                                'block w-full py-3 px-1 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset',
-                                isActive ? 'focus-visible:ring-white/80' : 'focus-visible:ring-accent/40',
+                                'flex items-center justify-center w-full h-12 px-0.5 whitespace-nowrap cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset',
+                                isActive ? 'focus-visible:ring-on-accent' : 'focus-visible:ring-accent',
                               ].join(' ')}
                             >
                               {score ?? '–'}
@@ -401,21 +417,19 @@ export default function Scorecard({ navigate, params }) {
                         bracket here — it isn't a specific hole. */}
                     {holeIndex === 8 && frontNineComplete && (
                       <tr className="border-t-2 border-b border-border bg-bg-card">
-                        {/* No whitespace-nowrap here (unlike the hole-number
-                            cell above) — the hole column is a fixed w-14 in a
-                            table-fixed layout with no horizontal scroll,
-                            so if "Front 9" doesn't fit on one
-                            line at the narrowest width it wraps onto two
-                            rather than bleeding into the player columns. */}
-                        <td className="py-3 px-2 text-center type-small-strong text-text">
+                        {/* Caption with whitespace-nowrap (owner call, 23
+                            November 2026): at Caption size "Front 9" fits the
+                            fixed w-14 hole column on one line, where the
+                            Strong size wrapped onto two. */}
+                        <td className={`${bandRowCls} pl-3 pr-0 text-left type-caption text-text whitespace-nowrap`}>
                           Front 9
                         </td>
                         {players.map(player => {
                           const { total, toPar } = subtotal(game.scores?.[player] ?? [], holePars, 0, 9)
                           return (
-                            <td key={player} className="py-3 px-1 text-center type-strong text-text">
+                            <td key={player} className={`${bandRowCls} px-0.5 text-center type-strong text-text whitespace-nowrap`}>
                               {total ?? '–'}
-                              <ParDelta delta={toPar} variant="bracket" />
+                              <ParDelta delta={toPar} variant="bracket" className={dense ? 'block' : ''} />
                             </td>
                           )
                         })}
@@ -428,18 +442,30 @@ export default function Scorecard({ navigate, params }) {
           </table>
         </div>
 
-        {/* Totals bar — always visible */}
+        {/* Totals bar — always visible. A flex row outside the table, kept in
+            step with its columns: a w-14 label, then one equal flex-1 share per
+            player (min-w-0 so a wide total never widens its column). One line
+            (`55 (+22)`, 44px) for 1 to 4 players; total with its bracket
+            below (56px) for 5 or 6. */}
         <div className="bg-bg-card border-t-2 border-border flex">
-          <div className="w-14 py-3 px-2 type-small-strong text-muted flex items-center justify-center">
+          <div className={`w-14 shrink-0 pl-3 pr-1 type-strong text-text flex items-center ${bandRowCls}`}>
             Total
           </div>
           {players.map(player => (
-            <div key={player} className="flex-1 py-3 px-1 text-center type-strong text-text">
-              {playerTotal(game.scores, player) || '–'}
-              <ParDelta
-                delta={roundToPar((game.scores?.[player] ?? []).slice(0, holePars.length), holePars)}
-                variant="bracket"
-              />
+            <div
+              key={player}
+              className={`flex-1 min-w-0 px-0.5 flex justify-center items-center text-center type-strong text-text whitespace-nowrap ${bandRowCls}`}
+            >
+              {/* One child, so the flex row centres it as a unit and the
+                  space before the bracket survives (flex items drop it). */}
+              <div>
+                {playerTotal(game.scores, player) || '–'}
+                <ParDelta
+                  delta={roundToPar((game.scores?.[player] ?? []).slice(0, holePars.length), holePars)}
+                  variant="bracket"
+                  className={dense ? 'block' : ''}
+                />
+              </div>
             </div>
           ))}
         </div>

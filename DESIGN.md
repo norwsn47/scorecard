@@ -1,7 +1,7 @@
 # Design
 ## Scorecard by Outbuild — Bruntsfield Short Hole Golf Course
 
-Last updated: 22 November 2026
+Last updated: 23 November 2026
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
 > **Redesign in progress (from 22 November 2026).** `docs/redesign/reference/tokens.json` (read from Figma) is the source of truth for the redesign and wins over this file wherever they differ. Stage 1 updated the token-level sections only (Colour tokens, Overlays, Border radius, Shadows, and the new token notes under Typography and Spacing). The **component sections still describe the shipped app** until stage 9 rewrites them, so expect them to mention values (uppercase button labels, `rounded-sm` and `rounded-md`, the 5% row tint, `px-5` page padding) that the redesign decisions in `CHANGELOG.md` (22 November 2026) replace.
@@ -63,7 +63,7 @@ Two border tokens, split by **job**, not by size or importance:
 
 Why not darken `border` itself: it draws every rule on every screen. Darkening it would turn the scorecard's quiet printed-rule feel into a grid of grey lines (flatness and restraint, `OUTBUILD-DESIGN-LANGUAGE.md` §4 and §9). A field earns a firmer edge; a divider does not.
 
-Not a state colour. `field` is the *resting* edge of a field. Error / duplicate takes `border-error` (`--color-error` `#9B3A24`, Figma `color/status/error/text`, about 6.1:1 on `bg-card`); the focus ring stays `ring-accent/40`. There is no dark theme, so there is a single value. The Tailwind key is `field` (not `border-field`) so the class reads `border-field` rather than `border-border-field`; do not use it for `bg-` or `text-`.
+Not a state colour. `field` is the *resting* edge of a field. Error / duplicate takes `border-error` (`--color-error` `#9B3A24`, Figma `color/status/error/text`, about 6.1:1 on `bg-card`); the focus ring is the solid `ring-accent` (see "Disabled and focus-visible"). There is no dark theme, so there is a single value. The Tailwind key is `field` (not `border-field`) so the class reads `border-field` rather than `border-border-field`; do not use it for `bg-` or `text-`.
 
 ### The two score-vs-par colours are a scoped exception
 
@@ -72,7 +72,7 @@ The app is otherwise **one brand colour doing all the work** (Outbuild principle
 - They colour **vs-par deltas only** — the per-hole inline delta (`+1` / `-1` / `E`) and the round total-to-par (`41 (+5)`). Nothing else.
 - They are **never** used for buttons, borders, icons, links, backgrounds, focus rings, or any interactive or chrome role. A golfer must never have to wonder whether a green thing is tappable.
 - **Level par (`E`) gets no colour of its own** — it inherits whatever text colour its context already uses (`text`, `muted`, `accent` in a winner column, or white in the active cell).
-- The bracketed par **label** on the hole number (e.g. "3 (3)", see "Score cells" above) is *not* a delta — it stays uncoloured and is unaffected by this exception.
+- The bracketed par **label** on the hole number (e.g. "3 (3)", see "Scorecard table") is *not* a delta — it stays uncoloured and is unaffected by this exception.
 
 This keeps within the Outbuild allowance of "no more than two accents beyond the brand colour, used in precisely defined contexts."
 
@@ -188,8 +188,8 @@ Base unit: 4px (Tailwind default).
 | Button group gap | `gap-3` or `gap-4` |
 | Footer safe area | `pb-10` to `pb-14` |
 | Control bar | `px-page py-4` |
-| Table cell (vertical) | `py-3` |
-| Table cell (horizontal) | `px-2` (hole col), `px-1` (player cols) |
+| Table row height | `h-12` (48px) live grid, `h-9` (36px) Summary; band rows `h-11` or `h-14` (dense). See "Scorecard table" |
+| Table cell (horizontal) | `pl-3 pr-1` (hole col, labels left-aligned), `px-0.5` or `px-1` (player cols) |
 
 The header bar sets its height with `min-h-[4.25rem]` rather than vertical padding; see "Page header".
 
@@ -380,7 +380,7 @@ Disabled:     bg-disabled-surface border-border text-disabled-text
 
 **Disabled.** Buttons, fields and the par stepper buttons use `disabled-surface` and `disabled-text` (`#E8E1D6` and `#D9D0C4`), not `opacity-40`. The pair is about 1.17:1, far below 4.5:1 **by design**: disabled states are exempt from the contrast rule (see "Sunlight contrast"). A disabled Secondary or Text button has no fill and takes `text-disabled-text` for its label (and its edge, for Secondary). `cursor-not-allowed` is set on all of them. **Circular game controls keep `opacity-25`** (Decrement and Advance): they are physical controls the player is about to need again, and a light fade reads as "not reachable right now".
 
-**Focus-visible.** Every button, field and control uses a solid 2px accent ring: `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent`. Buttons add `ring-offset-2 ring-offset-bg` so the ring sits clear of the border. Fields use `focus:` rather than `focus-visible:` because a text field should show focus on tap too, and add the accent edge. `:focus-visible` on buttons only fires for keyboard, switch and assistive-tech navigation, never a touch tap, so it is invisible in normal use on this touch-only product. The old 40% ring (`ring-accent/40`) is retired. The header's back button and `HeaderAction` use the solid ring. The only remaining `ring-accent/40` use (the Scorecard score-cell inset rings) is on the control guard's allow-list and moves in stage 7.
+**Focus-visible.** Every button, field and control uses a solid 2px accent ring: `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent`. Buttons add `ring-offset-2 ring-offset-bg` so the ring sits clear of the border. Fields use `focus:` rather than `focus-visible:` because a text field should show focus on tap too, and add the accent edge. `:focus-visible` on buttons only fires for keyboard, switch and assistive-tech navigation, never a touch tap, so it is invisible in normal use on this touch-only product. The old 40% ring (`ring-accent/40`) is retired. The header's back button and `HeaderAction` use the solid ring. The Scorecard and Summary score cells take the same solid ring, inset (stage 7): `ring-accent`, or `ring-on-accent` on the active cell. No `ring-accent/40` remains in the app.
 
 **No shadow on buttons or sheets.** `shadow-btn` and the sheet `shadow-card` are gone. The one shadow, `shadow-subtle`, is for record cards only.
 
@@ -598,21 +598,47 @@ A small status label: `inline-block rounded-full bg-accent-tint px-3 py-1 type-c
 A centred block: `title` (`type-title text-text`, a `p` by default, `titleAs` for a heading), optional `body` (`type-body text-muted`, 8px above), and an optional `action` or children (24px above, usually a Button). `role` passes through: History's "could not load" and "signed out" states use `role="alert"`, and a load failure is never shown as an empty state. Used for History "No rounds yet" and the load-failure block. History's no-match state also uses it ("No rounds found", with `role="status"`). Setup's course-area and Courses' dashed boxes are compact inline notices without a title and stay as they are (stage 8 may revisit).
 
 ### Scorecard table
+
+The live grid (`Scorecard.jsx`) and the read-only table (`Summary.jsx`, which History's detail view reuses) share one look, from plan 5f (stage 7). Only the row height differs.
+
 ```
-table-fixed border-collapse w-full
+table:  w-full table-fixed border-collapse
+cols:   <colgroup> <col class="w-14"> then one bare <col> per player </colgroup>
 ```
+
+The hole column is a fixed 56px (`w-14`) and the player columns share the rest equally, so one to six players fit at 320px and up with no sideways scroll (Summary lost its `overflow-x-auto` and `min-w-max`). Scores are centred.
+
+**Dense mode.** Five or six players is "dense": `dense = players.length >= 5`. It changes exactly two things, the column headers and the totals. Scores never shrink. Why: at 390px six columns are about 56px wide, and a 14px caps name or `115 (+46)` on one line does not fit that.
+
+| Part | 1 to 4 players | 5 or 6 players (dense) |
+|---|---|---|
+| Header cells (`th`) | `type-label-caps text-muted`, `h-9` | `type-caption text-muted`, sentence case, `h-9` |
+| "Hole" header | `type-label-caps`, left-aligned, `pl-3` | `type-caption`, left-aligned, `pl-3` |
+| Player name | `truncate min-w-0` inside a flex span, with the `PlayerStar` (`shrink-0`) after it | same. The full name stays the `th` text, so it is the accessible name |
+| Total, Front 9, Back 9 | total and bracket on one line, `55 (+22)`, row `h-11` (44px) | total on one line, bracket below it (`block`), centred, row `h-14` (56px) |
+
+The bracket is always `type-caption` (the `bracket` form of `ParDelta`). It is never shrunk any further.
+
 | Part | Classes |
 |---|---|
-| Header row | `bg-bg-card border-b border-border` |
-| Header cells | `font-ui text-xs tracking-[0.12em] uppercase text-muted` |
-| Data rows | `border-b border-border` |
-| Active row | `bg-[rgba(26,67,41,0.05)]` |
-| Active cell | `bg-accent text-white font-semibold` |
-| Score cell (element) | A real `<button type="button">` filling the `td` (`block w-full py-3 px-1`, `td` is `p-0`), labelled "Hole N, par P, Player: score" (or "no score yet") with `aria-current="true"` on the active cell, so any hole can be reached and corrected by keyboard or screen reader (#96). Focus ring is inset: `focus-visible:ring-2 focus-visible:ring-inset`, `ring-accent/40` on a normal cell and `ring-white/80` on the accent-filled active cell. |
-| Hole # (active row) | `text-accent` (the bold weight was dropped in stage 2 with the type utilities; stage 7 may restore it per plan 5e) |
-| Hole # (inactive) | `text-muted` |
-| Hole # + par | hole number `type-strong`, then the hole's par in brackets `type-caption ml-0.5` (12px, so smaller than the number; stage 2 of the redesign) — e.g. **3** (3). The bracketed par **label** carries no colour of its own; it inherits the cell colour (muted / accent). Same treatment on the live grid and the read-only Summary table, and mirrored (bold hole number + normal-weight bracket, same muted colour) on the hand-drawn share canvas (`src/utils/share.js`) since 5 September 2026. Replaces the earlier raised `(N)` superscript. *Deltas-only exception:* the par carries no colour rule holds for this par **label** — but score-vs-par **deltas** (the `+1` / `-1` / `E` inline delta and the round total-to-par) do take a semantic colour. See "Score vs par" below (the "bracketed par label" it refers to is this row). |
-| Empty score | `—` (em dash) |
+| Header row | `bg-bg-card border-b border-border`. Live grid: `thead` is `sticky top-0 z-10` |
+| Hole column cell (`td`) | `bg-bg-card pl-3 pr-1 text-left whitespace-nowrap`, height from the row (`h-12` live, `h-9` Summary). **No hairline** between it and the scores. The header and totals rows use the same `bg-bg-card`, so the scores sit in a framed field. Row hairlines (`border-b border-border`) stay |
+| Hole # + par | hole number `type-strong`, then the par in brackets `type-caption ml-0.5`, e.g. **3** (3). Inactive row: number `text-text`, bracket `text-muted`. Active row: both `text-accent` (muted on the tint is 4.39:1 over the card, below AA) |
+| Data rows | `border-b border-border`, `h-12` (48px) live so the whole cell is the tap target, `h-9` (36px) on Summary |
+| Active row | `bg-accent-tint` on the `tr`, across the whole row **including the hole column**. The hole `td` paints no fill of its own in the active row (it drops `bg-bg-card`), so the 8% tint shows uniformly. Tint is the only fill there; do not raise it |
+| Active cell | `bg-accent text-on-accent` on the `td`, square, the whole cell. Its `ParDelta` is `inverted` (white, the sign carries direction) |
+| Score cell (element) | A real `<button type="button">` filling the `td` (`flex items-center justify-center w-full h-12 px-0.5 whitespace-nowrap`, `td` is `p-0`), labelled "Hole N, par P, Player: score" (or "no score yet") with `aria-current="true"` on the active cell, so any hole can be reached and corrected by keyboard or screen reader (#96). The score and its delta stay on one line |
+| Focus ring | Inset and solid: `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset`, with `focus-visible:ring-accent` on a normal cell and `focus-visible:ring-on-accent` (white) on the accent-filled active cell. The old 40% ring is gone |
+| Band rows (Total, Front 9, Back 9) | label in the hole column. Total: `pl-3 pr-1 text-left type-strong text-text`. Front 9 and Back 9: `pl-3 pr-0 text-left type-caption text-text whitespace-nowrap`, so they fit the 56px column on one line (owner call, 23 November 2026; at Strong size they wrapped onto two). Front 9 and Back 9 rows are `bg-bg-card border-t-2 border-b border-border` |
+| Totals bar (live grid) | A flex row under the table, kept in step with its columns: a `w-14 shrink-0 pl-3` label, then one `flex-1 min-w-0` share per player. `bg-bg-card border-t-2 border-border`, `h-11` or `h-14` as above |
+| Summary Total row | `tfoot` `sticky bottom-0 z-10`, `bg-bg-card` on each cell (not the row, #66). Height is a minimum, so a `DNF` sub-label can grow it. Winner column text is `text-accent`; the header of a winner is `text-accent` too |
+| Empty score | `-` (the live grid uses an en dash) |
+| Share image mirror | `share.js` draws its own table (banded rows, no hole-column fill, no dense mode). It mirrors the hole number in `text` bold with the bracket in `muted`, and the `TOTAL` label in `text`. Header labels stay muted caps |
+
+Rows on the live grid are 48px because they are the tap target. The 36px Summary rows are read-only.
+
+**Contrast (computed, WCAG relative luminance).** Muted on the dense Caption header (on `bg-card`) 5.02:1. Accent on the active-row tint 8.89:1 over the page (8.53:1 over the card). Inactive hole number `text` on `bg-card` 15.2:1, its muted bracket 5.02:1. White on the solid active cell 11.2:1. Deltas on the tint over the page: under par 5.10:1, over par 5.52:1. Band labels `text` on `bg-card` 15.2:1. Focus rings: accent on the page 10.2:1, white on accent 11.2:1 (3:1 required).
+
 
 ### Score vs par
 
@@ -624,11 +650,11 @@ The one place the scorecard leaves pencil-and-paper monochrome. Applies to score
 - Over par: `+N` (`+1`, `+5`) — always a leading `+` — rendered in `over-par` `#9B3A24`.
 - Hole not yet scored: nothing shown. No placeholder, no `E`.
 
-**Per-hole indicator (grid + Summary + share).** An inline Caption delta on the same line as the score digit, after a small gap: `9 +6`. `type-caption` (12px, medium, tracking 0.2px), rendered by the shared `ParDelta` component. It is no longer a raised superscript (redesign decision 8). The digit stays the workhorse and the delta annotates it. The bracket form is not used in the grid, because up to six player columns share a row and `3 (+1)` will not fit.
+**Per-hole indicator (grid + Summary + share).** An inline Caption delta on the same line as the score digit, after a small gap: `9 +6`. `type-caption` (12px, medium, tracking 0.2px), rendered by the shared `ParDelta` component. It is no longer a raised superscript (redesign decision 8). The digit stays the workhorse and the delta annotates it. The bracket form is not used in the grid, because up to six player columns share a row and `3 (+1)` will not fit. The delta sits on the score's line (`whitespace-nowrap`), never below it, and a level `E` takes the surrounding text colour.
 
 **Round total-to-par (totals bar, Summary totals row, finish dialog, share).** In brackets, on the total's own line: `41 (+5)`, also `type-caption` (the bracket form of `ParDelta`, used in History and every totals row). Not superscript. `DNF` stays as the sub-label beneath where it applies. The bracket's digits and sign take the semantic colour; the surrounding total stays `text` / `accent` as today. Before a player has scored, the bracket is omitted entirely. Summary and History used to also show an `Av. X` (average strokes) sub-line here — dropped (#70, flagged as not interesting): the bracket already carries the same total-to-par information the average line duplicated.
 - The share image is hand-drawn and sizes its own bracket to match the total.
-- The live Scorecard totals bar uses the same Caption bracket as every other surface; there is no longer a separate size exception there.
+- The live Scorecard totals bar uses the same Caption bracket as every other surface; there is no size exception anywhere, so the bracket is never shrunk. With one to four players the bracket sits on the total's line (`55 (+22)`, 44px row). With five or six (dense mode, see "Scorecard table") it sits below the total, centred, in a 56px row.
 
 **Override rule (one sentence).** A vs-par delta keeps its semantic colour on every surface where the background is the cream ground or the card — *including* inside a winner's accent-green column, where the delta stays `under-par` / `over-par` and only a level `E` inherits the column's green — and drops the semantic colour *only* inside a filled cell (the live active cell, white-on-`accent`), where the delta takes that cell's inverted white text and the leading `+` / `-` sign carries the direction.
 
@@ -782,7 +808,7 @@ Inline SVGs throughout — no icon library dependency.
 
 ### Divergences — flag for fix
 
-**Intended state:** the advance-button fill is the `control-warm` token, the active-row tint is `accent-tint` (`--color-accent-tint`), and every focus ring is `ring-accent/40`. All are now fully implemented — `src/pages/Login.jsx:111`'s hardcoded `focus:ring-[rgba(26,67,41,0.4)]` was swapped for the token on 5 September 2026, and `Home.jsx`'s inline `rgba(26,67,41,0.1)` decorative circle became `bg-accent/10` on 8 September 2026 (#65). This section describes the intended, shipped state.
+**Intended state:** the advance-button fill is the `control-warm` token, the active-row tint is `accent-tint` (`--color-accent-tint`), and every focus ring is the solid `ring-accent`. All are now fully implemented — `src/pages/Login.jsx:111`'s hardcoded `focus:ring-[rgba(26,67,41,0.4)]` was swapped for the token on 5 September 2026, and `Home.jsx`'s inline `rgba(26,67,41,0.1)` decorative circle became `bg-accent/10` on 8 September 2026 (#65). This section describes the intended, shipped state.
 
 **Field edges (#108, decided 19 September 2026).** Intended state: every text input, textarea and select uses `border-field` (`#827970`, about 3.7:1 on `bg-card`, computed), fixing the 1.39:1 resting edge that sat below WCAG 1.4.11's 3:1 for a control boundary. The decision was scoped to form fields only, so hairlines and dividers did not move. The token, its Tailwind alias and this documentation landed on 21 September 2026; the classes on the inputs are applied in the same branch (`fix/input-border-contrast`).
 

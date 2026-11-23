@@ -21,8 +21,6 @@ const SRC = resolve(process.cwd(), 'src')
 // must have, so a stale or grown entry fails. Each is owned by a later stage,
 // which removes the entry when it moves the component onto the tokens.
 const ALLOW = [
-  // Stage 7: Scorecard score-cell inset rings (owner put them out of scope for stage 3).
-  { file: 'src/pages/Scorecard.jsx', cls: 'ring-accent/40', count: 1, reason: 'stage 7: score-cell inset rings' },
   // Stage 4: px-5 and px-6 are not page padding in these places. Page edges use px-page.
   { file: 'src/components/Button.jsx', cls: 'px-6', count: 1, reason: 'inner padding of the large button' },
   { file: 'src/components/CourseMapModal.jsx', cls: 'px-5', count: 4, reason: 'map modal inner padding (modal, not a page)' },
