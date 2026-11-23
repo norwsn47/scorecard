@@ -91,12 +91,19 @@ describe('Summary table - band rows', () => {
     }
   })
 
-  it('keeps the winner column in accent and the DNF sub-label', async () => {
+  it('gives the winner column no colour of its own, and keeps the DNF sub-label', async () => {
     const g = makeGame(['Ann', 'Bo'], 9)
     g.winners = ['Ann']; g.winner = 'Ann'; g.dnf = ['Bo']
     g.scores.Bo = [4, 4, null, null, null, null, null, null, null]
     await renderSummary(g)
-    expect(screen.getByRole('columnheader', { name: /Ann/ })).toHaveClass('text-accent')
+    const winnerHead = screen.getByRole('columnheader', { name: /Ann/ })
+    const otherHead = screen.getByRole('columnheader', { name: /Bo/ })
+    expect(winnerHead).toHaveClass('text-muted')
+    expect(winnerHead).not.toHaveClass('text-accent')
+    expect(winnerHead.className).toBe(otherHead.className)
+    for (const cell of document.querySelectorAll('tbody td, tfoot td')) {
+      expect(cell).not.toHaveClass('text-accent')
+    }
     expect(screen.getAllByText('DNF').length).toBeGreaterThan(0)
   })
 })
