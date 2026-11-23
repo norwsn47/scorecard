@@ -67,6 +67,11 @@ export default function Home({ navigate }) {
   return (
     <div className="h-full bg-bg flex flex-col relative">
 
+      {/* Scroll area: on a short screen (or with Resume game showing) the
+          content is taller than the screen, so it scrolls rather than clipping
+          the footer. The spacer below still pushes the actions to the bottom
+          when there is room. The toast sits outside, pinned to the screen. */}
+      <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
 
       {/* ── Branding ── */}
       <header className="flex flex-col justify-start px-page pt-10 pb-2">
@@ -204,6 +209,8 @@ export default function Home({ navigate }) {
           </a>
         </p>
       </footer>
+
+      </div>
 
       {/* 'changed' is good news (notice green); 'expired' and 'taken' are failures (error red). */}
       {noticeCopy && (
