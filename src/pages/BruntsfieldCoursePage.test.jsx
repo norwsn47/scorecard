@@ -6,7 +6,7 @@ import { AuthProvider } from '../hooks/useAuth.jsx'
 
 // Covers #78: the three conditional foot-of-page links (active game /
 // "Resume game", signed-out "Last round", signed-in "Past rounds") and the
-// always-present "← Golf Scorecard home" link, including its track() call.
+// always-present "Golf Scorecard home" link, including its track() call.
 
 function mountFetch(user = null) {
   global.fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ user }) })
@@ -97,14 +97,14 @@ describe('BruntsfieldCoursePage (#78)', () => {
     expect(navigate).toHaveBeenCalledWith('login')
   })
 
-  it('the "← Golf Scorecard home" link tracks the click and navigates home', async () => {
+  it('the "Golf Scorecard home" link tracks the click and navigates home', async () => {
     const user = userEvent.setup()
     mountFetch(null)
     const plausible = vi.fn()
     window.plausible = plausible
     const { navigate } = renderPage()
 
-    await user.click(await screen.findByRole('button', { name: '← Golf Scorecard home' }))
+    await user.click(await screen.findByRole('button', { name: 'Golf Scorecard home' }))
 
     expect(plausible).toHaveBeenCalledWith('Bruntsfield Home Link Clicked', { props: {} })
     expect(navigate).toHaveBeenCalledWith('home')

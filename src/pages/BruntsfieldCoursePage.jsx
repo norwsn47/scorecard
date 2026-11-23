@@ -75,11 +75,11 @@ export default function BruntsfieldCoursePage({ navigate }) {
         </Button>
 
         <Button variant="secondary" fullWidth onClick={() => setShowMap(true)}>
-          View Course Map
+          View course map
         </Button>
 
         <Button variant="secondary" fullWidth onClick={() => navigate('rules', { from: 'bruntsfield' })}>
-          Course Rules
+          Course rules
         </Button>
 
         {user && (
@@ -118,9 +118,13 @@ export default function BruntsfieldCoursePage({ navigate }) {
         <div className="pt-4 text-center">
           <button
             onClick={() => { track('Bruntsfield Home Link Clicked'); navigate('home') }}
-            className="inline-block py-3 -my-3 type-small-strong text-muted active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="inline-flex items-center gap-1 py-3 -my-3 type-small-strong text-muted active:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
-            ← Golf Scorecard home
+            {/* Same chevron as the PageHeader back button (stage 8). */}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 shrink-0" aria-hidden="true">
+              <path d="M15 6l-6 6 6 6" />
+            </svg>
+            Golf Scorecard home
           </button>
         </div>
       </main>

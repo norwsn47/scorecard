@@ -12,7 +12,7 @@ export default function Rules({ goBack, params }) {
   return (
     <div className="h-full bg-bg flex flex-col">
       <PageHeader
-        title="Course Rules"
+        title="Course rules"
         backLabel={FROM_LABEL[from] ?? 'Home'}
         onBack={() => goBack(from)}
       />
