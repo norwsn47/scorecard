@@ -634,7 +634,7 @@ The bracket is always `type-caption` (the `bracket` form of `ParDelta`). It is n
 | Totals bar (live grid) | A flex row under the table, kept in step with its columns: a `w-14 shrink-0 pl-3` label, then one `flex-1 min-w-0` share per player. `bg-bg-card border-t-2 border-border`, `h-11` or `h-14` as above |
 | Summary Total row | `tfoot` `sticky bottom-0 z-10`, `bg-bg-card` on each cell (not the row, #66). Height is a minimum, so a `DNF` sub-label can grow it. Every column is `text-text`, the winner's included: the winner is named in the result line above the table, not coloured in it (owner call, 23 November 2026) |
 | Empty score | `-` (the live grid uses an en dash) |
-| Share image mirror | `share.js` draws its own table (banded rows, no hole-column fill, no dense mode). It mirrors the hole number in `text` bold with the bracket in `muted`, and the `TOTAL` label in `text`. Header labels stay muted caps |
+| Share image mirror | `share.js` draws the Summary table on a canvas: the 56px `bg-bg-card` hole column, a tinted header row (Label caps, or Caption in dense mode, names truncated with an ellipsis), 36px rows with hairlines, Front 9 / Back 9 band rows, the Total row (44px, or 56px with the bracket stacked in dense mode). See "Share image" |
 
 Rows on the live grid are 48px because they are the tap target. The 36px Summary rows are read-only.
 
@@ -654,7 +654,7 @@ The one place the scorecard leaves pencil-and-paper monochrome. Applies to score
 **Per-hole indicator (grid + Summary + share).** An inline Caption delta on the same line as the score digit, after a small gap: `9 +6`. `type-caption` (12px, medium, tracking 0.2px), rendered by the shared `ParDelta` component. It is no longer a raised superscript (redesign decision 8). The digit stays the workhorse and the delta annotates it. The bracket form is not used in the grid, because up to six player columns share a row and `3 (+1)` will not fit. The delta sits on the score's line (`whitespace-nowrap`), never below it, and a level `E` takes the surrounding text colour.
 
 **Round total-to-par (totals bar, Summary totals row, finish dialog, share).** In brackets, on the total's own line: `41 (+5)`, also `type-caption` (the bracket form of `ParDelta`, used in History and every totals row). Not superscript. `DNF` stays as the sub-label beneath where it applies. The bracket's digits and sign take the semantic colour; the surrounding total stays `text` / `accent` as today. Before a player has scored, the bracket is omitted entirely. Summary and History used to also show an `Av. X` (average strokes) sub-line here — dropped (#70, flagged as not interesting): the bracket already carries the same total-to-par information the average line duplicated.
-- The share image is hand-drawn and sizes its own bracket to match the total.
+- The share image draws the same Caption bracket beside the total (below it in dense mode).
 - The live Scorecard totals bar uses the same Caption bracket as every other surface; there is no size exception anywhere, so the bracket is never shrunk. With one to four players the bracket sits on the total's line (`55 (+22)`, 44px row). With five or six (dense mode, see "Scorecard table") it sits below the total, centred, in a 56px row.
 
 **Override rule (one sentence).** A vs-par delta keeps its semantic colour on every surface where the background is the cream ground or the card, and drops the semantic colour *only* inside a filled cell (the live active cell, white-on-`accent`), where the delta takes that cell's inverted white text and the leading `+` / `-` sign carries the direction.
@@ -666,7 +666,15 @@ Rationale: the semantic colours fail contrast on the solid `accent` fill (1.6–
 underPar: '#2C6B3C',
 overPar:  '#9B3A24',
 ```
-The share image has no active cell, so the "filled cell" branch of the override never applies there. It does have winner columns (drawn in `C.accent`): per the rule above, deltas in those columns still render in `C.underPar` / `C.overPar`, and a level `E` inherits `C.accent`. In practice the canvas picks the delta's `fillStyle` purely from the sign of the delta (negative → `C.underPar`, positive → `C.overPar`, zero → inherit the cell's current fill), independent of winner status.
+The share image has no active cell, so the "filled cell" branch of the override never applies there, and like Summary it has no winner column colour. The canvas picks the delta's colour from its sign alone: negative `C.underPar`, positive `C.overPar`, level `E` in `C.text`.
+
+### Share image
+`src/utils/share.js` draws a picture of the Summary screen at 390px wide (2x), using the DESIGN.md type styles as canvas fonts and nothing below the 12px Caption floor:
+- **Header:** the course name in the Title style (Cormorant italic 500, 24/30, `text`), centred, wrapping to two lines and then clamped with an ellipsis; the date below in Caption `muted`; a hairline under the header.
+- **Result line** (two or more players): Summary's words in Body `muted` with the winner's name in `accent`, between hairlines ("Winner - Will - 53 strokes", "Tied - A & B - ...", "Tied - 4 players level on ...", "No winner"). A line too long for its space drops to Small, then shortens the names.
+- **Table:** exactly the Summary score table (see "Scorecard table"), including Front 9 / Back 9 rows, the `DNF` sub-label, inline Caption deltas and dense mode for five or six players.
+- **Foot:** the Outbuild lockup as on Home ("Scorecard" Strong, "by Outbuild" Small `muted`).
+Tracking (Label caps 1.1px, Caption 0.2px) is applied where the browser supports `ctx.letterSpacing`. The signed-in star is never drawn.
 
 ### Accent divider rule
 ```

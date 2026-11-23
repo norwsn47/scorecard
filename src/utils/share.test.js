@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { shareScorecard } from './share.js'
+import { LAYOUT, shareScorecard } from './share.js'
 
 // Coverage for the share image (BACKLOG #104). jsdom has no canvas, so the
 // canvas is faked: createElement('canvas') returns a recording stand-in whose
@@ -18,7 +18,9 @@ function fakeCanvas() {
   ctx = {
     scale: vi.fn(),
     fillRect: vi.fn(),
-    fillText: vi.fn(),
+    // Records the font in force for each piece of text drawn.
+    fillText: vi.fn(() => ctx.fontsDrawn.push(ctx.font)),
+    fontsDrawn: [],
     // Fixed-width glyphs keep the name-truncation loop deterministic.
     measureText: vi.fn(text => ({ width: String(text).length * 6 })),
     fillStyle: '',
@@ -35,6 +37,9 @@ function fakeCanvas() {
 }
 
 const drawnText = () => ctx.fillText.mock.calls.map(([text]) => text)
+// The result line is drawn in pieces (the winner's name in accent), so it is
+// checked as one joined string.
+const joinedText = () => drawnText().join('')
 
 function game(overrides = {}) {
   return {
@@ -127,15 +132,15 @@ describe('shareScorecard - what the image says', () => {
     expect(drawnText()).toContain('DNF')
   })
 
-  describe('winner callout wording (shared with Summary and History)', () => {
+  describe('result line wording (the same as Summary)', () => {
     it('names an outright winner with their strokes', async () => {
       await shareScorecard(game())
-      expect(drawnText()).toContain('Winner: Ann - 6 strokes')
+      expect(joinedText()).toContain('Winner - Ann - 6 strokes')
     })
 
     it('spells out two tied winners with an ampersand', async () => {
       await shareScorecard(game({ scores: { Ann: [3, 4], Bo: [4, 3] } }))
-      expect(drawnText()).toContain('Tied: Ann & Bo - 7 strokes')
+      expect(joinedText()).toContain('Tied - Ann & Bo - 7 strokes')
     })
 
     it('spells out three tied winners as "A, B & C"', async () => {
@@ -144,7 +149,7 @@ describe('shareScorecard - what the image says', () => {
         players,
         scores: Object.fromEntries(players.map(p => [p, [3, 3]])),
       }))
-      expect(drawnText()).toContain('Tied: Ann, Bo & Cass - 6 strokes')
+      expect(joinedText()).toContain('Tied - Ann, Bo & Cass - 6 strokes')
     })
 
     it('falls back to a count for four or more level', async () => {
@@ -153,30 +158,67 @@ describe('shareScorecard - what the image says', () => {
         players,
         scores: Object.fromEntries(players.map(p => [p, [3, 3]])),
       }))
-      expect(drawnText()).toContain('Tied: 4 players level on 6 strokes')
+      expect(joinedText()).toContain('Tied - 4 players level on 6 strokes')
     })
 
     it('says nobody won when no player has a score', async () => {
       await shareScorecard(game({ scores: {} }))
-      expect(drawnText()).toContain('No winner - all players DNF')
+      expect(drawnText()).toContain('No winner')
     })
 
     it('re-derives the winner from the scores rather than trusting a stale stored one', async () => {
       await shareScorecard(game({ winner: 'Bo', winners: ['Bo'], winningTotal: 1 }))
-      expect(drawnText()).toContain('Winner: Ann - 6 strokes')
-      expect(drawnText()).not.toContain('Winner: Bo - 1 strokes')
+      expect(joinedText()).toContain('Winner - Ann - 6 strokes')
+      expect(joinedText()).not.toContain('Bo - 1 stroke')
     })
 
-    it('omits the callout entirely for a solo round, and the card is shorter for it', async () => {
+    it('omits the result line entirely for a solo round, and the card is shorter for it', async () => {
       await shareScorecard(game())
       const duoHeight = canvas.height
 
       await shareScorecard(game({ players: ['Ann'], scores: { Ann: [3, 3] } }))
 
       expect(drawnText().some(t => /^(Winner|Tied|No winner)/.test(t))).toBe(false)
-      // Callout box (44) + the gap after it (12), drawn at 2x.
-      expect(canvas.height).toBe(duoHeight - (44 + 12) * 2)
+      // The result line's band, drawn at 2x.
+      expect(canvas.height).toBe(duoHeight - LAYOUT.RESULT_H * 2)
     })
+  })
+})
+
+describe('shareScorecard - follows the Summary design', () => {
+  it('never draws text below the 12px Caption floor', async () => {
+    await shareScorecard(game({ scores: { Ann: [2, 3], Bo: [4, 5] } }))
+    const sizes = ctx.fontsDrawn.map(f => parseInt(f.match(/(\d+)px/)[1], 10))
+    expect(sizes.length).toBe(ctx.fillText.mock.calls.length)
+    expect(Math.min(...sizes)).toBeGreaterThanOrEqual(12)
+  })
+
+  it('draws the delta inline beside the score, not raised as a superscript', async () => {
+    await shareScorecard(game({ scores: { Ann: [2, 3], Bo: [4, 4] } }))
+    const calls = ctx.fillText.mock.calls
+    const scoreCall = calls.find(([t]) => t === '2')
+    const deltaCall = calls.find(([t]) => t === ' -1')
+    expect(scoreCall).toBeTruthy()
+    expect(deltaCall).toBeTruthy()
+    expect(deltaCall[2]).toBe(scoreCall[2])
+  })
+
+  it('writes the date under the course name', async () => {
+    await shareScorecard(game())
+    expect(drawnText()).toContain('1 August 2026')
+  })
+
+  it('adds Front 9 and Back 9 rows to an 18-hole round', async () => {
+    const pars = Array(18).fill(3)
+    await shareScorecard(game({ holes: 18, holesPlayed: 18, holePars: pars, scores: { Ann: Array(18).fill(3), Bo: Array(18).fill(4) } }))
+    expect(drawnText()).toEqual(expect.arrayContaining(['Front 9', 'Back 9', 'Total']))
+  })
+
+  it('uses sentence-case Caption headers for five or six players', async () => {
+    const players = ['Ann', 'Bo', 'Cass', 'Dev', 'Eve']
+    await shareScorecard(game({ players, scores: Object.fromEntries(players.map(p => [p, [3, 3]])) }))
+    expect(drawnText()).toEqual(expect.arrayContaining(['Hole', 'Ann', 'Eve']))
+    expect(drawnText()).not.toContain('ANN')
   })
 })
 
