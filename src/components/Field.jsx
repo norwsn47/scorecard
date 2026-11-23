@@ -17,7 +17,7 @@ import { forwardRef, useId } from 'react'
 // in the DOM, visually hidden, and still names the control.
 
 const CONTROL_BASE =
-  'block w-full min-w-0 py-3 pl-4 pr-4 rounded-control border type-body ' +
+  'block w-full min-w-0 py-3 pl-4 rounded-control border type-body ' +
   'bg-bg-card text-text placeholder:text-muted ' +
   'focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent ' +
   'disabled:bg-disabled-surface disabled:border-border disabled:text-disabled-text ' +
@@ -70,8 +70,10 @@ const Field = forwardRef(function Field(
     // Error takes Figma's error colour; the resting edge is the field-only token.
     hasError ? 'border-error' : 'border-field',
     Tag === 'textarea' ? 'resize-none' : '',
-    isSelect ? 'appearance-none pr-10 truncate' : '',
-    trailing ? 'pr-12' : '',
+    // One right padding per control. pr-4 used to sit in the base string next
+    // to pr-10 / pr-12, and Tailwind emits pr-4 later in the CSS, so it won and
+    // a long select value ran under the chevron.
+    isSelect ? 'appearance-none pr-10 truncate' : trailing ? 'pr-12' : 'pr-4',
   ]
     .filter(Boolean)
     .join(' ')
