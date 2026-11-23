@@ -268,7 +268,7 @@ export default function Settings({ navigate }) {
               <p className="type-small text-muted">
                 Fills in your name at the start of a new round and marks you with a small star on the scorecard. Leave it blank if you would rather not.
               </p>
-              {nameError && <p role="alert" className="type-small text-accent pl-1">{nameError}</p>}
+              {nameError && <p role="alert" className="type-small text-error pl-1">{nameError}</p>}
               <div className="flex items-center gap-5">
                 <Button
                   size="medium"
@@ -335,7 +335,7 @@ export default function Settings({ navigate }) {
                   placeholder="you@example.com"
                   autoComplete="email"
                 />
-                {emailError && <p role="alert" className="type-small text-accent pl-1">{emailError}</p>}
+                {emailError && <p role="alert" className="type-small text-error pl-1">{emailError}</p>}
                 {emailSent && (
                   <p role="status" className="type-small text-muted pl-1">
                     Check the new inbox for a confirmation link. Your address only changes once you open it.
@@ -415,7 +415,7 @@ export default function Settings({ navigate }) {
               {signingOut ? 'Signing out…' : 'Sign out'}
             </Button>
             {signOutError && (
-              <p role="alert" className="type-small text-accent mt-related">
+              <p role="alert" className="type-small text-error mt-related">
                 Couldn't sign out - check your connection and try again.
               </p>
             )}
@@ -433,7 +433,7 @@ export default function Settings({ navigate }) {
               Removes your account and every round and course saved to it, on every device. This cannot be undone. Quick-play scores saved on this device are not part of your account and stay put.
             </p>
             {deleteError && !confirmDelete && (
-              <p role="alert" className="type-small text-accent">{deleteError}</p>
+              <p role="alert" className="type-small text-error">{deleteError}</p>
             )}
           </div>
         </section>
@@ -473,7 +473,7 @@ export default function Settings({ navigate }) {
             />
 
             {deleteError && (
-              <p role="alert" className="type-small text-accent mb-3">{deleteError}</p>
+              <p role="alert" className="type-small text-error mb-3">{deleteError}</p>
             )}
 
             <div className="flex flex-col gap-3">

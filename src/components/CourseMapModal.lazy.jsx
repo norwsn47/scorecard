@@ -56,7 +56,7 @@ function LoadFailed({ onClose }) {
           </button>
         </div>
         <div className="flex items-center justify-center min-h-[160px] px-5 text-center">
-          <p role="alert" className="type-small text-accent">
+          <p role="alert" className="type-small text-error">
             The course map couldn't load. Check your connection and reopen this.
           </p>
         </div>

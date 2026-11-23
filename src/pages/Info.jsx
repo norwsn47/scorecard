@@ -138,7 +138,7 @@ export default function Info({ navigate, goBack, params }) {
                 Sign out
               </button>
               {logoutError && (
-                <p role="alert" className="type-small text-accent mt-related">
+                <p role="alert" className="type-small text-error mt-related">
                   Couldn't sign out - check your connection and try again.
                 </p>
               )}

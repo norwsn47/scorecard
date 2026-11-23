@@ -741,7 +741,7 @@ export default function Summary({ navigate, params }) {
                   browser either way. Keep is not offered when the device
                   itself could not hold the round. */}
               {user && saveError && (
-                <div className="rounded-control border border-accent px-4 py-4 space-y-3">
+                <div className="rounded-control border border-error px-4 py-4 space-y-3">
                   <p key={saveError.n} role="alert" className="type-small text-text">
                     {SAVE_ERROR_COPY[saveError.kind]}
                   </p>
@@ -856,7 +856,7 @@ export default function Summary({ navigate, params }) {
             <h2 id="summary-delete-round-heading" className="type-title text-text mb-1">Delete this round?</h2>
             <p className="type-small text-muted mb-8">This cannot be undone.</p>
             {deleteError && (
-              <p role="alert" className="type-small text-accent mb-3">{deleteError}</p>
+              <p role="alert" className="type-small text-error mb-3">{deleteError}</p>
             )}
             <div className="flex gap-3">
               <Button
