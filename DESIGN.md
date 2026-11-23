@@ -40,7 +40,7 @@ All tokens are defined as CSS custom properties in `src/styles/index.css` and al
 | `control-warm` | `--color-control-warm` | `#7D746C` | Warm grey for secondary game controls: Decrement outline and glyph, Advance fill |
 | `disabled-surface` | `--color-surface-disabled` | `#E8E1D6` | Fill of a disabled control. Figma `color/surface/disabled` |
 | `disabled-text` | `--color-text-disabled` | `#A39A90` | Text of a disabled control. **Owner override** of Figma `color/text/disabled` (`#D9D0C4`, 1.17:1 on the disabled fill, unreadable outdoors): about 2.1:1 on `disabled-surface`, 2.5:1 on `bg` - readable, still plainly disabled |
-| `error` | `--color-error` | `#9B3A24` | Field error edge and message. Figma `color/status/error/text`. Same value as `over-par`, separate token so `over-par` stays deltas-only |
+| `error` | `--color-error` | `#9B3A24` | Every error: field edge and message, inline error lines, error toasts. Figma `color/status/error/text`. Same value as `over-par`, separate token so `over-par` stays deltas-only |
 | `under-par` | `--color-under-par` | `#2C6B3C` | Score-vs-par **delta** when under par (`-1`, `-2` ...). Deltas only: never chrome, never interactive |
 | `over-par` | `--color-over-par` | `#9B3A24` | Score-vs-par **delta** when over par (`+1`, `+5` ...). Deltas only: never chrome, never interactive |
 | *(desktop only)* | n/a | `#E8E2D6` | Background behind phone frame on desktop |
@@ -108,7 +108,7 @@ The `field` and `border` rows are **hand-computed from WCAG relative luminance**
 
 Both delta colours **fail** on the solid `accent` fill. This is expected and is exactly why the override rule below forces them off inside a filled cell. On every non-filled surface (cream ground or card, including behind a winner's accent-green *text*) they pass comfortably.
 
-`under-par` `#2C6B3C` is a lighter, greener mid-forest, deliberately ~12 lightness points up from the brand `accent` `#1A4329` so a `-1` reads as its own "good score" mark, not as winner/active chrome. `over-par` `#9B3A24` is a deep burnt-terracotta / rust: warm, of the Outbuild family (the brand's original accent direction). Form field errors use the same value through their own `error` token, so `over-par` itself stays deltas-only. The app-level notice banner is the green `accent` fill (see "Error / notification banner").
+`under-par` `#2C6B3C` is a lighter, greener mid-forest, deliberately ~12 lightness points up from the brand `accent` `#1A4329` so a `-1` reads as its own "good score" mark, not as winner/active chrome. `over-par` `#9B3A24` is a deep burnt-terracotta / rust: warm, of the Outbuild family (the brand's original accent direction). Errors use the same value through their own `error` token, so `over-par` itself stays deltas-only. Every error is in `error` red, never accent green, so an error never reads as a link (see "Toast").
 
 ---
 
@@ -158,7 +158,7 @@ Everything that is not Display or Title is Inter, through one of six utilities. 
 |---|---|
 | Body and descriptive copy, input text, the total score | `type-body` (`type-strong` where it needs emphasis, 500) |
 | Buttons, header actions (Finish, Save), navigation (Back), emphasised labels, score cells | `type-strong` or `type-small-strong`, sentence case |
-| Secondary copy, helper text, table cells, error and banner text | `type-small` (`type-small-strong` for emphasis) |
+| Secondary copy, helper text, table cells, error and toast text | `type-small` (`type-small-strong` for emphasis) |
 | Score-vs-par delta, fine print | `type-caption` (12px, 500, tracking 0.2px); see "Score vs par" |
 | Micro labels and table headers | `type-label-caps` (the only uppercase style), `text-muted` |
 
@@ -675,15 +675,24 @@ w-10 h-0.5 bg-accent mx-auto
 Used to separate major sections on the Home screen (left-aligned `ml-0` variant). Not used on utility screens.
 On the Home screen the rule is left-aligned: `ml-0` replaces `mx-auto`.
 
-### Error / notification banner
+### Toast (error and notice messages)
+`components/Toast.jsx`. A floating message pill, never a full-width banner at the top of the screen. It floats over the page near the bottom, where the eye and thumb already are, inset by the page margin.
 ```
-sticky top-0 z-50 bg-accent text-on-accent text-center type-small py-2 px-4
+absolute inset-x-page z-40 rounded-control text-on-accent pl-4, message type-small py-3
+Error:   bg-error   message role="alert"   (white on error 6.9:1)
+Notice:  bg-accent  message role="status"  (white on accent 11.2:1)
+Dismiss: 44px button, white cross, aria-label "Dismiss", outside the live region
 ```
-Used for the app-level storage-blocked notice (`role="alert"`) and Home's email-link notice (`role="status"`).
+- **Placement.** The parent is positioned and sets the bottom offset, so the toast clears each screen's bottom zone. Scorecard: just above the round-control bar (`bottom-full mb-related` inside it). Home: `1.5rem` above the bottom plus the safe-area inset. App-level storage notice: `7.5rem` plus the safe-area inset, clearing Setup's and Summary's action bars. All are inside `.app-shell`, so the desktop phone frame contains them.
+- **Never auto-dismisses.** An error must not vanish before it is read. Each has a dismiss button; a failure that happens again (the next failed save) shows the toast again.
+- **One at a time.** The app-level "storage is blocked" toast is not shown on the Scorecard, where the Scorecard's own save-failure toast already reports the same problem.
+- **Uses today:** storage blocked (App), save failure (Scorecard), Home's email-link result (green for "updated", red for "expired" or "taken").
+
+**Error colour.** Every error message is `type-small text-error`: field errors (see Field), inline error lines (sign-out, delete, save, resend), and load failures that are errors rather than empty states. A bordered error panel (Summary's save failure) takes `border-error` with the message in `text-text`. Accent green is never used for an error. Guidance notices that are not failures (Summary's "Finish your current round before editing a past one.") stay `text-accent`.
 
 **Load-failure states.** When a list or selector cannot load, show that, never an empty state. History uses `EmptyState` (title, sentence, a button: **Try again**, or **Sign in** for a 401) with `role="alert"`; Setup's course area uses the dashed empty-state box with the same wording and a small outline button. An empty state ("No rounds yet", "No courses yet") is only for a load that succeeded and returned nothing.
 
-**Announce messages.** An error banner or inline error line carries `role="alert"`; a neutral confirmation ("Saved.", "Check the new inbox...") carries `role="status"`. Neither is put on a per-second countdown (e.g. "Resend in 29s") - that would be read out every tick.
+**Announce messages.** An error toast or inline error line carries `role="alert"`; a neutral confirmation ("Saved.", "Check the new inbox...") carries `role="status"`. Neither is put on a per-second countdown (e.g. "Resend in 29s") - that would be read out every tick.
 
 ### Outbuild attribution mark
 Footer of home screen only.

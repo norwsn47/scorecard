@@ -13,6 +13,7 @@ import Scorecard            from './pages/Scorecard.jsx'
 import Setup                from './pages/Setup.jsx'
 import Summary              from './pages/Summary.jsx'
 import BruntsfieldCoursePage from './pages/BruntsfieldCoursePage.jsx'
+import Toast                from './components/Toast.jsx'
 import { getActiveGame, isStorageAvailable } from './utils/storage.js'
 import { AuthProvider, useAuth } from './hooks/useAuth.jsx'
 import { useSyncPendingRounds } from './hooks/useSyncPendingRounds.js'
@@ -94,6 +95,7 @@ function AppContent() {
   })
   const [params, setParams]       = useState({})
   const [storageOk, setStorageOk] = useState(true)
+  const [storageNoticeDismissed, setStorageNoticeDismissed] = useState(false)
 
   useEffect(() => {
     setStorageOk(isStorageAvailable())
@@ -175,15 +177,19 @@ function AppContent() {
   const Page = PAGES[page] ?? Home
   return (
     <>
-      <div className="app-shell max-w-[430px] mx-auto h-dvh overflow-hidden bg-bg flex flex-col">
-        {!storageOk && (
-          <div role="alert" className="sticky top-0 z-50 bg-accent text-on-accent text-center type-small py-2 px-4">
-            Scores won't save – storage is blocked. Using private browsing?
-          </div>
-        )}
+      <div className="app-shell relative max-w-[430px] mx-auto h-dvh overflow-hidden bg-bg flex flex-col">
         <ErrorBoundary key={page}>
           <Page navigate={navigate} goBack={goBack} params={params} />
         </ErrorBoundary>
+        {/* Clears the tallest bottom zones (Setup's and Summary's action bars).
+            Not on the Scorecard: there a blocked store fails every save, and the
+            Scorecard's own save-failure toast says so above its controls, so
+            showing both would stack two toasts. */}
+        {!storageOk && !storageNoticeDismissed && page !== 'scorecard' && (
+          <Toast onDismiss={() => setStorageNoticeDismissed(true)} className="bottom-[calc(7.5rem+env(safe-area-inset-bottom,0px))]">
+            Scores won't save – storage is blocked. Using private browsing?
+          </Toast>
+        )}
       </div>
 
       <div className="desktop-note" aria-hidden="true">

@@ -4,6 +4,7 @@ import CourseMapModal from '../components/CourseMapModal.lazy.jsx'
 import PageHeader, { HeaderAction } from '../components/PageHeader.jsx'
 import ParDelta from '../components/ParDelta.jsx'
 import PlayerStar from '../components/PlayerStar.jsx'
+import Toast from '../components/Toast.jsx'
 import { BRUNTSFIELD_COURSE_NAME, MAX_HOLES, MAX_STROKES } from '../constants.js'
 import { track } from '../utils/analytics.js'
 import { computeDisplayedHoles, finishGame, isSignedInPlayer } from '../utils/game.js'
@@ -279,14 +280,6 @@ export default function Scorecard({ navigate, params }) {
   return (
     <div className="relative h-full bg-bg flex flex-col">
 
-      {saveError && (
-        <div role="alert" className="bg-accent text-on-accent text-center type-small py-2 px-4">
-          {isEdit
-            ? "Couldn't save your changes – check your connection and try again"
-            : "Couldn't save – storage may be full"}
-        </div>
-      )}
-
       <PageHeader
         title={isEdit ? 'Edit Round' : 'Scorecard'}
         subtitle={null}
@@ -470,8 +463,16 @@ export default function Scorecard({ navigate, params }) {
           ))}
         </div>
 
-        {/* Floating control bar */}
-        <div className="bg-bg border-t border-border px-page py-4">
+        {/* Floating control bar. Relative so the save-failure toast can float
+            just above it. The next failed save shows the toast again. */}
+        <div className="relative bg-bg border-t border-border px-page py-4">
+          {saveError && (
+            <Toast onDismiss={() => setSaveError(false)} className="bottom-full mb-related">
+              {isEdit
+                ? "Couldn't save your changes – check your connection and try again"
+                : "Couldn't save – storage may be full"}
+            </Toast>
+          )}
           <div className="flex items-center justify-between">
             {isBruntsfieldCourse ? (
               <button
