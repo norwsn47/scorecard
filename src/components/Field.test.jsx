@@ -113,3 +113,27 @@ describe('Field', () => {
     expect(el).toHaveValue('Ann')
   })
 })
+
+describe('Field - one right padding per control', () => {
+  // pr-4 used to sit beside pr-10 / pr-12; Tailwind emits pr-4 later in the
+  // CSS, so it won and a long select value ran under the chevron.
+  it('a select reserves room for its chevron and carries no pr-4', () => {
+    render(<Select label="Course"><option>Bruntsfield Short Hole Golf Course</option></Select>)
+    const select = screen.getByLabelText('Course')
+    expect(select).toHaveClass('pr-10', 'truncate')
+    expect(select).not.toHaveClass('pr-4')
+  })
+
+  it('an input with a trailing element reserves room for it and carries no pr-4', () => {
+    render(<Input label="Email" trailing={<span>x</span>} />)
+    const input = screen.getByLabelText('Email')
+    expect(input).toHaveClass('pr-12')
+    expect(input).not.toHaveClass('pr-4')
+  })
+
+  it('a plain input and a textarea keep pr-4', () => {
+    render(<><Input label="Name" /><Textarea label="Notes" /></>)
+    expect(screen.getByLabelText('Name')).toHaveClass('pr-4')
+    expect(screen.getByLabelText('Notes')).toHaveClass('pr-4')
+  })
+})
