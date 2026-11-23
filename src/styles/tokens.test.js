@@ -271,9 +271,13 @@ describe('radius, shadow and spacing', () => {
     expect(parseFloat(m[8])).toBeCloseTo(fig.a, 5)
   })
 
-  it('keeps the existing shadow-card and shadow-btn untouched', () => {
-    expect(cssVar('--shadow-card')).toBe('0 1px 3px rgba(26, 26, 24, 0.08), 0 1px 2px rgba(26, 26, 24, 0.04)')
-    expect(cssVar('--shadow-btn')).toBe('0 1px 2px rgba(26, 26, 24, 0.12)')
+  it('has one shadow and one control radius: the retired variables and utilities stay gone', () => {
+    for (const name of ['--shadow-card', '--shadow-btn', '--radius-sm', '--radius-md', '--radius-lg']) {
+      expect(css, `${name} was removed in stage 9`).not.toContain(name)
+    }
+    const ext = tailwindConfig.theme.extend
+    expect(Object.keys(ext.boxShadow)).toEqual(['subtle'])
+    expect(Object.keys(ext.borderRadius).sort()).toEqual(['control', 'sheet'])
   })
 
   const aliasToFigma = {

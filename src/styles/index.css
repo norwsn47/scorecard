@@ -80,9 +80,9 @@
        src/styles/tokens.test.js). Built from the accent channels so the two
        can never drift apart. */
     --color-accent-tint:  rgb(var(--color-accent) / 0.08);
-    --color-accent-tint-hover: rgb(var(--color-accent) / 0.15); /* color/accent/subtle-hover - defined, not yet applied */
-    --color-on-accent:    #FFFFFF;   /* color/accent/on-accent - defined, not yet applied */
-    --color-surface-disabled: #E8E1D6; /* color/surface/disabled - defined, not yet applied */
+    --color-accent-tint-hover: rgb(var(--color-accent) / 0.15); /* color/accent/subtle-hover - pressed tint */
+    --color-on-accent:    #FFFFFF;   /* color/accent/on-accent */
+    --color-surface-disabled: #E8E1D6; /* color/surface/disabled */
     --color-text-disabled:    #A39A90; /* Owner override of Figma color/text/disabled (#D9D0C4, 1.17:1 on the disabled fill, unreadable outdoors), 22 November 2026. About 2.1:1 on surface-disabled, 2.5:1 on bg: readable, still plainly disabled. Disabled states are exempt from 4.5:1 (DESIGN.md "Sunlight contrast") */
     --color-error:            #9B3A24; /* color/status/error/text - field error edge and message. Same value as over-par, kept as its own token so over-par stays deltas-only */
     --color-under-par:   #2C6B3C;   /* score-vs-par delta — under par; deltas only, never chrome (DESIGN.md "Score vs par") */
@@ -92,11 +92,7 @@
     --font-display: 'Cormorant Garamond', serif;
     --font-ui:      'Inter', sans-serif;
 
-    /* Radius */
-    --radius-sm:  4px;
-    --radius-md:  8px;
-    --radius-lg:  12px;
-    /* Redesign radii, in rem (the desktop frame's root is 18px). sm/md/lg stay until stage 3. */
+    /* Radius, in rem (the desktop frame's root is 18px) */
     --radius-control: 0.375rem;  /* radius/control 6px: buttons, inputs, selects, cards */
     --radius-sheet:   1rem;      /* radius/sheet 16px: bottom sheets, top corners only */
 
@@ -104,11 +100,7 @@
     --overlay-modal:    rgba(26,26,24,0.55);
     --overlay-backdrop: rgba(26,26,24,0.4);
 
-    /* Shadows */
-    --shadow-card: 0 1px 3px rgba(26, 26, 24, 0.08), 0 1px 2px rgba(26, 26, 24, 0.04);
-    --shadow-btn:  0 1px 2px rgba(26, 26, 24, 0.12);
-    /* Figma "Shadow/Subtle": defined, not yet applied. Later stages move record
-       cards onto it and drop --shadow-card and --shadow-btn. */
+    /* Shadow: the one shadow, for record cards only (Figma "Shadow/Subtle") */
     --shadow-subtle: 0 0.0625rem 0.125rem rgba(28, 27, 25, 0.06);
   }
 
@@ -122,7 +114,7 @@
 
 /* The eight type styles from Figma (tokens.json textStyles). Sizes, line
    heights and tracking are in rem so they scale with the 18px desktop root.
-   Defined here, not yet used: stage 2 replaces ad hoc type classes with them.
+   They are the only way to style text (guarded by type-guard.test.js).
    Serif is for Display and Title only. */
 @layer components {
   .type-display {

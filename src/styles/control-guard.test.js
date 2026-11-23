@@ -5,7 +5,7 @@ import { resolve, join, relative } from 'node:path'
 // Control guard (redesign stage 3, piece 5). Controls take their radius, focus
 // ring, disabled colours and flat (shadow-free) look from tokens. This fails on
 // the old shipped values in src/**/*.jsx so they cannot drift back:
-//   rounded-sm, rounded-md   -> rounded-control (or rounded-sheet, rounded-full)
+//   rounded-sm, -md, -lg     -> rounded-control (or rounded-sheet, rounded-full)
 //   shadow-btn               -> none (buttons are flat)
 //   ring-accent/40           -> ring-accent (solid 2px focus ring)
 //   opacity-40               -> disabled:bg-disabled-surface disabled:text-disabled-text
@@ -38,6 +38,9 @@ const ALLOW = [
 const CLASS_RULES = [
   { name: 'rounded-sm', test: c => c === 'rounded-sm' },
   { name: 'rounded-md', test: c => c === 'rounded-md' },
+  // The old sm/md/lg radius keys were removed in stage 9, so these now fall back to
+  // Tailwind's own sizes (not the app's). Banned so nothing quietly picks them up.
+  { name: 'rounded-lg', test: c => c === 'rounded-lg' },
   { name: 'shadow-btn', test: c => c === 'shadow-btn' },
   { name: 'shadow-card', test: c => c === 'shadow-card' },
   { name: 'ring-accent/40', test: c => c === 'ring-accent/40' },
@@ -120,8 +123,8 @@ describe('control guard scanner', () => {
   const tokens = s => scan(s).map(f => f.cls)
 
   it('detects banned classes, including variant-prefixed ones', () => {
-    const src = '<b className="rounded-sm md:rounded-md shadow-btn hover:shadow-btn focus-visible:ring-accent/40 disabled:opacity-40 shadow-card px-5 md:px-6">'
-    expect(tokens(src)).toEqual(['rounded-sm', 'rounded-md', 'shadow-btn', 'shadow-btn', 'ring-accent/40', 'opacity-40', 'shadow-card', 'px-5', 'px-6'])
+    const src = '<b className="rounded-sm md:rounded-md rounded-lg shadow-btn hover:shadow-btn focus-visible:ring-accent/40 disabled:opacity-40 shadow-card px-5 md:px-6">'
+    expect(tokens(src)).toEqual(['rounded-sm', 'rounded-md', 'rounded-lg', 'shadow-btn', 'shadow-btn', 'ring-accent/40', 'opacity-40', 'shadow-card', 'px-5', 'px-6'])
   })
 
   it('detects hex and rgba colours, including inside arbitrary values', () => {
@@ -131,7 +134,7 @@ describe('control guard scanner', () => {
 
   it('does not flag the allowed tokens or look-alikes', () => {
     const src = [
-      'rounded-control rounded-sheet rounded-full rounded-lg rounded-t-md shadow-subtle',
+      'rounded-control rounded-sheet rounded-full rounded-t-md rounded-t-sheet shadow-subtle',
       'ring-accent ring-accent/20 px-page px-4 px-50 opacity-25 opacity-400 disabled:bg-disabled-surface',
       'href="#main" id="#nothex" // rounded-sm #fff rgba(0,0,0,1)',
       '/* shadow-btn opacity-40 */ {/* ring-accent/40 */}',
