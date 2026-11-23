@@ -6,6 +6,7 @@ import { track } from '../utils/analytics.js'
 import { formatShortDate } from '../utils/format.js'
 import { getActiveGame, getCompletedGames } from '../utils/storage.js'
 import { useAuth } from '../hooks/useAuth.jsx'
+import Toast from '../components/Toast.jsx'
 
 // ?email=changed|expired|taken redirected back from GET /api/auth/confirm-email
 // — the address change confirmed, the link was dead, or the address
@@ -66,11 +67,6 @@ export default function Home({ navigate }) {
   return (
     <div className="h-full bg-bg flex flex-col relative">
 
-      {noticeCopy && (
-        <div role="status" className="sticky top-0 z-50 bg-accent text-on-accent text-center type-small py-2 px-4">
-          {noticeCopy}
-        </div>
-      )}
 
       {/* ── Branding ── */}
       <header className="flex flex-col justify-start px-page pt-10 pb-2">
@@ -209,6 +205,16 @@ export default function Home({ navigate }) {
         </p>
       </footer>
 
+      {/* 'changed' is good news (notice green); 'expired' and 'taken' are failures (error red). */}
+      {noticeCopy && (
+        <Toast
+          tone={notice === 'changed' ? 'notice' : 'error'}
+          onDismiss={() => setNotice(null)}
+          className="bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))]"
+        >
+          {noticeCopy}
+        </Toast>
+      )}
     </div>
   )
 }

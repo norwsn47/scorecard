@@ -76,7 +76,7 @@ export default function CourseMapModal({ onClose }) {
         {/* Map view */}
         {!showRules && mapState === 'error' && (
           <div className="flex items-center justify-center min-h-[240px] px-5 text-center">
-            <p className="type-small text-accent">
+            <p className="type-small text-error">
               The course map couldn't load. Check your connection and reopen this.
             </p>
           </div>

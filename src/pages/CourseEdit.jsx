@@ -219,7 +219,7 @@ export default function CourseEdit({ navigate, goBack, params }) {
             </div>
 
             {saveError && (
-              <p role="alert" className="type-small text-accent pl-1">{saveError}</p>
+              <p role="alert" className="type-small text-error pl-1">{saveError}</p>
             )}
 
             <div className="pt-3">
@@ -236,7 +236,7 @@ export default function CourseEdit({ navigate, goBack, params }) {
                 Delete this course
               </button>
               {deleteError && (
-                <p role="alert" className="type-small text-accent mt-2">{deleteError}</p>
+                <p role="alert" className="type-small text-error mt-2">{deleteError}</p>
               )}
             </div>
           </>

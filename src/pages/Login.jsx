@@ -123,7 +123,7 @@ export default function Login({ navigate, goBack }) {
           <div className="w-full max-w-[260px] flex flex-col items-stretch gap-3">
             {resendError && (
               <div role="alert" className="px-4 py-3 rounded-control bg-bg-card border border-border">
-                <p className="type-small text-accent">{resendError}</p>
+                <p className="type-small text-error">{resendError}</p>
               </div>
             )}
             <Button
@@ -162,7 +162,7 @@ export default function Login({ navigate, goBack }) {
 
         {error && (
           <div role="alert" className="mb-5 px-4 py-3 rounded-control bg-bg-card border border-border">
-            <p className="type-small text-accent">
+            <p className="type-small text-error">
               {error === 'expired'
                 ? 'Your link has expired. Request a new one.'
                 : error === 'error'
