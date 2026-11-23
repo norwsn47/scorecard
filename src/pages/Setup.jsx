@@ -12,6 +12,7 @@ import { deriveHolePars } from '../utils/scores.js'
 import { clearActiveCell, clearActiveGame, getActiveGame, getPlayers, saveActiveGame, savePlayers } from '../utils/storage.js'
 import { useAuth } from '../hooks/useAuth.jsx'
 import { holdRound, syncPendingRounds } from '../utils/sync.js'
+import TextLink from '../components/TextLink.jsx'
 
 const MAX_PLAYERS = 6
 const NEW_COURSE_HOLE_OPTIONS = [9, 18]
@@ -795,12 +796,9 @@ export default function Setup({ navigate, goBack, params }) {
           <div className="text-center">
             <p className="type-small text-muted">
               New here?{' '}
-              <button
-                onClick={() => navigate('rules', { from: 'setup', bruntsfield: fromBruntsfield })}
-                className="inline-block py-3 -my-3 text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              >
+              <TextLink onClick={() => navigate('rules', { from: 'setup', bruntsfield: fromBruntsfield })}>
                 Read the course rules before you start
-              </button>
+              </TextLink>
             </p>
           </div>
         )}

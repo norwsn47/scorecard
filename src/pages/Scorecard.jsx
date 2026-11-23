@@ -13,6 +13,7 @@ import { deriveHolePars, playerTotal, roundToPar, scoreToPar, subtotal } from '.
 import { clearActiveCell, clearActiveGame, getActiveCell, getActiveGame, getCompletedGames, saveActiveCell, saveActiveGame, saveCompletedGame, updateCompletedGame } from '../utils/storage.js'
 import { buildGamePatch, syncPendingRounds } from '../utils/sync.js'
 import { useAuth } from '../hooks/useAuth.jsx'
+import TextLink from '../components/TextLink.jsx'
 
 function initialCellFor(g) {
   if (!g) return { holeIndex: 0, playerIndex: 0 }
@@ -516,12 +517,9 @@ export default function Scorecard({ navigate, params }) {
             been scored. */}
         {isEdit && (
           <div className="bg-bg px-page pb-4 text-center shrink-0">
-            <button
-              onClick={() => navigate('setup', { editRound: true, game, fromScorecard: true })}
-              className="inline-block py-3.5 -my-3.5 type-small-strong text-muted underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-            >
+            <TextLink size="small-strong" tone="muted" pad="lg" onClick={() => navigate('setup', { editRound: true, game, fromScorecard: true })}>
               Edit game setup
-            </button>
+            </TextLink>
           </div>
         )}
       </main>

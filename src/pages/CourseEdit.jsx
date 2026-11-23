@@ -5,6 +5,7 @@ import { Input } from '../components/Field.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import ParStepperGrid, { stepPar as stepParArray } from '../components/ParStepperGrid.jsx'
 import { deriveHolePars } from '../utils/scores.js'
+import TextLink from '../components/TextLink.jsx'
 
 // Editing and deleting a signed-in user's own course (#54/#71).
 // Reached from Settings > My courses. GET /api/courses
@@ -216,12 +217,9 @@ export default function CourseEdit({ navigate, goBack, params }) {
             </div>
 
             <div className="text-center pt-2">
-              <button
-                onClick={() => { setDeleteError(null); setConfirmDelete(true) }}
-                className="inline-block py-3 -my-3 type-small-strong text-muted underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              >
+              <TextLink size="small-strong" tone="muted" onClick={() => { setDeleteError(null); setConfirmDelete(true) }}>
                 Delete this course
-              </button>
+              </TextLink>
               {deleteError && (
                 <p role="alert" className="type-small text-error mt-2">{deleteError}</p>
               )}

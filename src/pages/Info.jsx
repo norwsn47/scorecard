@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import ExternalArrow from '../components/ExternalArrow.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import { useAuth } from '../hooks/useAuth.jsx'
+import TextLink from '../components/TextLink.jsx'
 
 export default function Info({ navigate, goBack, params }) {
   const { user, logout } = useAuth()
@@ -39,15 +39,9 @@ export default function Info({ navigate, goBack, params }) {
                 One of the world's oldest golf links, Bruntsfield Short Hole Golf Club has been a fixture in Edinburgh since 1895. The 36-hole course features par-3 holes of 45–90 yards – unique to world golf.
               </p>
               <div>
-                <a
-                  href="https://www.bruntsfieldshortholegolfclub.co.uk"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 py-3 -my-3 type-body text-accent underline underline-offset-2"
-                >
+                <TextLink external size="body" href="https://www.bruntsfieldshortholegolfclub.co.uk">
                   bruntsfieldshortholegolfclub.co.uk
-                  <ExternalArrow />
-                </a>
+                </TextLink>
               </div>
             </section>
 
@@ -59,13 +53,9 @@ export default function Info({ navigate, goBack, params }) {
                 Please read the rules before playing.
               </p>
               <div>
-                <button
-                  onClick={() => navigate('rules', { from: 'info' })}
-                  className="inline-flex items-center gap-1 py-3 -my-3 type-body text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                >
+                <TextLink external size="body" onClick={() => navigate('rules', { from: 'info' })}>
                   View full course rules
-                  <ExternalArrow />
-                </button>
+                </TextLink>
               </div>
             </section>
 
@@ -80,26 +70,17 @@ export default function Info({ navigate, goBack, params }) {
             Scorecard is made by Outbuild, a small design collective based in Edinburgh.
           </p>
           <div>
-            <a
-              href="https://outbuild.uk"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 py-3 -my-3 type-body text-accent underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-            >
+            <TextLink external size="body" href="https://outbuild.uk">
               outbuild.uk
-              <ExternalArrow />
-            </a>
+            </TextLink>
           </div>
           <p className="type-body text-text mt-related">
             Questions or feedback? Get in touch.
           </p>
           <div>
-            <a
-              href="mailto:scorecard@outbuild.uk"
-              className="inline-block py-3 -my-3 type-body text-accent underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-            >
+            <TextLink size="body" href="mailto:scorecard@outbuild.uk">
               scorecard@outbuild.uk
-            </a>
+            </TextLink>
           </div>
         </section>
 
@@ -114,15 +95,13 @@ export default function Info({ navigate, goBack, params }) {
               <p className="type-body text-muted break-words">{user.email}</p>
             </div>
             <div className="mt-related">
-              <button
-                onClick={() => navigate('settings', { from: 'info' })}
-                className="inline-block py-3 -my-3 text-left type-body text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              >
+              <TextLink size="body" className="text-left" onClick={() => navigate('settings', { from: 'info' })}>
                 Edit your name, change your email or delete your account
-              </button>
+              </TextLink>
             </div>
             <div className="mt-related">
-              <button
+              <TextLink
+                size="body"
                 onClick={async () => {
                   setLogoutError(false)
                   try {
@@ -133,10 +112,9 @@ export default function Info({ navigate, goBack, params }) {
                     setLogoutError(true)
                   }
                 }}
-                className="inline-block py-3 -my-3 type-body text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
                 Sign out
-              </button>
+              </TextLink>
               {logoutError && (
                 <p role="alert" className="type-small text-error mt-related">
                   Couldn't sign out - check your connection and try again.
@@ -151,12 +129,9 @@ export default function Info({ navigate, goBack, params }) {
               Sign in to save your rounds across devices and keep your history.
             </p>
             <div>
-              <button
-                onClick={() => navigate('login')}
-                className="inline-block py-3 -my-3 type-body text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-              >
+              <TextLink size="body" onClick={() => navigate('login')}>
                 Sign in or create account
-              </button>
+              </TextLink>
             </div>
           </section>
         )}
@@ -168,12 +143,9 @@ export default function Info({ navigate, goBack, params }) {
             Your data is handled under UK GDPR.
           </p>
           <p>
-            <button
-              onClick={() => navigate('privacy', { from: 'info' })}
-              className="inline-block py-3.5 -my-3.5 type-small text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-            >
+            <TextLink size="small" pad="lg" onClick={() => navigate('privacy', { from: 'info' })}>
               Read our privacy policy
-            </button>
+            </TextLink>
           </p>
         </div>
 

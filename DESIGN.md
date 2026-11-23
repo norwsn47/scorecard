@@ -455,6 +455,20 @@ Text-led pages share one vertical rhythm, set with the spacing aliases and no ra
 - **Settings sign out and delete block** is centred (`flex flex-col items-center text-center gap-section`), pushed to the foot of the page by a `flex-1` spacer. Sign out is a Text button; "Delete my account" is a muted underlined `type-small-strong` link with its explanation beneath.
 - **Links.** Grow the tap area with padding and an equal negative margin (see "Inline link tap targets"), and put the link in its own wrapper `<div>` inside a `flex flex-col gap-related` section. Using flex gap instead of `space-y-*` means the negative margin is never overridden, so the link needs no extra handling. Where an item sits under another, `mt-related` gives the 8px.
 
+### Text links (`src/components/TextLink.jsx`)
+
+Every underlined text link in the app is `TextLink`, so the look, press state and focus ring cannot drift:
+```
+<TextLink onClick | href [external] [size] [tone] [pad] [className]>
+Shared:  underline underline-offset-2 rounded-control active:opacity-70
+         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent
+size:    body | small | small-strong | (omitted: inherit the surrounding text)
+tone:    accent (default) | muted (secondary actions: Edit game setup, Delete this round, Delete my account)
+pad:     md  py-3 -my-3 (default)  |  lg  py-3.5 -my-3.5 (a small link on its own line)  |  none  (inside a sentence)
+external: adds the ↗ arrow (inline-flex gap-1); on an href also target="_blank" rel="noopener noreferrer"
+```
+It renders a `<button type="button">` without `href` and an `<a>` with one, and forwards its ref. The tap-area rules below are what `pad` encodes. Not converted, deliberately: Home's links (owner call to leave them as they are) and the underlined `<span>`s that sit inside a larger button (Home, the course page and Summary's sign-in nudge).
+
 ### Inline link tap targets
 
 Text links inside body copy (`type-body` / `type-small`, underlined accent) are visually small but still need a comfortable hit area. Grow the tap target with vertical padding cancelled by an equal negative margin, so the clickable box expands without shifting surrounding layout:
