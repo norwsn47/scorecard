@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import tailwindConfig from '../../tailwind.config.js'
 
-// Token contract (redesign stage 1). docs/redesign/reference/tokens.json is read
+// Token contract (redesign stage 1). src/styles/tokens.json (moved from docs/redesign/reference/ on 23 November 2026) is read
 // from Figma and is the source of truth for the redesign; index.css and
 // tailwind.config.js must match it. This also guards the sunlight contrast rules
 // in DESIGN.md: raising the accent tint above 8% fails here, because muted text
@@ -12,7 +12,7 @@ import tailwindConfig from '../../tailwind.config.js'
 const root = p => resolve(process.cwd(), p)
 const rawCss = readFileSync(root('src/styles/index.css'), 'utf8')
 const css = rawCss.replace(/\/\*[\s\S]*?\*\//g, '')
-const tokens = JSON.parse(readFileSync(root('docs/redesign/reference/tokens.json'), 'utf8'))
+const tokens = JSON.parse(readFileSync(root('src/styles/tokens.json'), 'utf8'))
 
 const BASE = 16 // 1rem = 16px; the 18px desktop root scales everything from there
 

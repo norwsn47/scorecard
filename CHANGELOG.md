@@ -26,6 +26,7 @@ The redesign shipped in stages 0 to 8 (merged). These calls were made during the
 - **The par stepper grid drops to one column below 360px.** At 320px two columns left no room for "Hole 18" beside its stepper.
 - **Dead radius and shadow tokens removed.** `--shadow-card`, `--shadow-btn`, `--radius-sm`, `--radius-md`, `--radius-lg` and their Tailwind keys are gone, along with the unused `font-display` Tailwind key. `rounded-lg` joins `rounded-sm` and `rounded-md` as a banned class, since the keys no longer shadow Tailwind's defaults.
 - **Known difference, left as it is:** the magic-link email still uses the older 4px button, 8px card and uppercase label. It was outside the redesign; aligning it is a later call.
+- **Redesign reference pack removed** (23 November 2026). `docs/redesign/` (the implementation plan, Figma reference PNGs and baseline screenshots) is deleted now that every stage has shipped; it remains in git history. `tokens.json`, the Figma token export the token test checks against, moved to `src/styles/tokens.json`, so references to `docs/redesign/reference/tokens.json` in the 22 November entries now mean that file.
 
 ## 22 November 2026 (redesign: decisions accepted, Figma tokens reconciled)
 

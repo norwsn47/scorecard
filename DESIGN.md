@@ -4,7 +4,7 @@
 Last updated: 23 November 2026
 > Whenever you edit this file, update the "Last updated:" date above to today's date before saving.
 
-> This file describes the app as it ships after the November 2026 redesign. The tokens were read from Figma and are recorded in `docs/redesign/reference/tokens.json`; `src/styles/tokens.test.js` checks the code against that file. Decisions and reversals are in `CHANGELOG.md` (22 and 23 November 2026).
+> This file describes the app as it ships after the November 2026 redesign. The tokens were read from Figma and are recorded in `src/styles/tokens.json`; `src/styles/tokens.test.js` checks the code against that file. Decisions and reversals are in `CHANGELOG.md` (22 and 23 November 2026).
 
 ---
 
