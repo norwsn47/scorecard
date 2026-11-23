@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import Button from '../components/Button.jsx'
 import Card, { CARD_INNER_CONTROL } from '../components/Card.jsx'
 import EmptyState from '../components/EmptyState.jsx'
+import FilterMenu from '../components/FilterMenu.jsx'
 import FilterSheet from '../components/FilterSheet.jsx'
 import Tag from '../components/Tag.jsx'
 import PageHeader, { HeaderAction } from '../components/PageHeader.jsx'
@@ -29,62 +30,6 @@ function readPending(userId) {
   return list
 }
 
-// One filter pill (Figma Chip, c09-chip.png): "Course" or "Player" with a small
-// caret at rest, the chosen value with a clear cross once applied. The main
-// button always opens the picker sheet (aria-haspopup, aria-expanded); the cross
-// is its own button so clearing never needs the sheet. 44px tall, truncates a
-// long value (the full value is in the accessible name).
-const PILL_BASE =
-  'inline-flex max-w-full items-stretch rounded-full border min-h-11 transition-colors ' +
-  'has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent ' +
-  'has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-offset-bg'
-const PILL_DEFAULT = 'border-field text-text hover:bg-accent-tint'
-const PILL_OPEN = 'border-field bg-accent-tint text-text'
-const PILL_APPLIED = 'border-accent bg-accent text-on-accent hover:bg-accent-hover'
-
-function FilterPill({ label, value, star, open, onOpen, onClear, pillRef }) {
-  const applied = value !== null
-  const state = applied ? PILL_APPLIED : open ? PILL_OPEN : PILL_DEFAULT
-  return (
-    <span className={`${PILL_BASE} ${state}`}>
-      <button
-        ref={pillRef}
-        type="button"
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        aria-label={applied ? `${label}: ${value}` : undefined}
-        // Focus first, so the sheet can hand focus back here even where a tap
-        // does not focus a button (Safari).
-        onClick={e => { e.currentTarget.focus(); onOpen() }}
-        className={[
-          'inline-flex min-w-0 items-center gap-related min-h-11 rounded-full type-strong focus:outline-none',
-          applied ? 'pl-4 pr-2' : 'px-4',
-        ].join(' ')}
-      >
-        <span className="truncate">{applied ? value : label}</span>
-        {applied && star}
-        {!applied && (
-          <svg viewBox="0 0 10 10" aria-hidden="true" className="w-2.5 h-2.5 shrink-0" fill="currentColor">
-            <path d="M1.5 3h7L5 7.5z" />
-          </svg>
-        )}
-      </button>
-      {applied && (
-        <button
-          type="button"
-          aria-label={`Clear ${label.toLowerCase()} filter`}
-          onClick={onClear}
-          className="inline-flex w-11 -ml-2 shrink-0 items-center justify-center rounded-full focus:outline-none"
-        >
-          <svg viewBox="0 0 10 10" aria-hidden="true" className="w-2.5 h-2.5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-            <path d="M2 2l6 6M8 2L2 8" />
-          </svg>
-        </button>
-      )}
-    </span>
-  )
-}
-
 const roundsWord = n => (n === 1 ? 'round' : 'rounds')
 
 export default function History({ navigate }) {
@@ -98,12 +43,10 @@ export default function History({ navigate }) {
   const [loading, setLoading]         = useState(!!user)
   const [filter, setFilter]           = useState(null)
   const [courseFilter, setCourseFilter] = useState(null)
-  // Which picker sheet is open: null | 'course' | 'player'.
+  // Which sheet is open: null | 'menu' (Filter rounds) | 'course' | 'player'.
   const [sheet, setSheet]           = useState(null)
-  const coursePillRef = useRef(null)
-  const playerPillRef = useRef(null)
-  const pillsRef = useRef(null)
-  const refocusPills = useRef(false)
+  const fabRef = useRef(null)
+  const refocusFab = useRef(false)
   // Load state for the signed-in list: null | 'failed' | 'signedOut'. A failed
   // load must not read as "No rounds yet" (#99). `skipped` counts stored rounds
   // that couldn't be read, so one bad row no longer blanks the whole list.
@@ -204,25 +147,48 @@ export default function History({ navigate }) {
   }))
 
   function clearFilters() {
-    refocusPills.current = true
+    refocusFab.current = true
     setFilter(null)
     setCourseFilter(null)
   }
 
   // Clearing from the status line or the no-match block removes the button that
-  // had focus, so hand focus to the first pill (if there is one) rather than lose it.
+  // had focus, so hand focus to the filter button rather than lose it.
   useEffect(() => {
-    if (!refocusPills.current) return
-    refocusPills.current = false
-    pillsRef.current?.querySelector('button')?.focus()
+    if (!refocusFab.current) return
+    refocusFab.current = false
+    fabRef.current?.focus()
   }, [filter, courseFilter])
+
+  // The filter button: shown once rounds are in and there is something to
+  // pick (a course filter needs a signed-in user with 2+ courses; a player
+  // filter needs 2+ players). The inline player names on the cards drive the
+  // same `filter` state.
+  const canFilterCourse = Boolean(user && courses.length > 1)
+  const canFilterPlayer = players.length > 1
+  // A background-sync reload (loading with rounds already in hand) keeps the
+  // button, so an open sheet keeps its opener to hand focus back to.
+  const showFab = allGames.length > 0 && (canFilterCourse || canFilterPlayer)
+  const appliedCount = (canFilterCourse && courseFilter ? 1 : 0) + (filter ? 1 : 0)
+  // If a reload leaves nothing to pick, close any open sheet; if it leaves
+  // under two courses, drop the course filter (it would have no row or badge).
+  useEffect(() => {
+    if (!showFab) setSheet(null)
+  }, [showFab])
+  useEffect(() => {
+    if (!loading && !canFilterCourse) setCourseFilter(null)
+  }, [loading, canFilterCourse])
+  const menuRows = [
+    canFilterCourse && { key: 'course', label: 'Course', value: courseFilter ?? 'All courses', applied: Boolean(courseFilter) },
+    canFilterPlayer && { key: 'player', label: 'Player', value: filter ?? 'All players', applied: Boolean(filter) },
+  ].filter(Boolean)
 
   function toggleFilter(name) {
     setFilter(prev => (prev === name ? null : name))
   }
 
   return (
-    <div className="h-full bg-bg flex flex-col">
+    <div className="relative h-full bg-bg flex flex-col">
 
       <PageHeader
         title="History"
@@ -235,7 +201,7 @@ export default function History({ navigate }) {
         ) : null}
       />
 
-      {/* Course label - one course, logged-in only. With 2+ courses the course pill below takes over. */}
+      {/* Course label - one course, logged-in only. With 2+ courses the course filter takes over. */}
       {user && !loading && courses.length === 1 && (
         <div className="px-page pt-4 pb-1 shrink-0">
           <p className="type-label-caps text-accent">{courses[0]}</p>
@@ -248,35 +214,6 @@ export default function History({ navigate }) {
           <p className="type-small text-muted">
             Stored on your device. Gone if you clear your browser.
           </p>
-        </div>
-      )}
-
-      {/* Filter pills: the course pill needs a signed-in user with 2+ courses, the
-          player pill needs 2+ players. Each opens a picker sheet; the inline
-          player names on the cards drive the same `filter` state. */}
-      {!loading && ((user && courses.length > 1) || players.length > 1) && (
-        <div ref={pillsRef} className="px-page pt-3 pb-1 shrink-0 flex flex-wrap gap-related">
-          {user && courses.length > 1 && (
-            <FilterPill
-              label="Course"
-              value={courseFilter}
-              open={sheet === 'course'}
-              pillRef={coursePillRef}
-              onOpen={() => setSheet('course')}
-              onClear={() => { coursePillRef.current?.focus(); setCourseFilter(null) }}
-            />
-          )}
-          {players.length > 1 && (
-            <FilterPill
-              label="Player"
-              value={filter}
-              star={isSignedInPlayer(filter, user?.name) ? <PlayerStar /> : null}
-              open={sheet === 'player'}
-              pillRef={playerPillRef}
-              onOpen={() => setSheet('player')}
-              onClear={() => { playerPillRef.current?.focus(); setFilter(null) }}
-            />
-          )}
         </div>
       )}
 
@@ -294,7 +231,8 @@ export default function History({ navigate }) {
       )}
 
       {/* Game list */}
-      <main className="flex-1 overflow-y-auto px-page py-4 space-y-3">
+      {/* Bottom padding clears the floating filter button (56px + 24px). */}
+      <main className={`flex-1 overflow-y-auto px-page pt-4 space-y-3 ${showFab ? 'pb-24' : 'pb-4'}`}>
 
         {loading && (
           <div className="text-center pt-16">
@@ -431,6 +369,39 @@ export default function History({ navigate }) {
 
       </main>
 
+      {/* Floating filter button (DESIGN.md "History filter button"): opens the
+          Filter rounds sheet. A badge counts the filters applied. */}
+      {showFab && (
+        <button
+          ref={fabRef}
+          type="button"
+          aria-haspopup="dialog"
+          aria-expanded={sheet !== null}
+          aria-label={appliedCount ? `Filter rounds, ${appliedCount} applied` : 'Filter rounds'}
+          // Focus first, so the sheet can hand focus back here even where a tap
+          // does not focus a button (Safari).
+          onClick={e => { e.currentTarget.focus(); setSheet('menu') }}
+          className="absolute right-page bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] z-30 w-14 h-14 rounded-full bg-accent text-on-accent flex items-center justify-center hover:bg-accent-hover active:bg-accent-hover transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" aria-hidden="true" className="w-6 h-6">
+            <path d="M4 7h16M7 12h10M10 17h4" />
+          </svg>
+          {appliedCount > 0 && (
+            <span aria-hidden="true" className="absolute -top-0.5 -right-0.5 min-w-5 h-5 px-1 rounded-full bg-bg border border-accent text-accent type-caption flex items-center justify-center">
+              {appliedCount}
+            </span>
+          )}
+        </button>
+      )}
+
+      {sheet === 'menu' && (
+        <FilterMenu
+          rows={menuRows}
+          onPick={key => setSheet(key)}
+          onClear={clearFilters}
+          onClose={() => setSheet(null)}
+        />
+      )}
       {sheet === 'course' && (
         <FilterSheet
           title="Course"

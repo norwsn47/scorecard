@@ -109,13 +109,13 @@ describe('History — Home fallback on depth 0 (#89 fix-forward)', () => {
 })
 
 describe('History — player filter (#51 / #61)', () => {
-  it('shows no player pill when only one player appears across rounds', () => {
+  it('shows no filter button when only one player appears across rounds', () => {
     seedLocalGames([round('g1', ['Ann'], '2026-08-01T10:00:00.000Z')])
     renderHistory()
-    expect(screen.queryByRole('button', { name: /^Player/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /^Filter rounds/ })).not.toBeInTheDocument()
   })
 
-  it('shows a Player pill once two or more players appear; its sheet has a row per player and filters the list', async () => {
+  it('shows the filter button once two or more players appear; the Player picker has a row per player and filters the list', async () => {
     const user = userEvent.setup()
     seedLocalGames([
       round('g1', ['Ann', 'Bo'], '2026-08-02T10:00:00.000Z'),
@@ -128,7 +128,8 @@ describe('History — player filter (#51 / #61)', () => {
     // Both rounds in the list: Cass's row (g2) is present.
     expect(within(list).getByText('Cass')).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: 'Player' }))
+    await user.click(screen.getByRole('button', { name: 'Filter rounds' }))
+    await user.click(screen.getByRole('button', { name: 'Player: All players' }))
     const sheet = screen.getByRole('dialog', { name: 'Player' })
     expect(within(sheet).getByRole('radio', { name: /^All players/ })).toBeInTheDocument()
 
@@ -138,6 +139,7 @@ describe('History — player filter (#51 / #61)', () => {
     expect(within(list).getByText('Bo')).toBeInTheDocument()
 
     // "All players" clears the filter — g2 is back.
+    await user.click(screen.getByRole('button', { name: 'Filter rounds, 1 applied' }))
     await user.click(screen.getByRole('button', { name: 'Player: Bo' }))
     await user.click(within(screen.getByRole('dialog')).getByRole('radio', { name: /^All players/ }))
     expect(within(list).getByText('Cass')).toBeInTheDocument()
@@ -184,7 +186,9 @@ describe('History - signed-in star (#91)', () => {
     expect(within(list).getAllByRole('img', { name: 'You' })).toHaveLength(1)
 
     // The star shows on the player's row in the picker sheet, and on nobody else's.
-    await userEvent.setup().click(screen.getByRole('button', { name: 'Player' }))
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Filter rounds' }))
+    await user.click(screen.getByRole('button', { name: 'Player: All players' }))
     const sheet = screen.getByRole('dialog', { name: 'Player' })
     expect(within(sheet).getAllByRole('img', { name: 'You' })).toHaveLength(1)
     expect(within(within(sheet).getByRole('radio', { name: /^Ann/ })).getByRole('img', { name: 'You' })).toBeInTheDocument()

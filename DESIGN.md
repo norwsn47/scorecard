@@ -36,7 +36,7 @@ All tokens are defined as CSS custom properties in `src/styles/index.css` and al
 | `accent-tint-hover` | `--color-accent-tint-hover` | accent at 15% (`rgb(var(--color-accent) / 0.15)`) | Pressed state of an `accent-tint` fill (buttons, header actions, the back button). Figma `color/accent/subtle-hover` |
 | `on-accent` | `--color-on-accent` | `#FFFFFF` | Text and icons on a solid `accent` fill. Figma `color/accent/on-accent`. White on `accent` is 11.2:1 |
 | `border` | `--color-border` | `#D9D0C4` | Hairlines, dividers, card edges: warm light, decorative (1.39:1 on `bg`, deliberately below the 3:1 graphics floor) |
-| `field` | `--color-border-field` | `#827970` | Boundary of **form fields** (text inputs, textareas, selects) and the History filter pills. Used as `border-field`. Warm mid-grey, ~3.7:1 on `bg-card` (see "Sunlight contrast") |
+| `field` | `--color-border-field` | `#827970` | Boundary of **form fields** (text inputs, textareas, selects). Used as `border-field`. Warm mid-grey, ~3.7:1 on `bg-card` (see "Sunlight contrast") |
 | `control-warm` | `--color-control-warm` | `#7D746C` | Warm grey for secondary game controls: Decrement outline and glyph, Advance fill |
 | `disabled-surface` | `--color-surface-disabled` | `#E8E1D6` | Fill of a disabled control. Figma `color/surface/disabled` |
 | `disabled-text` | `--color-text-disabled` | `#A39A90` | Text of a disabled control. **Owner override** of Figma `color/text/disabled` (`#D9D0C4`, 1.17:1 on the disabled fill, unreadable outdoors): about 2.1:1 on `disabled-surface`, 2.5:1 on `bg` - readable, still plainly disabled |
@@ -53,7 +53,7 @@ All tokens are defined as CSS custom properties in `src/styles/index.css` and al
 
 Two border tokens, split by **job**, not by size or importance:
 
-- **`border-field`** - the edge of something you type or choose into: `<input>`, `<textarea>`, `<select>` (including the date input). That edge is the only thing telling a golfer where the field is, so it is a control boundary and must clear 3:1 (WCAG 1.4.11). Nothing else takes it, with one deliberate exception: the History filter pills (see "Filter pills"), which are a control with no other boundary and take `border-field` so the pill reads as tappable. The pill keeps its own separate clear button.
+- **`border-field`** - the edge of something you type or choose into: `<input>`, `<textarea>`, `<select>` (including the date input). That edge is the only thing telling a golfer where the field is, so it is a control boundary and must clear 3:1 (WCAG 1.4.11). Nothing else takes it.
 - **`border-border`** - everything decorative: header and table rules, list dividers, card edges, the dashed empty-state boxes, the inactive 9/18 option and the par stepper cells. If removing the line would not stop someone finding a control, it is a hairline and stays light. (Secondary buttons use `border-accent`, and a disabled one `border-disabled-text`; they are not hairlines.)
 
 Why not darken `border` itself: it draws every rule on every screen. Darkening it would turn the scorecard's quiet printed-rule feel into a grid of grey lines (flatness and restraint, `OUTBUILD-DESIGN-LANGUAGE.md` §4 and §9). A field earns a firmer edge; a divider does not.
@@ -220,7 +220,7 @@ One control radius. Two utilities come from the Figma Shape collection, in rem (
 |---|---|---|---|
 | `0.375rem` (6px) | `rounded-control` | `--radius-control` | The one control radius: buttons, fields (input, select, date, textarea), cards, the par stepper cells and their buttons, the Map control, the hole-count options, the back button and the text header action |
 | `1rem` (16px) | `rounded-sheet` | `--radius-sheet` | Bottom sheets, **top corners only** (`rounded-t-sheet`) |
-| `50%` | `rounded-full` | none | Circular game controls (the 64px Decrement, Increment and Advance buttons), the History filter pills, the `Tag`, the filled header action pill (Scorecard Finish), the sheet handle and the Home course-card icon disc |
+| `50%` | `rounded-full` | none | Circular game controls (the 64px Decrement, Increment and Advance buttons), the History filter button and its badge, the `Tag`, the filled header action pill (Scorecard Finish), the sheet handle and the Home course-card icon disc |
 | `44px` | *(CSS only)* | none | Phone frame on desktop |
 
 `rounded-sm`, `rounded-md` and `rounded-lg` are banned in `src/**/*.jsx` by `src/styles/control-guard.test.js`. The old 4px, 8px and 12px radius variables are gone, so those classes would fall back to Tailwind's own sizes, not the app's.
@@ -480,7 +480,7 @@ Precedent: the Setup course-rules link, Summary's "create an account" link (`py-
 
 **Hole-count toggle (9 / 18)**, shown in Setup once "+ New course" is open: two equal buttons, `flex gap-2`, each `flex-1 h-11 rounded-control border type-small-strong`. Active = `border-accent text-accent`; inactive = `border-border text-text`; `active:bg-bg-card`. Labelled "9 holes" / "18 holes", default 9. Single-select: `role="radiogroup"` on the wrapper, `role="radio"` + `aria-checked` on each button. Caption below (`type-small text-muted mt-1.5 pl-1`): "Holes - can't be changed later".
 
-This toggle's **outline** active state is a deliberate choice, not a leftover: see "Selection-state language: outline vs fill" below, which compares it directly with the filter pills' fill applied state.
+This toggle's **outline** active state is a deliberate choice, not a leftover: see "Selection-state language: outline vs fill" below, which compares it with the History filters' applied state.
 
 ### My courses (Settings)
 
@@ -492,44 +492,45 @@ Shared by course creation (Setup), course editing (CourseEdit) and round-level p
 
 **Two-column list, one column below 360px:** `grid grid-cols-1 min-[360px]:grid-cols-2 gap-x-3 gap-y-1.5`, one cell per hole. Below 360px two columns leave no room for "Hole 18" beside its stepper, so the label wrapped; one column keeps every label on one line. Each cell: `flex items-center justify-between rounded-control border border-border bg-bg-card pl-3 pr-0.5`, holding a `Hole {n}` label (`type-small text-text`) and a `−  {par}  +` stepper. Stepper buttons are 44px square, `rounded-control`, with the disabled colours at the 2 to 7 band edge (no wraparound); the par value between them is `type-strong w-4 text-center tabular-nums`. Each row carries `role="group" aria-label="Hole {n}, par {par}"`; the buttons carry `aria-label="Decrease/Increase par for hole {n}"`. Heading above the grid: `type-label-caps text-muted`, "Par for each hole" (or "Par for this round"). No "set every hole to N" control, no tap-to-cycle grid.
 
-### Filter pills (History)
+### History filter button
 
-`src/pages/History.jsx` (the local `FilterPill`), from Figma "Chip" (`c09-chip.png`, `05`, `17`, `18`, `20`). Two pills, **Course** then **Player**, replace the old chip rows (CHANGELOG reversal 6). Each opens a `FilterSheet` (below). The course pill shows only for a signed-in user with 2+ courses, the player pill for 2+ players (signed in or not), and neither while the list loads. A signed-in user with exactly one course still sees that course named as a `type-label-caps text-accent` label, and a signed-out visitor still sees the "Stored on your device" disclaimer. The pills sit in one wrapping row (`flex flex-wrap gap-related px-page`), so two long values drop to a second line at 320px rather than scroll.
+`src/pages/History.jsx` plus `src/components/FilterMenu.jsx`. A floating round button at the bottom right of History opens a **Filter rounds** sheet; it replaced the Course and Player pills at the top of the page (owner call, CHANGELOG 23 November 2026: pills at the top did not work; reverses redesign decision 6). A signed-in user with exactly one course still sees that course named as a `type-label-caps text-accent` label, and a signed-out visitor still sees the "Stored on your device" disclaimer.
 
 ```
-Shape:    inline-flex max-w-full rounded-full border min-h-11   (44px target)
-Default:  border-field text-text, "Course" or "Player" plus a small caret
-          hover bg-accent-tint
-Open:     border-field bg-accent-tint text-text  (the sheet is up; aria-expanded="true")
-Applied:  border-accent bg-accent text-on-accent, the chosen value (truncated) plus a cross
-          hover bg-accent-hover
-Focus:    ring-2 ring-accent ring-offset-2 ring-offset-bg on the whole pill (has-[:focus-visible])
+Button:  absolute right-page bottom-[1.5rem + safe area] z-30 w-14 h-14 rounded-full
+         bg-accent text-on-accent, hover/active bg-accent-hover, a 24px three-line filter icon
+         focus-visible: ring-2 ring-accent ring-offset-2 ring-offset-bg; no shadow
+Badge:   when filters are applied, a 20px bg-bg circle with an accent edge and the count
+         (type-caption text-accent) at the top right; aria-hidden
+Name:    "Filter rounds", or "Filter rounds, {n} applied"; aria-haspopup="dialog", aria-expanded
+List:    the round list takes pb-24 while the button shows, so it never covers the last card
 ```
 
-- **Two buttons when applied.** The main button always opens the sheet (`aria-haspopup="dialog"`, `aria-expanded`). Its accessible name is the visible label at rest ("Course") and `Course: {value}` once applied, so a truncated value is still read in full. The cross is its own 44px button, named "Clear course filter" or "Clear player filter", and clears just that filter without opening the sheet. After a clear, focus stays on the pill's main button.
-- **Edge.** `border-field`, not `border-border`: `c09-chip.png` shows a clearly firmer edge than a card hairline, and the pill is a control with no other boundary.
-- **Open has no PNG.** The tint is the Figma hover look, reused so the pill reads as "pressed in" while its sheet is up.
-- **One selection, two entry points.** The inline player-name toggles on the round cards, the player pill and the player sheet all read and write the same `filter` state, so they always agree. Single choice per pill, "All ..." clears, and the two pills combine (course AND player).
-- **The star.** The signed-in player keeps the `PlayerStar` on their applied pill and on their row in the sheet.
+- **When it shows.** When there is at least one round and something to pick (it stays through a background-sync reload, so an open sheet keeps its opener; if a reload leaves nothing to pick, any open sheet closes, and a course filter is dropped once fewer than two courses remain): a course filter needs a signed-in user with 2+ courses, a player filter needs 2+ players (signed in or not). It stays on the no-match state so the filters can still be changed.
+- **Filter rounds sheet** (`FilterMenu`). The shared sheet shell (handle, `type-title` "Filter rounds"), one row per filter that has something to pick, Course first: the label at the left, the current value at the right ("All courses", or the chosen value in `text-accent`) and a chevron. A row's accessible name is `{Label}: {value}`. Rows use the same 56px hairline row as the picker. A **Clear filters** Text button follows the rows once anything is applied; it clears both and closes the sheet.
+- **Two steps.** A row opens that filter's picker (`FilterSheet`, below) in place of the Filter rounds sheet. Choosing an option applies it and closes the picker. Focus returns to the filter button from either sheet.
+- **One selection, two entry points.** The inline player-name toggles on the round cards and the Player picker read and write the same `filter` state, so they always agree. Single choice per filter, "All ..." clears, and the two filters combine (course AND player).
+- **The star.** The signed-in player keeps the `PlayerStar` on their row in the picker.
+- **Both sheets are `absolute` inside History's `relative` root**, so on the desktop phone frame they stay inside the frame.
 
-**Applied state** (`18-history-filters-applied.png`). When any filter is applied and at least one round matches, a row under the pills shows `Showing {n} of {m} rounds` (`type-small text-muted`, `role="status"`, so a change is announced politely; "round" when m is 1) with a **Clear filters** Text button at the right, which clears both filters and puts focus on the first pill. `m` is every round loaded, `n` the rounds on screen. The row is not rendered when no filter is applied.
+**Applied state.** When any filter is applied and at least one round matches, a row under the header shows `Showing {n} of {m} rounds` (`type-small text-muted`, `role="status"`, so a change is announced politely; "round" when m is 1) with a **Clear filters** Text button at the right, which clears both filters and puts focus on the filter button. `m` is every round loaded, `n` the rounds on screen. With the pills gone, this row and the button's badge are what show the list is filtered.
 
-**No-match state** (`20-history-no-match.png`). When the filters leave no rounds, the status row is replaced by an `EmptyState` (`role="status"`): "No rounds found", then "{name} hasn't played a recorded round." for a player filter, "{name} hasn't played a recorded round at {course}." for a course and player together (a pairing the signed-in player can now reach), and a Text action that clears every filter ("Show all rounds", or "Clear filters" for the pairing). "No rounds yet" is unchanged and only shows with no filter applied.
+**No-match state.** When the filters leave nothing, the list shows `EmptyState` "No rounds found" with a sentence naming the filters and a Text button ("Clear filters", or "Show all rounds" for one filter).
 
 ### FilterSheet (`src/components/FilterSheet.jsx`)
 
-The picker behind each pill (`17-history-picker-open.png`, rows from List row `c15`). A bottom sheet in the shared pattern, with the focus trap added.
+The picker for one filter, opened from a row of the Filter rounds sheet. A bottom sheet in the shared pattern, with the focus trap added. Its dialog behaviour (focus in on open, Escape, the Tab trap, focus return) comes from `src/hooks/useSheetFocus.js`, shared with `FilterMenu`.
 
 ```
 <FilterSheet title allLabel allCount options selected onSelect onClose />
   options: [{ value, label, count, suffix? }]    selected: a value, or null for "All"
   onSelect(value | null)    onClose()            mount it to open it, unmount to close
 Sheet:   role="dialog" aria-modal="true" aria-labelledby={title id} (on the sheet, not the backdrop)
-         bg-bg rounded-t-sheet w-full max-w-[430px] max-h-[85vh] px-page pt-3, no shadow
+         absolute inset-0 backdrop; bg-bg rounded-t-sheet w-full max-w-[430px] max-h-[85vh] px-page pt-3, no shadow
 Handle:  w-10 h-1 bg-border rounded-full mx-auto mb-group
 Title:   h2 type-title text-text
 Rows:    role="radiogroup" > button role="radio" aria-checked, w-full min-h-11 py-group (56px)
-         border-b border-border type-body, label left, "{n} rounds" (text-muted) and a check at the right
+         px-3 rounded-control in a -mx-3 list, hairline drawn inset by after:, type-body, label left, "{n} rounds" (text-muted) and a check at the right
 Chosen:  text-accent label, a 20px check, no tint
 Press:   active:bg-accent-tint (muted count on 8% is 4.57:1)
 Focus:   ring-2 ring-inset ring-accent
@@ -546,10 +547,9 @@ Focus:   ring-2 ring-inset ring-accent
 Two different "this is currently selected" idioms exist in the app side by side:
 
 - **Segmented control** (9/18 hole-count toggle): active = **outline** (`border-accent text-accent`), inactive = `border-border text-text`. This is a fixed, mutually-exclusive *setting* chosen once while building something (a course) - closer to a radio button than a switch. Quiet, because it describes a configuration, not an in-the-moment action.
-- **Filter pill** (History): applied = **fill** (`bg-accent border-accent text-on-accent`, with the value and a cross), at rest = `border-field text-text` with a caret. This is a transient, removable *criterion* layered over a list you are looking at - closer to a toggle switch. Bold, because a filled pill means "this is live and shaping what is on screen right now", and that should be unmissable at a glance.
-- **Inside the picker sheet**, the chosen row is **accent text plus a check, no tint**: a quiet marker, because the sheet is about to close and the pill carries the loud state.
+- **History filters**: an applied filter shows as a count badge on the floating filter button, the "Showing n of m" row, and the value in `text-accent` in the Filter rounds sheet. Inside the picker sheet the chosen row is **accent text plus a check, no tint**: a quiet marker, because the sheet is about to close.
 
-The split tracks a distinction the app already makes on radius (`rounded-control` for anchored controls, `rounded-full` for pills - Outbuild design language section 5): an anchored control you set once stays quiet with an outline; a pill actively narrowing your view earns the bolder fill. Keep the two languages apart - don't reach for fill on a future segmented control, or outline on a future filter pill, without a reason as specific as this one.
+Keep the segmented control's outline language for settings chosen once; don't reach for fill on a future segmented control without a reason.
 
 ### Bottom sheet / confirmation modal
 ```
@@ -795,7 +795,7 @@ Inline SVGs throughout — no icon library dependency.
 - Standard `strokeWidth`: `1.5` (general UI), `2` (close/X), `2.5` (advance chevron)
 - Sizes: `w-2.5 h-2.5` (external link ↗), `w-4 h-4` (close ✕), `w-6 h-6` (map, chevron)
 
-**Signed-in identity star (`src/components/PlayerStar.jsx`)** — a small star badge trailing a player's name wherever players are listed (live Scorecard, Summary, History player rows, the applied player pill and the player picker) when that name matches the signed-in user's own `users.name`. Stroke-based like the rest of the set, `w-2.5 h-2.5` — the same size tier as the external-link ↗ annotation, since the role is identical (a small glyph beside text, not a standalone control). Deliberately carries no colour of its own — it renders in `currentColor` and inherits whatever colour its surrounding name already has (muted header, accent winner name in the result line, on-accent applied pill), so it never introduces a competing colour rule or implies the signed-in player outranks guests in the round. Never shown on the share image — that's a static export for a recipient who may not be signed in.
+**Signed-in identity star (`src/components/PlayerStar.jsx`)** — a small star badge trailing a player's name wherever players are listed (live Scorecard, Summary, History player rows and the player picker) when that name matches the signed-in user's own `users.name`. Stroke-based like the rest of the set, `w-2.5 h-2.5` — the same size tier as the external-link ↗ annotation, since the role is identical (a small glyph beside text, not a standalone control). Deliberately carries no colour of its own — it renders in `currentColor` and inherits whatever colour its surrounding name already has (muted header, accent winner name in the result line), so it never introduces a competing colour rule or implies the signed-in player outranks guests in the round. Never shown on the share image — that's a static export for a recipient who may not be signed in.
 
 ---
 

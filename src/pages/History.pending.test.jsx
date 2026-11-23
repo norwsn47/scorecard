@@ -239,7 +239,8 @@ describe('History - merging pending rounds with the saved list', () => {
     mockApi({ games: [dbRow('d1', '2026-08-01T10:00:00.000Z', ['Ann', 'Bo'])] })
     await renderHistory()
 
-    await user.click(screen.getByRole('button', { name: 'Player' }))
+    await user.click(screen.getByRole('button', { name: 'Filter rounds' }))
+    await user.click(screen.getByRole('button', { name: 'Player: All players' }))
     const sheet = screen.getByRole('dialog', { name: 'Player' })
     expect(within(sheet).getByRole('radio', { name: /^Cass/ })).toBeInTheDocument()
 
@@ -254,7 +255,8 @@ describe('History - merging pending rounds with the saved list', () => {
     mockApi({ games: [dbRow('d1', '2026-08-01T10:00:00.000Z', ['Ann'], { course_name: 'Bruntsfield' })] })
     await renderHistory()
 
-    await user.click(screen.getByRole('button', { name: 'Course' }))
+    await user.click(screen.getByRole('button', { name: 'Filter rounds' }))
+    await user.click(screen.getByRole('button', { name: 'Course: All courses' }))
     expect(within(screen.getByRole('dialog', { name: 'Course' })).getByRole('radio', { name: /^Elsewhere/ })).toBeInTheDocument()
   })
 })
