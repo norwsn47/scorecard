@@ -5,11 +5,12 @@ import CourseMapModal from '../components/CourseMapModal.lazy.jsx'
 import PageHeader, { HeaderAction } from '../components/PageHeader.jsx'
 import ParDelta from '../components/ParDelta.jsx'
 import PlayerStar from '../components/PlayerStar.jsx'
+import { SubtotalRow, tableDensity } from '../components/ScoreTable.jsx'
 import Toast from '../components/Toast.jsx'
 import { BRUNTSFIELD_COURSE_NAME, MAX_HOLES, MAX_STROKES } from '../constants.js'
 import { track } from '../utils/analytics.js'
 import { computeDisplayedHoles, finishGame, isSignedInPlayer } from '../utils/game.js'
-import { deriveHolePars, playerTotal, roundToPar, scoreToPar, subtotal } from '../utils/scores.js'
+import { deriveHolePars, playerTotal, roundToPar, scoreToPar } from '../utils/scores.js'
 import { clearActiveCell, clearActiveGame, getActiveCell, getActiveGame, getCompletedGames, saveActiveCell, saveActiveGame, saveCompletedGame, updateCompletedGame } from '../utils/storage.js'
 import { buildGamePatch, syncPendingRounds } from '../utils/sync.js'
 import { useAuth } from '../hooks/useAuth.jsx'
@@ -90,9 +91,8 @@ export default function Scorecard({ navigate, params }) {
   // Dense mode (5 or 6 players, plan 5f): at 390px six columns are about 56px
   // wide, so column headers drop from Label caps to Caption and a total stacks
   // above its bracket instead of sitting beside it. Scores never shrink.
-  const dense         = players.length >= 5
-  const headCls       = dense ? 'type-caption' : 'type-label-caps'
-  const bandRowCls    = dense ? 'h-14' : 'h-11'
+  const density       = tableDensity(players.length)
+  const { dense, headCls, bandRowCls } = density
 
   // Whether the active game's course is actually Bruntsfield — matched by
   // the game itself, not by which route it was started from (#1, reverses
@@ -312,11 +312,11 @@ export default function Scorecard({ navigate, params }) {
 
             <thead className="sticky top-0 z-10">
               <tr className="border-b border-border bg-bg-card">
-                <th className={`h-9 py-2 pl-3 pr-1 text-left text-muted ${headCls}`}>
+                <th scope="col" className={`h-9 py-2 pl-3 pr-1 text-left text-muted ${headCls}`}>
                   Hole
                 </th>
                 {players.map(player => (
-                  <th key={player} className={`h-9 py-2 px-1 text-center text-muted ${headCls}`}>
+                  <th key={player} scope="col" className={`h-9 py-2 px-1 text-center text-muted ${headCls}`}>
                     <span className="flex items-center justify-center gap-0.5 min-w-0">
                       <span className="truncate min-w-0">{player}</span>
                       {isSignedInPlayer(player, user?.name) && <PlayerStar />}
@@ -396,24 +396,11 @@ export default function Scorecard({ navigate, params }) {
                         differentiated from the hole grid. No per-hole par
                         bracket here — it isn't a specific hole. */}
                     {holeIndex === 8 && frontNineComplete && (
-                      <tr className="border-t-2 border-b border-border bg-bg-card">
-                        {/* Caption with whitespace-nowrap (owner call, 23
-                            November 2026): at Caption size "Front 9" fits the
-                            fixed w-14 hole column on one line, where the
-                            Strong size wrapped onto two. */}
-                        <td className={`${bandRowCls} pl-3 pr-0 text-left type-caption text-text whitespace-nowrap`}>
-                          Front 9
-                        </td>
-                        {players.map(player => {
-                          const { total, toPar } = subtotal(game.scores?.[player] ?? [], holePars, 0, 9)
-                          return (
-                            <td key={player} className={`${bandRowCls} px-0.5 text-center type-strong text-text whitespace-nowrap`}>
-                              {total ?? '–'}
-                              <ParDelta delta={toPar} variant="bracket" className={dense ? 'block' : ''} />
-                            </td>
-                          )
-                        })}
-                      </tr>
+                      <SubtotalRow
+                        label="Front 9" from={0} to={9}
+                        players={players} scores={game.scores} holePars={holePars}
+                        density={density} empty="–"
+                      />
                     )}
                   </Fragment>
                 )

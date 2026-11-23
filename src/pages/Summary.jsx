@@ -8,10 +8,11 @@ import { track } from '../utils/analytics.js'
 import { formatDateOnly, localDateString } from '../utils/format.js'
 import { buildEditGame, deriveResult, isSignedInPlayer } from '../utils/game.js'
 import { tiedNames, strokesLabel } from '../utils/result.js'
-import { deriveHolePars, playerTotal, roundToPar, scoreToPar, subtotal } from '../utils/scores.js'
+import { deriveHolePars, playerTotal, roundToPar, scoreToPar } from '../utils/scores.js'
 import PageHeader, { HeaderAction } from '../components/PageHeader.jsx'
 import ParDelta from '../components/ParDelta.jsx'
 import PlayerStar from '../components/PlayerStar.jsx'
+import { SubtotalRow, tableDensity } from '../components/ScoreTable.jsx'
 import { shareScorecard } from '../utils/share.js'
 import { clearActiveCell, getActiveGame, getCompletedGames, markCompletedGamePending, markCompletedGameSynced, saveActiveGame, updatePendingNotes } from '../utils/storage.js'
 import { deleteRound, DELETE_FAILED_MESSAGE, SAVING_MESSAGE } from '../utils/deleteRound.js'
@@ -160,10 +161,8 @@ export default function Summary({ navigate, params }) {
   // Dense mode (5 or 6 players, plan 5f): Caption column headers instead of
   // Label caps, and a total stacks above its bracket (56px band rows instead
   // of 44px). Mirrors the live Scorecard grid.
-  const dense      = (game.players?.length ?? 0) >= 5
-  const headCls    = dense ? 'type-caption' : 'type-label-caps'
-  const bandRowCls = dense ? 'h-14' : 'h-11'
-  const bracketCls = dense ? 'block' : ''
+  const density    = tableDensity(game.players?.length ?? 0)
+  const { headCls, bandRowCls, bracketCls } = density
 
   const resultBase = 'type-body text-muted text-center'
   const resultName = 'mx-1.5 type-body text-accent'
@@ -593,36 +592,18 @@ export default function Summary({ navigate, params }) {
                       Caption size "Front 9" fits the 56px hole column on one
                       line, where the Strong size wrapped onto two. */}
                   {game.holes === 18 && holeIndex === 8 && (
-                    <tr className="border-t-2 border-b border-border bg-bg-card">
-                      <th scope="row" className={`${bandRowCls} pl-3 pr-0 text-left type-caption text-text whitespace-nowrap`}>
-                        Front 9
-                      </th>
-                      {(game.players ?? []).map(player => {
-                        const { total, toPar } = subtotal(game.scores?.[player] ?? [], holePars, 0, 9)
-                        return (
-                          <td key={player} className={`${bandRowCls} px-0.5 text-center type-strong text-text whitespace-nowrap`}>
-                            {total ?? '-'}
-                            <ParDelta delta={toPar} variant="bracket" className={bracketCls} />
-                          </td>
-                        )
-                      })}
-                    </tr>
+                    <SubtotalRow
+                      label="Front 9" from={0} to={9}
+                      players={game.players ?? []} scores={game.scores} holePars={holePars}
+                      density={density}
+                    />
                   )}
                   {game.holes === 18 && holeIndex === 17 && (
-                    <tr className="border-t-2 border-b border-border bg-bg-card">
-                      <th scope="row" className={`${bandRowCls} pl-3 pr-0 text-left type-caption text-text whitespace-nowrap`}>
-                        Back 9
-                      </th>
-                      {(game.players ?? []).map(player => {
-                        const { total, toPar } = subtotal(game.scores?.[player] ?? [], holePars, 9, 18)
-                        return (
-                          <td key={player} className={`${bandRowCls} px-0.5 text-center type-strong text-text whitespace-nowrap`}>
-                            {total ?? '-'}
-                            <ParDelta delta={toPar} variant="bracket" className={bracketCls} />
-                          </td>
-                        )
-                      })}
-                    </tr>
+                    <SubtotalRow
+                      label="Back 9" from={9} to={18}
+                      players={game.players ?? []} scores={game.scores} holePars={holePars}
+                      density={density}
+                    />
                   )}
                 </Fragment>
               ))}

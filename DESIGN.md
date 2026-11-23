@@ -616,7 +616,7 @@ A centred block: `title` (`type-title text-text`, a `p` by default, `titleAs` fo
 
 ### Scorecard table
 
-The live grid (`Scorecard.jsx`) and the read-only table (`Summary.jsx`, which History's detail view reuses) share one look. Only the row height differs.
+The live grid (`Scorecard.jsx`) and the read-only table (`Summary.jsx`, which History's detail view reuses) share one look. Only the row height differs. The shared pieces live in `src/components/ScoreTable.jsx`: `tableDensity(playerCount)` (the dense-mode classes) and `SubtotalRow` (the Front 9 and Back 9 band rows, a `th scope="row"` label), so the two tables cannot drift apart.
 
 ```
 table:  w-full table-fixed border-collapse
