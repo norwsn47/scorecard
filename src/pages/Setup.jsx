@@ -141,7 +141,7 @@ export default function Setup({ navigate, goBack, params }) {
   const userIdRef = useRef(null)
   useEffect(() => { userIdRef.current = user?.id ?? null }, [user?.id])
 
-  // While the Edit Round screen is open for a local round, the background sync
+  // While the Edit round screen is open for a local round, the background sync
   // leaves that round alone (BACKLOG #113): the `_edit` working copy
   // does not exist yet, so without a hold an `online` or app-open run could send
   // the old data and strand the edit. Holding a round that is not pending is a
@@ -518,7 +518,7 @@ export default function Setup({ navigate, goBack, params }) {
     <div className="h-full bg-bg flex flex-col">
 
       <PageHeader
-        title={editRound ? 'Edit Round' : pastRound ? 'Add past round' : 'New game'}
+        title={editRound ? 'Edit round' : pastRound ? 'Add past round' : 'New game'}
         backLabel={
           editRound
             ? (fromScorecard ? 'Scorecard' : 'Summary')

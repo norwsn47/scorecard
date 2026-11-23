@@ -281,7 +281,7 @@ export default function Scorecard({ navigate, params }) {
     <div className="relative h-full bg-bg flex flex-col">
 
       <PageHeader
-        title={isEdit ? 'Edit Round' : 'Scorecard'}
+        title={isEdit ? 'Edit round' : 'Scorecard'}
         subtitle={null}
         // Neither branch steps back through real history — both are explicit
         // navigates with cleanup, so the label says what actually happens
