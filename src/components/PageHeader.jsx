@@ -23,9 +23,8 @@
 // ending in an ellipsis, #87); the subtitle stays a single truncated line.
 // Because the centre sits between the two side slots rather than on a layer
 // above them, a long back label can never fall under a button — instead it
-// eats into the centre title's width, so a back label should stay within
-// about 12 characters (DESIGN.md
-// "Back-label length budget").
+// eats into the centre title's width, so a back label should be
+// one plain word, two at most (DESIGN.md "Back-label length").
 //
 // Invisible mirror: when the centre slot has content (a title or a
 // subtitle), each side slot also holds an aria-hidden, invisible copy of the

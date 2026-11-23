@@ -5,22 +5,24 @@
 > - **Adding:** only if it's something I'd actually do — a real bug, a feature idea I've asked for, or a manual step I owe. Critical/High findings from a review or audit go in; everything else stays in the chat report. Non-blocking review notes are never logged. Accepted or won't-fix items are never logged either — if the context matters, it goes in a code comment instead.
 > - **Removing:** whoever finishes an item deletes its line in the same commit as the change. Add a `CHANGELOG.md` note only if it was a decision or a reversal.
 > - **Entries stay short:** one to three lines — what needs doing, not the history.
-> - **IDs are stable and never reused**, even after an item is deleted, so gaps are expected. Next free ID: **#124**.
+> - **IDs are stable and never reused**, even after an item is deleted, so gaps are expected. Next free ID: **#126**.
 
-**Last updated:** 27 September 2026
+**Last updated:** 23 November 2026
 
 ---
 
 ## My manual to-dos
 
 - **#2b** — Set `RESEND_FROM_EMAIL` to the `Scorecard by Outbuild <address>` format in the Cloudflare Pages dashboard (Settings → Environment variables).
-- **#90** — Check the header top spacing on a real iPhone.
+- **#90** - Check the header top spacing on a real iPhone. The header no longer has its old 24px top padding (68px minimum bar now); the page uses `viewport-fit=cover` with the default status-bar style, so check the title clears the status bar and notch.
+- **#124** - Test the redesigned app on a real iPhone through a Cloudflare preview URL, including once outdoors in sunlight (contrast, disabled and tint states, tap targets), before treating the redesign as done.
 - **#120** — Production checks: sign-in still works (recheck a double-click on the link lands on the expired state); a failed save recovers (block `/api/games` in DevTools, finish a round, confirm Retry/Keep, round shows "Not yet saved" in History, unblock and confirm it syncs with no duplicate).
 
 ---
 
 ## Bugs and small fixes
 
+- **#125** - Signed-in History shows only the latest 100 rounds: `GET /api/games` has `LIMIT 100` and no paging, so older rounds silently vanish (still in D1). Add paging or a "showing latest 100" note, and have History handle it.
 - **#116** — A lost save response followed by a local edit keeps the old data on the server (needs `PATCH` or `GET` by `client_round_id`).
 - **#43b** — A signed-in round opened from History can land on the wrong round after a back/forward bounce or an edit-cancel (needs `GET /api/games/:id`).
 - **#111** — Show a small "Couldn't share - try again" message when sharing fails.

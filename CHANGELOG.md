@@ -5,13 +5,31 @@
 > Git history is the full record; this file is for context and decision rationale that commit messages don't carry.
 > Update the date below whenever you add an entry.
 
-**Last updated:** 22 November 2026
+**Last updated:** 23 November 2026
 
 ---
 
+## 23 November 2026 (redesign: decisions made while building stages 1 to 8)
+
+The redesign shipped in stages 0 to 8 (merged). These calls were made during the build and are not in the 22 November entry. DESIGN.md now describes the shipped result.
+
+- **Button outline is 1px, not 2px.** The 2px outline read too heavy on the buttons.
+- **The page header is a 68px minimum, not a fixed height.** A title that wraps to two lines, or a title plus a subtitle, grows the bar by about 10px rather than clipping.
+- **The header title sits at the true centre on every screen.** The left and right slots mirror each other's width (the invisible mirror applies whenever there is a title or subtitle). Long course-name titles clip after two lines (`line-clamp-2`) rather than give up centring. The owner chose this over letting course-name screens drop the mirror.
+- **Finish is a filled pill only once every hole is scored.** Until then (and in edit mode) it is a text action.
+- **Card hover and press feedback is an accent edge, not a tint.** Muted text on the 8% tint over `bg-card` is 4.39:1, and on the 15% pressed tint 3.88:1, both below AA. Applies to `Card` (History round cards, the Home course card).
+- **Section label colours follow Figma.** Accent on Information and Privacy, muted on Settings and Home. Not mixed on one screen.
+- **History filter pills keep a separate clear button and a `border-field` edge.** The pill is a control with no other boundary, and the cross is its own 44px target. The picker's counts reflect the other active filter (the course counts respect the player filter, and the reverse).
+- **Front 9 and Back 9 labels are Caption.** At Strong size they wrapped onto two lines in the 56px hole column.
+- **The Settings delete sheet stacks its buttons**, "Delete account" above "Keep my account", as Figma shows. Other confirmation sheets keep the side-by-side Cancel then Confirm pair.
+- **The Home course card reads "Bruntsfield Short Hole Course".** Home only: the stored course name is unchanged ("Bruntsfield Short Hole Golf Course").
+- **The par stepper grid drops to one column below 360px.** At 320px two columns left no room for "Hole 18" beside its stepper.
+- **Dead radius and shadow tokens removed.** `--shadow-card`, `--shadow-btn`, `--radius-sm`, `--radius-md`, `--radius-lg` and their Tailwind keys are gone, along with the unused `font-display` Tailwind key. `rounded-lg` joins `rounded-sm` and `rounded-md` as a banned class, since the keys no longer shadow Tailwind's defaults.
+- **Known difference, left as it is:** the magic-link email still uses the older 4px button, 8px card and uppercase label. It was outside the redesign; aligning it is a later call.
+
 ## 22 November 2026 (redesign: decisions accepted, Figma tokens reconciled)
 
-Context: the Scorecard was redesigned in Figma (file "Outbuild", board "Scorecard design system (latest)"). The implementation plan and reference images are in `docs/redesign/`. These decisions reverse or extend rules in DESIGN.md, and were accepted by the project owner on 22 November 2026. DESIGN.md is updated in the same branch as each stage that implements them, so until then DESIGN.md still describes the shipped app.
+Context: the Scorecard was redesigned in Figma (file "Outbuild", board "Scorecard design system (latest)"). The implementation plan and reference images are in `docs/redesign/`. These decisions reverse or extend rules in DESIGN.md, and were accepted by the project owner on 22 November 2026. DESIGN.md was updated stage by stage and rewritten to match the shipped result on 23 November 2026.
 
 **Reversals and extensions of DESIGN.md**
 1. **Buttons use sentence case.** Reverses the uppercase, tracked button labels (`uppercase tracking-[0.1em]`). Reason: one calmer, more legible type system (eight styles, serif for titles only).
