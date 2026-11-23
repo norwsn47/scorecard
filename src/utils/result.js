@@ -4,7 +4,8 @@
  * The result itself is computed by calculateResult / deriveResult in game.js;
  * these format its `winners` / `winningTotal` for display. "Tied" is the shared
  * term and " - " (a spaced hyphen) the shared separator across the Summary,
- * History and the share image. Two or three level
+ * History and the share image (Summary and the share image draw the
+ * result line from these pieces). Two or three level
  * winners are spelled out; four or more fall back to a count.
  */
 
@@ -18,18 +19,3 @@ export function tiedNames(names) {
 
 /** "1 stroke" / "5 strokes". */
 export const strokesLabel = n => `${n} ${n === 1 ? 'stroke' : 'strokes'}`
-
-/**
- * One-line result label for a History card. Returns null for a solo round
- * (fewer than two players) — a solo round carries no result.
- *
- * Expects a game object already carrying a deriveResult() output
- * (`winners`, `isDraw`, `winningTotal`).
- */
-export function historyResultLabel({ players = [], winners = [], isDraw = false, winningTotal = null } = {}) {
-  if (players.length < 2) return null
-  if (winners.length === 0) return 'No winner'
-  if (!isDraw) return `Winner: ${winners[0]} - ${strokesLabel(winningTotal)}`
-  if (winners.length <= 3) return `Tied: ${tiedNames(winners)} - ${strokesLabel(winningTotal)}`
-  return `Tied: ${winners.length} players level on ${strokesLabel(winningTotal)}`
-}

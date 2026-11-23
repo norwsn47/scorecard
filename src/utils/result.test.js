@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { historyResultLabel, strokesLabel, tiedNames } from './result.js'
+import { strokesLabel, tiedNames } from './result.js'
 
 describe('tiedNames', () => {
   it('returns an empty string for no names', () => {
@@ -23,57 +23,11 @@ describe('tiedNames', () => {
   })
 })
 
-describe('historyResultLabel', () => {
-  it('returns null for a solo round', () => {
-    expect(historyResultLabel({ players: ['Alice'], winners: [], winningTotal: null })).toBeNull()
-  })
-
-  it('returns "No winner" when nobody finished', () => {
-    expect(historyResultLabel({
-      players: ['Alice', 'Bob'], winners: [], isDraw: false, winningTotal: null,
-    })).toBe('No winner')
-  })
-
-  it('names the outright winner with the total', () => {
-    expect(historyResultLabel({
-      players: ['Alice', 'Bob'], winners: ['Alice'], isDraw: false, winningTotal: 42,
-    })).toBe('Winner: Alice - 42 strokes')
-  })
-
-  it('spells out a two-way tie', () => {
-    expect(historyResultLabel({
-      players: ['Alice', 'Bob'], winners: ['Alice', 'Bob'], isDraw: true, winningTotal: 40,
-    })).toBe('Tied: Alice & Bob - 40 strokes')
-  })
-
-  it('spells out a three-way tie', () => {
-    expect(historyResultLabel({
-      players: ['Alice', 'Bob', 'Carol'], winners: ['Alice', 'Bob', 'Carol'], isDraw: true, winningTotal: 40,
-    })).toBe('Tied: Alice, Bob & Carol - 40 strokes')
-  })
-
-  it('falls back to a count for four or more level', () => {
-    expect(historyResultLabel({
-      players: ['A', 'B', 'C', 'D'], winners: ['A', 'B', 'C', 'D'], isDraw: true, winningTotal: 36,
-    })).toBe('Tied: 4 players level on 36 strokes')
-  })
-
-  it('tolerates a missing/empty argument', () => {
-    expect(historyResultLabel()).toBeNull()
-  })
-})
-
 describe('strokesLabel', () => {
   it('is singular for exactly one stroke and plural otherwise', () => {
     expect(strokesLabel(1)).toBe('1 stroke')
     expect(strokesLabel(0)).toBe('0 strokes')
     expect(strokesLabel(2)).toBe('2 strokes')
     expect(strokesLabel(42)).toBe('42 strokes')
-  })
-
-  it('is used in every History result wording', () => {
-    expect(historyResultLabel({ players: ['A', 'B'], winners: ['A'], isDraw: false, winningTotal: 1 })).toBe('Winner: A - 1 stroke')
-    expect(historyResultLabel({ players: ['A', 'B'], winners: ['A', 'B'], isDraw: true, winningTotal: 1 })).toBe('Tied: A & B - 1 stroke')
-    expect(historyResultLabel({ players: ['A', 'B', 'C', 'D'], winners: ['A', 'B', 'C', 'D'], isDraw: true, winningTotal: 1 })).toBe('Tied: 4 players level on 1 stroke')
   })
 })
