@@ -4,10 +4,11 @@ import userEvent from '@testing-library/user-event'
 import History from './History.jsx'
 import { AuthProvider } from '../hooks/useAuth.jsx'
 
-// History filter pills and the picker sheet (redesign stage 6, CHANGELOG
-// reversal 6). Quick-play History reads localStorage; signed-in History reads
-// the mocked /api/games. Course pill: signed in with 2+ courses only. Player pill:
-// 2+ players, either way.
+// History's floating filter button, the "Filter rounds" sheet and the picker
+// sheets (CHANGELOG 23 November 2026: the filter pills became a floating
+// button). Quick-play History reads localStorage; signed-in History reads the
+// mocked /api/games. Course filter: signed in with 2+ courses only. Player
+// filter: 2+ players, either way.
 
 const SIGNED_IN = { id: 'u1', email: 'ann@example.com', name: 'Ann', pending_email: null }
 
@@ -67,8 +68,15 @@ const localRound = (id, players, courseName) => ({
 })
 
 const openCards = () => screen.queryAllByRole('button', { name: /^Open round/ })
-const coursePill = () => screen.getByRole('button', { name: /^Course/ })
-const playerPill = () => screen.getByRole('button', { name: /^Player/ })
+const fab = () => screen.getByRole('button', { name: /^Filter rounds/ })
+const queryFab = () => screen.queryByRole('button', { name: /^Filter rounds/ })
+const menu = () => screen.getByRole('dialog', { name: 'Filter rounds' })
+const menuRows = () => within(menu()).getAllByRole('button', { name: /^(Course|Player):/ })
+// Opens the Filter rounds sheet, then the named filter's picker.
+async function openPicker(user, label) {
+  await user.click(fab())
+  await user.click(within(menu()).getByRole('button', { name: new RegExp(`^${label}:`) }))
+}
 const choose = (user, name) => user.click(within(screen.getByRole('dialog')).getByRole('radio', { name }))
 
 beforeEach(() => {
@@ -76,51 +84,72 @@ beforeEach(() => {
   window.history.replaceState({}, '', '/history')
 })
 
-describe('History - filter pills appear only when there is something to pick', () => {
-  it('signed in with 2+ courses and 2+ players: both pills, Course first', async () => {
-    await renderSignedIn()
-    const pills = screen.getAllByRole('button', { name: /^(Course|Player)/ })
-    expect(pills.map(p => p.textContent)).toEqual(['Course', 'Player'])
-    for (const pill of pills) {
-      expect(pill).toHaveAttribute('aria-haspopup', 'dialog')
-      expect(pill).toHaveAttribute('aria-expanded', 'false')
-    }
-  })
-
-  it('signed in with one course: the course label, no course pill, but the player pill', async () => {
-    await renderSignedIn([ROWS[0], ROWS[4]])
-    expect(screen.queryByRole('button', { name: /^Course/ })).not.toBeInTheDocument()
-    expect(screen.getAllByText('Links').length).toBeGreaterThan(0)
-    expect(playerPill()).toBeInTheDocument()
-  })
-
-  it('signed out: never a course pill (even with several courses), player pill with 2+ players', () => {
-    renderQuickPlay([localRound('r1', ['Ann', 'Bo'], 'Links'), localRound('r2', ['Ann'], 'Swanston')])
-    expect(screen.queryByRole('button', { name: /^Course/ })).not.toBeInTheDocument()
-    expect(playerPill()).toBeInTheDocument()
-  })
-
-  it('signed out with one player: no pills at all', () => {
-    renderQuickPlay([localRound('r1', ['Ann'], 'Links'), localRound('r2', ['Ann'], 'Swanston')])
+describe('History - the filter button appears only when there is something to pick', () => {
+  it('signed in with 2+ courses and 2+ players: the button, and its sheet lists Course then Player', async () => {
+    const user = await renderSignedIn()
+    expect(fab()).toHaveAttribute('aria-haspopup', 'dialog')
+    expect(fab()).toHaveAttribute('aria-expanded', 'false')
+    // No pills at the top any more.
     expect(screen.queryByRole('button', { name: /^(Course|Player)/ })).not.toBeInTheDocument()
+
+    await user.click(fab())
+    expect(fab()).toHaveAttribute('aria-expanded', 'true')
+    expect(menu()).toHaveAttribute('aria-modal', 'true')
+    expect(menuRows().map(r => r.getAttribute('aria-label'))).toEqual(['Course: All courses', 'Player: All players'])
+    expect(menuRows()[0]).toHaveFocus()
+    expect(within(menu()).queryByRole('button', { name: 'Clear filters' })).not.toBeInTheDocument()
   })
 
-  it('no pills and no status while the signed-in rounds are still loading', () => {
+  it('signed in with one course: the course label, and only a Player row', async () => {
+    const user = await renderSignedIn([ROWS[0], ROWS[4]])
+    expect(screen.getAllByText('Links').length).toBeGreaterThan(0)
+    await user.click(fab())
+    expect(menuRows().map(r => r.getAttribute('aria-label'))).toEqual(['Player: All players'])
+  })
+
+  it('signed out: never a Course row (even with several courses), a Player row with 2+ players', async () => {
+    const user = renderQuickPlay([localRound('r1', ['Ann', 'Bo'], 'Links'), localRound('r2', ['Ann'], 'Swanston')])
+    await user.click(fab())
+    expect(menuRows().map(r => r.getAttribute('aria-label'))).toEqual(['Player: All players'])
+  })
+
+  it('signed out with one player: no filter button', () => {
+    renderQuickPlay([localRound('r1', ['Ann'], 'Links'), localRound('r2', ['Ann'], 'Swanston')])
+    expect(queryFab()).not.toBeInTheDocument()
+  })
+
+  it('no filter button and no status while the signed-in rounds are still loading', () => {
     global.fetch = vi.fn(() => new Promise(() => {}))
     render(<AuthProvider><History navigate={vi.fn()} goBack={vi.fn()} /></AuthProvider>)
-    expect(screen.queryByRole('button', { name: /^(Course|Player)/ })).not.toBeInTheDocument()
+    expect(queryFab()).not.toBeInTheDocument()
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  })
+
+  it('no filter button when there are no rounds', async () => {
+    await renderSignedIn([])
+    expect(queryFab()).not.toBeInTheDocument()
+  })
+
+  it('the button counts the filters applied', async () => {
+    const user = await renderSignedIn()
+    expect(fab()).toHaveAccessibleName('Filter rounds')
+    await openPicker(user, 'Course')
+    await choose(user, /^Swanston/)
+    expect(fab()).toHaveAccessibleName('Filter rounds, 1 applied')
+    expect(fab()).toHaveTextContent('1')
+    await openPicker(user, 'Player')
+    await choose(user, /^Cy/)
+    expect(fab()).toHaveAccessibleName('Filter rounds, 2 applied')
   })
 })
 
 describe('History - the picker sheet', () => {
   it('is a labelled modal dialog: a radiogroup with "All courses" first and the chosen row checked', async () => {
     const user = await renderSignedIn()
-    await user.click(coursePill())
-
+    await openPicker(user, 'Course')
     const dialog = screen.getByRole('dialog', { name: 'Course' })
     expect(dialog).toHaveAttribute('aria-modal', 'true')
-    expect(coursePill()).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.queryByRole('dialog', { name: 'Filter rounds' })).not.toBeInTheDocument()
     const group = within(dialog).getByRole('radiogroup', { name: 'Course' })
     const rows = within(group).getAllByRole('radio')
     expect(rows.map(r => r.textContent)).toEqual([
@@ -136,19 +165,19 @@ describe('History - the picker sheet', () => {
     expect(rows.map(r => r.tabIndex)).toEqual([0, -1, -1, -1])
   })
 
-  it('choosing a row applies the filter, closes the sheet, and the pill shows the value', async () => {
+  it('choosing a row applies the filter, closes the sheet, returns focus to the button, and the menu shows the value', async () => {
     const user = await renderSignedIn()
-    await user.click(coursePill())
+    await openPicker(user, 'Course')
     await choose(user, /^Swanston/)
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(openCards()).toHaveLength(2)
-    const pill = screen.getByRole('button', { name: 'Course: Swanston' })
-    expect(pill).toHaveTextContent('Swanston')
-    expect(pill).toHaveFocus()
+    expect(fab()).toHaveFocus()
 
-    // Reopen: the chosen row is checked and takes focus.
-    await user.click(pill)
+    // Reopen: the menu row shows the value; the picker has it checked and focused.
+    await user.click(fab())
+    expect(within(menu()).getByRole('button', { name: 'Course: Swanston' })).toBeInTheDocument()
+    await user.click(within(menu()).getByRole('button', { name: 'Course: Swanston' }))
     expect(screen.getByRole('radio', { name: /^Swanston/ })).toHaveAttribute('aria-checked', 'true')
     expect(screen.getByRole('radio', { name: /^Swanston/ })).toHaveFocus()
     expect(screen.getByRole('radio', { name: /^All courses/ })).toHaveAttribute('aria-checked', 'false')
@@ -156,19 +185,19 @@ describe('History - the picker sheet', () => {
 
   it('"All courses" clears the course filter', async () => {
     const user = await renderSignedIn()
-    await user.click(coursePill())
+    await openPicker(user, 'Course')
     await choose(user, /^Links/)
     expect(openCards()).toHaveLength(2)
 
-    await user.click(screen.getByRole('button', { name: 'Course: Links' }))
+    await openPicker(user, 'Course')
     await choose(user, /^All courses/)
     expect(openCards()).toHaveLength(5)
-    expect(coursePill()).toHaveTextContent('Course')
+    expect(fab()).toHaveAccessibleName('Filter rounds')
   })
 
   it('arrow keys move focus between rows without choosing, Enter chooses', async () => {
     const user = await renderSignedIn()
-    await user.click(playerPill())
+    await openPicker(user, 'Player')
     const dialog = screen.getByRole('dialog', { name: 'Player' })
     const rows = within(dialog).getAllByRole('radio')
     expect(rows[0]).toHaveFocus()
@@ -182,13 +211,12 @@ describe('History - the picker sheet', () => {
     expect(rows[0]).toHaveFocus()
     await user.keyboard('{ArrowDown}{Enter}')
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(playerPill()).toHaveTextContent(/\S/)
     expect(openCards().length).toBeLessThan(5)
   })
 
   it('player rows are sorted by round count and the signed-in player keeps the star', async () => {
     const user = await renderSignedIn()
-    await user.click(playerPill())
+    await openPicker(user, 'Player')
     const rows = within(screen.getByRole('dialog')).getAllByRole('radio')
     expect(rows.map(r => r.textContent.replace('You', ''))).toEqual([
       'All players5 rounds', 'Ann4 rounds', 'Bo3 rounds', 'Cy2 rounds',
@@ -199,10 +227,10 @@ describe('History - the picker sheet', () => {
 
   it('counts reflect the other active filter', async () => {
     const user = await renderSignedIn()
-    await user.click(playerPill())
+    await openPicker(user, 'Player')
     await choose(user, /^Cy/) // Cy: r3 (Swanston), r4 (Galloway)
 
-    await user.click(coursePill())
+    await openPicker(user, 'Course')
     const rows = within(screen.getByRole('dialog')).getAllByRole('radio')
     expect(rows.map(r => r.textContent)).toEqual([
       'All courses2 rounds',
@@ -213,20 +241,21 @@ describe('History - the picker sheet', () => {
   })
 })
 
-describe('History - the inline name toggles and the player pill are one selection', () => {
-  it('tapping a name on a card shows in the pill and in the sheet', async () => {
+describe('History - the inline name toggles and the player filter are one selection', () => {
+  it('tapping a name on a card shows in the menu and in the picker', async () => {
     const user = await renderSignedIn()
     const card = openCards()[3].parentElement // r4 Galloway: Bo, Cy
     await user.click(within(card).getByRole('button', { name: 'Cy' }))
 
-    expect(screen.getByRole('button', { name: 'Player: Cy' })).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Player: Cy' }))
+    await user.click(fab())
+    expect(within(menu()).getByRole('button', { name: 'Player: Cy' })).toBeInTheDocument()
+    await user.click(within(menu()).getByRole('button', { name: 'Player: Cy' }))
     expect(screen.getByRole('radio', { name: /^Cy/ })).toHaveAttribute('aria-checked', 'true')
   })
 
-  it('choosing in the sheet turns the matching name toggles on, and tapping the name again clears the pill', async () => {
+  it('choosing in the picker turns the matching name toggles on, and tapping the name again clears it', async () => {
     const user = await renderSignedIn()
-    await user.click(playerPill())
+    await openPicker(user, 'Player')
     await choose(user, /^Bo/)
 
     const main = screen.getByRole('main')
@@ -234,17 +263,7 @@ describe('History - the inline name toggles and the player pill are one selectio
       expect(toggle).toHaveAttribute('aria-pressed', 'true')
     }
     await user.click(within(main).getAllByRole('button', { name: 'Bo' })[0])
-    expect(playerPill()).toHaveTextContent('Player')
-    expect(openCards()).toHaveLength(5)
-  })
-
-  it('the cross on an applied pill clears just that filter and keeps focus on the pill', async () => {
-    const user = await renderSignedIn()
-    await user.click(playerPill())
-    await choose(user, /^Bo/)
-    await user.click(screen.getByRole('button', { name: 'Clear player filter' }))
-    expect(screen.queryByRole('button', { name: 'Clear player filter' })).not.toBeInTheDocument()
-    expect(playerPill()).toHaveFocus()
+    expect(fab()).toHaveAccessibleName('Filter rounds')
     expect(openCards()).toHaveLength(5)
   })
 })
@@ -258,28 +277,36 @@ describe('History - applied filters: status line and Clear filters', () => {
 
   it('says how many rounds are showing, updates as filters combine, and Clear filters resets both', async () => {
     const user = await renderSignedIn()
-    await user.click(coursePill())
+    await openPicker(user, 'Course')
     await choose(user, /^Swanston/)
     expect(screen.getByRole('status')).toHaveTextContent('Showing 2 of 5 rounds')
 
-    await user.click(playerPill())
+    await openPicker(user, 'Player')
     await choose(user, /^Cy/) // Swanston AND Cy: r3 only
     expect(screen.getByRole('status')).toHaveTextContent('Showing 1 of 5 rounds')
     expect(openCards()).toHaveLength(1)
-    expect(screen.getByRole('button', { name: 'Course: Swanston' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Player: Cy' })).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Clear filters' }))
     expect(openCards()).toHaveLength(5)
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
-    expect(coursePill()).toHaveTextContent('Course')
-    expect(playerPill()).toHaveTextContent('Player')
-    expect(coursePill()).toHaveFocus()
+    expect(fab()).toHaveAccessibleName('Filter rounds')
+    expect(fab()).toHaveFocus()
+  })
+
+  it('Clear filters in the Filter rounds sheet resets both and closes it', async () => {
+    const user = await renderSignedIn()
+    await openPicker(user, 'Course')
+    await choose(user, /^Swanston/)
+    await user.click(fab())
+    await user.click(within(menu()).getByRole('button', { name: 'Clear filters' }))
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(openCards()).toHaveLength(5)
+    expect(fab()).toHaveFocus()
   })
 
   it('works signed out too: a player filter gives the status line and Clear filters', async () => {
     const user = renderQuickPlay([localRound('r1', ['Ann', 'Bo']), localRound('r2', ['Ann', 'Cy']), localRound('r3', ['Bo'])])
-    await user.click(playerPill())
+    await openPicker(user, 'Player')
     await choose(user, /^Bo/)
     expect(screen.getByRole('status')).toHaveTextContent('Showing 2 of 3 rounds')
     await user.click(screen.getByRole('button', { name: 'Clear filters' }))
@@ -290,9 +317,9 @@ describe('History - applied filters: status line and Clear filters', () => {
 describe('History - no-match state', () => {
   it('a course and player with no round together: no-match wording, Clear filters resets', async () => {
     const user = await renderSignedIn()
-    await user.click(coursePill())
+    await openPicker(user, 'Course')
     await choose(user, /^Links/) // Ann, Bo only: Cy never played it
-    await user.click(playerPill())
+    await openPicker(user, 'Player')
     await choose(user, /^Cy/)
 
     expect(openCards()).toHaveLength(0)
@@ -300,6 +327,8 @@ describe('History - no-match state', () => {
     expect(screen.getByText("Cy hasn't played a recorded round at Links.")).toBeInTheDocument()
     expect(screen.queryByText(/^Showing/)).not.toBeInTheDocument()
     expect(screen.queryByText('No rounds yet')).not.toBeInTheDocument()
+    // The button stays, so the filters can still be changed.
+    expect(fab()).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Clear filters' }))
     expect(openCards()).toHaveLength(5)
@@ -314,40 +343,47 @@ describe('History - no-match state', () => {
 })
 
 describe('History - sheet dismissal and focus', () => {
-  it('Escape closes the sheet and returns focus to the pill that opened it', async () => {
+  it('Escape closes either sheet and returns focus to the filter button', async () => {
     const user = await renderSignedIn()
-    const pill = playerPill()
-    await user.click(pill)
-    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    await user.click(fab())
+    expect(menu()).toBeInTheDocument()
     await user.keyboard('{Escape}')
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(pill).toHaveFocus()
-    expect(pill).toHaveAttribute('aria-expanded', 'false')
+    expect(fab()).toHaveFocus()
+    expect(fab()).toHaveAttribute('aria-expanded', 'false')
+
+    await openPicker(user, 'Player')
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(fab()).toHaveFocus()
     expect(openCards()).toHaveLength(5) // nothing chosen
   })
 
   it('a tap on the backdrop closes it; a tap inside the sheet does not', async () => {
     const user = await renderSignedIn()
-    await user.click(coursePill())
+    await openPicker(user, 'Course')
     const dialog = screen.getByRole('dialog')
     await user.click(within(dialog).getByRole('heading', { name: 'Course' }))
     expect(screen.getByRole('dialog')).toBeInTheDocument()
     await user.click(dialog.parentElement)
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
-    expect(coursePill()).toHaveFocus()
+    expect(fab()).toHaveFocus()
   })
 
-  it('Tab and Shift+Tab stay inside the sheet', async () => {
+  it('Tab and Shift+Tab stay inside both sheets', async () => {
     const user = await renderSignedIn()
-    await user.click(coursePill())
-    const dialog = screen.getByRole('dialog')
-    for (let i = 0; i < 4; i += 1) {
-      await user.tab()
-      expect(dialog).toContainElement(document.activeElement)
-    }
-    for (let i = 0; i < 4; i += 1) {
-      await user.tab({ shift: true })
-      expect(dialog).toContainElement(document.activeElement)
+    await user.click(fab())
+    for (const dialogName of ['Filter rounds', 'Course']) {
+      if (dialogName === 'Course') await user.click(within(menu()).getByRole('button', { name: /^Course:/ }))
+      const dialog = screen.getByRole('dialog', { name: dialogName })
+      for (let i = 0; i < 4; i += 1) {
+        await user.tab()
+        expect(dialog).toContainElement(document.activeElement)
+      }
+      for (let i = 0; i < 4; i += 1) {
+        await user.tab({ shift: true })
+        expect(dialog).toContainElement(document.activeElement)
+      }
     }
     expect(document.activeElement).not.toBe(document.body)
   })

@@ -194,8 +194,11 @@ describe('History - filter picker sheet', () => {
     const user = userEvent.setup()
     render(<AuthProvider><History navigate={vi.fn()} goBack={vi.fn()} /></AuthProvider>)
     await screen.findAllByRole('button', { name: /^Open round/ })
-    const pill = screen.getByRole('button', { name: 'Course' })
+    // The floating filter button opens the Filter rounds sheet; its Course row
+    // opens the picker. Focus returns to the button.
+    const pill = screen.getByRole('button', { name: 'Filter rounds' })
     await user.click(pill)
+    await user.click(screen.getByRole('button', { name: 'Course: All courses' }))
     return { user, pill }
   }
 
@@ -207,7 +210,7 @@ describe('History - filter picker sheet', () => {
     expect(within(dialog).getByRole('radio', { name: /^All courses/ })).toHaveFocus()
   })
 
-  it('Escape closes it and hands focus back to the pill', async () => {
+  it('Escape closes it and hands focus back to the filter button', async () => {
     const { user, pill } = await open()
     await user.keyboard('{Escape}')
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()

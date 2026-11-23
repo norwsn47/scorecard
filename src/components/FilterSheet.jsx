@@ -1,4 +1,5 @@
-import { useEffect, useId, useRef } from 'react'
+import { useId, useRef } from 'react'
+import useSheetFocus from '../hooks/useSheetFocus.js'
 
 // Bottom-sheet picker for one History filter (Figma "History / picker open",
 // 17-history-picker-open.png; rows follow the List row, c15). Single choice:
@@ -30,11 +31,6 @@ import { useEffect, useId, useRef } from 'react'
 // and Enter or Space chooses. (Arrow keys do not choose, as they would in a bare
 // radiogroup, because choosing closes the sheet.)
 
-const FOCUSABLE = [
-  'button:not([disabled])', '[href]', 'input:not([disabled])', 'select:not([disabled])',
-  'textarea:not([disabled])', '[tabindex]',
-].map(s => `${s}:not([tabindex="-1"])`).join(', ')
-
 const countLabel = n => `${n} ${n === 1 ? 'round' : 'rounds'}`
 
 function Check() {
@@ -58,67 +54,16 @@ export default function FilterSheet({ title, allLabel, allCount, options, select
   const headingId = useId()
   const sheetRef = useRef(null)
   const listRef = useRef(null)
-  // Read through a ref so a parent re-render with a new function never
-  // re-runs the open effect (which would pull focus back in).
-  const onCloseRef = useRef(onClose)
-  onCloseRef.current = onClose
-
-  // The one close path: backdrop, Escape and a chosen row all come through here.
-  function close() {
-    onCloseRef.current()
-  }
-  const closeRef = useRef(close)
-  closeRef.current = close
+  // Focus moves to the chosen row on open (the "All" row when nothing is
+  // chosen); Escape, the Tab trap and focus return come from useSheetFocus.
+  const close = useSheetFocus(sheetRef, onClose, () =>
+    listRef.current?.querySelector('[role="radio"][aria-checked="true"]') ??
+    listRef.current?.querySelector('[role="radio"]'))
 
   function choose(value) {
     onSelect(value)
-    closeRef.current()
+    close()
   }
-
-  // Open effect, keyed on mount (= open) only: remember the opener, move focus
-  // to the chosen row, listen for Escape and Tab, then hand focus back.
-  useEffect(() => {
-    const opener = document.activeElement
-    const rows = listRef.current?.querySelectorAll('[role="radio"]')
-    const target = listRef.current?.querySelector('[role="radio"][aria-checked="true"]') ?? rows?.[0]
-    if (target) target.focus()
-    else sheetRef.current?.focus()
-
-    function onKeyDown(e) {
-      if (e.key === 'Escape') {
-        e.preventDefault()
-        closeRef.current()
-        return
-      }
-      if (e.key !== 'Tab') return
-      const sheet = sheetRef.current
-      if (!sheet) return
-      const focusable = [...sheet.querySelectorAll(FOCUSABLE)]
-      if (focusable.length === 0) {
-        e.preventDefault()
-        sheet.focus()
-        return
-      }
-      const first = focusable[0]
-      const last = focusable[focusable.length - 1]
-      const active = document.activeElement
-      if (!sheet.contains(active)) {
-        e.preventDefault()
-        ;(e.shiftKey ? last : first).focus()
-      } else if (e.shiftKey && active === first) {
-        e.preventDefault()
-        last.focus()
-      } else if (!e.shiftKey && active === last) {
-        e.preventDefault()
-        first.focus()
-      }
-    }
-    document.addEventListener('keydown', onKeyDown)
-    return () => {
-      document.removeEventListener('keydown', onKeyDown)
-      if (opener && opener.isConnected && typeof opener.focus === 'function') opener.focus()
-    }
-  }, [])
 
   function onRowKeyDown(e) {
     const keys = ['ArrowDown', 'ArrowRight', 'ArrowUp', 'ArrowLeft', 'Home', 'End']
@@ -145,7 +90,7 @@ export default function FilterSheet({ title, allLabel, allCount, options, select
 
   return (
     <div
-      className="fixed inset-0 flex items-end justify-center z-50"
+      className="absolute inset-0 flex items-end justify-center z-50"
       style={{ background: 'var(--overlay-backdrop)' }}
       onClick={close}
     >
