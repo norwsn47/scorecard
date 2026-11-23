@@ -52,7 +52,7 @@ export default function CourseMapModal({ onClose }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="course-map-heading"
-        className="bg-bg rounded-2xl w-[360px] overflow-hidden max-h-[80vh] flex flex-col"
+        className="bg-bg rounded-sheet w-[360px] overflow-hidden max-h-[80vh] flex flex-col"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}

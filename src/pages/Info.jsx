@@ -18,7 +18,7 @@ export default function Info({ navigate, goBack, params }) {
         onBack={() => goBack(fromBruntsfield ? 'bruntsfield' : fromSettings ? 'settings' : 'home')}
       />
 
-      <main className="flex-1 overflow-y-auto px-page pt-6 pb-14 flex flex-col gap-section max-w-sm mx-auto w-full">
+      <main className="flex-1 overflow-y-auto px-page pt-6 pb-14 flex flex-col gap-section">
 
         {/* Why we made this */}
         <section className="flex flex-col gap-related">
@@ -116,7 +116,7 @@ export default function Info({ navigate, goBack, params }) {
             <div className="mt-related">
               <button
                 onClick={() => navigate('settings', { from: 'info' })}
-                className="inline-block py-3 -my-3 type-body text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                className="inline-block py-3 -my-3 text-left type-body text-accent underline underline-offset-2 active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
                 Edit your name, change your email or delete your account
               </button>
@@ -160,6 +160,8 @@ export default function Info({ navigate, goBack, params }) {
             </div>
           </section>
         )}
+
+        <div className="h-px bg-border" />
 
         <div className="flex flex-col gap-related">
           <p className="type-small text-muted">

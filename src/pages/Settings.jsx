@@ -221,7 +221,7 @@ export default function Settings({ navigate }) {
           a quiet row with a small pencil rather than a full-width form; the
           field opens only on a deliberate tap. Sign out and Delete sit at the
           foot as plain links. */}
-      <main className="flex-1 overflow-y-auto px-page pt-6 pb-14 max-w-sm mx-auto w-full flex flex-col gap-section">
+      <main className="flex-1 overflow-y-auto px-page pt-6 pb-14 flex flex-col gap-section">
 
         {/* ── Account: name and email ── */}
         <section>
@@ -389,7 +389,7 @@ export default function Settings({ navigate }) {
           <button
             type="button"
             onClick={() => navigate('info', { from: 'settings' })}
-            className="w-full min-h-[48px] py-2 flex items-center justify-between gap-3 border-b border-border text-left active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="w-full min-h-[56px] py-2 flex items-center justify-between gap-3 border-b border-border text-left active:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           >
             <span className="type-strong text-text">Information</span>
             <span className="flex items-center gap-1.5 type-small text-muted">

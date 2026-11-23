@@ -340,8 +340,8 @@ The Text button at Large, grouped under the player fields. The dashed ghost butt
 |---|---|
 | Map | `w-16 h-16 rounded-control text-muted flex-col` - no ring; map glyph over a `type-caption` "Map" label (muted, so the caption clears 4.5:1). Steps back from the three scoring controls; same 64px tap area |
 | Decrement (−) | `rounded-full border-2 border-control-warm text-control-warm text-2xl` - disabled: `opacity-25` |
-| Increment (+) | `rounded-full bg-accent border-2 border-accent text-bg text-2xl` |
-| Advance (→) | `rounded-full bg-control-warm border-2 border-control-warm text-bg` - disabled: `opacity-25` |
+| Increment (+) | `rounded-full bg-accent border-2 border-accent text-on-accent text-2xl` (white, as all text on accent) |
+| Advance (→) | `rounded-full bg-control-warm border-2 border-control-warm text-on-accent` (white, 4.6:1) - disabled: `opacity-25` |
 
 These are physical game controls, not text buttons, which is why they keep their own `opacity-25` disabled state rather than the button system's disabled tokens: a lighter fade reads as "not reachable right now" (e.g. can't decrement below hole 1) rather than "unavailable", which suits a control the player is about to need again a moment later.
 
@@ -448,7 +448,7 @@ Text-led pages share one vertical rhythm, set with the spacing aliases and no ra
 | Blocks inside a section, and the gap between paragraphs | 16px (`gap-group`) | RulesContent's stack |
 | Sections | 24px (`gap-section`) either side of a full-width hairline | Info's sections, split by `<div className="h-px bg-border" />` |
 
-- **Page frame.** `main` is `px-page pt-6 pb-14 flex flex-col gap-section max-w-sm mx-auto w-full`, scrolling inside the page column.
+- **Page frame.** `main` is `px-page pt-6 pb-14 flex flex-col gap-section`, scrolling inside the page column. No `max-w-sm`: it included the padding, so at 390px it pulled the text 3px further in than the header (19px, not 16px). The page column itself is capped at 430px.
 - **Section labels** are `type-label-caps`. Info and Privacy set them in `text-accent`. Settings and Home set them in `text-muted`, as in their reference screens. Do not mix the two on one screen.
 - **Body text** is `type-body text-text`. Secondary lines are `type-small text-muted`.
 - **Settings value rows** are hairline list rows, not boxed fields: `py-3.5 border-b border-border`, a muted `type-small` caption, the value in `type-body text-text`, and a helper line. The edit control is a **44px icon button** (`w-11 h-11 -mr-2.5`, a 20px pencil, `rounded-control`, `text-accent`, accent tint on press) with a specific `aria-label` ("Edit name", "Change email address"). The field opens in place only on a deliberate tap. The tap-through rows ("My courses", "Information") use the same hairline, with a chevron.

@@ -39,7 +39,7 @@ function LoadFailed({ onClose }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="course-map-failed-heading"
-        className="bg-bg rounded-2xl w-[360px] overflow-hidden"
+        className="bg-bg rounded-sheet w-[360px] overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
         <div className="relative px-5 py-4 border-b border-border">

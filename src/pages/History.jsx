@@ -230,12 +230,13 @@ export default function History({ navigate }) {
         </div>
       )}
 
-      {/* Game list */}
-      {/* Bottom padding clears the floating filter button (56px + 24px). */}
-      <main className={`flex-1 overflow-y-auto px-page pt-4 space-y-3 ${showFab ? 'pb-24' : 'pb-4'}`}>
+      {/* Game list. Bottom padding clears the floating filter button (56px +
+          24px). With no cards to show (loading, empty, no match, a failed
+          load), the message sits in the middle of the page, as in Figma. */}
+      <main className={`flex-1 overflow-y-auto px-page pt-4 space-y-3 ${showFab ? 'pb-24' : 'pb-4'} ${loading || displayed.length === 0 ? 'flex flex-col justify-center' : ''}`}>
 
         {loading && (
-          <div className="text-center pt-16">
+          <div className="text-center">
             <p className="type-small text-muted">Loading…</p>
           </div>
         )}
@@ -243,7 +244,7 @@ export default function History({ navigate }) {
         {!loading && loadError && (
           <EmptyState
             role="alert"
-            className={allGames.length > 0 ? 'pt-4 pb-2' : 'pt-16'}
+            className={allGames.length > 0 ? 'pt-4 pb-2' : undefined}
             title={loadError === 'signedOut' ? "You've been signed out" : "Couldn't load your rounds"}
             body={loadError === 'signedOut'
               ? 'Sign in again to see your rounds.'
@@ -266,7 +267,7 @@ export default function History({ navigate }) {
         )}
 
         {!loading && !loadError && displayed.length === 0 && (
-          <div className="text-center pt-16">
+          <div className="text-center">
             {anyFilter ? (
               <EmptyState
                 role="status"
