@@ -30,7 +30,7 @@ export default function Privacy({ goBack, params }) {
         onBack={() => goBack(from)}
       />
 
-      <main className="flex-1 overflow-y-auto px-page pt-6 pb-14 flex flex-col gap-section max-w-sm mx-auto w-full">
+      <main className="flex-1 overflow-y-auto px-page pt-6 pb-14 flex flex-col gap-section">
 
         <section className="flex flex-col gap-related">
           <p className="type-label-caps text-accent">What we collect</p>

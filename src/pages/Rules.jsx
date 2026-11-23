@@ -16,7 +16,7 @@ export default function Rules({ goBack, params }) {
         backLabel={FROM_LABEL[from] ?? 'Home'}
         onBack={() => goBack(from)}
       />
-      <main className="flex-1 overflow-y-auto px-page pt-6 pb-14 max-w-sm mx-auto w-full">
+      <main className="flex-1 overflow-y-auto px-page pt-6 pb-14">
         <RulesContent />
       </main>
     </div>

@@ -271,7 +271,9 @@ describe('History - error state on EmptyState', () => {
     })
     renderHistory()
     const alert = await screen.findByRole('alert')
-    expect(alert).toHaveClass('text-center', 'pt-16')
+    // Centred in the page by the list (flex justify-center), not padded down.
+    expect(alert).toHaveClass('text-center')
+    expect(alert.closest('main')).toHaveClass('flex', 'flex-col', 'justify-center')
     expect(alert).toHaveTextContent("Couldn't load your rounds")
     expect(within(alert).getByRole('button', { name: 'Try again' })).toBeInTheDocument()
   })

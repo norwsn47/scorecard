@@ -501,7 +501,7 @@ export default function Scorecard({ navigate, params }) {
             <button
               onClick={handleIncrement}
               aria-label="Increase score"
-              className="w-16 h-16 rounded-full bg-accent border-2 border-accent text-bg font-ui text-2xl flex items-center justify-center active:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              className="w-16 h-16 rounded-full bg-accent border-2 border-accent text-on-accent font-ui text-2xl flex items-center justify-center active:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             >
               +
             </button>
@@ -509,7 +509,7 @@ export default function Scorecard({ navigate, params }) {
               onClick={handleAdvance}
               disabled={activeCell.holeIndex === displayedHoles - 1 && activeCell.playerIndex === players.length - 1}
               aria-label="Advance to next player"
-              className="w-16 h-16 rounded-full bg-control-warm border-2 border-control-warm text-bg flex items-center justify-center disabled:opacity-25 active:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+              className="w-16 h-16 rounded-full bg-control-warm border-2 border-control-warm text-on-accent flex items-center justify-center disabled:opacity-25 active:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-6 h-6">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6" />
