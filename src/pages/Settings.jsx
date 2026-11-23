@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import Button from '../components/Button.jsx'
+import ConfirmSheet from '../components/ConfirmSheet.jsx'
 import { Input } from '../components/Field.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import PlayerStar from '../components/PlayerStar.jsx'
@@ -115,25 +116,9 @@ export default function Settings({ navigate }) {
     if (!deleting) setConfirmDelete(false)
   }
 
-  // While the delete sheet is open: pull focus onto the confirmation input once
-  // (on open, not again when `deleting` flips), and hand it back to whatever
-  // opened the sheet on close (#80).
-  useEffect(() => {
-    if (!confirmDelete) return
-    const opener = document.activeElement
-    deleteInputRef.current?.focus()
-    return () => opener?.focus?.()
-  }, [confirmDelete])
-  // Escape dismisses it (equivalent to "Keep my account") unless a delete is in
-  // flight. Backdrop click is wired on the overlay element itself below.
-  useEffect(() => {
-    if (!confirmDelete || deleting) return
-    function onKey(e) {
-      if (e.key === 'Escape') setConfirmDelete(false)
-    }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [confirmDelete, deleting])
+  // The delete sheet (ConfirmSheet) focuses the confirmation input on open and
+  // hands focus back to its opener on close (#80). Escape and the backdrop
+  // dismiss it (equivalent to "Keep my account") unless a delete is in flight.
 
   if (loading || !user) return null
 
@@ -209,7 +194,7 @@ export default function Settings({ navigate }) {
   }
 
   return (
-    <div className="h-full bg-bg flex flex-col">
+    <div className="relative h-full bg-bg flex flex-col">
 
       <PageHeader
         title="Settings"
@@ -443,20 +428,12 @@ export default function Settings({ navigate }) {
       {/* Delete confirmation — mirrors History.jsx's delete-round sheet, with a
           typed-DELETE gate on the destructive button. */}
       {confirmDelete && (
-        <div
-          className="fixed inset-0 flex items-end justify-center z-50"
-          style={{ background: 'var(--overlay-backdrop)' }}
-          onClick={closeDelete}
+        <ConfirmSheet
+          title="Delete your account?"
+          onClose={closeDelete}
+          locked={deleting}
+          initialFocusRef={deleteInputRef}
         >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="delete-account-heading"
-            onClick={e => e.stopPropagation()}
-            className="bg-bg rounded-t-sheet w-full max-w-[430px] px-6 pt-6 pb-10"
-          >
-            <div className="w-10 h-1 bg-border rounded-full mx-auto mb-6" />
-            <h2 id="delete-account-heading" className="type-title text-text mb-1">Delete your account?</h2>
             <p className="type-body text-muted mb-6">
               All your rounds, all your courses and the account itself are removed for good. Quick-play history on this device is not affected.
             </p>
@@ -493,8 +470,7 @@ export default function Settings({ navigate }) {
                 Keep my account
               </Button>
             </div>
-          </div>
-        </div>
+        </ConfirmSheet>
       )}
 
     </div>

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import Button from '../components/Button.jsx'
+import ConfirmSheet from '../components/ConfirmSheet.jsx'
 import { Input } from '../components/Field.jsx'
 import PageHeader from '../components/PageHeader.jsx'
 import ParStepperGrid, { stepPar as stepParArray } from '../components/ParStepperGrid.jsx'
@@ -41,23 +42,9 @@ export default function CourseEdit({ navigate, goBack, params }) {
   // this one edit session.
   const originalPars = useRef(null)
 
-  // While the delete-course sheet is open: pull focus onto the non-destructive
-  // "Cancel", hand focus back to the "Delete this course" control on close, and
-  // let Escape dismiss it - not mid-delete (#100, DESIGN.md "Dialog semantics").
-  useEffect(() => {
-    if (!confirmDelete) return
-    const opener = document.activeElement
-    cancelDeleteRef.current?.focus()
-    return () => opener?.focus?.()
-  }, [confirmDelete])
-  useEffect(() => {
-    if (!confirmDelete || deleting) return
-    function onKey(e) {
-      if (e.key === 'Escape') setConfirmDelete(false)
-    }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [confirmDelete, deleting])
+  // The delete-course sheet (ConfirmSheet): focus on the non-destructive
+  // "Cancel", back to the "Delete this course" control on close, Escape and
+  // backdrop dismiss - not mid-delete (#100, DESIGN.md "Dialog semantics").
 
   useEffect(() => {
     let cancelled = false
@@ -160,7 +147,7 @@ export default function CourseEdit({ navigate, goBack, params }) {
   const showParCascadeWarning = parsChanged && roundCount > 0
 
   return (
-    <div className="h-full bg-bg flex flex-col">
+    <div className="relative h-full bg-bg flex flex-col">
 
       <PageHeader title={course?.name} subtitle="Edit course" backLabel="Courses" onBack={backToCourses} />
 
@@ -248,20 +235,12 @@ export default function CourseEdit({ navigate, goBack, params }) {
           exactly, but the copy states the round count up front so
           the user knows the cascade before confirming. */}
       {confirmDelete && course && (
-        <div
-          className="fixed inset-0 flex items-end justify-center z-50"
-          style={{ background: 'var(--overlay-backdrop)' }}
-          onClick={() => { if (!deleting) setConfirmDelete(false) }}
+        <ConfirmSheet
+          title={`Delete ${course.name}?`}
+          onClose={() => setConfirmDelete(false)}
+          locked={deleting}
+          initialFocusRef={cancelDeleteRef}
         >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="delete-course-heading"
-            onClick={e => e.stopPropagation()}
-            className="bg-bg rounded-t-sheet w-full max-w-[430px] px-6 pt-6 pb-10"
-          >
-            <div className="w-10 h-1 bg-border rounded-full mx-auto mb-6" />
-            <h2 id="delete-course-heading" className="type-title text-text mb-1">Delete {course.name}?</h2>
             <p className="type-small text-muted mb-8">{roundsClause}This cannot be undone.</p>
             <div className="flex gap-3">
               <Button
@@ -277,8 +256,7 @@ export default function CourseEdit({ navigate, goBack, params }) {
                 {deleting ? 'Deleting…' : 'Delete'}
               </Button>
             </div>
-          </div>
-        </div>
+        </ConfirmSheet>
       )}
 
     </div>

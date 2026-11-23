@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import Button from '../components/Button.jsx'
+import ConfirmSheet from '../components/ConfirmSheet.jsx'
 import CourseMapModal from '../components/CourseMapModal.lazy.jsx'
 import PageHeader, { HeaderAction } from '../components/PageHeader.jsx'
 import ParDelta from '../components/ParDelta.jsx'
@@ -74,25 +75,10 @@ export default function Scorecard({ navigate, params }) {
     if (!game) navigate('home', {}, { replace: true })
   }, [game]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // While the finish/save sheet is open: pull focus onto the non-destructive
-  // "Cancel", hand focus back to whatever opened it when it closes, and let
-  // Escape dismiss it - except mid-save, when it must not (#100, DESIGN.md
-  // "Dialog semantics").
+  // The finish/save sheet (ConfirmSheet): focus on the non-destructive
+  // "Cancel", back to the opener on close, Escape and backdrop dismiss -
+  // except mid-save, when it must not (#100, DESIGN.md "Dialog semantics").
   const cancelFinishRef = useRef(null)
-  useEffect(() => {
-    if (!showConfirm) return
-    const opener = document.activeElement
-    cancelFinishRef.current?.focus()
-    return () => opener?.focus?.()
-  }, [showConfirm])
-  useEffect(() => {
-    if (!showConfirm || finishing) return
-    function onKey(e) {
-      if (e.key === 'Escape') setShowConfirm(false)
-    }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [showConfirm, finishing])
 
   if (!game) return null
 
@@ -545,22 +531,12 @@ export default function Scorecard({ navigate, params }) {
 
       {/* Confirmation dialog */}
       {showConfirm && (
-        <div
-          className="absolute inset-0 flex items-end justify-center z-50"
-          style={{ background: 'var(--overlay-backdrop)' }}
-          onClick={() => { if (!finishing) setShowConfirm(false) }}
+        <ConfirmSheet
+          title={isEdit ? 'Save changes?' : 'Finish game?'}
+          onClose={() => setShowConfirm(false)}
+          locked={finishing}
+          initialFocusRef={cancelFinishRef}
         >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="finish-heading"
-            onClick={e => e.stopPropagation()}
-            className="bg-bg rounded-t-sheet w-full max-w-[430px] px-6 pt-6 pb-10"
-          >
-            <div className="w-10 h-1 bg-border rounded-full mx-auto mb-6" />
-            <h2 id="finish-heading" className="type-title text-text mb-1">
-              {isEdit ? 'Save changes?' : 'Finish game?'}
-            </h2>
             <p className="type-small text-muted mb-6">
               {isEdit ? 'This replaces the saved round. Winner and totals update.' : 'Scores are final'}
             </p>
@@ -596,8 +572,7 @@ export default function Scorecard({ navigate, params }) {
                 {isEdit ? (finishing ? 'Saving…' : 'Save changes') : 'Confirm'}
               </Button>
             </div>
-          </div>
-        </div>
+        </ConfirmSheet>
       )}
     </div>
   )
