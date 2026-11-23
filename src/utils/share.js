@@ -195,15 +195,16 @@ async function buildCanvas(game) {
       ctx.fillRect(PAD, rowY, W - PAD * 2, ROW_H)
     }
     // Hole number + par in brackets, matching the live grid and Summary
-    // treatment: the number bold, the par trailing in brackets at the
-    // same size, not bold, no colour of its own — e.g. "3 (3)".
+    // treatment (stage 7): the number in the text colour and bold, the par
+    // trailing in brackets at the same size, not bold, in muted — e.g. "3 (3)".
     ctx.textAlign = 'left'
-    ctx.fillStyle = C.muted
+    ctx.fillStyle = C.text
     const holeLabel = String(h + 1)
     const parLabel  = ` (${holePars[h]})`
     ctx.font = 'bold 10px Inter, system-ui, sans-serif'
     ctx.fillText(holeLabel, PAD + 4, rowY + ROW_H / 2 + 4)
     const holeLabelW = ctx.measureText(holeLabel).width
+    ctx.fillStyle = C.muted
     ctx.font = '10px Inter, system-ui, sans-serif'
     ctx.fillText(parLabel, PAD + 4 + holeLabelW, rowY + ROW_H / 2 + 4)
 
@@ -239,7 +240,8 @@ async function buildCanvas(game) {
   ctx.fillStyle = C.card
   ctx.fillRect(PAD, y, W - PAD * 2, TOTAL_H)
 
-  ctx.fillStyle = C.muted
+  // The band label is the text colour on the app's Total row (stage 7).
+  ctx.fillStyle = C.text
   ctx.font      = '11px Inter, system-ui, sans-serif'
   ctx.textAlign = 'left'
   ctx.fillText('TOTAL', PAD + 4, y + 22)

@@ -171,6 +171,14 @@ export default function Summary({ navigate, params }) {
   // each hole number, matching the live Scorecard grid (item 37).
   const holePars = deriveHolePars(game.holePars, game.holesPlayed ?? game.holes ?? MAX_HOLES)
 
+  // Dense mode (5 or 6 players, plan 5f): Caption column headers instead of
+  // Label caps, and a total stacks above its bracket (56px band rows instead
+  // of 44px). Mirrors the live Scorecard grid.
+  const dense      = (game.players?.length ?? 0) >= 5
+  const headCls    = dense ? 'type-caption' : 'type-label-caps'
+  const bandRowCls = dense ? 'h-14' : 'h-11'
+  const bracketCls = dense ? 'block' : ''
+
   const resultBase = 'type-body text-muted text-center'
   const resultName = 'mx-1.5 type-body text-accent'
   const resultStrokes = 'type-body text-muted'
@@ -517,15 +525,22 @@ export default function Summary({ navigate, params }) {
       <main className="flex-1 flex flex-col min-h-0">
         {/* Read-only scorecard. The vs-par tally lives in the same table
             as extra rows below the totals so its columns stay locked to the
-            player columns above, even when the grid scrolls sideways. */}
+            player columns above. table-fixed with a 56px hole column and equal
+            player columns fits up to six players at 320px with no sideways
+            scroll (long names truncate in the header). */}
         {/* No bottom padding here: the sticky Total row pins to the scroll
             box's edge, so any padding below it leaves a strip where the hole
             rows show through as they scroll underneath. */}
-        <div className="flex-1 overflow-y-auto overflow-x-auto mt-3">
-          <table className="w-full min-w-max border-collapse">
+        <div className="flex-1 overflow-y-auto mt-3">
+          <table className="w-full table-fixed border-collapse">
+            <colgroup>
+              <col className="w-14" />
+              {(game.players ?? []).map(player => <col key={player} />)}
+            </colgroup>
+
             <thead>
               <tr className="border-b border-border bg-bg-card">
-                <th scope="col" className="py-2 px-3 text-left type-label-caps text-muted w-16">
+                <th scope="col" className={`h-9 py-2 pl-3 pr-1 text-left text-muted ${headCls}`}>
                   Hole
                 </th>
                 {(game.players ?? []).map(player => (
@@ -533,11 +548,12 @@ export default function Summary({ navigate, params }) {
                     key={player}
                     scope="col"
                     className={[
-                      'py-2 px-3 text-center type-label-caps max-w-[90px]',
+                      'h-9 py-2 px-1 text-center',
+                      headCls,
                       isWinner(player) ? 'text-accent' : 'text-muted',
                     ].join(' ')}
                   >
-                    <span className="flex items-center justify-center gap-0.5">
+                    <span className="flex items-center justify-center gap-0.5 min-w-0">
                       <span className="truncate min-w-0">{player}</span>
                       {isSignedInPlayer(player, user?.name) && <PlayerStar />}
                     </span>
@@ -551,9 +567,11 @@ export default function Summary({ navigate, params }) {
               {Array.from({ length: game.holesPlayed ?? game.holes }, (_, holeIndex) => (
                 <Fragment key={holeIndex}>
                   <tr className="border-b border-border">
-                    <td className="py-2 px-3 text-muted whitespace-nowrap">
-                      <span className="type-strong">{holeIndex + 1}</span>
-                      <span className="type-caption ml-0.5">({holePars[holeIndex]})</span>
+                    {/* Hole column: deeper cream fill, left-aligned, no hairline
+                        against the scores. Number in text colour, bracket muted. */}
+                    <td className="h-9 pl-3 pr-1 text-left whitespace-nowrap bg-bg-card">
+                      <span className="type-strong text-text">{holeIndex + 1}</span>
+                      <span className="type-caption ml-0.5 text-muted">({holePars[holeIndex]})</span>
                     </td>
                     {(game.players ?? []).map(player => {
                       const score = game.scores[player]?.[holeIndex]
@@ -561,7 +579,7 @@ export default function Summary({ navigate, params }) {
                         <td
                           key={player}
                           className={[
-                            'py-2 px-3 text-center type-strong',
+                            'h-9 px-0.5 text-center type-strong whitespace-nowrap',
                             isWinner(player) ? 'text-accent' : 'text-text',
                           ].join(' ')}
                         >
@@ -585,18 +603,21 @@ export default function Summary({ navigate, params }) {
                       which naturally hides the Back 9 line for a round that
                       stopped at or before hole 9. History's detail view reuses
                       this same component, so it inherits both lines
-                      automatically. */}
+                      automatically. The band label is Caption with
+                      whitespace-nowrap (owner call, 23 November 2026): at
+                      Caption size "Front 9" fits the 56px hole column on one
+                      line, where the Strong size wrapped onto two. */}
                   {game.holes === 18 && holeIndex === 8 && (
                     <tr className="border-t-2 border-b border-border bg-bg-card">
-                      <th scope="row" className="py-3 px-3 text-left type-small-strong text-text whitespace-nowrap">
+                      <th scope="row" className={`${bandRowCls} pl-3 pr-0 text-left type-caption text-text whitespace-nowrap`}>
                         Front 9
                       </th>
                       {(game.players ?? []).map(player => {
                         const { total, toPar } = subtotal(game.scores?.[player] ?? [], holePars, 0, 9)
                         return (
-                          <td key={player} className="py-3 px-3 text-center type-strong text-text">
+                          <td key={player} className={`${bandRowCls} px-0.5 text-center type-strong text-text whitespace-nowrap`}>
                             {total ?? '-'}
-                            <ParDelta delta={toPar} variant="bracket" />
+                            <ParDelta delta={toPar} variant="bracket" className={bracketCls} />
                           </td>
                         )
                       })}
@@ -604,15 +625,15 @@ export default function Summary({ navigate, params }) {
                   )}
                   {game.holes === 18 && holeIndex === 17 && (
                     <tr className="border-t-2 border-b border-border bg-bg-card">
-                      <th scope="row" className="py-3 px-3 text-left type-small-strong text-text whitespace-nowrap">
+                      <th scope="row" className={`${bandRowCls} pl-3 pr-0 text-left type-caption text-text whitespace-nowrap`}>
                         Back 9
                       </th>
                       {(game.players ?? []).map(player => {
                         const { total, toPar } = subtotal(game.scores?.[player] ?? [], holePars, 9, 18)
                         return (
-                          <td key={player} className="py-3 px-3 text-center type-strong text-text">
+                          <td key={player} className={`${bandRowCls} px-0.5 text-center type-strong text-text whitespace-nowrap`}>
                             {total ?? '-'}
-                            <ParDelta delta={toPar} variant="bracket" />
+                            <ParDelta delta={toPar} variant="bracket" className={bracketCls} />
                           </td>
                         )
                       })}
@@ -625,15 +646,17 @@ export default function Summary({ navigate, params }) {
             {/* Totals row pinned to the bottom of the scroll area (#63) so it
                 stays in view on a long round. bg-bg-card is set on each cell
                 (not the row) because a <tr> background doesn't reliably paint
-                over scrolled content behind it in some mobile browsers (#66). */}
+                over scrolled content behind it in some mobile browsers (#66).
+                The row height is a minimum, so a DNF sub-label can grow it. */}
             <tfoot className="sticky bottom-0 z-10">
               <tr className="border-t-2 border-border">
-                <th scope="row" className="py-3 px-3 text-left type-small-strong text-muted bg-bg-card">Total</th>
+                <th scope="row" className={`${bandRowCls} pl-3 pr-1 text-left type-strong text-text bg-bg-card`}>Total</th>
                 {(game.players ?? []).map(player => (
                   <td
                     key={player}
                     className={[
-                      'py-3 px-3 text-center type-strong bg-bg-card',
+                      bandRowCls,
+                      'px-0.5 text-center type-strong whitespace-nowrap bg-bg-card',
                       isWinner(player) ? 'text-accent' : 'text-text',
                     ].join(' ')}
                   >
@@ -641,6 +664,7 @@ export default function Summary({ navigate, params }) {
                     <ParDelta
                       delta={roundToPar((game.scores?.[player] ?? []).slice(0, holePars.length), holePars)}
                       variant="bracket"
+                      className={bracketCls}
                     />
                     {/* The "Av. X" sub-line was dropped (#70, flagged as not interesting) —
                         the bracketed total-to-par above already carries that information. */}
