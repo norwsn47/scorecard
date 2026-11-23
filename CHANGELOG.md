@@ -13,6 +13,7 @@
 
 - **Every error is red.** Inline error lines (sign-out, delete, save, resend, sign-in link), the map load failure, the storage and save-failure banners and Home's email-link failures now use `error` (`#9B3A24`), not accent green. Before, only form-field errors were red, so most errors read like links. Guidance notices that are not failures stay green.
 - **Banners become a floating toast.** The full-width banners at the top of the screen (storage blocked, save failure, Home's email-link result) are replaced by one `Toast` component: a rounded pill floating near the bottom of the screen, above the bottom controls, with a dismiss button. It never auto-dismisses. It also stays inside the desktop phone frame. Owner's call: a top banner was easy to miss and pushed the page down.
+- **Summary's table no longer colours the winner's column.** The header, scores and total of the winning player were accent green. Every column now reads the same; the winner is named in the result line above the table, which keeps its accent name. Figma shows no column highlight.
 
 ## 23 November 2026 (redesign: decisions made while building stages 1 to 8)
 

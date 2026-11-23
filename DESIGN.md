@@ -30,7 +30,7 @@ All tokens are defined as CSS custom properties in `src/styles/index.css` and al
 | `bg-card` | `--color-bg-card` | `#F5EFE3` | Surface — slightly warmer cream for cards, inputs |
 | `text` | `--color-text` | `#1A1A18` | Primary text — near-black charcoal |
 | `muted` | `--color-text-muted` | `#6B6560` | Muted text — warm grey |
-| `accent` | `--color-accent` | `#1A4329` | Brand colour — deep historic Scottish green; all interactive highlights, active cell, winner. The CSS var holds the RGB channels (`26 67 41`), not a hex string, so opacity modifiers compile |
+| `accent` | `--color-accent` | `#1A4329` | Brand colour — deep historic Scottish green; all interactive highlights, active cell, the winner's name in the Summary result line. The CSS var holds the RGB channels (`26 67 41`), not a hex string, so opacity modifiers compile |
 | `accent-hover` | `--color-accent-hover` | `#142f1e` | Accent on press (Figma accent hover and pressed) |
 | `accent-tint` | `--color-accent-tint` | accent at 8% (`rgb(var(--color-accent) / 0.08)`) | The one tint: active row, selected states and soft fills. Figma `color/accent/subtle`. **Must not be raised:** `muted` text on it is 4.57:1, so any more opacity falls below AA 4.5:1. Guarded by `src/styles/tokens.test.js` |
 | `accent-tint-hover` | `--color-accent-tint-hover` | accent at 15% (`rgb(var(--color-accent) / 0.15)`) | Pressed state of an `accent-tint` fill (buttons, header actions, the back button). Figma `color/accent/subtle-hover` |
@@ -66,7 +66,7 @@ The app is otherwise **one brand colour doing all the work** (Outbuild principle
 
 - They colour **vs-par deltas only** — the per-hole inline delta (`+1` / `-1` / `E`) and the round total-to-par (`41 (+5)`). Nothing else.
 - They are **never** used for buttons, borders, icons, links, backgrounds, focus rings, or any interactive or chrome role. A golfer must never have to wonder whether a green thing is tappable.
-- **Level par (`E`) gets no colour of its own** — it inherits whatever text colour its context already uses (`text`, `muted`, `accent` in a winner column, or white in the active cell).
+- **Level par (`E`) gets no colour of its own** — it inherits whatever text colour its context already uses (`text`, `muted`, or white in the active cell).
 - The bracketed par **label** on the hole number (e.g. "3 (3)", see "Scorecard table") is *not* a delta — it stays uncoloured and is unaffected by this exception.
 
 This keeps within the Outbuild allowance of "no more than two accents beyond the brand colour, used in precisely defined contexts."
@@ -92,7 +92,7 @@ The app is used outdoors on a phone in bright light, so both delta colours were 
 | `under-par` `#2C6B3C` | **5.8 : 1** ✓ | **5.6 : 1** ✓ | 1.7 : 1 ✗ |
 | `over-par` `#9B3A24` | **6.3 : 1** ✓ | **6.1 : 1** ✓ | 1.6 : 1 ✗ |
 | white `#FFFFFF` (active-cell text, `on-accent`) | — | — | **11.2 : 1** ✓ |
-| `accent` `#1A4329` (winner column text) | 10.2 : 1 ✓ | 9.8 : 1 ✓ | — |
+| `accent` `#1A4329` (winner name in the result line) | 10.2 : 1 ✓ | 9.8 : 1 ✓ | — |
 | `control-warm` `#7D746C` (Decrement outline and glyph, Advance fill) | 4.2 : 1 ✓ | 4.0 : 1 ✓ | — |
 | `muted` `#6B6560` (secondary text, inactive hole numbers, placeholders) | 5.2 : 1 ✓ | 5.0 : 1 ✓ | — |
 | `field` `#827970` (text input, textarea, select edge) | 3.9 : 1 ✓ | 3.7 : 1 ✓ | — |
@@ -106,7 +106,7 @@ The `field` and `border` rows are **hand-computed from WCAG relative luminance**
 
 `control-warm` is a graphics colour (icons, rings, fills), held to the 3:1 floor with a 4:1 aim, so it clears the rule at about 4:1. `muted` is text and clears 4.5:1.
 
-Both delta colours **fail** on the solid `accent` fill. This is expected and is exactly why the override rule below forces them off inside a filled cell. On every non-filled surface (cream ground or card, including behind a winner's accent-green *text*) they pass comfortably.
+Both delta colours **fail** on the solid `accent` fill. This is expected and is exactly why the override rule below forces them off inside a filled cell. On every non-filled surface (cream ground or card) they pass comfortably.
 
 `under-par` `#2C6B3C` is a lighter, greener mid-forest, deliberately ~12 lightness points up from the brand `accent` `#1A4329` so a `-1` reads as its own "good score" mark, not as winner/active chrome. `over-par` `#9B3A24` is a deep burnt-terracotta / rust: warm, of the Outbuild family (the brand's original accent direction). Errors use the same value through their own `error` token, so `over-par` itself stays deltas-only. Every error is in `error` red, never accent green, so an error never reads as a link (see "Toast").
 
@@ -632,7 +632,7 @@ The bracket is always `type-caption` (the `bracket` form of `ParDelta`). It is n
 | Focus ring | Inset and solid: `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset`, with `focus-visible:ring-accent` on a normal cell and `focus-visible:ring-on-accent` (white) on the accent-filled active cell. The old 40% ring is gone |
 | Band rows (Total, Front 9, Back 9) | label in the hole column. Total: `pl-3 pr-1 text-left type-strong text-text`. Front 9 and Back 9: `pl-3 pr-0 text-left type-caption text-text whitespace-nowrap`, so they fit the 56px column on one line (owner call, CHANGELOG 23 November 2026; at Strong size they wrapped onto two). Front 9 and Back 9 rows are `bg-bg-card border-t-2 border-b border-border` |
 | Totals bar (live grid) | A flex row under the table, kept in step with its columns: a `w-14 shrink-0 pl-3` label, then one `flex-1 min-w-0` share per player. `bg-bg-card border-t-2 border-border`, `h-11` or `h-14` as above |
-| Summary Total row | `tfoot` `sticky bottom-0 z-10`, `bg-bg-card` on each cell (not the row, #66). Height is a minimum, so a `DNF` sub-label can grow it. Winner column text is `text-accent`; the header of a winner is `text-accent` too |
+| Summary Total row | `tfoot` `sticky bottom-0 z-10`, `bg-bg-card` on each cell (not the row, #66). Height is a minimum, so a `DNF` sub-label can grow it. Every column is `text-text`, the winner's included: the winner is named in the result line above the table, not coloured in it (owner call, 23 November 2026) |
 | Empty score | `-` (the live grid uses an en dash) |
 | Share image mirror | `share.js` draws its own table (banded rows, no hole-column fill, no dense mode). It mirrors the hole number in `text` bold with the bracket in `muted`, and the `TOTAL` label in `text`. Header labels stay muted caps |
 
@@ -657,9 +657,9 @@ The one place the scorecard leaves pencil-and-paper monochrome. Applies to score
 - The share image is hand-drawn and sizes its own bracket to match the total.
 - The live Scorecard totals bar uses the same Caption bracket as every other surface; there is no size exception anywhere, so the bracket is never shrunk. With one to four players the bracket sits on the total's line (`55 (+22)`, 44px row). With five or six (dense mode, see "Scorecard table") it sits below the total, centred, in a 56px row.
 
-**Override rule (one sentence).** A vs-par delta keeps its semantic colour on every surface where the background is the cream ground or the card — *including* inside a winner's accent-green column, where the delta stays `under-par` / `over-par` and only a level `E` inherits the column's green — and drops the semantic colour *only* inside a filled cell (the live active cell, white-on-`accent`), where the delta takes that cell's inverted white text and the leading `+` / `-` sign carries the direction.
+**Override rule (one sentence).** A vs-par delta keeps its semantic colour on every surface where the background is the cream ground or the card, and drops the semantic colour *only* inside a filled cell (the live active cell, white-on-`accent`), where the delta takes that cell's inverted white text and the leading `+` / `-` sign carries the direction.
 
-Rationale: the semantic colours fail contrast on the solid `accent` fill (1.6–1.7:1) so they cannot be used there; everywhere else — winner columns included — the delta sits on cream/card and passes AA (5.6–6.3:1), and a winner making bogeys is information worth keeping visible. Winner status therefore never changes a delta's colour; only a solid fill behind it does.
+Rationale: the semantic colours fail contrast on the solid `accent` fill (1.6–1.7:1) so they cannot be used there; everywhere else the delta sits on cream/card and passes AA (5.6–6.3:1), and a winner making bogeys is information worth keeping visible. Winner status therefore never changes a delta's colour; only a solid fill behind it does.
 
 **Canvas mirror (`src/utils/share.js`).** The share image is hand-drawn and cannot read CSS tokens, so the two hexes are duplicated into its local `C` map:
 ```
@@ -795,7 +795,7 @@ Inline SVGs throughout — no icon library dependency.
 - Standard `strokeWidth`: `1.5` (general UI), `2` (close/X), `2.5` (advance chevron)
 - Sizes: `w-2.5 h-2.5` (external link ↗), `w-4 h-4` (close ✕), `w-6 h-6` (map, chevron)
 
-**Signed-in identity star (`src/components/PlayerStar.jsx`)** — a small star badge trailing a player's name wherever players are listed (live Scorecard, Summary, History player rows, the applied player pill and the player picker) when that name matches the signed-in user's own `users.name`. Stroke-based like the rest of the set, `w-2.5 h-2.5` — the same size tier as the external-link ↗ annotation, since the role is identical (a small glyph beside text, not a standalone control). Deliberately carries no colour of its own — it renders in `currentColor` and inherits whatever colour its surrounding name already has (muted header, accent winner name, on-accent applied pill), so it never introduces a competing colour rule or implies the signed-in player outranks guests in the round. Never shown on the share image — that's a static export for a recipient who may not be signed in.
+**Signed-in identity star (`src/components/PlayerStar.jsx`)** — a small star badge trailing a player's name wherever players are listed (live Scorecard, Summary, History player rows, the applied player pill and the player picker) when that name matches the signed-in user's own `users.name`. Stroke-based like the rest of the set, `w-2.5 h-2.5` — the same size tier as the external-link ↗ annotation, since the role is identical (a small glyph beside text, not a standalone control). Deliberately carries no colour of its own — it renders in `currentColor` and inherits whatever colour its surrounding name already has (muted header, accent winner name in the result line, on-accent applied pill), so it never introduces a competing colour rule or implies the signed-in player outranks guests in the round. Never shown on the share image — that's a static export for a recipient who may not be signed in.
 
 ---
 

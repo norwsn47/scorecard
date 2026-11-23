@@ -163,9 +163,10 @@ export default function Summary({ navigate, params }) {
   if (!game) return null
 
   const isDnf    = player => game.dnf?.includes(player)
-  // Every tied winner gets the accent treatment, not just winners[0] (item 36).
+  // The winner is named in the result line above the table (every tied
+  // winner, item 36). The table itself carries no winner colour: every
+  // column reads in the same text colour (owner call, 23 November 2026).
   const winners  = game.winners ?? []
-  const isWinner = player => winners.includes(player)
 
   // Per-hole par for the read-only table — small bracketed reference next to
   // each hole number, matching the live Scorecard grid (item 37).
@@ -550,7 +551,7 @@ export default function Summary({ navigate, params }) {
                     className={[
                       'h-9 py-2 px-1 text-center',
                       headCls,
-                      isWinner(player) ? 'text-accent' : 'text-muted',
+                      'text-muted',
                     ].join(' ')}
                   >
                     <span className="flex items-center justify-center gap-0.5 min-w-0">
@@ -579,8 +580,7 @@ export default function Summary({ navigate, params }) {
                         <td
                           key={player}
                           className={[
-                            'h-9 px-0.5 text-center type-strong whitespace-nowrap',
-                            isWinner(player) ? 'text-accent' : 'text-text',
+                            'h-9 px-0.5 text-center type-strong whitespace-nowrap text-text',
                           ].join(' ')}
                         >
                           {score ?? '-'}
@@ -656,8 +656,7 @@ export default function Summary({ navigate, params }) {
                     key={player}
                     className={[
                       bandRowCls,
-                      'px-0.5 text-center type-strong whitespace-nowrap bg-bg-card',
-                      isWinner(player) ? 'text-accent' : 'text-text',
+                      'px-0.5 text-center type-strong whitespace-nowrap bg-bg-card text-text',
                     ].join(' ')}
                   >
                     {playerTotal(game.scores, player) || '-'}
