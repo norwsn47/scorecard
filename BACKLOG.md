@@ -5,7 +5,7 @@
 > - **Adding:** only if it's something I'd actually do — a real bug, a feature idea I've asked for, or a manual step I owe. Critical/High findings from a review or audit go in; everything else stays in the chat report. Non-blocking review notes are never logged. Accepted or won't-fix items are never logged either — if the context matters, it goes in a code comment instead.
 > - **Removing:** whoever finishes an item deletes its line in the same commit as the change. Add a `CHANGELOG.md` note only if it was a decision or a reversal.
 > - **Entries stay short:** one to three lines — what needs doing, not the history.
-> - **IDs are stable and never reused**, even after an item is deleted, so gaps are expected. Next free ID: **#125**.
+> - **IDs are stable and never reused**, even after an item is deleted, so gaps are expected. Next free ID: **#126**.
 
 **Last updated:** 23 November 2026
 
@@ -22,6 +22,7 @@
 
 ## Bugs and small fixes
 
+- **#125** - Signed-in History shows only the latest 100 rounds: `GET /api/games` has `LIMIT 100` and no paging, so older rounds silently vanish (still in D1). Add paging or a "showing latest 100" note, and have History handle it.
 - **#116** — A lost save response followed by a local edit keeps the old data on the server (needs `PATCH` or `GET` by `client_round_id`).
 - **#43b** — A signed-in round opened from History can land on the wrong round after a back/forward bounce or an edit-cancel (needs `GET /api/games/:id`).
 - **#111** — Show a small "Couldn't share - try again" message when sharing fails.

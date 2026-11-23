@@ -1,6 +1,6 @@
 # Scorecard redesign: implementation plan
 Last updated: 23 November 2026
-> **Status (23 November 2026):** stages 0 to 8 are shipped (merged to `main`); stage 9 part 1 (DESIGN.md rewrite, dead-token removal, CHANGELOG and BACKLOG) is done. Still to do: the `/full-audit` and `/pre-launch` runs, and the real-iPhone test (BACKLOG #124).
+> **Status (23 November 2026):** stages 0 to 8 are shipped (merged to `main`); stage 9 (DESIGN.md rewrite, dead-token removal, CHANGELOG and BACKLOG, `/full-audit` and `/pre-launch`) is done. Audits: no Critical; one High (signed-in History capped at 100 rounds, BACKLOG #125, predates the redesign); pre-launch verdict FLAG, GO once the real-device checks pass. Still to do: the real-iPhone test (BACKLOG #124, with #90).
 > How to bring the Figma redesign into the live app, in small, reversible stages, using the project's existing workflow (CLAUDE.md, DESIGN.md, agents, review gate).
 
 Source of truth for the design: Figma file `1I1SSucIxg7CVz9HEysdp3` (Outbuild), board "Scorecard design system (latest)", node `66-1004`. It holds seven screens, the 18 components, the colour, type, shape and spacing tokens, and the content-page rules. The code agent may not be able to open Figma, so it works from the reference pack in section 11 (text spec first, PNGs for the look). If your Claude Code setup can use the Figma connector, use it as a bonus, not as the only source.
