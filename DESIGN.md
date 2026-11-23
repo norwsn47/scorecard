@@ -152,7 +152,7 @@ Serif is for Display and Title only. Nothing else in the app uses it.
 
 ### UI register — Inter
 
-Everything that is not Display or Title is Inter, through one of six utilities. Only Label caps is uppercase; buttons, header actions and navigation (Back) are sentence case.
+Everything that is not Display or Title is Inter, through one of six utilities. Only Label caps is uppercase; buttons, header actions, navigation (Back) and page titles ("New game", "Edit round") are sentence case.
 
 | Context | Utility |
 |---|---|

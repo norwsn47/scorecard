@@ -7,7 +7,7 @@ import { AuthProvider, useAuth } from '../hooks/useAuth.jsx'
 import { clearActiveGame, getActiveGame, getCompletedGames, markCompletedGamePending, saveActiveGame } from '../utils/storage.js'
 import { isHeld, syncPendingRounds } from '../utils/sync.js'
 
-// The Edit Round screen holds a local round while it is open, and asks for a
+// The Edit round screen holds a local round while it is open, and asks for a
 // sync run when the edit is abandoned or its stranded working copy is cleared
 // (BACKLOG #113). The real runner and the real holds are used; only
 // the entry point is spied so a test can see when a run was asked for.
@@ -85,11 +85,11 @@ function seedPending() {
   markCompletedGamePending('round-1', 'u1', 'Kept note')
 }
 
-describe('Setup - holding a pending round while the Edit Round screen is open', () => {
+describe('Setup - holding a pending round while the Edit round screen is open', () => {
   it('a real sync run sends nothing for the round while the screen is open, and the round is held', async () => {
     seedPending()
     renderSetup({ editRound: true, game: record })
-    await screen.findByText('Edit Round')
+    await screen.findByText('Edit round')
     await settle()
 
     expect(isHeld('round-1')).toBe(true)
@@ -103,7 +103,7 @@ describe('Setup - holding a pending round while the Edit Round screen is open', 
   it('releases the hold on unmount, and the round then goes out', async () => {
     seedPending()
     const { unmount } = renderSetup({ editRound: true, game: record })
-    await screen.findByText('Edit Round')
+    await screen.findByText('Edit round')
     await settle()
     expect(isHeld('round-1')).toBe(true)
 
@@ -118,7 +118,7 @@ describe('Setup - holding a pending round while the Edit Round screen is open', 
   it('still holds after a StrictMode double mount (hold taken, released and retaken)', async () => {
     seedPending()
     renderSetup({ editRound: true, game: record }, { strict: true })
-    await screen.findByText('Edit Round')
+    await screen.findByText('Edit round')
     await settle()
 
     expect(isHeld('round-1')).toBe(true)
@@ -128,7 +128,7 @@ describe('Setup - holding a pending round while the Edit Round screen is open', 
 
   it('a database edit takes no hold and asks for no sync run on unmount', async () => {
     const { unmount } = renderSetup({ editRound: true, game: { ...record, _fromDb: true } })
-    await screen.findByText('Edit Round')
+    await screen.findByText('Edit round')
     await settle()
     expect(isHeld('round-1')).toBe(false)
 
@@ -151,7 +151,7 @@ describe('Setup - holding a pending round while the Edit Round screen is open', 
   it('signed out: the round is held, but leaving never asks for a sync run', async () => {
     mockFetch({ user: null })
     const { unmount } = renderSetup({ editRound: true, game: record })
-    await screen.findByText('Edit Round')
+    await screen.findByText('Edit round')
     await settle()
     expect(isHeld('round-1')).toBe(true)
 
@@ -161,11 +161,11 @@ describe('Setup - holding a pending round while the Edit Round screen is open', 
   })
 })
 
-describe('Setup - leaving the Edit Round screen', () => {
+describe('Setup - leaving the Edit round screen', () => {
   it('cancelling (no edit working copy) asks for a sync run for the signed-in user, and the round is sent', async () => {
     seedPending()
     const { unmount } = renderSetup({ editRound: true, game: record })
-    await screen.findByText('Edit Round')
+    await screen.findByText('Edit round')
     await settle()
 
     unmount()
@@ -198,7 +198,7 @@ describe('Setup - leaving the Edit Round screen', () => {
     seedPending()
     const user = userEvent.setup()
     const { navigate, unmount } = renderSetup({ editRound: true, game: record })
-    await screen.findByText('Edit Round')
+    await screen.findByText('Edit round')
     await settle()
 
     // 1. Setup open: the hold protects the round.
